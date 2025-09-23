@@ -4,4 +4,6 @@ version = "0.1.0"
 description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
 requires-python = ">=3.13.6"
-dependencies = []
+dependencies = [
+    "jupyter>=1.1.1",
+]
