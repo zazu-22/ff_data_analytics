@@ -1,0 +1,75 @@
+Now that the site has running back data, many of you have asked me to clarify what all the numbers mean and explain some of the methodology behind the charting.  
+
+If you’re a subscriber to this site, you know about Matt’s work and in particular how he isolates receiver play as much as he can from quarterback play. 
+
+We’re now using that same concept and applying it to running backs. 
+
+Charting running backs obviously works a bit different from receivers as offensive line and quarterback play inevitably influence running lanes and defensive fronts. 
+
+That being said, we’re isolating running back play as best as possible.
+Success Rate by Concept
+Concept Percentage
+Notable Stats
+
+WHAT WE TRACK
+
+First we identify formation and chart whether a back is running from an under-center formation or from a shotgun/pistol formation. This is true even for wildcat runs where there is no quarterback involved. 
+
+Then we note whether or not the box is “loaded,” meaning does the defense have one or more extra defenders than there are blockers on the play. 
+
+Most base formations include five offensive linemen and usually a tight end. In this scenario if there are 7 defenders in the box, I mark it down as a loaded rush attempt. 
+
+Conversely if there are eight blockers, let’s say the OL, two TE’s and a full back, if the defense places eight men in the box, that to me is not a loaded or stacked box. 
+
+Once the ball is snapped, then I identify blocking scheme. Is it a man/gap run play or are we looking at a zone rush attempt. 
+
+Then I chart direction. If the run ends up going inside the presnap tackle position, I mark that as an “inside” run. 
+
+In the case of moving offensive linemen, even if the running back ends up hitting the B or C gap, if he’s run to a spot that is outside the PRESNAP tackle position, I mark that down as an outside run. There’s going to be some borderline calls obviously, but that’s the general idea when talking about rush direction. 
+
+This next bit is very important when referencing zone plays: there are plays called “outside zone” or “inside zone” or some such variation. Keep in mind I’m not tracking exact plays, meaning, it’s entirely possible some variation of outside zone was the call but the back ended up cutting back and running the ball between the tackles. 
+
+I would mark that play down as a zone run that went inside. For shorthand perhaps I even call it an inside zone run. There will be a lot of angry coaches in my mentions saying that it was an outside zone run call and that I’m mis-identifying the play and you can tell because of blah, blah, blah, blah. In the words of the great Tommy Lee Jones in The Fugitive, I DON’T CARE. 
+
+Again, I’m not identifying the exact play, as that becomes a very murky proposition without knowing exactly what was called. I’m identifying general blocking schemes and rush attempt direction. 
+
+METHODOLOGY
+
+When it comes to marking down a successful or unsuccessful run, there are a lot of factors that go into a one or zero. 
+
+Generally speaking if a back runs for a yard or less (my definition of a run stuff), most likely that goes down as an unsuccessful run. Generally speaking if a back runs for 5 yards or more, most likely that goes down as a successful run. 
+
+Regarding runs of 5+ yards, let me just say this, VERY rarely will a back get 5+ yards without doing something worthy of a positive mark. It might be hole recognition, burst through the hole, speed around the edge… something that the back did directly to contribute to the run. 
+
+There are more exceptions for sure when it comes to runs of 2 yards or less but again, for the most part, a run doesn’t fall apart without the back generally failing to capitalize somewhere along the path. Maybe he was slow to the hole, missed a cutback opportunity or tried to bounce when he should have just followed his blocking.
+
+There are obviously exceptions that I’ll get to in a bit but the vast majority of my charting time is dedicated to the gray area, 3-4 yard rush plays. 
+
+How much is the back, how much is the OL? On a 3-yard rush, if the back misses a cut back opportunity and/or ends up getting exactly what is blocked I’m inclined to mark that as an unsuccessful rush attempt. 
+
+But maybe he used good speed to bounce to the outside and a 5 yard loss is turned into a 3 yard gain. That’s a successful run to me. 
+
+Maybe the back received the ball and there was absolutely nothing there, but he proceeded to power forward, maximized his yardage and picked up 3 yards. Again, that’s a successful run to me. 
+Charting Example
+
+This play is a good example. The play design was most likely to the outside but one of his pulling linemen fell down right in front of Saquon.  Most backs would have either been tripped up there or taken a step back to get to the outside, either way that play is most likely ending up with negative yardage. Barkley adjusted, burrowed forward and ended up picking up two yards. 
+
+Because he made a move that I would argue an average back would not make, and because Barkley ended up maximizing yardage, that was a clear successful run in my book. 
+
+You may disagree but that’s a glimpse into how I chart.
+
+Finally we end up charting explosive touches (plays resulting in 10+ yards), run stuffs, catch rates based on more or less than 5 yards downfield.  We also track pass blocking success rates, a hugely important stat that could indicate whether a back even gets on the field. 
+
+APPLICATION
+
+It’s an underrated part of running back evaluation but SCHEME FIT MATTERS. 
+
+Look no further than Dameon Pierce. He was great as a rookie but has since flopped badly. Why is that? There have been no injuries to speak of, no loss of athleticism and he didn’t suddenly forget how to play running back. 
+
+It came down to scheme fit. He was really good on man/gap plays but not so good on zone runs. His rookie season under Lovie Smith, the Texans were much more heavy into man/gap concepts. But once DeMeco Ryans came over from that Shanahan coaching tree, Houston became one of the heaviest zone rushing teams in the NFL. 
+
+This left Pierce out in the cold.
+
+But imagine if someone told you beforehand that Pierce wasn’t any good at zone running… for one, you’d be a smarter football fan, but for two you would’ve known to avoid him in fantasy drafts (and again look like a genius doing so).
+
+That’s what this new Sleeper King/Reception Perception tool is aiming to do, not just provide you great data points on running back skills, but also marry that data to existing team run tendencies (provided by Sports Info Solutions and FTN) to give you the most informed running back takes possible.
