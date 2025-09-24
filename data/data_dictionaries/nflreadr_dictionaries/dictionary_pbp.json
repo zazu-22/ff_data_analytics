@@ -1,0 +1,1862 @@
+[
+  {
+    "Field": "play_id",
+    "Description": "Numeric play id that when used with game_id and drive provides the unique identifier for a single play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "game_id",
+    "Description": "Ten digit identifier for NFL game.",
+    "Type": "character"
+  },
+  {
+    "Field": "old_game_id",
+    "Description": "Legacy NFL game ID.",
+    "Type": "character"
+  },
+  {
+    "Field": "home_team",
+    "Description": "String abbreviation for the home team.",
+    "Type": "character"
+  },
+  {
+    "Field": "away_team",
+    "Description": "String abbreviation for the away team.",
+    "Type": "character"
+  },
+  {
+    "Field": "season_type",
+    "Description": "'REG' or 'POST' indicating if the game belongs to regular or post season.",
+    "Type": "character"
+  },
+  {
+    "Field": "week",
+    "Description": "Season week.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "posteam",
+    "Description": "String abbreviation for the team with possession.",
+    "Type": "character"
+  },
+  {
+    "Field": "posteam_type",
+    "Description": "String indicating whether the posteam team is home or away.",
+    "Type": "character"
+  },
+  {
+    "Field": "defteam",
+    "Description": "String abbreviation for the team on defense.",
+    "Type": "character"
+  },
+  {
+    "Field": "side_of_field",
+    "Description": "String abbreviation for which team's side of the field the team with possession is currently on.",
+    "Type": "character"
+  },
+  {
+    "Field": "yardline_100",
+    "Description": "Numeric distance in the number of yards from the opponent's endzone for the posteam.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "game_date",
+    "Description": "Date of the game.",
+    "Type": "character"
+  },
+  {
+    "Field": "quarter_seconds_remaining",
+    "Description": "Numeric seconds remaining in the quarter.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "half_seconds_remaining",
+    "Description": "Numeric seconds remaining in the half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "game_seconds_remaining",
+    "Description": "Numeric seconds remaining in the game.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "game_half",
+    "Description": "String indicating which half the play is in, either Half1, Half2, or Overtime.",
+    "Type": "character"
+  },
+  {
+    "Field": "quarter_end",
+    "Description": "Binary indicator for whether or not the row of the data is marking the end of a quarter.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive",
+    "Description": "Numeric drive number in the game.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "sp",
+    "Description": "Binary indicator for whether or not a score occurred on the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qtr",
+    "Description": "Quarter of the game (5 is overtime).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "down",
+    "Description": "The down for the given play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "goal_to_go",
+    "Description": "Binary indicator for whether or not the posteam is in a goal down situation.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "time",
+    "Description": "Time at start of play provided in string format as minutes:seconds remaining in the quarter.",
+    "Type": "character"
+  },
+  {
+    "Field": "yrdln",
+    "Description": "String indicating the current field position for a given play.",
+    "Type": "character"
+  },
+  {
+    "Field": "ydstogo",
+    "Description": "Numeric yards in distance from either the first down marker or the endzone in goal down situations.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "ydsnet",
+    "Description": "Numeric value for total yards gained on the given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "desc",
+    "Description": "Detailed string description for the given play.",
+    "Type": "character"
+  },
+  {
+    "Field": "play_type",
+    "Description": "String indicating the type of play: pass (includes sacks), run (includes scrambles), punt, field_goal, kickoff, extra_point, qb_kneel, qb_spike, no_play (timeouts and penalties), and missing for rows indicating end of play.",
+    "Type": "character"
+  },
+  {
+    "Field": "yards_gained",
+    "Description": "Numeric yards gained (or lost) by the possessing team, excluding yards gained via fumble recoveries and laterals.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "shotgun",
+    "Description": "Binary indicator for whether or not the play was in shotgun formation.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "no_huddle",
+    "Description": "Binary indicator for whether or not the play was in no_huddle formation.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_dropback",
+    "Description": "Binary indicator for whether or not the QB dropped back on the play (pass attempt, sack, or scrambled).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_kneel",
+    "Description": "Binary indicator for whether or not the QB took a knee.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_spike",
+    "Description": "Binary indicator for whether or not the QB spiked the ball.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_scramble",
+    "Description": "Binary indicator for whether or not the QB scrambled.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "pass_length",
+    "Description": "String indicator for pass length: short or deep.",
+    "Type": "character"
+  },
+  {
+    "Field": "pass_location",
+    "Description": "String indicator for pass location: left, middle, or right.",
+    "Type": "character"
+  },
+  {
+    "Field": "air_yards",
+    "Description": "Numeric value for distance in yards perpendicular to the line of scrimmage at where the targeted receiver either caught or didn't catch the ball.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "yards_after_catch",
+    "Description": "Numeric value for distance in yards perpendicular to the yard line where the receiver made the reception to where the play ended.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "run_location",
+    "Description": "String indicator for location of run: left, middle, or right.",
+    "Type": "character"
+  },
+  {
+    "Field": "run_gap",
+    "Description": "String indicator for line gap of run: end, guard, or tackle",
+    "Type": "character"
+  },
+  {
+    "Field": "field_goal_result",
+    "Description": "String indicator for result of field goal attempt: made, missed, or blocked.",
+    "Type": "character"
+  },
+  {
+    "Field": "kick_distance",
+    "Description": "Numeric distance in yards for kickoffs, field goals, and punts.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "extra_point_result",
+    "Description": "String indicator for the result of the extra point attempt: good, failed, blocked, safety (touchback in defensive endzone is 1 point apparently), or aborted.",
+    "Type": "character"
+  },
+  {
+    "Field": "two_point_conv_result",
+    "Description": "String indicator for result of two point conversion attempt: success, failure, safety (touchback in defensive endzone is 1 point apparently), or return.",
+    "Type": "character"
+  },
+  {
+    "Field": "home_timeouts_remaining",
+    "Description": "Numeric timeouts remaining in the half for the home team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "away_timeouts_remaining",
+    "Description": "Numeric timeouts remaining in the half for the away team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "timeout",
+    "Description": "Binary indicator for whether or not a timeout was called by either team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "timeout_team",
+    "Description": "String abbreviation for which team called the timeout.",
+    "Type": "character"
+  },
+  {
+    "Field": "td_team",
+    "Description": "String abbreviation for which team scored the touchdown.",
+    "Type": "character"
+  },
+  {
+    "Field": "td_player_name",
+    "Description": "String name of the player who scored a touchdown.",
+    "Type": "character"
+  },
+  {
+    "Field": "td_player_id",
+    "Description": "Unique identifier of the player who scored a touchdown.",
+    "Type": "character"
+  },
+  {
+    "Field": "posteam_timeouts_remaining",
+    "Description": "Number of timeouts remaining for the possession team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defteam_timeouts_remaining",
+    "Description": "Number of timeouts remaining for the team on defense.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_score",
+    "Description": "Score for the home team at the start of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_score",
+    "Description": "Score for the away team at the start of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "posteam_score",
+    "Description": "Score the posteam at the start of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defteam_score",
+    "Description": "Score the defteam at the start of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "score_differential",
+    "Description": "Score differential between the posteam and defteam at the start of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "posteam_score_post",
+    "Description": "Score for the posteam at the end of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defteam_score_post",
+    "Description": "Score for the defteam at the end of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "score_differential_post",
+    "Description": "Score differential between the posteam and defteam at the end of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "no_score_prob",
+    "Description": "Predicted probability of no score occurring for the rest of the half based on the expected points model.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "opp_fg_prob",
+    "Description": "Predicted probability of the defteam scoring a FG next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "opp_safety_prob",
+    "Description": "Predicted probability of the defteam scoring a safety next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "opp_td_prob",
+    "Description": "Predicted probability of the defteam scoring a TD next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fg_prob",
+    "Description": "Predicted probability of the posteam scoring a FG next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "safety_prob",
+    "Description": "Predicted probability of the posteam scoring a safety next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "td_prob",
+    "Description": "Predicted probability of the posteam scoring a TD next. 'Next' in this context means the next score in the same game half.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "extra_point_prob",
+    "Description": "Predicted probability of the posteam scoring an extra point.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "two_point_conversion_prob",
+    "Description": "Predicted probability of the posteam scoring the two point conversion.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "ep",
+    "Description": "Using the scoring event probabilities, the estimated expected points with respect to the possession team for the given play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "epa",
+    "Description": "Expected points added (EPA) by the posteam for the given play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_epa",
+    "Description": "Cumulative total EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_epa",
+    "Description": "Cumulative total EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_rush_epa",
+    "Description": "Cumulative total rushing EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_rush_epa",
+    "Description": "Cumulative total rushing EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_pass_epa",
+    "Description": "Cumulative total passing EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_pass_epa",
+    "Description": "Cumulative total passing EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "air_epa",
+    "Description": "EPA from the air yards alone. For completions this represents the actual value provided through the air. For incompletions this represents the hypothetical value that could've been added through the air if the pass was completed.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "yac_epa",
+    "Description": "EPA from the yards after catch alone. For completions this represents the actual value provided after the catch. For incompletions this represents the difference between the hypothetical air_epa and the play's raw observed EPA (how much the incomplete pass cost the posteam).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "comp_air_epa",
+    "Description": "EPA from the air yards alone only for completions.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "comp_yac_epa",
+    "Description": "EPA from the yards after catch alone only for completions.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_comp_air_epa",
+    "Description": "Cumulative total completions air EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_comp_air_epa",
+    "Description": "Cumulative total completions air EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_comp_yac_epa",
+    "Description": "Cumulative total completions yac EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_comp_yac_epa",
+    "Description": "Cumulative total completions yac EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_raw_air_epa",
+    "Description": "Cumulative total raw air EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_raw_air_epa",
+    "Description": "Cumulative total raw air EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_raw_yac_epa",
+    "Description": "Cumulative total raw yac EPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_raw_yac_epa",
+    "Description": "Cumulative total raw yac EPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "wp",
+    "Description": "Estimated win probabiity for the posteam given the current situation at the start of the given play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "def_wp",
+    "Description": "Estimated win probability for the defteam.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "home_wp",
+    "Description": "Estimated win probability for the home team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "away_wp",
+    "Description": "Estimated win probability for the away team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "wpa",
+    "Description": "Win probability added (WPA) for the posteam.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "vegas_wpa",
+    "Description": "Win probability added (WPA) for the posteam: spread_adjusted model.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "vegas_home_wpa",
+    "Description": "Win probability added (WPA) for the home team: spread_adjusted model.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "home_wp_post",
+    "Description": "Estimated win probability for the home team at the end of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "away_wp_post",
+    "Description": "Estimated win probability for the away team at the end of the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "vegas_wp",
+    "Description": "Estimated win probabiity for the posteam given the current situation at the start of the given play, incorporating pre-game Vegas line.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "vegas_home_wp",
+    "Description": "Estimated win probability for the home team incorporating pre-game Vegas line.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_rush_wpa",
+    "Description": "Cumulative total rushing WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_rush_wpa",
+    "Description": "Cumulative total rushing WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_pass_wpa",
+    "Description": "Cumulative total passing WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_pass_wpa",
+    "Description": "Cumulative total passing WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "air_wpa",
+    "Description": "WPA through the air (same logic as air_epa).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "yac_wpa",
+    "Description": "WPA from yards after the catch (same logic as yac_epa).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "comp_air_wpa",
+    "Description": "The air_wpa for completions only.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "comp_yac_wpa",
+    "Description": "The yac_wpa for completions only.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_comp_air_wpa",
+    "Description": "Cumulative total completions air WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_comp_air_wpa",
+    "Description": "Cumulative total completions air WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_comp_yac_wpa",
+    "Description": "Cumulative total completions yac WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_comp_yac_wpa",
+    "Description": "Cumulative total completions yac WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_raw_air_wpa",
+    "Description": "Cumulative total raw air WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_raw_air_wpa",
+    "Description": "Cumulative total raw air WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_home_raw_yac_wpa",
+    "Description": "Cumulative total raw yac WPA for the home team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_away_raw_yac_wpa",
+    "Description": "Cumulative total raw yac WPA for the away team in the game so far.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_blocked",
+    "Description": "Binary indicator for if the punt was blocked.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "first_down_rush",
+    "Description": "Binary indicator for if a running play converted the first down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "first_down_pass",
+    "Description": "Binary indicator for if a passing play converted the first down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "first_down_penalty",
+    "Description": "Binary indicator for if a penalty converted the first down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "third_down_converted",
+    "Description": "Binary indicator for if the first down was converted on third down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "third_down_failed",
+    "Description": "Binary indicator for if the posteam failed to convert first down on third down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fourth_down_converted",
+    "Description": "Binary indicator for if the first down was converted on fourth down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fourth_down_failed",
+    "Description": "Binary indicator for if the posteam failed to convert first down on fourth down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "incomplete_pass",
+    "Description": "Binary indicator for if the pass was incomplete.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "touchback",
+    "Description": "Binary indicator for if a touchback occurred on the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "interception",
+    "Description": "Binary indicator for if the pass was intercepted.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_inside_twenty",
+    "Description": "Binary indicator for if the punt ended inside the twenty yard line.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_in_endzone",
+    "Description": "Binary indicator for if the punt was in the endzone.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_out_of_bounds",
+    "Description": "Binary indicator for if the punt went out of bounds.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_downed",
+    "Description": "Binary indicator for if the punt was downed.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_fair_catch",
+    "Description": "Binary indicator for if the punt was caught with a fair catch.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_inside_twenty",
+    "Description": "Binary indicator for if the kickoff ended inside the twenty yard line.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_in_endzone",
+    "Description": "Binary indicator for if the kickoff was in the endzone.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_out_of_bounds",
+    "Description": "Binary indicator for if the kickoff went out of bounds.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_downed",
+    "Description": "Binary indicator for if the kickoff was downed.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_fair_catch",
+    "Description": "Binary indicator for if the kickoff was caught with a fair catch.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_forced",
+    "Description": "Binary indicator for if the fumble was forced.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_not_forced",
+    "Description": "Binary indicator for if the fumble was not forced.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_out_of_bounds",
+    "Description": "Binary indicator for if the fumble went out of bounds.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "solo_tackle",
+    "Description": "Binary indicator if the play had a solo tackle (could be multiple due to fumbles).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "safety",
+    "Description": "Binary indicator for whether or not a safety occurred.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "penalty",
+    "Description": "Binary indicator for whether or not a penalty occurred.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "tackled_for_loss",
+    "Description": "Binary indicator for whether or not a tackle for loss on a run play occurred.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_lost",
+    "Description": "Binary indicator for if the fumble was lost.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "own_kickoff_recovery",
+    "Description": "Binary indicator for if the kicking team recovered the kickoff.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "own_kickoff_recovery_td",
+    "Description": "Binary indicator for if the kicking team recovered the kickoff and scored a TD.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_hit",
+    "Description": "Binary indicator if the QB was hit on the play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "rush_attempt",
+    "Description": "Binary indicator for if the play was a run.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "pass_attempt",
+    "Description": "Binary indicator for if the play was a pass attempt (includes sacks).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "sack",
+    "Description": "Binary indicator for if the play ended in a sack.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "touchdown",
+    "Description": "Binary indicator for if the play resulted in a TD.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "pass_touchdown",
+    "Description": "Binary indicator for if the play resulted in a passing TD.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "rush_touchdown",
+    "Description": "Binary indicator for if the play resulted in a rushing TD.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "return_touchdown",
+    "Description": "Binary indicator for if the play resulted in a return TD. Returns may occur on any of: interception, fumble, kickoff, punt, or blocked kicks.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "extra_point_attempt",
+    "Description": "Binary indicator for extra point attempt.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "two_point_attempt",
+    "Description": "Binary indicator for two point conversion attempt.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "field_goal_attempt",
+    "Description": "Binary indicator for field goal attempt.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "kickoff_attempt",
+    "Description": "Binary indicator for kickoff.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "punt_attempt",
+    "Description": "Binary indicator for punts.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble",
+    "Description": "Binary indicator for if a fumble occurred.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "complete_pass",
+    "Description": "Binary indicator for if the pass was completed.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "assist_tackle",
+    "Description": "Binary indicator for if an assist tackle occurred.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_reception",
+    "Description": "Binary indicator for if a lateral occurred on the reception.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_rush",
+    "Description": "Binary indicator for if a lateral occurred on a run.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_return",
+    "Description": "Binary indicator for if a lateral occurred on a return. Returns may occur on any of: interception, fumble, kickoff, punt, or blocked kicks.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_recovery",
+    "Description": "Binary indicator for if a lateral occurred on a fumble recovery.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "passer_player_id",
+    "Description": "Unique identifier for the player that attempted the pass.",
+    "Type": "character"
+  },
+  {
+    "Field": "passer_player_name",
+    "Description": "String name for the player that attempted the pass.",
+    "Type": "character"
+  },
+  {
+    "Field": "passing_yards",
+    "Description": "Numeric yards by the passer_player_name, including yards gained in pass plays with laterals. This should equal official passing statistics.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "receiver_player_id",
+    "Description": "Unique identifier for the receiver that was targeted on the pass.",
+    "Type": "character"
+  },
+  {
+    "Field": "receiver_player_name",
+    "Description": "String name for the targeted receiver.",
+    "Type": "character"
+  },
+  {
+    "Field": "receiving_yards",
+    "Description": "Numeric yards by the receiver_player_name, excluding yards gained in pass plays with laterals. This should equal official receiving statistics but could miss yards gained in pass plays with laterals. Please see the description of `lateral_receiver_player_name` for further information.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "rusher_player_id",
+    "Description": "Unique identifier for the player that attempted the run.",
+    "Type": "character"
+  },
+  {
+    "Field": "rusher_player_name",
+    "Description": "String name for the player that attempted the run.",
+    "Type": "character"
+  },
+  {
+    "Field": "rushing_yards",
+    "Description": "Numeric yards by the rusher_player_name, excluding yards gained in rush plays with laterals. This should equal official rushing statistics but could miss yards gained in rush plays with laterals. Please see the description of `lateral_rusher_player_name` for further information.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_receiver_player_id",
+    "Description": "Unique identifier for the player that received the last(!) lateral on a pass play.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_receiver_player_name",
+    "Description": "String name for the player that received the last(!) lateral on a pass play. If there were multiple laterals in the same play, this will only be the last player who received a lateral. Please see <https://github.com/mrcaseb/nfl-data/tree/master/data/lateral_yards> for a list of plays where multiple players recorded lateral receiving yards.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_receiving_yards",
+    "Description": "Numeric yards by the `lateral_receiver_player_name` in pass plays with laterals. Please see the description of `lateral_receiver_player_name` for further information.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_rusher_player_id",
+    "Description": "Unique identifier for the player that received the last(!) lateral on a run play.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_rusher_player_name",
+    "Description": "String name for the player that received the last(!) lateral on a run play. If there were multiple laterals in the same play, this will only be the last player who received a lateral. Please see <https://github.com/mrcaseb/nfl-data/tree/master/data/lateral_yards> for a list of plays where multiple players recorded lateral rushing yards.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_rushing_yards",
+    "Description": "Numeric yards by the `lateral_rusher_player_name` in run plays with laterals. Please see the description of `lateral_rusher_player_name` for further information.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "lateral_sack_player_id",
+    "Description": "Unique identifier for the player that received the lateral on a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_sack_player_name",
+    "Description": "String name for the player that received the lateral on a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "interception_player_id",
+    "Description": "Unique identifier for the player that intercepted the pass.",
+    "Type": "character"
+  },
+  {
+    "Field": "interception_player_name",
+    "Description": "String name for the player that intercepted the pass.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_interception_player_id",
+    "Description": "Unique indentifier for the player that received the lateral on an interception.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_interception_player_name",
+    "Description": "String name for the player that received the lateral on an interception.",
+    "Type": "character"
+  },
+  {
+    "Field": "punt_returner_player_id",
+    "Description": "Unique identifier for the punt returner.",
+    "Type": "character"
+  },
+  {
+    "Field": "punt_returner_player_name",
+    "Description": "String name for the punt returner.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_punt_returner_player_id",
+    "Description": "Unique identifier for the player that received the lateral on a punt return.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_punt_returner_player_name",
+    "Description": "String name for the player that received the lateral on a punt return.",
+    "Type": "character"
+  },
+  {
+    "Field": "kickoff_returner_player_name",
+    "Description": "String name for the kickoff returner.",
+    "Type": "character"
+  },
+  {
+    "Field": "kickoff_returner_player_id",
+    "Description": "Unique identifier for the kickoff returner.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_kickoff_returner_player_id",
+    "Description": "Unique identifier for the player that received the lateral on a kickoff return.",
+    "Type": "character"
+  },
+  {
+    "Field": "lateral_kickoff_returner_player_name",
+    "Description": "String name for the player that received the lateral on a kickoff return.",
+    "Type": "character"
+  },
+  {
+    "Field": "punter_player_id",
+    "Description": "Unique identifier for the punter.",
+    "Type": "character"
+  },
+  {
+    "Field": "punter_player_name",
+    "Description": "String name for the punter.",
+    "Type": "character"
+  },
+  {
+    "Field": "kicker_player_name",
+    "Description": "String name for the kicker on FG or kickoff.",
+    "Type": "character"
+  },
+  {
+    "Field": "kicker_player_id",
+    "Description": "Unique identifier for the kicker on FG or kickoff.",
+    "Type": "character"
+  },
+  {
+    "Field": "own_kickoff_recovery_player_id",
+    "Description": "Unique identifier for the player that recovered their own kickoff.",
+    "Type": "character"
+  },
+  {
+    "Field": "own_kickoff_recovery_player_name",
+    "Description": "String name for the player that recovered their own kickoff.",
+    "Type": "character"
+  },
+  {
+    "Field": "blocked_player_id",
+    "Description": "Unique identifier for the player that blocked the punt or FG.",
+    "Type": "character"
+  },
+  {
+    "Field": "blocked_player_name",
+    "Description": "String name for the player that blocked the punt or FG.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_for_loss_1_player_id",
+    "Description": "Unique identifier for one of the potential players with the tackle for loss.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_for_loss_1_player_name",
+    "Description": "String name for one of the potential players with the tackle for loss.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_for_loss_2_player_id",
+    "Description": "Unique identifier for one of the potential players with the tackle for loss.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_for_loss_2_player_name",
+    "Description": "String name for one of the potential players with the tackle for loss.",
+    "Type": "character"
+  },
+  {
+    "Field": "qb_hit_1_player_id",
+    "Description": "Unique identifier for one of the potential players that hit the QB. No sack as the QB was not the ball carrier. For sacks please see `sack_player` or `half_sack_*_player`.",
+    "Type": "character"
+  },
+  {
+    "Field": "qb_hit_1_player_name",
+    "Description": "String name for one of the potential players that hit the QB. No sack as the QB was not the ball carrier. For sacks please see `sack_player` or `half_sack_*_player`.",
+    "Type": "character"
+  },
+  {
+    "Field": "qb_hit_2_player_id",
+    "Description": "Unique identifier for one of the potential players that hit the QB. No sack as the QB was not the ball carrier. For sacks please see `sack_player` or `half_sack_*_player`.",
+    "Type": "character"
+  },
+  {
+    "Field": "qb_hit_2_player_name",
+    "Description": "String name for one of the potential players that hit the QB. No sack as the QB was not the ball carrier. For sacks please see `sack_player` or `half_sack_*_player`.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_1_team",
+    "Description": "Team of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_1_player_id",
+    "Description": "Unique identifier of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_1_player_name",
+    "Description": "String name of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_2_team",
+    "Description": "Team of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_2_player_id",
+    "Description": "Unique identifier of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "forced_fumble_player_2_player_name",
+    "Description": "String name of one of the players with a forced fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_1_team",
+    "Description": "Team of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_2_team",
+    "Description": "Team of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_1_player_id",
+    "Description": "Unique identifier of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_2_player_id",
+    "Description": "Unique identifier of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_1_player_name",
+    "Description": "String name of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "solo_tackle_2_player_name",
+    "Description": "String name of one of the players with a solo tackle.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_1_player_id",
+    "Description": "Unique identifier of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_1_player_name",
+    "Description": "String name of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_1_team",
+    "Description": "Team of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_2_player_id",
+    "Description": "Unique identifier of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_2_player_name",
+    "Description": "String name of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_2_team",
+    "Description": "Team of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_3_player_id",
+    "Description": "Unique identifier of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_3_player_name",
+    "Description": "String name of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_3_team",
+    "Description": "Team of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_4_player_id",
+    "Description": "Unique identifier of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_4_player_name",
+    "Description": "String name of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "assist_tackle_4_team",
+    "Description": "Team of one of the players with a tackle assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist",
+    "Description": "Binary indicator for if there has been a tackle with assist.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "tackle_with_assist_1_player_id",
+    "Description": "Unique identifier of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist_1_player_name",
+    "Description": "String name of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist_1_team",
+    "Description": "Team of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist_2_player_id",
+    "Description": "Unique identifier of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist_2_player_name",
+    "Description": "String name of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "tackle_with_assist_2_team",
+    "Description": "Team of one of the players with a tackle with assist.",
+    "Type": "character"
+  },
+  {
+    "Field": "pass_defense_1_player_id",
+    "Description": "Unique identifier of one of the players with a pass defense.",
+    "Type": "character"
+  },
+  {
+    "Field": "pass_defense_1_player_name",
+    "Description": "String name of one of the players with a pass defense.",
+    "Type": "character"
+  },
+  {
+    "Field": "pass_defense_2_player_id",
+    "Description": "Unique identifier of one of the players with a pass defense.",
+    "Type": "character"
+  },
+  {
+    "Field": "pass_defense_2_player_name",
+    "Description": "String name of one of the players with a pass defense.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_1_team",
+    "Description": "Team of one of the first player with a fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_1_player_id",
+    "Description": "Unique identifier of the first player who fumbled on the play.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_1_player_name",
+    "Description": "String name of one of the first player who fumbled on the play.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_2_player_id",
+    "Description": "Unique identifier of the second player who fumbled on the play.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_2_player_name",
+    "Description": "String name of one of the second player who fumbled on the play.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumbled_2_team",
+    "Description": "Team of one of the second player with a fumble.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_1_team",
+    "Description": "Team of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_1_yards",
+    "Description": "Yards gained by one of the players with a fumble recovery.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_recovery_1_player_id",
+    "Description": "Unique identifier of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_1_player_name",
+    "Description": "String name of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_2_team",
+    "Description": "Team of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_2_yards",
+    "Description": "Yards gained by one of the players with a fumble recovery.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fumble_recovery_2_player_id",
+    "Description": "Unique identifier of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "fumble_recovery_2_player_name",
+    "Description": "String name of one of the players with a fumble recovery.",
+    "Type": "character"
+  },
+  {
+    "Field": "sack_player_id",
+    "Description": "Unique identifier of the player who recorded a solo sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "sack_player_name",
+    "Description": "String name of the player who recorded a solo sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "half_sack_1_player_id",
+    "Description": "Unique identifier of the first player who recorded half a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "half_sack_1_player_name",
+    "Description": "String name of the first player who recorded half a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "half_sack_2_player_id",
+    "Description": "Unique identifier of the second player who recorded half a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "half_sack_2_player_name",
+    "Description": "String name of the second player who recorded half a sack.",
+    "Type": "character"
+  },
+  {
+    "Field": "return_team",
+    "Description": "String abbreviation of the return team. Returns may occur on any of: interception, fumble, kickoff, punt, or blocked kicks.",
+    "Type": "character"
+  },
+  {
+    "Field": "return_yards",
+    "Description": "Yards gained by the return team. Returns may occur on any of: interception, fumble, kickoff, punt, or blocked kicks.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "penalty_team",
+    "Description": "String abbreviation of the team with the penalty.",
+    "Type": "character"
+  },
+  {
+    "Field": "penalty_player_id",
+    "Description": "Unique identifier for the player with the penalty.",
+    "Type": "character"
+  },
+  {
+    "Field": "penalty_player_name",
+    "Description": "String name for the player with the penalty.",
+    "Type": "character"
+  },
+  {
+    "Field": "penalty_yards",
+    "Description": "Yards gained (or lost) by the posteam from the penalty.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "replay_or_challenge",
+    "Description": "Binary indicator for whether or not a replay or challenge.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "replay_or_challenge_result",
+    "Description": "String indicating the result of the replay or challenge.",
+    "Type": "character"
+  },
+  {
+    "Field": "penalty_type",
+    "Description": "String indicating the penalty type of the first penalty in the given play. Will be `NA` if `desc` is missing the type.",
+    "Type": "character"
+  },
+  {
+    "Field": "defensive_two_point_attempt",
+    "Description": "Binary indicator whether or not the defense was able to have an attempt on a two point conversion, this results following a turnover.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defensive_two_point_conv",
+    "Description": "Binary indicator whether or not the defense successfully scored on the two point conversion.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defensive_extra_point_attempt",
+    "Description": "Binary indicator whether or not the defense was able to have an attempt on an extra point attempt, this results following a blocked attempt that the defense recovers the ball.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "defensive_extra_point_conv",
+    "Description": "Binary indicator whether or not the defense successfully scored on an extra point attempt.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "safety_player_name",
+    "Description": "String name for the player who scored a safety.",
+    "Type": "character"
+  },
+  {
+    "Field": "safety_player_id",
+    "Description": "Unique identifier for the player who scored a safety.",
+    "Type": "character"
+  },
+  {
+    "Field": "season",
+    "Description": "4 digit number indicating to which season the game belongs to.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "cp",
+    "Description": "Numeric value indicating the probability for a complete pass based on comparable game situations.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "cpoe",
+    "Description": "For a single pass play this is 1 - cp when the pass was completed or 0 - cp when the pass was incomplete. Analyzed for a whole game or season an indicator for the passer how much over or under expectation his completion percentage was.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "series",
+    "Description": "Starts at 1, each new first down increments, numbers shared across both teams NA: kickoffs, extra point/two point conversion attempts, non-plays, no posteam",
+    "Type": "numeric"
+  },
+  {
+    "Field": "series_success",
+    "Description": "1: scored touchdown, gained enough yards for first down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "series_result",
+    "Description": "Possible values: First down, Touchdown, Opp touchdown, Field goal, Missed field goal, Safety, Turnover, Punt, Turnover on downs, QB kneel, End of half",
+    "Type": "character"
+  },
+  {
+    "Field": "order_sequence",
+    "Description": "Column provided by NFL to fix out-of-order plays. Available 2011 and beyond with source \"nfl\".",
+    "Type": "numeric"
+  },
+  {
+    "Field": "start_time",
+    "Description": "Kickoff time in eastern time zone.",
+    "Type": "character"
+  },
+  {
+    "Field": "time_of_day",
+    "Description": "Time of day of play in UTC \"HH:MM:SS\" format. Available 2011 and beyond with source \"nfl\".",
+    "Type": "character"
+  },
+  {
+    "Field": "stadium",
+    "Description": "Game site name.",
+    "Type": "character"
+  },
+  {
+    "Field": "weather",
+    "Description": "String describing the weather including temperature, humidity and wind (direction and speed). Doesn't change during the game!",
+    "Type": "character"
+  },
+  {
+    "Field": "nfl_api_id",
+    "Description": "UUID of the game in the new NFL API.",
+    "Type": "character"
+  },
+  {
+    "Field": "play_clock",
+    "Description": "Time on the playclock when the ball was snapped.",
+    "Type": "character"
+  },
+  {
+    "Field": "play_deleted",
+    "Description": "Binary indicator for deleted plays.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "play_type_nfl",
+    "Description": "Play type as listed in the NFL source. Slightly different to the regular play_type variable.",
+    "Type": "character"
+  },
+  {
+    "Field": "special_teams_play",
+    "Description": "Binary indicator for whether play is special teams play from NFL source. Available 2011 and beyond with source \"nfl\".",
+    "Type": "numeric"
+  },
+  {
+    "Field": "st_play_type",
+    "Description": "Type of special teams play from NFL source. Available 2011 and beyond with source \"nfl\".",
+    "Type": "character"
+  },
+  {
+    "Field": "end_clock_time",
+    "Description": "Game time at the end of a given play.",
+    "Type": "character"
+  },
+  {
+    "Field": "end_yard_line",
+    "Description": "String indicating the yardline at the end of the given play consisting of team half and yard line number.",
+    "Type": "character"
+  },
+  {
+    "Field": "fixed_drive",
+    "Description": "Manually created drive number in a game.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "fixed_drive_result",
+    "Description": "Manually created drive result.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_real_start_time",
+    "Description": "Local day time when the drive started (currently not used by the NFL and therefore mostly 'NA').",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_play_count",
+    "Description": "Numeric value of how many regular plays happened in a given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_time_of_possession",
+    "Description": "Time of possession in a given drive.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_first_downs",
+    "Description": "Number of forst downs in a given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_inside20",
+    "Description": "Binary indicator if the offense was able to get inside the opponents 20 yard line.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_ended_with_score",
+    "Description": "Binary indicator the drive ended with a score.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_quarter_start",
+    "Description": "Numeric value indicating in which quarter the given drive has started.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_quarter_end",
+    "Description": "Numeric value indicating in which quarter the given drive has ended.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_yards_penalized",
+    "Description": "Numeric value of how many yards the offense gained or lost through penalties in the given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_start_transition",
+    "Description": "String indicating how the offense got the ball.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_end_transition",
+    "Description": "String indicating how the offense lost the ball.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_game_clock_start",
+    "Description": "Game time at the beginning of a given drive.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_game_clock_end",
+    "Description": "Game time at the end of a given drive.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_start_yard_line",
+    "Description": "String indicating where a given drive started consisting of team half and yard line number.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_end_yard_line",
+    "Description": "String indicating where a given drive ended consisting of team half and yard line number.",
+    "Type": "character"
+  },
+  {
+    "Field": "drive_play_id_started",
+    "Description": "Play_id of the first play in the given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "drive_play_id_ended",
+    "Description": "Play_id of the last play in the given drive.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "away_score",
+    "Description": "Total points scored by the away team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "home_score",
+    "Description": "Total points scored by the home team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "location",
+    "Description": "Either 'Home' o 'Neutral' indicating if the home team played at home or at a neutral site.",
+    "Type": "character"
+  },
+  {
+    "Field": "result",
+    "Description": "Equals home_score - away_score and means the game outcome from the perspective of the home team.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total",
+    "Description": "Equals home_score + away_score and means the total points scored in the given game.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "spread_line",
+    "Description": "The closing spread line for the game. A positive number means the home team was favored by that many points, a negative number means the away team was favored by that many points. (Source: Pro-Football-Reference)",
+    "Type": "numeric"
+  },
+  {
+    "Field": "total_line",
+    "Description": "The closing total line for the game. (Source: Pro-Football-Reference)",
+    "Type": "numeric"
+  },
+  {
+    "Field": "div_game",
+    "Description": "Binary indicator for if the given game was a division game.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "roof",
+    "Description": "One of 'dome', 'outdoors', 'closed', 'open' indicating indicating the roof status of the stadium the game was played in. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "surface",
+    "Description": "What type of ground the game was played on. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "temp",
+    "Description": "The temperature at the stadium only for 'roof' = 'outdoors' or 'open'.(Source: Pro-Football-Reference)",
+    "Type": "numeric"
+  },
+  {
+    "Field": "wind",
+    "Description": "The speed of the wind in miles/hour only for 'roof' = 'outdoors' or 'open'. (Source: Pro-Football-Reference)",
+    "Type": "numeric"
+  },
+  {
+    "Field": "home_coach",
+    "Description": "First and last name of the home team coach. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "away_coach",
+    "Description": "First and last name of the away team coach. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "stadium_id",
+    "Description": "ID of the stadium the game was played in. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "game_stadium",
+    "Description": "Name of the stadium the game was played in. (Source: Pro-Football-Reference)",
+    "Type": "character"
+  },
+  {
+    "Field": "success",
+    "Description": "Binary indicator wheter epa > 0 in the given play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "passer",
+    "Description": "Name of the dropback player (scrambles included) including plays with penalties.",
+    "Type": "character"
+  },
+  {
+    "Field": "passer_jersey_number",
+    "Description": "Jersey number of the passer.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "rusher",
+    "Description": "Name of the rusher (no scrambles) including plays with penalties.",
+    "Type": "character"
+  },
+  {
+    "Field": "rusher_jersey_number",
+    "Description": "Jersey number of the rusher.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "receiver",
+    "Description": "Name of the receiver including plays with penalties.",
+    "Type": "character"
+  },
+  {
+    "Field": "receiver_jersey_number",
+    "Description": "Jersey number of the receiver.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "pass",
+    "Description": "Binary indicator if the play was a pass play (sacks and scrambles included).",
+    "Type": "numeric"
+  },
+  {
+    "Field": "rush",
+    "Description": "Binary indicator if the play was a rushing play.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "first_down",
+    "Description": "Binary indicator if the play ended in a first down.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "aborted_play",
+    "Description": "Binary indicator if the play description indicates \"Aborted\".",
+    "Type": "numeric"
+  },
+  {
+    "Field": "special",
+    "Description": "Binary indicator if \"play_type\" is one of \"extra_point\", \"field_goal\", \"kickoff\", or \"punt\".",
+    "Type": "numeric"
+  },
+  {
+    "Field": "play",
+    "Description": "Binary indicator: 1 if the play was a 'normal' play (including penalties), 0 otherwise.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "passer_id",
+    "Description": "ID of the player in the 'passer' column.",
+    "Type": "character"
+  },
+  {
+    "Field": "rusher_id",
+    "Description": "ID of the player in the 'rusher' column.",
+    "Type": "character"
+  },
+  {
+    "Field": "receiver_id",
+    "Description": "ID of the player in the 'receiver' column.",
+    "Type": "character"
+  },
+  {
+    "Field": "name",
+    "Description": "Name of the 'passer' if it is not 'NA', or name of the 'rusher' otherwise.",
+    "Type": "character"
+  },
+  {
+    "Field": "jersey_number",
+    "Description": "Jersey number of the player listed in the 'name' column.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "id",
+    "Description": "ID of the player in the 'name' column.",
+    "Type": "character"
+  },
+  {
+    "Field": "fantasy_player_name",
+    "Description": "Name of the rusher on rush plays or receiver on pass plays (from official stats).",
+    "Type": "character"
+  },
+  {
+    "Field": "fantasy_player_id",
+    "Description": "ID of the rusher on rush plays or receiver on pass plays (from official stats).",
+    "Type": "character"
+  },
+  {
+    "Field": "fantasy",
+    "Description": "Name of the rusher on rush plays or receiver on pass plays.",
+    "Type": "character"
+  },
+  {
+    "Field": "fantasy_id",
+    "Description": "ID of the rusher on rush plays or receiver on pass plays.",
+    "Type": "character"
+  },
+  {
+    "Field": "out_of_bounds",
+    "Description": "1 if play description contains ran ob, pushed ob, or sacked ob; 0 otherwise.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "home_opening_kickoff",
+    "Description": "1 if the home team received the opening kickoff, 0 otherwise.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "qb_epa",
+    "Description": "Gives QB credit for EPA for up to the point where a receiver lost a fumble after a completed catch and makes EPA work more like passing yards on plays with fumbles.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xyac_epa",
+    "Description": "Expected value of EPA gained after the catch, starting from where the catch was made. Zero yards after the catch would be listed as zero EPA.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xyac_mean_yardage",
+    "Description": "Average expected yards after the catch based on where the ball was caught.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xyac_median_yardage",
+    "Description": "Median expected yards after the catch based on where the ball was caught.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xyac_success",
+    "Description": "Probability play earns positive EPA (relative to where play started) based on where ball was caught.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xyac_fd",
+    "Description": "Probability play earns a first down based on where the ball was caught.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "xpass",
+    "Description": "Probability of dropback scaled from 0 to 1.",
+    "Type": "numeric"
+  },
+  {
+    "Field": "pass_oe",
+    "Description": "Dropback percent over expected on a given play scaled from 0 to 100.",
+    "Type": "numeric"
+  }
+]

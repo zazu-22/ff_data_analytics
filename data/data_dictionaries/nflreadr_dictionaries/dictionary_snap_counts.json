@@ -1,0 +1,82 @@
+[
+  {
+    "field": "game_id",
+    "data_type": "character",
+    "description": "nflfastR game ID"
+  },
+  {
+    "field": "pfr_game_id",
+    "data_type": "character",
+    "description": "PFR game ID"
+  },
+  {
+    "field": "season",
+    "data_type": "numeric",
+    "description": "Season of game"
+  },
+  {
+    "field": "game_type",
+    "data_type": "character",
+    "description": "Type of game (regular or postseason)"
+  },
+  {
+    "field": "week",
+    "data_type": "numeric",
+    "description": "Week of game in NFL season"
+  },
+  {
+    "field": "player",
+    "data_type": "character",
+    "description": "Player name"
+  },
+  {
+    "field": "pfr_player_id",
+    "data_type": "character",
+    "description": "Player PFR ID"
+  },
+  {
+    "field": "position",
+    "data_type": "character",
+    "description": "Position of player"
+  },
+  {
+    "field": "team",
+    "data_type": "character",
+    "description": "Team of player"
+  },
+  {
+    "field": "opponent",
+    "data_type": "character",
+    "description": "Opposing team of player"
+  },
+  {
+    "field": "offense_snaps",
+    "data_type": "numeric",
+    "description": "Number of snaps on offense"
+  },
+  {
+    "field": "offense_pct",
+    "data_type": "numeric",
+    "description": "Percent of offensive snaps taken"
+  },
+  {
+    "field": "defense_snaps",
+    "data_type": "numeric",
+    "description": "Number of snaps on defense"
+  },
+  {
+    "field": "defense_pct",
+    "data_type": "numeric",
+    "description": "Percent of defensive snaps taken"
+  },
+  {
+    "field": "st_snaps",
+    "data_type": "numeric",
+    "description": "Number of snaps on special teams"
+  },
+  {
+    "field": "st_pct",
+    "data_type": "numeric",
+    "description": "Percent of special teams snaps taken"
+  }
+]

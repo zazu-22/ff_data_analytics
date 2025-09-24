@@ -1,0 +1,197 @@
+[
+  {
+    "field": "gsis_id",
+    "data_type": "character",
+    "description": "GSIS ID for player. Primary key for all data."
+  },
+  {
+    "field": "display_name",
+    "data_type": "character",
+    "description": "Full name of player"
+  },
+  {
+    "field": "common_first_name",
+    "data_type": "character",
+    "description": "Common first name of player"
+  },
+  {
+    "field": "first_name",
+    "data_type": "character",
+    "description": "First name of player"
+  },
+  {
+    "field": "last_name",
+    "data_type": "character",
+    "description": "Last name of player"
+  },
+  {
+    "field": "short_name",
+    "data_type": "character",
+    "description": "Player short name (i.e. F.Last)"
+  },
+  {
+    "field": "football_name",
+    "data_type": "character",
+    "description": "Common player name (i.e. in most cases common_first_name last_name)"
+  },
+  {
+    "field": "suffix",
+    "data_type": "character",
+    "description": "Name suffix of player"
+  },
+  {
+    "field": "esb_id",
+    "data_type": "character",
+    "description": "ESB ID of player"
+  },
+  {
+    "field": "nfl_id",
+    "data_type": "character",
+    "description": "NFL ID of player (this is used in Big Data Bowl Data)"
+  },
+  {
+    "field": "pfr_id",
+    "data_type": "character",
+    "description": "Pro-Football-Reference ID for player"
+  },
+  {
+    "field": "pff_id",
+    "data_type": "character",
+    "description": "PFF ID for player"
+  },
+  {
+    "field": "otc_id",
+    "data_type": "character",
+    "description": "Over the Cap ID for player"
+  },
+  {
+    "field": "espn_id",
+    "data_type": "character",
+    "description": "ESPN ID for player"
+  },
+  {
+    "field": "smart_id",
+    "data_type": "character",
+    "description": "SMART ID for player (that's in raw pbp. It includes a hashed ESB_ID)"
+  },
+  {
+    "field": "birth_date",
+    "data_type": "character",
+    "description": "Player birth date (sourced from NFL. Other sources may differ)"
+  },
+  {
+    "field": "position_group",
+    "data_type": "character",
+    "description": "Postion group of player as listed by NFL"
+  },
+  {
+    "field": "position",
+    "data_type": "character",
+    "description": "Position of player as listed by NFL"
+  },
+  {
+    "field": "ngs_position_group",
+    "data_type": "character",
+    "description": "Position group of player as listed by Next Gen Stats"
+  },
+  {
+    "field": "ngs_position",
+    "data_type": "character",
+    "description": "Position of player as listed by Next Gen Stats"
+  },
+  {
+    "field": "headshot",
+    "data_type": "character",
+    "description": "NFL headshot url for player"
+  },
+  {
+    "field": "college_name",
+    "data_type": "character",
+    "description": "Official college (usually the last one attended)"
+  },
+  {
+    "field": "college_conference",
+    "data_type": "character",
+    "description": "Conference of college"
+  },
+  {
+    "field": "jersey_number",
+    "data_type": "character",
+    "description": "Latest jersey number of player"
+  },
+  {
+    "field": "latest_team",
+    "data_type": "character",
+    "description": "Latest team the player was listed in"
+  },
+  {
+    "field": "status",
+    "data_type": "character",
+    "description": "Roster status: describes things like Active, Inactive, Injured Reserve, Practice Squad etc"
+  },
+  {
+    "field": "ngs_status",
+    "data_type": "character",
+    "description": "Next Gen Stats variant of status"
+  },
+  {
+    "field": "ngs_status_short_description",
+    "data_type": "character",
+    "description": "Next Gen Stats status description"
+  },
+  {
+    "field": "pff_position",
+    "data_type": "character",
+    "description": "Position of player as listed by PFF"
+  },
+  {
+    "field": "pff_status",
+    "data_type": "character",
+    "description": "Roster status as listed by PFF"
+  },
+  {
+    "field": "draft_team",
+    "data_type": "character",
+    "description": "Team that drafted player"
+  },
+  {
+    "field": "height",
+    "data_type": "numeric",
+    "description": "Height of player (inches)"
+  },
+  {
+    "field": "weight",
+    "data_type": "numeric",
+    "description": "Weight of player (lbs)"
+  },
+  {
+    "field": "rookie_season",
+    "data_type": "numeric",
+    "description": "4 digit number indicating which season the player was a rookie"
+  },
+  {
+    "field": "last_season",
+    "data_type": "numeric",
+    "description": "4 digit number indicating which season the player was active the last time"
+  },
+  {
+    "field": "years_of_experience",
+    "data_type": "numeric",
+    "description": "Years played in league"
+  },
+  {
+    "field": "draft_year",
+    "data_type": "numeric",
+    "description": "Year that player was drafted"
+  },
+  {
+    "field": "draft_round",
+    "data_type": "numeric",
+    "description": "Round that player was drafted in"
+  },
+  {
+    "field": "draft_pick",
+    "data_type": "numeric",
+    "description": "Pick number of player"
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "field": "season",
+    "data_type": "integer",
+    "description": "Draft Year"
+  },
+  {
+    "field": "round",
+    "data_type": "integer",
+    "description": "Draft round"
+  },
+  {
+    "field": "pick",
+    "data_type": "integer",
+    "description": "Draft overall pick"
+  },
+  {
+    "field": "team",
+    "data_type": "character",
+    "description": "Draft team"
+  },
+  {
+    "field": "gsis_id",
+    "data_type": "character",
+    "description": "ID for joining with nflverse data"
+  },
+  {
+    "field": "pfr_player_id",
+    "data_type": "character",
+    "description": "ID from Pro Football Reference"
+  },
+  {
+    "field": "cfb_player_id",
+    "data_type": "character",
+    "description": "ID from College Football Reference"
+  },
+  {
+    "field": "pfr_player_name",
+    "data_type": "character",
+    "description": "Player's name as recorded by PFR"
+  },
+  {
+    "field": "hof",
+    "data_type": "logical",
+    "description": "Whether player has been selected to the Pro Football Hall of Fame"
+  },
+  {
+    "field": "position",
+    "data_type": "character",
+    "description": "Player position as recorded by PFR"
+  },
+  {
+    "field": "category",
+    "data_type": "character",
+    "description": "Broader category of player positions"
+  },
+  {
+    "field": "side",
+    "data_type": "character",
+    "description": "O for offense, D for defense, S for special teams"
+  },
+  {
+    "field": "college",
+    "data_type": "character",
+    "description": "College attended in final year"
+  },
+  {
+    "field": "age",
+    "data_type": "integer",
+    "description": "Player age as of draft"
+  },
+  {
+    "field": "to",
+    "data_type": "integer",
+    "description": "Final season played in NFL"
+  },
+  {
+    "field": "allpro",
+    "data_type": "numeric",
+    "description": "Number of AP First Team All-Pro selections as recorded by PFR"
+  },
+  {
+    "field": "probowls",
+    "data_type": "numeric",
+    "description": "Number of Pro Bowls"
+  },
+  {
+    "field": "seasons_started",
+    "data_type": "numeric",
+    "description": "Number of seasons recorded as primary starter for position"
+  },
+  {
+    "field": "w_av",
+    "data_type": "numeric",
+    "description": "Weighted Approximate Value"
+  },
+  {
+    "field": "car_av",
+    "data_type": "numeric",
+    "description": "Career Approximate Value"
+  },
+  {
+    "field": "dr_av",
+    "data_type": "numeric",
+    "description": "Draft Approximate Value"
+  },
+  {
+    "field": "games",
+    "data_type": "numeric",
+    "description": "Games played in career"
+  },
+  {
+    "field": "pass_completions",
+    "data_type": "numeric",
+    "description": "Career pass completions"
+  },
+  {
+    "field": "pass_attempts",
+    "data_type": "numeric",
+    "description": "Career pass attempts"
+  },
+  {
+    "field": "pass_yards",
+    "data_type": "numeric",
+    "description": "Career pass yards thrown"
+  },
+  {
+    "field": "pass_tds",
+    "data_type": "numeric",
+    "description": "Career pass touchdowns thrown"
+  },
+  {
+    "field": "pass_ints",
+    "data_type": "numeric",
+    "description": "Career pass interceptions thrown"
+  },
+  {
+    "field": "rush_atts",
+    "data_type": "numeric",
+    "description": "Career rushing attempts"
+  },
+  {
+    "field": "rush_yards",
+    "data_type": "numeric",
+    "description": "Career rushing yards"
+  },
+  {
+    "field": "rush_tds",
+    "data_type": "numeric",
+    "description": "Career rushing touchdowns"
+  },
+  {
+    "field": "receptions",
+    "data_type": "numeric",
+    "description": "Career receptions"
+  },
+  {
+    "field": "rec_yards",
+    "data_type": "numeric",
+    "description": "Career receiving yards"
+  },
+  {
+    "field": "rec_tds",
+    "data_type": "numeric",
+    "description": "Career receiving touchdowns"
+  },
+  {
+    "field": "def_solo_tackles",
+    "data_type": "numeric",
+    "description": "Career solo tackles"
+  },
+  {
+    "field": "def_ints",
+    "data_type": "numeric",
+    "description": "Career interceptions"
+  },
+  {
+    "field": "def_sacks",
+    "data_type": "numeric",
+    "description": "Career sacks"
+  }
+]

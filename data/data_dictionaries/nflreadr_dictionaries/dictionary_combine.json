@@ -1,0 +1,92 @@
+[
+  {
+    "field": "season",
+    "data_type": "numeric",
+    "description": "4 digit number indicating which season(s) the specified combine occurred."
+  },
+  {
+    "field": "draft_year",
+    "data_type": "numeric",
+    "description": "Year that player was drafted"
+  },
+  {
+    "field": "draft_team",
+    "data_type": "character",
+    "description": "Team that drafted player"
+  },
+  {
+    "field": "draft_round",
+    "data_type": "numeric",
+    "description": "Round that player was drafted in"
+  },
+  {
+    "field": "draft_ovr",
+    "data_type": "numeric",
+    "description": "Pick number of player"
+  },
+  {
+    "field": "pfr_id",
+    "data_type": "numeric",
+    "description": "Pro-Football-Reference ID for player"
+  },
+  {
+    "field": "cfb_id",
+    "data_type": "numeric",
+    "description": "Sports Reference (CFB) ID for player"
+  },
+  {
+    "field": "player_name",
+    "data_type": "character",
+    "description": "Full name of player"
+  },
+  {
+    "field": "pos",
+    "data_type": "character",
+    "description": "Position of player"
+  },
+  {
+    "field": "school",
+    "data_type": "character",
+    "description": "College of player"
+  },
+  {
+    "field": "ht",
+    "data_type": "numeric",
+    "description": "Height of player (feet and inches)"
+  },
+  {
+    "field": "wt",
+    "data_type": "numeric",
+    "description": "Weight of player (lbs)"
+  },
+  {
+    "field": "forty",
+    "data_type": "numeric",
+    "description": "Player's 40 yard dash time at combine (seconds)"
+  },
+  {
+    "field": "bench",
+    "data_type": "numeric",
+    "description": "Reps benched by player at combine"
+  },
+  {
+    "field": "vertical",
+    "data_type": "numeric",
+    "description": "Player's vertical jump at combine (inches)"
+  },
+  {
+    "field": "broad_jump",
+    "data_type": "numeric",
+    "description": "Player's broad jump at combine (inches)"
+  },
+  {
+    "field": "cone",
+    "data_type": "numeric",
+    "description": "Player's 3 cone drill time at combine (seconds)"
+  },
+  {
+    "field": "shuttle",
+    "data_type": "numeric",
+    "description": "Player's shuttle run time at combine (seconds)"
+  }
+]

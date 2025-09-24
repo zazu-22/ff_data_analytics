@@ -1,0 +1,62 @@
+[
+  {
+    "field": "dt",
+    "data_type": "character",
+    "description": "The timestamp (ISO8601-formatted text) indicating when the data record was loaded. Can be used to assign the data set to a specific point in time during the season."
+  },
+  {
+    "field": "team",
+    "data_type": "character",
+    "description": "Team that depth chart belongs to"
+  },
+  {
+    "field": "player_name",
+    "data_type": "character",
+    "description": "Full name of player"
+  },
+  {
+    "field": "espn_id",
+    "data_type": "character",
+    "description": "ESPN Player ID"
+  },
+  {
+    "field": "gsis_id",
+    "data_type": "character",
+    "description": "Game Stats and Info Service ID: the primary ID for play-by-play data"
+  },
+  {
+    "field": "pos_grp_id",
+    "data_type": "character",
+    "description": "Player position group identifier"
+  },
+  {
+    "field": "pos_grp",
+    "data_type": "character",
+    "description": "Player position group: formation of offense, defense, or special teams"
+  },
+  {
+    "field": "pos_id",
+    "data_type": "character",
+    "description": "Player position identifier"
+  },
+  {
+    "field": "pos_name",
+    "data_type": "character",
+    "description": "Player position name"
+  },
+  {
+    "field": "pos_abb",
+    "data_type": "character",
+    "description": "Player position abbreviation"
+  },
+  {
+    "field": "pos_slot",
+    "data_type": "numeric",
+    "description": "A number assigned to each position in a formation"
+  },
+  {
+    "field": "pos_rank",
+    "data_type": "numeric",
+    "description": "Player's rank on depth chart grouped by pos_slot"
+  }
+]
