@@ -1,0 +1,31 @@
+projections:
+  method: weighted_average
+  weight_method: inverse_mae_with_bias_penalty
+  sites:
+  - id: fantasypros
+    name: FantasyPros
+    weight: 0.1305
+  - id: numberfire
+    name: NumberFire
+    weight: 0.12
+  - id: fantasysharks
+    name: FantasySharks
+    weight: 0.1176
+  - id: espn
+    name: ESPN
+    weight: 0.1155
+  - id: fftoday
+    name: FFToday
+    weight: 0.112
+  - id: cbs
+    name: CBS
+    weight: 0.1103
+  - id: nfl
+    name: NFL
+    weight: 0.1097
+  - id: rtsports
+    name: RTSports
+    weight: 0.0997
+  - id: walterfootball
+    name: WalterFootball
+    weight: 0.0846

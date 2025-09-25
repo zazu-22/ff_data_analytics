@@ -292,3 +292,80 @@ ff_duckdb:
       threads: 4
       extensions: [httpfs]
 ```
+
+
+---
+
+# Addendum — SPEC v2.2 (Consolidated)
+*(generated 2025-09-24T23:36:28.569837Z)*
+
+The following sections supersede or augment parts of v2:
+
+# SPEC-1 Consolidated (v2 → v2.2 patch)
+Generated: 2025-09-24T23:30:42.789792Z
+
+## Orchestration & Language Strategy (CONFIRMED + SHIM DETAILS)
+
+**Primary orchestrator:** Python (uv-managed).
+
+**Loaders**
+- **nflverse:** Python-first via `nflreadpy`, with a **Python shim** that falls back to `nflreadr` (R) when a dataset/utility is unavailable in Python or misbehaves.
+- **FFanalytics (projections):** R-native runner (invoked from Python); not part of the nflverse shim.
+
+### nflverse Shim (NEW)
+A unified Python entrypoint that:
+1) Tries `nflreadpy` for the requested dataset(s).
+2) On `NotImplementedError`, `AttributeError`, or explicit “no coverage” in the registry, calls an R script (`Rscript scripts/nflverse_load.R ...`) that uses `nflreadr`.
+3) Writes partitioned Parquet with a standard metadata footer and returns the output manifest.
+
+**Function signature (conceptual):**
+```python
+load_nflverse(dataset: str,
+              seasons: list[int] | int | None = None,
+              weeks: list[int] | int | None = None,
+              out_dir: str = "gs://ff-analytics/raw/nflverse",
+              loader_preference: str = "python_first", # or "r_only" / "python_only"
+              extra_args: dict | None = None) -> dict
+```
+
+**Behavior:**
+- **Registry-driven** mapping from logical dataset names to concrete loader calls.
+- **Tracing/logging:** log which path ran (`python` vs `r_fallback`), versions (`nflreadpy.__version__`, `nflreadr` session), and parameters.
+- **Contracts:** always produce the same schema per dataset regardless of loader; any loader-specific quirks are normalized in the shim before write.
+
+**Repo layout (relevant parts)**
+```
+/ingest/nflverse/
+  shim.py                 # load_nflverse(...) + registry & fallbacks
+  registry.py             # dataset→loader function map, coverage flags
+/scripts/R/
+  nflverse_load.R         # R entrypoint using nflreadr::load_* then writes Parquet
+  ffanalytics_run.R       # R entrypoint for weekly projections
+/config/
+  renv.lock               # pinned R packages (nflreadr >= 1.5.0, ffanalytics deps)
+  uv.lock                 # Python lock incl. nflreadpy, polars, pyarrow
+```
+
+**nflverse scheduling:**
+- Weekly Monday 08:00 UTC (in-season) + ad-hoc historical.
+- Optional overlay to twice-daily cron for injuries/depth charts if desired.
+
+**Version pins (as of today):**
+- `nflreadr` **1.5.0** (CRAN)
+- `nflreadpy` **0.1.1** (PyPI/GitHub lifecycle: experimental)
+- `polars` **>=0.20**; `pyarrow` **>=15**
+
+## FFanalytics Runner (CLARIFIED)
+- Invoked by Python (`subprocess`), but **not** behind the nflverse shim.
+- Outputs a long-form `fact_player_projections` with consistent schema; stores scrape logs and site coverage stats.
+- Config via YAML (sites, weights, scoring rules) passed to `ffanalytics_run.R`.
+
+## Storage Path Convention (CONFIRMED)
+- Raw: `gs://ff-analytics/raw/<provider>/<dataset>/dt=YYYY-MM-DD/`
+- Stage: `gs://ff-analytics/stage/<provider>/<dataset>/`
+- Mart: `gs://ff-analytics/mart/<domain>/...`
+- Always include `asof_datetime` (UTC), `source_name`, `source_version`, and `loader_path`.
+
+## Identity, Change Capture, Freshness (CONFIRMED)
+- No change from v2.1 patch; applies equally regardless of loader path.
+
