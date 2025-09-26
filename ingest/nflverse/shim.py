@@ -11,16 +11,15 @@ Usage:
 """
 
 from __future__ import annotations
+
 import importlib
 import json
 import os
-import sys
 import subprocess
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Union, Optional
-
 import uuid
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 try:
     import polars as pl
@@ -29,15 +28,20 @@ except Exception:
 
 from .registry import REGISTRY
 
+
 def _utcnow_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
+
 
 class LoaderResolutionError(RuntimeError):
     pass
 
-def _write_parquet(df, out_path: str, dataset: str, loader_path: str, source_name: str, source_version: str):
+
+def _write_parquet(
+    df, out_path: str, dataset: str, loader_path: str, source_name: str, source_version: str
+):
     """Write a polars or pandas dataframe to Parquet with a sidecar _meta.json."""
-    dt = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    dt = datetime.now(UTC).strftime("%Y-%m-%d")
     partition_dir = Path(out_path) / dataset / f"dt={dt}"
     partition_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"{dataset}_{uuid.uuid4().hex[:8]}.parquet"
@@ -55,11 +59,12 @@ def _write_parquet(df, out_path: str, dataset: str, loader_path: str, source_nam
         # Try pandas fallback
         try:
             import pandas as pd
+
             if not isinstance(df, pd.DataFrame):
                 df = pd.DataFrame(df)
             df.to_parquet(file_path.as_posix(), index=False, engine="pyarrow")
         except Exception as e:
-            raise RuntimeError(f"Failed to write Parquet: {e}")
+            raise RuntimeError(f"Failed to write Parquet: {e}") from e
 
     meta = {
         "dataset": dataset,
@@ -67,10 +72,16 @@ def _write_parquet(df, out_path: str, dataset: str, loader_path: str, source_nam
         "loader_path": loader_path,
         "source_name": source_name,
         "source_version": source_version,
-        "output_parquet": file_path.as_posix()
+        "output_parquet": file_path.as_posix(),
     }
     (partition_dir / "_meta.json").write_text(json.dumps(meta, indent=2))
-    return {"dataset": dataset, "partition_dir": partition_dir.as_posix(), "parquet_file": file_path.as_posix(), "meta": meta}
+    return {
+        "dataset": dataset,
+        "partition_dir": partition_dir.as_posix(),
+        "parquet_file": file_path.as_posix(),
+        "meta": meta,
+    }
+
 
 def _load_with_python(spec, seasons=None, weeks=None, **kwargs):
     loader_path = spec.py_loader
@@ -86,17 +97,18 @@ def _load_with_python(spec, seasons=None, weeks=None, **kwargs):
         source_version = "unknown"
     return df, f"python:{loader_path}", "nflverse", source_version
 
+
 def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
     # Call Rscript runner
     script = Path(__file__).resolve().parents[2] / "scripts" / "R" / "nflverse_load.R"
     cmd = ["Rscript", script.as_posix(), "--dataset", spec.name]
     if seasons is not None:
-        if isinstance(seasons, (list, tuple)):
+        if isinstance(seasons, list | tuple):
             cmd += ["--seasons", ",".join(map(str, seasons))]
         else:
             cmd += ["--seasons", str(seasons)]
     if weeks is not None:
-        if isinstance(weeks, (list, tuple)):
+        if isinstance(weeks, list | tuple):
             cmd += ["--weeks", ",".join(map(str, weeks))]
         else:
             cmd += ["--weeks", str(weeks)]
@@ -109,18 +121,24 @@ def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
         raise LoaderResolutionError(f"R loader failed: {proc.stderr[:500]}")
     # Expect runner to print a single-line JSON manifest to stdout
     try:
-        manifest = json.loads(proc.stdout.strip().splitlines()[-1])
+        json.loads(proc.stdout.strip().splitlines()[-1])
     except Exception:
-        manifest = {"note": "Runner did not return JSON manifest; check logs.", "stdout_tail": proc.stdout.strip()[-500:]}
+        {
+            "note": "Runner did not return JSON manifest; check logs.",
+            "stdout_tail": proc.stdout.strip()[-500:],
+        }
     # We still return manifest; caller can proceed
     return None, "r:nflreadr", "nflverse", "nflreadr"
 
-def load_nflverse(dataset: str,
-                  seasons: Optional[Union[int, List[int]]] = None,
-                  weeks: Optional[Union[int, List[int]]] = None,
-                  out_dir: str = "gs://ff-analytics/raw/nflverse",
-                  loader_preference: str = "python_first",
-                  **kwargs) -> Dict[str, Any]:
+
+def load_nflverse(
+    dataset: str,
+    seasons: int | list[int] | None = None,
+    weeks: int | list[int] | None = None,
+    out_dir: str = "gs://ff-analytics/raw/nflverse",
+    loader_preference: str = "python_first",
+    **kwargs,
+) -> dict[str, Any]:
     """
     Unified loader for nflverse datasets.
 
@@ -133,15 +151,32 @@ def load_nflverse(dataset: str,
     spec = REGISTRY[dataset]
 
     if loader_preference == "r_only":
-        _, loader_path, source_name, source_version = _load_with_r(spec, seasons=seasons, weeks=weeks, out_dir=out_dir, **kwargs)
-        return {"dataset": dataset, "loader_path": loader_path, "source_name": source_name, "source_version": source_version}
+        _, loader_path, source_name, source_version = _load_with_r(
+            spec, seasons=seasons, weeks=weeks, out_dir=out_dir, **kwargs
+        )
+        return {
+            "dataset": dataset,
+            "loader_path": loader_path,
+            "source_name": source_name,
+            "source_version": source_version,
+        }
 
     # Try python path first
     try:
-        df, loader_path, source_name, source_version = _load_with_python(spec, seasons=seasons, weeks=weeks, **kwargs)
+        df, loader_path, source_name, source_version = _load_with_python(
+            spec, seasons=seasons, weeks=weeks, **kwargs
+        )
         manifest = _write_parquet(df, out_dir, dataset, loader_path, source_name, source_version)
         return manifest
-    except (NotImplementedError, AttributeError, ModuleNotFoundError) as e:
+    except (NotImplementedError, AttributeError, ModuleNotFoundError):
         # Fallback to R
-        _, loader_path, source_name, source_version = _load_with_r(spec, seasons=seasons, weeks=weeks, out_dir=out_dir, **kwargs)
-        return {"dataset": dataset, "loader_path": loader_path, "source_name": source_name, "source_version": source_version, "fallback": True}
+        _, loader_path, source_name, source_version = _load_with_r(
+            spec, seasons=seasons, weeks=weeks, out_dir=out_dir, **kwargs
+        )
+        return {
+            "dataset": dataset,
+            "loader_path": loader_path,
+            "source_name": source_name,
+            "source_version": source_version,
+            "fallback": True,
+        }
