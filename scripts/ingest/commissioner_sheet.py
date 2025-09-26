@@ -104,30 +104,52 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
             rows, cols = 100, 50  # Default if properties not available
             logger.info(f"  Using default range: {rows} rows × {cols} columns")
 
-        # Use a specific range instead of get_all_values() to avoid timeout
-        # Limit to 50x50 which should cover all owner data
-        max_rows = min(rows, 50)
-        max_cols = min(cols, 50)
-
-        # Convert column number to letter (50 = AX)
-        col_letter = ''
-        n = max_cols
-        while n > 0:
-            n, remainder = divmod(n - 1, 26)
-            col_letter = chr(65 + remainder) + col_letter
-
-        range_str = f"A1:{col_letter}{max_rows}"
-        logger.info(f"  Reading range: {range_str}")
-
-        # Get values with specific range (with 30 second timeout)
-        signal.alarm(30)  # 30 second timeout
+        # First try a small test read to verify access works
+        logger.info(f"  Testing with small read (A1:C3)...")
+        signal.alarm(10)
         try:
-            values = worksheet.get(range_str)
-            signal.alarm(0)  # Cancel timeout if successful
+            test_values = worksheet.get("A1:C3")
+            signal.alarm(0)
+            logger.info(f"  ✓ Small read successful: {len(test_values)} rows")
         except TimeoutError:
-            logger.error(f"  ✗ Timeout reading {owner_name} after 30 seconds")
+            logger.error(f"  ✗ Even small read timed out for {owner_name}")
             signal.alarm(0)
             return pd.DataFrame()
+
+        # Read in smaller chunks to avoid timeout
+        # Read 10 rows at a time
+        chunk_size = 10
+        max_rows = min(rows, 40)  # Limit to 40 rows for owner sheets
+        max_cols = min(cols, 40)  # Limit to 40 columns
+
+        all_values = []
+
+        for start_row in range(1, max_rows + 1, chunk_size):
+            end_row = min(start_row + chunk_size - 1, max_rows)
+
+            # Convert column number to letter
+            col_letter = ''
+            n = max_cols
+            while n > 0:
+                n, remainder = divmod(n - 1, 26)
+                col_letter = chr(65 + remainder) + col_letter
+
+            range_str = f"A{start_row}:{col_letter}{end_row}"
+            logger.info(f"  Reading chunk: {range_str}")
+
+            signal.alarm(15)  # 15 second timeout per chunk
+            try:
+                chunk_values = worksheet.get(range_str)
+                signal.alarm(0)
+                if chunk_values:
+                    all_values.extend(chunk_values)
+                    logger.info(f"    ✓ Got {len(chunk_values)} rows")
+            except TimeoutError:
+                logger.error(f"    ✗ Timeout reading chunk {range_str}")
+                signal.alarm(0)
+                break
+
+        values = all_values
 
         if not values or len(values) < 2:
             logger.warning(f"  No data found in {owner_name}")
