@@ -1,0 +1,79 @@
+name: Test Simple Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install gspread google-auth
+
+      - name: Test basic functionality
+        run: |
+          python -c "print('Python works')"
+          python -c "import gspread; print('gspread imported')"
+          python -c "from google.oauth2.service_account import Credentials; print('google-auth imported')"
+
+      - name: Test sheet access with timeout
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          COMMISSIONER_SHEET_URL: ${{ secrets.COMMISSIONER_SHEET_URL }}
+        run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 -d > /tmp/gcp-key.json
+
+          # Use timeout command to prevent hanging
+          timeout 30 python -c "
+import os
+import sys
+import gspread
+from google.oauth2.service_account import Credentials
+
+print('Starting test...', flush=True)
+sys.stdout.flush()
+
+try:
+    sheet_url = os.environ.get('COMMISSIONER_SHEET_URL', '')
+    print(f'Sheet URL: {sheet_url[:50]}...', flush=True)
+
+    sheet_id = sheet_url.split('/d/')[1].split('/')[0] if 'docs.google.com' in sheet_url else sheet_url
+    print(f'Sheet ID: {sheet_id}', flush=True)
+
+    print('Creating credentials...', flush=True)
+    scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+    creds = Credentials.from_service_account_file('/tmp/gcp-key.json', scopes=scope)
+
+    print('Authorizing gspread...', flush=True)
+    gc = gspread.authorize(creds)
+
+    print('Opening sheet by key...', flush=True)
+    sheet = gc.open_by_key(sheet_id)
+    print(f'SUCCESS: Opened {sheet.title}', flush=True)
+
+    print('Getting worksheets...', flush=True)
+    worksheets = sheet.worksheets()
+    print(f'Found {len(worksheets)} worksheets', flush=True)
+
+    print('Attempting to read A1 from first worksheet...', flush=True)
+    ws = worksheets[0]
+    print(f'Worksheet: {ws.title}', flush=True)
+
+    # Just try to read ONE cell
+    value = ws.acell('A1').value
+    print(f'SUCCESS: A1 = {value}', flush=True)
+
+except Exception as e:
+    print(f'ERROR: {e}', flush=True)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+" || echo "Command timed out or failed with exit code: $?"
