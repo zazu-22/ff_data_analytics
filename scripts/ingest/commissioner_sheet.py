@@ -7,6 +7,7 @@ Designed to run in GitHub Actions where network access works.
 import argparse
 import json
 import logging
+import signal
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +16,15 @@ import gspread
 import pandas as pd
 from google.cloud import storage
 from google.oauth2.service_account import Credentials
+
+# Timeout handler for hung operations
+class TimeoutError(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutError("Operation timed out")
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 # Configure logging
 logging.basicConfig(
@@ -83,11 +93,44 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
     logger.info(f"Reading worksheet: {owner_name}")
 
     try:
-        # Get all values from worksheet
-        values = worksheet.get_all_values()
+        # First, get worksheet dimensions
+        logger.info(f"  Getting worksheet properties...")
+        props = worksheet._properties
+        if 'gridProperties' in props:
+            rows = props['gridProperties'].get('rowCount', 100)
+            cols = props['gridProperties'].get('columnCount', 50)
+            logger.info(f"  Worksheet size: {rows} rows × {cols} columns")
+        else:
+            rows, cols = 100, 50  # Default if properties not available
+            logger.info(f"  Using default range: {rows} rows × {cols} columns")
+
+        # Use a specific range instead of get_all_values() to avoid timeout
+        # Limit to 50x50 which should cover all owner data
+        max_rows = min(rows, 50)
+        max_cols = min(cols, 50)
+
+        # Convert column number to letter (50 = AX)
+        col_letter = ''
+        n = max_cols
+        while n > 0:
+            n, remainder = divmod(n - 1, 26)
+            col_letter = chr(65 + remainder) + col_letter
+
+        range_str = f"A1:{col_letter}{max_rows}"
+        logger.info(f"  Reading range: {range_str}")
+
+        # Get values with specific range (with 30 second timeout)
+        signal.alarm(30)  # 30 second timeout
+        try:
+            values = worksheet.get(range_str)
+            signal.alarm(0)  # Cancel timeout if successful
+        except TimeoutError:
+            logger.error(f"  ✗ Timeout reading {owner_name} after 30 seconds")
+            signal.alarm(0)
+            return pd.DataFrame()
 
         if not values or len(values) < 2:
-            logger.warning(f"No data found in {owner_name}")
+            logger.warning(f"  No data found in {owner_name}")
             return pd.DataFrame()
 
         # Convert to DataFrame (first row as headers)
@@ -96,11 +139,16 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
         # Clean up empty columns
         df = df.loc[:, (df != "").any(axis=0)]
 
+        # Clean up empty rows
+        df = df[df.astype(bool).any(axis=1)]
+
         logger.info(f"  ✓ Exported {len(df)} rows × {len(df.columns)} columns from {owner_name}")
         return df
 
     except Exception as e:
         logger.error(f"  ✗ Failed to export {owner_name}: {e}")
+        import traceback
+        traceback.print_exc()
         return pd.DataFrame()
 
 
