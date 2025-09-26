@@ -9,3 +9,22 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Environment and secrets
+.env
+.env.local
+config/secrets/
+*.json.key
+*-key.json
+service-account-*.json
+
+# Data directories (for local development)
+data/raw/
+data/stage/
+data/mart/
+samples/
+
+# Temporary files
+*.tmp
+*.log
+.cache/

@@ -5,6 +5,8 @@ description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
 requires-python = ">=3.13.6"
 dependencies = [
+    "google-api-python-client>=2.183.0",
+    "google-auth>=2.40.3",
     "gspread>=6.2.1",
     "jupyter>=1.1.1",
     "matplotlib>=3.10.6",

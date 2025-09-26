@@ -26,11 +26,12 @@ repos:
         additional_dependencies: [mdformat-gfm]
         files: .*(\.md|\.mdx)$
 
-  - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.15.0
-    hooks:
-      - id: yamlfix
-        files: ^(config|\.github)/.*\.(yml|yaml)$
+  # Temporarily disabled - issue with Python 3.13
+  # - repo: https://github.com/lyz-code/yamlfix
+  #   rev: 1.15.0
+  #   hooks:
+  #     - id: yamlfix
+  #       files: ^(config|\.github)/.*\.(yml|yaml)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

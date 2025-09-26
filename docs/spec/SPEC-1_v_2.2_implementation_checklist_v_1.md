@@ -17,15 +17,17 @@ ______________________________________________________________________
   - `docs/spec/SPEC-1_Consolidated_v2.2.md` (+ patch & change log) ☑ (named SPEC-1_v_2.2.md)
 - ☑ Add `uv.lock` pinning: `polars (>=0.20)`, `pyarrow (>=15)`, `pandas`, `nflreadpy`. (polars 1.33.1, pyarrow 21.0.0, pandas 2.3.2, nflreadpy 0.1.3)
 - ☑ Add `renv.lock` pinning: `nflreadr (>=1.5.0)`, `arrow`, `jsonlite`, `yaml`, `optparse`, `lubridate`, `remotes`, `ffanalytics` (GitHub), plus `digest`.
-- ☐ Commit files and open PR "SPEC v2.2 integration".
+- ☑ Commit files and open PR "SPEC v2.2 integration". (Committed directly to main)
 
 ## 1) Cloud Paths & Secrets
 
-- ☐ Confirm GCS bucket/prefix: `gs://ff-analytics/{raw,stage,mart}` (or your final names).
-- ☐ Configure CI secrets:
-  - `GOOGLE_APPLICATION_CREDENTIALS_JSON` (Sheets sampler only; service account read‑only).
-  - Any KTC fetcher secrets (if needed later).
-- ☐ Validate service account access to Commissioner Sheet (read).
+- ☑ Confirm GCS bucket/prefix: `gs://ff-analytics/{raw,stage,mart}` (bucket created with lifecycle policies).
+- ☑ Configure CI secrets:
+  - `GOOGLE_APPLICATION_CREDENTIALS_JSON` (service account key configured).
+  - `GCP_PROJECT_ID`, `GCS_BUCKET`, `SLEEPER_LEAGUE_ID`, `COMMISSIONER_SHEET_URL` (all configured).
+  - `SPORTS_DATA_IO_API_KEY` (configured as optional).
+- ☑ Validate service account access to GCS (verified with test workflow).
+- ☑ Validate service account access to Commissioner Sheet (✅ WORKS IN GITHUB ACTIONS! Local timeout due to network issues).
 
 ## 2) nflverse — Python Shim Bring‑Up
 
