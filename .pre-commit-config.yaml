@@ -1,0 +1,47 @@
+# Auto-formatting and linting hooks for this repository.
+# Install:   pip install pre-commit && pre-commit install
+# Run all:   pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+        args: ["--fix", "--unsafe-fixes"]
+      - id: ruff-format
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.8.5
+    hooks:
+      - id: nbqa-ruff
+        additional_dependencies: [ruff]
+        args: ["--fix", "--unsafe-fixes"]
+        files: ^notebooks/.*\.ipynb$
+        exclude: \.ipynb_checkpoints
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        additional_dependencies: [mdformat-gfm]
+        files: .*(\.md|\.mdx)$
+
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.15.0
+    hooks:
+      - id: yamlfix
+        files: ^(config|\.github)/.*\.(yml|yaml)$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: pretty-format-json
+        args: ["--autofix", "--no-sort-keys"]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        files: ^notebooks/.*\.ipynb$

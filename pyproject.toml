@@ -15,3 +15,29 @@ dependencies = [
     "pyarrow>=21.0.0",
     "pydrive2>=1.21.3",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["ingest", "tools"]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.mdformat]
+wrap = 100
+number = false
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]
