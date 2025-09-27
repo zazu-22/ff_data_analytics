@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Minimal test to see where the timeout occurs."""
 
-import json
 import os
 import sys
 import time
@@ -32,6 +31,7 @@ try:
     print("\n1. Importing libraries...")
     import gspread
     from google.oauth2.service_account import Credentials
+
     print(f"   ✓ Imports done ({time.time() - start_time:.2f}s)")
 except ImportError as e:
     print(f"   ✗ Import failed: {e}")
@@ -62,7 +62,7 @@ try:
     print("\n6. Trying to read one cell...")
     ws = worksheets[0]
     print(f"   From worksheet: {ws.title}")
-    cell = ws.acell('A1')
+    cell = ws.acell("A1")
     print(f"   ✓ Read cell A1: '{cell.value}' ({time.time() - start_time:.2f}s)")
 
     print("\n✅ ALL TESTS PASSED!")
@@ -71,4 +71,5 @@ except Exception as e:
     print(f"\n❌ Failed at step: {e}")
     print(f"   Time when failed: {time.time() - start_time:.2f}s")
     import traceback
+
     traceback.print_exc()

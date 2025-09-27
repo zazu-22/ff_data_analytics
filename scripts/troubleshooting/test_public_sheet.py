@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Test if service account can read ANY sheet, using a public test sheet."""
 
-import json
 from pathlib import Path
+
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
@@ -20,16 +20,18 @@ try:
     creds = Credentials.from_service_account_file(str(creds_path), scopes=scope)
 
     print("2. Building service...")
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     print("3. Reading public test sheet...")
     # Try to read from Google's example sheet
-    result = service.spreadsheets().values().get(
-        spreadsheetId=TEST_SHEET_ID,
-        range='Class Data!A1:C3'
-    ).execute()
+    result = (
+        service.spreadsheets()
+        .values()
+        .get(spreadsheetId=TEST_SHEET_ID, range="Class Data!A1:C3")
+        .execute()
+    )
 
-    values = result.get('values', [])
+    values = result.get("values", [])
     if values:
         print(f"✓ Successfully read {len(values)} rows from public sheet")
         print(f"  First row: {values[0]}")

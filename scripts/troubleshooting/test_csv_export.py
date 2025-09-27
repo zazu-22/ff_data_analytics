@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Test accessing the Commissioner Sheet via CSV export URLs."""
 
-import urllib.request
-import io
 import csv
+import io
+import urllib.request
 
 print("Testing CSV Export Method...")
-print("="*50)
+print("=" * 50)
 
 SHEET_ID = "1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"
 
@@ -25,13 +25,13 @@ for sheet_name, gid in sheets.items():
         req = urllib.request.Request(
             csv_url,
             headers={
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-            }
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+            },
         )
 
         # Short timeout to avoid hanging
         response = urllib.request.urlopen(req, timeout=5)
-        data = response.read().decode('utf-8')
+        data = response.read().decode("utf-8")
 
         # Parse CSV
         reader = csv.reader(io.StringIO(data))
@@ -46,8 +46,9 @@ for sheet_name, gid in sheets.items():
             output_file = f"samples/{sheet_name}_sample.csv"
             print(f"   Saving sample to {output_file}")
             import os
+
             os.makedirs("samples", exist_ok=True)
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 writer = csv.writer(f)
                 for row in rows[:10]:  # First 10 rows
                     writer.writerow(row)
@@ -55,6 +56,6 @@ for sheet_name, gid in sheets.items():
     except Exception as e:
         print(f"❌ Failed: {e}")
 
-print("\n" + "="*50)
+print("\n" + "=" * 50)
 print("If CSV export works, we can use this method instead of the Sheets API!")
 print("The data can be fetched periodically and stored in GCS.")

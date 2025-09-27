@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Minimal test - just check if we can read a single cell."""
 
-import json
 import os
-import sys
-from pathlib import Path
 
 # Add timeout protection
 import signal
+import sys
+from pathlib import Path
+
 
 def timeout_handler(signum, frame):
     print("\n⏱️ Operation timed out after 10 seconds")
     sys.exit(1)
+
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
@@ -47,7 +48,9 @@ try:
     client = gspread.authorize(creds)
 
     print("2. Opening sheet...")
-    sheet_id = sheet_url.split("/d/")[1].split("/")[0] if "docs.google.com" in sheet_url else sheet_url
+    sheet_id = (
+        sheet_url.split("/d/")[1].split("/")[0] if "docs.google.com" in sheet_url else sheet_url
+    )
     sheet = client.open_by_key(sheet_id)
 
     print("3. Getting worksheets...")
@@ -70,7 +73,7 @@ try:
     print(f"   Reading from: {target_ws.title}")
 
     # Just try to get one cell
-    cell_value = target_ws.acell('A1').value
+    cell_value = target_ws.acell("A1").value
     print(f"   ✓ Cell A1 value: {cell_value}")
 
     # Cancel timeout

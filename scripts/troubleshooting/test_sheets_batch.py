@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Test different API methods to diagnose the timeout issue."""
 
-import json
+import time
 from pathlib import Path
+
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-import time
 
 print("Diagnostic test for Commissioner Sheet access...")
 
@@ -17,14 +17,15 @@ SHEET_ID = "1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"
 try:
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     creds = Credentials.from_service_account_file(str(creds_path), scopes=scope)
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     print("\n1. Testing metadata access (this works)...")
     start = time.time()
-    spreadsheet = service.spreadsheets().get(
-        spreadsheetId=SHEET_ID,
-        fields="properties.title,sheets.properties"
-    ).execute()
+    spreadsheet = (
+        service.spreadsheets()
+        .get(spreadsheetId=SHEET_ID, fields="properties.title,sheets.properties")
+        .execute()
+    )
     print(f"   ✓ Got metadata in {time.time()-start:.2f}s")
     print(f"   Title: {spreadsheet['properties']['title']}")
 
@@ -32,13 +33,18 @@ try:
     print("\n2. Testing batchGet with minimal range...")
     start = time.time()
     try:
-        result = service.spreadsheets().values().batchGet(
-            spreadsheetId=SHEET_ID,
-            ranges=['Eric!A1'],  # Just one cell
-            majorDimension='ROWS',
-            valueRenderOption='UNFORMATTED_VALUE',  # Raw values, no formatting
-            dateTimeRenderOption='FORMATTED_STRING'
-        ).execute()
+        result = (
+            service.spreadsheets()
+            .values()
+            .batchGet(
+                spreadsheetId=SHEET_ID,
+                ranges=["Eric!A1"],  # Just one cell
+                majorDimension="ROWS",
+                valueRenderOption="UNFORMATTED_VALUE",  # Raw values, no formatting
+                dateTimeRenderOption="FORMATTED_STRING",
+            )
+            .execute()
+        )
         print(f"   ✓ BatchGet succeeded in {time.time()-start:.2f}s")
         print(f"   Result: {result.get('valueRanges', [])}")
     except Exception as e:
@@ -48,11 +54,16 @@ try:
     print("\n3. Testing with FORMULA valueRenderOption...")
     start = time.time()
     try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=SHEET_ID,
-            range='Eric!A1',
-            valueRenderOption='FORMULA'  # Get formulas instead of values
-        ).execute()
+        result = (
+            service.spreadsheets()
+            .values()
+            .get(
+                spreadsheetId=SHEET_ID,
+                range="Eric!A1",
+                valueRenderOption="FORMULA",  # Get formulas instead of values
+            )
+            .execute()
+        )
         print(f"   ✓ Formula read succeeded in {time.time()-start:.2f}s")
         print(f"   Result: {result.get('values', [])}")
     except Exception as e:
@@ -62,18 +73,22 @@ try:
     print("\n4. Testing sheet properties only...")
     start = time.time()
     try:
-        result = service.spreadsheets().get(
-            spreadsheetId=SHEET_ID,
-            ranges=['Eric'],
-            includeGridData=False  # Don't include cell data
-        ).execute()
+        result = (
+            service.spreadsheets()
+            .get(
+                spreadsheetId=SHEET_ID,
+                ranges=["Eric"],
+                includeGridData=False,  # Don't include cell data
+            )
+            .execute()
+        )
         print(f"   ✓ Properties succeeded in {time.time()-start:.2f}s")
-        eric_sheet = next(s for s in result['sheets'] if s['properties']['title'] == 'Eric')
+        eric_sheet = next(s for s in result["sheets"] if s["properties"]["title"] == "Eric")
         print(f"   Eric sheet ID: {eric_sheet['properties']['sheetId']}")
     except Exception as e:
         print(f"   ✗ Properties failed: {e}")
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Summary:")
     print("- Metadata access: ✓ Works")
     print("- Cell value reads: ✗ Timeout")

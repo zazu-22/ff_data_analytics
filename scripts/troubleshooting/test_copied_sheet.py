@@ -15,9 +15,9 @@ if env_file.exists():
                 key, value = line.strip().split("=", 1)
                 os.environ[key] = value.strip("'\"")
 
-print("="*50)
+print("=" * 50)
 print("Testing Copied Commissioner Sheet")
-print("="*50)
+print("=" * 50)
 
 # Get the new sheet URL from env
 sheet_url = os.environ.get("COMMISSIONER_SHEET_URL", "")
@@ -46,17 +46,17 @@ with open(creds_path) as f:
     sa_email = json.load(f).get("client_email")
 print(f"Service Account: {sa_email}")
 
-print("\n" + "-"*50)
+print("\n" + "-" * 50)
 print("IMPORTANT: Make sure you've shared the copied sheet with:")
 print(f"  {sa_email}")
 print("Give it 'Viewer' or 'Editor' access")
-print("-"*50 + "\n")
+print("-" * 50 + "\n")
 
 try:
     print("1. Authenticating...")
     scope = [
         "https://www.googleapis.com/auth/spreadsheets.readonly",
-        "https://www.googleapis.com/auth/drive.readonly"
+        "https://www.googleapis.com/auth/drive.readonly",
     ]
     creds = Credentials.from_service_account_file(str(creds_path), scopes=scope)
     gc = gspread.authorize(creds)
@@ -88,14 +88,14 @@ try:
     # Try different read methods
     print("\n   Method 1: Single cell (A1)...")
     try:
-        value = eric_ws.acell('A1').value
+        value = eric_ws.acell("A1").value
         print(f"   ✓ Cell A1 = '{value}'")
     except Exception as e:
         print(f"   ✗ Failed: {e}")
 
     print("\n   Method 2: Small range (A1:C3)...")
     try:
-        values = eric_ws.get('A1:C3')
+        values = eric_ws.get("A1:C3")
         print(f"   ✓ Got {len(values)} rows")
         if values:
             print(f"   First row: {values[0]}")
@@ -104,24 +104,24 @@ try:
 
     print("\n   Method 3: Batch get...")
     try:
-        values = eric_ws.batch_get(['A1:C1', 'A2:C2'])
-        print(f"   ✓ Batch get succeeded")
+        values = eric_ws.batch_get(["A1:C1", "A2:C2"])
+        print("   ✓ Batch get succeeded")
         for i, val in enumerate(values):
             print(f"   Range {i+1}: {val}")
     except Exception as e:
         print(f"   ✗ Failed: {e}")
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("✅ SUCCESS! The copied sheet works!")
-    print("="*50)
+    print("=" * 50)
     print("\nYou can now use this copied sheet for your pipeline.")
     print("Update your .env file with:")
     print(f"COMMISSIONER_SHEET_URL={sheet_url}")
 
 except gspread.exceptions.APIError as e:
     if "403" in str(e):
-        print(f"\n❌ Permission denied!")
-        print(f"\nMake sure you've shared the copied sheet with:")
+        print("\n❌ Permission denied!")
+        print("\nMake sure you've shared the copied sheet with:")
         print(f"  {sa_email}")
     else:
         print(f"\n❌ API Error: {e}")
@@ -129,4 +129,5 @@ except gspread.exceptions.APIError as e:
 except Exception as e:
     print(f"\n❌ Error: {type(e).__name__}: {e}")
     import traceback
+
     traceback.print_exc()

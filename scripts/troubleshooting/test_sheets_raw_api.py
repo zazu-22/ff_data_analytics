@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test Google Sheets access using raw API instead of gspread."""
 
-import json
 import os
 from pathlib import Path
 
@@ -13,6 +12,7 @@ except ImportError:
     print("Installing required packages...")
     import subprocess
     import sys
+
     subprocess.check_call([sys.executable, "-m", "uv", "add", "google-api-python-client"])
     from google.oauth2.service_account import Credentials
     from googleapiclient.discovery import build
@@ -51,7 +51,7 @@ try:
 
     # Build the service
     print("2. Building Sheets service...")
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Get spreadsheet metadata
     print("3. Getting spreadsheet metadata...")
@@ -60,40 +60,40 @@ try:
     print(f"   ✓ Sheets: {len(spreadsheet['sheets'])} worksheets")
 
     # List first few sheet names
-    for i, sheet in enumerate(spreadsheet['sheets'][:5]):
-        title = sheet['properties']['title']
-        rows = sheet['properties']['gridProperties']['rowCount']
-        cols = sheet['properties']['gridProperties']['columnCount']
+    for i, sheet in enumerate(spreadsheet["sheets"][:5]):
+        title = sheet["properties"]["title"]
+        rows = sheet["properties"]["gridProperties"]["rowCount"]
+        cols = sheet["properties"]["gridProperties"]["columnCount"]
         print(f"      {i+1}. {title} ({rows}×{cols})")
 
     # Try to read a specific range from a smaller sheet
     print("\n4. Testing cell read from 'Eric' worksheet...")
-    range_name = 'Eric!A1:C3'  # Small range from Eric sheet
+    range_name = "Eric!A1:C3"  # Small range from Eric sheet
 
     try:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=sheet_id,
-            range=range_name
-        ).execute()
+        result = (
+            service.spreadsheets().values().get(spreadsheetId=sheet_id, range=range_name).execute()
+        )
 
-        values = result.get('values', [])
+        values = result.get("values", [])
 
         if not values:
-            print('   ⚠ No data found in range')
+            print("   ⚠ No data found in range")
         else:
-            print(f'   ✓ Successfully read {len(values)} rows')
+            print(f"   ✓ Successfully read {len(values)} rows")
             for i, row in enumerate(values):
-                print(f'      Row {i+1}: {row[:3]}')  # Show first 3 columns
+                print(f"      Row {i+1}: {row[:3]}")  # Show first 3 columns
 
         print("\n" + "=" * 50)
         print("✅ SUCCESS: Can read cells using raw API!")
         print("=" * 50)
 
     except HttpError as error:
-        print(f'   ❌ API Error reading cells: {error}')
-        print(f'   Error details: {error.resp.status} - {error.content}')
+        print(f"   ❌ API Error reading cells: {error}")
+        print(f"   Error details: {error.resp.status} - {error.content}")
 
 except Exception as e:
     print(f"\n❌ Error: {type(e).__name__}: {e}")
     import traceback
+
     traceback.print_exc()

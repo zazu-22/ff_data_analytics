@@ -33,12 +33,14 @@ try:
     print("\nTrying with full spreadsheets + drive scopes...")
     scope = [
         "https://www.googleapis.com/auth/spreadsheets.readonly",
-        "https://www.googleapis.com/auth/drive.readonly"
+        "https://www.googleapis.com/auth/drive.readonly",
     ]
     creds = Credentials.from_service_account_file(str(creds_path), scopes=scope)
     client = gspread.authorize(creds)
 
-    sheet_id = sheet_url.split("/d/")[1].split("/")[0] if "docs.google.com" in sheet_url else sheet_url
+    sheet_id = (
+        sheet_url.split("/d/")[1].split("/")[0] if "docs.google.com" in sheet_url else sheet_url
+    )
     sheet = client.open_by_key(sheet_id)
 
     # Get worksheet info
@@ -55,12 +57,12 @@ try:
     props = ws._properties
     print(f"Properties available: {list(props.keys())}")
 
-    if 'gridProperties' in props:
-        grid = props['gridProperties']
+    if "gridProperties" in props:
+        grid = props["gridProperties"]
         print(f"Rows: {grid.get('rowCount', 'unknown')}")
         print(f"Columns: {grid.get('columnCount', 'unknown')}")
 
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("IMPORTANT: The issue appears to be with reading cell data.")
     print("This could mean:")
     print("1. The worksheet is shared but cell data is protected")
