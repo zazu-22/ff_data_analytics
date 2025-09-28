@@ -27,7 +27,7 @@ ______________________________________________________________________
   - `GCP_PROJECT_ID`, `GCS_BUCKET`, `SLEEPER_LEAGUE_ID`, `COMMISSIONER_SHEET_URL` (all configured).
   - `SPORTS_DATA_IO_API_KEY` (configured as optional).
 - ☑ Validate service account access to GCS (verified with test workflow).
-- ☑ Validate service account access to Commissioner Sheet (✅ WORKS IN GITHUB ACTIONS! Local timeout due to network issues).
+- ☑ Validate service account access to Commissioner Sheet (
 
 ## 2) nflverse — Python Shim Bring‑Up
 
@@ -40,7 +40,7 @@ ______________________________________________________________________
 
 ## 3) Sleeper — Minimal Ingest Checks
 
-- ☐ Run samples: `python tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
+- ☐ Run samples: `uv run tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
 - ☐ Confirm fields exist for contracts/cap linkage (IDs, roster slots, player IDs).
 - ☐ Validate row counts ~ league expectations (12 teams; starters per roster rules).
 
@@ -51,11 +51,11 @@ ______________________________________________________________________
   - Uses Shared Drive for logging (service account quota workaround)
   - Intelligent skip logic based on source modification times
 - ☑ Configure league sheet copy destination and logging:
-  - Source: `COMMISSIONER_SHEET_ID="1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"`
-  - Destination: `LEAGUE_SHEET_COPY_ID="1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"`
-  - Logs: Shared Drive `LOG_PARENT_ID="0AOi29KXdvnd7Uk9PVA"`
+  - Source: `COMMISSIONER_SHEET_ID`
+  - Destination: `LEAGUE_SHEET_COPY_ID`
+  - Logs: Shared Drive `LOG_PARENT_ID`
 - ☐ Export small samples per tab from the copied sheet:
-  - `python tools/make_samples.py sheets --tabs contracts rosters cap draft_assets trade_conditions --sheet-url <COPY_URL> --out ./samples`
+  - `uv run tools/make_samples.py sheets --tabs $OWNER_TABS --sheet-url $LEAGUE_SHEET_COPY_URL --out ./samples`
 - ☐ Verify natural keys per tab (unique per date partition) and numeric domains (cap ≥ 0, years 1..5, etc.).
 
 ## 5) KeepTradeCut — Replace Sampler Stub
@@ -63,12 +63,13 @@ ______________________________________________________________________
 - ☐ Implement real KTC fetcher (players + picks) respecting ToS and polite rate limits (randomized sleeps, caching).
 - ☐ Update `tools/make_samples.py::sample_ktc` to call actual fetcher; keep `--top-n` sampling to limit size.
 - ☐ Normalize to long‑form `asset_type ∈ {player,pick}` with `asof_date`, `rank`, `value`.
+- [ ] Export small samples from the KTC fetcher
 
 ## 6) FFanalytics — Wire Runner (R) to Real Projections
 
 - ☐ Edit `scripts/R/ffanalytics_run.R` to call `ffanalytics::getProjections(...)` with sites from `config/projections/ffanalytics_projections_config.yaml` (ids + weights) and scoring from `config/scoring/sleeper_scoring_rules.yaml`.
 - ☐ Ensure output long‑form schema: `player, position, team, season, week, projected_points, site_id, site_weight, generated_at`.
-- ☐ Smoke test via tool: `python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --positions QB RB WR TE --sites fantasypros numberfire --out ./samples`
+- ☐ Smoke test via tool: `uv run python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --positions QB RB WR TE --sites fantasypros numberfire --out ./samples`
 - ☐ Document any site ID/name mapping adjustments discovered during wiring.
 
 ## 7) dbt — Seeds, Staging, and Marts
