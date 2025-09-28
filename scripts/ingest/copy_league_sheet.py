@@ -481,6 +481,27 @@ def main() -> int:
                 f"(src modified {src_modified_utc.isoformat()})"
             )
             print(message)
+
+            # Log the individual tab skip
+            skip_time = datetime.now(UTC).isoformat()
+            log_row(
+                log_ws,
+                run_id=run_id,
+                tab=title,
+                status="SKIP_CURRENT",
+                started_at=skip_time,
+                finished_at=skip_time,
+                duration_ms=0,
+                src_sheet_id=COMMISSIONER_SHEET_ID,
+                src_tab_title=title,
+                dst_sheet_id=LEAGUE_SHEET_COPY_ID,
+                dst_tab_id=None,
+                rows=None,
+                cols=None,
+                checksum=None,
+                src_modifiedTime_utc=src_modified_utc.isoformat(),
+            )
+
             tab_results.append(
                 {
                     "tab": title,
@@ -687,6 +708,34 @@ def main() -> int:
     state_set(state_ws, "src_modifiedTime_utc", src_modified_utc.isoformat())
 
     finished_iso: str = datetime.now(UTC).isoformat()
+
+    # Add a run summary entry if this was a forced run where everything was skipped
+    # (Different from the whole-run skip at the beginning which exits early)
+    if (
+        not ENTIRE_RUN_SKIP_IF_UNCHANGED
+        and stats["skipped"] == len(TABS_TO_COPY)
+        and stats["copied"] == 0
+    ):
+        # This was a forced run but all tabs were already current
+        log_row(
+            log_ws,
+            run_id=run_id,
+            tab="[RUN_SUMMARY]",
+            status="FORCED_RUN_ALL_CURRENT",
+            started_at=run_started_iso,
+            finished_at=finished_iso,
+            duration_ms=int(
+                (datetime.now(UTC) - datetime.fromisoformat(run_started_iso)).total_seconds() * 1000
+            ),
+            src_sheet_id=COMMISSIONER_SHEET_ID,
+            src_tab_title="[ALL]",
+            dst_sheet_id=LEAGUE_SHEET_COPY_ID,
+            dst_tab_id=None,
+            rows=None,
+            cols=None,
+            checksum=None,
+            src_modifiedTime_utc=src_modified_utc.isoformat(),
+        )
 
     # Use the separate_logs_enabled flag which may have been updated if fallback occurred
     separate_logs: bool = separate_logs_enabled
