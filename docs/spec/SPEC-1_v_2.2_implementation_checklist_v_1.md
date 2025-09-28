@@ -49,9 +49,12 @@ ______________________________________________________________________
 
 ## 3) Sleeper — Minimal Ingest Checks
 
-- ☐ Run samples: `uv run tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
-- ☐ Confirm fields exist for contracts/cap linkage (IDs, roster slots, player IDs).
-- ☐ Validate row counts ~ league expectations (12 teams; starters per roster rules).
+- ☑ Run samples: `uv run tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
+  - Fixed duplicate column issue (renamed index to sleeper_player_id)
+- ☑ Confirm fields exist for contracts/cap linkage (IDs, roster slots, player IDs).
+  - Key fields present: owner_id, roster_id, players, starters
+- ☑ Validate row counts ~ league expectations (12 teams; starters per roster rules).
+  - Confirmed: 12 rosters, 13 users (co-owners), league ID matches
 
 ## 4) Google Sheets — Commissioner SSoT
 
@@ -118,12 +121,12 @@ ______________________________________________________________________
 ## 9) Samples & Fixtures
 
 - ☐ Generate minimal fixtures for each dataset and commit to a fixture bucket (or store as CI artifacts):
-  - `python tools/make_samples.py nflverse --datasets players weekly --seasons 2023 --weeks 1 --out ./samples`
-  - `python tools/make_samples.py sleeper --datasets league users rosters players --league-id ... --out ./samples`
-  - `python tools/make_samples.py sheets --tabs contracts rosters cap draft_assets trade_conditions --sheet-url ... --out ./samples`
-  - `python tools/make_samples.py ktc --assets players picks --top-n 50 --out ./samples`
-  - `python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --out ./samples`
-  - `python tools/make_samples.py sdio --paths <export files> --out ./samples`
+  - ☑ `PYTHONPATH=. uv run tools/make_samples.py nflverse --datasets players weekly injuries schedule teams --seasons 2024 --weeks 1 --out ./samples`
+  - ☑ `uv run tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
+  - ☑ `uv run tools/make_samples.py sheets --tabs Eric Gordon Joe JP Andy Chip McCreary TJ James Jason Kevin Piper --sheet-url https://docs.google.com/spreadsheets/d/1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0 --out ./samples`
+  - ☐ `python tools/make_samples.py ktc --assets players picks --top-n 50 --out ./samples`
+  - ☐ `python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --out ./samples`
+  - ☐ `python tools/make_samples.py sdio --paths <export files> --out ./samples`
 
 ## 10) Ops & Monitoring
 

@@ -172,11 +172,12 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
             df = (
                 pd.DataFrame.from_dict(data, orient="index")
                 .reset_index()
-                .rename(columns={"index": "player_id"})
+                .rename(columns={"index": "sleeper_player_id"})
             )
             keep_cols = [
                 c
                 for c in [
+                    "sleeper_player_id",
                     "player_id",
                     "full_name",
                     "position",
