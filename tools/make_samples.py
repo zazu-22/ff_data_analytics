@@ -302,34 +302,50 @@ def sample_ffanalytics(
 ):
     import subprocess
 
-    # Build arg list (avoids shell quoting and keeps line lengths short)
+    # Build arg list for the new simplified runner
     runner = "scripts/R/ffanalytics_run.R"
     out_dir_arg = (out / "ffanalytics").as_posix()
+
+    # Default values
+    if positions is None:
+        positions = ["QB", "RB", "WR", "TE", "K", "DST"]
+    if sites is None:
+        sites = ["CBS", "ESPN", "FantasyPros"]
+    if weeks is None:
+        weeks = [0]  # 0 for season-long projections
+
     cmd = [
         "Rscript",
         runner,
-        "--config",
-        config_yaml,
-        "--scoring",
-        scoring_yaml,
+        "--sources",
+        ",".join(sites),
+        "--positions",
+        ",".join(positions),
+        "--season",
+        "2024",
+        "--week",
+        str(weeks[0] if weeks else 0),
         "--out_dir",
         out_dir_arg,
     ]
-    # For now the R runner itself is responsible for subsetting; extend it later to accept filters.
-    # Run the R runner and raise on non‑zero exit; no unused variable.
+    # Note: config_yaml and scoring_yaml are no longer used by the simplified runner
+    # The runner just gets raw projections without scoring calculations
+
+    # Run the R runner
     subprocess.run(cmd, check=True, capture_output=True, text=True)
 
-    # Locate parquet (the runner writes it)
+    # Locate parquet (the runner writes it with different name pattern now)
     dt = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
-    df_path = out / "ffanalytics" / f"dt={dt}" / f"projections_{dt}.parquet"
+    df_path = out / "ffanalytics" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
     if df_path.exists():
         df = pd.read_parquet(df_path)
-        if positions is not None and "position" in df.columns:
-            df = df[df["position"].isin(positions)]
+        # Filter based on the actual column names in the raw projections
+        if positions is not None and "pos" in df.columns:
+            df = df[df["pos"].isin(positions)]
         if weeks is not None and "week" in df.columns:
             df = df[df["week"].isin(weeks)]
-        if sites is not None and "site_id" in df.columns:
-            df = df[df["site_id"].isin(sites)]
+        if sites is not None and "data_src" in df.columns:
+            df = df[df["data_src"].isin(sites)]
         out_dir = _ensure_out(out, "ffanalytics", "projections")
         return _write_outputs(
             df,

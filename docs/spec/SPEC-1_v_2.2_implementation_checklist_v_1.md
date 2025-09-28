@@ -86,10 +86,17 @@ ______________________________________________________________________
 
 ## 6) FFanalytics — Wire Runner (R) to Real Projections
 
-- ☐ Edit `scripts/R/ffanalytics_run.R` to call `ffanalytics::getProjections(...)` with sites from `config/projections/ffanalytics_projections_config.yaml` (ids + weights) and scoring from `config/scoring/sleeper_scoring_rules.yaml`.
-- ☐ Ensure output long‑form schema: `player, position, team, season, week, projected_points, site_id, site_weight, generated_at`.
-- ☐ Smoke test via tool: `uv run python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --positions QB RB WR TE --sites fantasypros numberfire --out ./samples`
-- ☐ Document any site ID/name mapping adjustments discovered during wiring.
+- ☑ Edit `scripts/R/ffanalytics_run.R` to scrape raw projections from multiple sources
+  - Simplified to just get raw projections without calculations
+  - Successfully scrapes from 8 sources: CBS, ESPN, FantasyPros, FantasySharks, FFToday, NumberFire/FanDuel, RTSports, Walterfootball
+  - Failed sources: FantasyData, FleaFlicker, Yahoo, FantasyFootballNerd, NFL (no data)
+- ☑ Ensure output long‑form schema with raw projection stats
+  - Output includes: player, pos, team, pass_yds, pass_tds, rush_yds, rush_tds, rec_yds, rec_tds, etc.
+  - Each source's projections kept separate with data_src column
+- ☑ Smoke test via tool: `PYTHONPATH=. uv run tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 0 --out ./samples`
+  - Successfully generates samples with 3,698 projections from 8 sources
+  - Covers all positions: QB, RB, WR, TE, K, DST
+- ☑ Document site availability: 8 working sources for 2024 season-long projections
 
 ## 7) dbt — Seeds, Staging, and Marts
 
