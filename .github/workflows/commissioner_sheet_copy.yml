@@ -69,8 +69,8 @@ jobs:
           echo "COMMISSIONER_SHEET_ID=${COMMISSIONER_SHEET_ID}" >> $GITHUB_ENV
           echo "LEAGUE_SHEET_COPY_ID=${LEAGUE_SHEET_COPY_ID}" >> $GITHUB_ENV
 
-          # Owner tabs to copy (default list)
-          echo "OWNER_TABS=Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper" >> $GITHUB_ENV
+          # Tabs to copy (default list)
+          echo "DEFAULT_TABS=Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper,TRANSACTIONS" >> $GITHUB_ENV
 
           # Logging configuration
           echo "LOG_IN_SEPARATE_SHEET=1" >> $GITHUB_ENV
@@ -97,7 +97,7 @@ jobs:
           # For now, just show what would happen
           echo "Would copy from Commissioner Sheet: $COMMISSIONER_SHEET_ID"
           echo "To League Sheet Copy: $LEAGUE_SHEET_COPY_ID"
-          echo "With tabs: $OWNER_TABS"
+          echo "With tabs: $DEFAULT_TABS"
           echo "Skip if unchanged: $ENTIRE_RUN_SKIP_IF_UNCHANGED"
 
           # Could run the script with a --dry-run flag if we add that feature
@@ -105,7 +105,7 @@ jobs:
           echo "  COMMISSIONER_SHEET_ID: $COMMISSIONER_SHEET_ID"
           echo "  LEAGUE_SHEET_COPY_ID: $LEAGUE_SHEET_COPY_ID"
           echo "  LOG_PARENT_ID: $LOG_PARENT_ID"
-          echo "  OWNER_TABS: $OWNER_TABS"
+          echo "  DEFAULT_TABS: $DEFAULT_TABS"
 
       - name: Run Commissioner Sheet Copy
         if: github.event.inputs.dry_run != 'true'
