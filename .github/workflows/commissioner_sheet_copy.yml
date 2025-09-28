@@ -102,12 +102,7 @@ jobs:
           echo "Skip if unchanged: $ENTIRE_RUN_SKIP_IF_UNCHANGED"
 
           # Could run the script with a --dry-run flag if we add that feature
-          python -c "
-import os
-print('Environment configured:')
-for key in ['COMMISSIONER_SHEET_ID', 'LEAGUE_SHEET_COPY_ID', 'LOG_PARENT_ID', 'OWNER_TABS']:
-    print(f'  {key}: {os.getenv(key, \"NOT SET\")}')
-"
+          python3 -c 'import os; [print(f"  {k}: {os.getenv(k, \"NOT SET\")}") for k in ["COMMISSIONER_SHEET_ID", "LEAGUE_SHEET_COPY_ID", "LOG_PARENT_ID", "OWNER_TABS"]]'
 
       - name: Run Commissioner Sheet Copy
         if: github.event.inputs.dry_run != 'true'
