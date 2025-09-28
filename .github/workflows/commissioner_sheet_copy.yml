@@ -4,26 +4,26 @@ on:
   schedule:
     # Twice daily at 07:30 and 15:30 UTC (30 minutes before main pipeline)
     # This ensures the copy is fresh when the main pipeline runs at 08:00 and 16:00
-    - cron: '30 7 * * *'
-    - cron: '30 15 * * *'
+    - cron: "30 7 * * *"
+    - cron: "30 15 * * *"
   workflow_dispatch:
     inputs:
       force_copy:
-        description: 'Force copy even if source unchanged'
+        description: "Force copy even if source unchanged"
         required: false
-        default: 'false'
+        default: "false"
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - "true"
+          - "false"
       dry_run:
-        description: 'Dry run (check only, no copy)'
+        description: "Dry run (check only, no copy)"
         required: false
-        default: 'false'
+        default: "false"
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - "true"
+          - "false"
 
 jobs:
   copy-commissioner-sheet:
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -132,9 +132,9 @@ jobs:
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
       - name: Send Discord notification
-        if: always() && env.DISCORD_WEBHOOK_URL != ''
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || '' }}
+        if: always() && env.DISCORD_WEBHOOK_URL
         run: |
           # Only send notifications for failures in scheduled runs
           # or always for manual runs
@@ -144,7 +144,7 @@ jobs:
               -d "{
                 \"content\": \"${{ steps.run_status.outputs.status_emoji }} Commissioner Sheet copy ${{ steps.run_status.outputs.status_text }} at ${{ steps.run_status.outputs.timestamp }}\\n**Trigger:** ${{ github.event_name }}\\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
               }" \
-              "$DISCORD_WEBHOOK_URL" || echo "Discord notification failed (non-critical)"
+              $DISCORD_WEBHOOK_URL || echo "Discord notification failed (non-critical)"
           fi
 
       - name: Upload logs as artifact
