@@ -46,8 +46,16 @@ ______________________________________________________________________
 
 ## 4) Google Sheets — Commissioner SSoT
 
-- ☐ Export small samples per tab:
-  - `python tools/make_samples.py sheets --tabs contracts rosters cap draft_assets trade_conditions --sheet-url <URL> --out ./samples`
+- ☑ Implement server-side copy strategy (ADR-005) to handle complex Commissioner Sheet:
+  - `scripts/ingest/copy_league_sheet.py` - Server-side copyTo with value freezing
+  - Uses Shared Drive for logging (service account quota workaround)
+  - Intelligent skip logic based on source modification times
+- ☑ Configure league sheet copy destination and logging:
+  - Source: `COMMISSIONER_SHEET_ID="1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"`
+  - Destination: `LEAGUE_SHEET_COPY_ID="1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"`
+  - Logs: Shared Drive `LOG_PARENT_ID="0AOi29KXdvnd7Uk9PVA"`
+- ☐ Export small samples per tab from the copied sheet:
+  - `python tools/make_samples.py sheets --tabs contracts rosters cap draft_assets trade_conditions --sheet-url <COPY_URL> --out ./samples`
 - ☐ Verify natural keys per tab (unique per date partition) and numeric domains (cap ≥ 0, years 1..5, etc.).
 
 ## 5) KeepTradeCut — Replace Sampler Stub

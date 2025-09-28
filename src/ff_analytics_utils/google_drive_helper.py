@@ -11,6 +11,28 @@ def build_drive(creds):
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
+def is_shared_drive(drive_id: str) -> bool:
+    """
+    Check if a drive ID appears to be a Shared Drive ID.
+    Shared Drive IDs typically start with '0A'.
+    """
+    return drive_id and drive_id.startswith("0A")
+
+
+def get_drive_info(drive, drive_id: str) -> dict[str, Any] | None:
+    """
+    Get information about a Shared Drive.
+    Returns None if it's not a Shared Drive or not accessible.
+    """
+    if not is_shared_drive(drive_id):
+        return None
+
+    try:
+        return drive.drives().get(driveId=drive_id).execute()
+    except Exception:
+        return None
+
+
 def get_file_metadata(
     drive, file_id: str, fields: str = "id,name,modifiedTime,version,owners"
 ) -> dict[str, Any]:
@@ -20,7 +42,12 @@ def get_file_metadata(
       - modifiedTime (RFC3339)
       - version (monotonic integer, often increments with content edits)
     """
-    return drive.files().get(fileId=file_id, fields=fields).execute()
+    try:
+        # Try with Shared Drive support first
+        return drive.files().get(fileId=file_id, fields=fields, supportsAllDrives=True).execute()
+    except Exception:
+        # Fallback to regular file access
+        return drive.files().get(fileId=file_id, fields=fields).execute()
 
 
 def parse_rfc3339(ts: str) -> datetime:
@@ -42,7 +69,11 @@ def ensure_spreadsheet_in_folder(drive, folder_id: str, name: str) -> str:
     """
     Return the fileId of a Google Sheets file named `name` inside `folder_id`.
     If it doesn't exist, create it in that folder and return its id.
+    Works with both regular folders and Shared Drives.
     """
+    # Check if the parent is a Shared Drive
+    use_shared_drive = is_shared_drive(folder_id)
+
     # Drive query strings use single quotes; escape any single quotes in the name
     escaped_name = name.replace("'", "\\'")
     q = (
@@ -50,21 +81,52 @@ def ensure_spreadsheet_in_folder(drive, folder_id: str, name: str) -> str:
         f"and name='{escaped_name}' "
         f"and '{folder_id}' in parents and trashed=false"
     )
-    res = (
-        drive.files()
-        .list(q=q, spaces="drive", fields="files(id,name,parents)", pageSize=50)
-        .execute()
-    )
+
+    # Search with appropriate parameters
+    list_params = {
+        "q": q,
+        "spaces": "drive",
+        "fields": "files(id,name,parents)",
+        "pageSize": 50,
+    }
+
+    if use_shared_drive:
+        list_params.update(
+            {
+                "corpora": "drive",
+                "driveId": folder_id,
+                "includeItemsFromAllDrives": True,
+                "supportsAllDrives": True,
+            }
+        )
+    else:
+        list_params.update(
+            {
+                "supportsAllDrives": True,
+                "includeItemsFromAllDrives": True,
+            }
+        )
+
+    res = drive.files().list(**list_params).execute()
     files = res.get("files", [])
     if files:
         return files[0]["id"]
 
+    # Create the spreadsheet
     file_metadata = {
         "name": name,
         "mimeType": "application/vnd.google-apps.spreadsheet",
         "parents": [folder_id],
     }
-    created = drive.files().create(body=file_metadata, fields="id").execute()
+
+    # Create with appropriate parameters
+    create_params = {
+        "body": file_metadata,
+        "fields": "id",
+        "supportsAllDrives": True,
+    }
+
+    created = drive.files().create(**create_params).execute()
     return created["id"]
 
 
@@ -109,7 +171,7 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
     Resolve/ensure a nested folder PATH under PARENT_ID (default 'root').
     - PATH uses '/' separators, e.g. "BellKeg/Logs/Prod"
     - For 'My Drive', keep parent_id='root' (default).
-    - For Shared drives, pass the shared drive's *root folder ID* as parent_id.
+    - For Shared drives, pass the shared drive's ID as parent_id.
     Returns the folderId of the final (leaf) folder.
 
     NOTE: Service account must have at least Viewer on each ancestor + Editor where creating.
@@ -118,8 +180,16 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
     def _escape(s: str) -> str:
         return s.replace("'", "\\'")
 
+    # Check if we're working with a Shared Drive
+    use_shared_drive = is_shared_drive(parent_id)
+    drive_id = parent_id if use_shared_drive else None
+
     # normalize: strip leading/trailing slashes and ignore empty segments
     parts = [seg for seg in (path or "").split("/") if seg and seg != "."]
+
+    # If no path parts, just return the parent
+    if not parts:
+        return parent_id
 
     current = parent_id  # start at root (or provided parent)
     for name in parts:
@@ -128,18 +198,26 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
             "mimeType='application/vnd.google-apps.folder' "
             f"and name='{_escape(name)}' and '{current}' in parents and trashed=false"
         )
-        res = (
-            drive.files()
-            .list(
-                q=q,
-                spaces="drive",
-                fields="files(id,name,parents)",
-                pageSize=100,
-                includeItemsFromAllDrives=True,
-                supportsAllDrives=True,
+
+        # Set up list parameters based on drive type
+        list_params = {
+            "q": q,
+            "spaces": "drive",
+            "fields": "files(id,name,parents)",
+            "pageSize": 100,
+            "supportsAllDrives": True,
+            "includeItemsFromAllDrives": True,
+        }
+
+        if use_shared_drive:
+            list_params.update(
+                {
+                    "corpora": "drive",
+                    "driveId": drive_id,
+                }
             )
-            .execute()
-        )
+
+        res = drive.files().list(**list_params).execute()
         files = res.get("files", [])
 
         if files:
@@ -156,6 +234,7 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
             "mimeType": "application/vnd.google-apps.folder",
             "parents": [current],
         }
+
         created = (
             drive.files()
             .create(
@@ -165,6 +244,7 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
             )
             .execute()
         )
+
         current = created["id"]
 
     return current

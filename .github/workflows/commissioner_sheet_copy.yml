@@ -1,0 +1,182 @@
+name: Commissioner Sheet Copy to League Sheet
+
+on:
+  schedule:
+    # Twice daily at 07:30 and 15:30 UTC (30 minutes before main pipeline)
+    # This ensures the copy is fresh when the main pipeline runs at 08:00 and 16:00
+    - cron: '30 7 * * *'
+    - cron: '30 15 * * *'
+  workflow_dispatch:
+    inputs:
+      force_copy:
+        description: 'Force copy even if source unchanged'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      dry_run:
+        description: 'Dry run (check only, no copy)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  copy-commissioner-sheet:
+    name: Copy Commissioner Sheet to League Sheet
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install gspread google-auth google-api-python-client python-dotenv rich
+
+      - name: Create credentials file
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 -d > /tmp/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json" >> $GITHUB_ENV
+
+      - name: Set environment variables
+        env:
+          COMMISSIONER_SHEET_ID: ${{ secrets.COMMISSIONER_SHEET_ID }}
+          LEAGUE_SHEET_COPY_ID: ${{ secrets.LEAGUE_SHEET_COPY_ID }}
+          LOG_PARENT_ID: ${{ secrets.LOG_PARENT_ID }}
+        run: |
+          # Core configuration
+          echo "COMMISSIONER_SHEET_ID=${COMMISSIONER_SHEET_ID}" >> $GITHUB_ENV
+          echo "LEAGUE_SHEET_COPY_ID=${LEAGUE_SHEET_COPY_ID}" >> $GITHUB_ENV
+
+          # Owner tabs to copy (default list)
+          echo "OWNER_TABS=Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper" >> $GITHUB_ENV
+
+          # Logging configuration
+          echo "LOG_IN_SEPARATE_SHEET=1" >> $GITHUB_ENV
+          echo "LOG_PARENT_ID=${LOG_PARENT_ID}" >> $GITHUB_ENV
+          echo "LOG_FOLDER_PATH=data/ingest/logs" >> $GITHUB_ENV
+          echo "LOG_SHEET_BASENAME=league_sheet_ingest_logs" >> $GITHUB_ENV
+
+          # Behavior configuration
+          if [ "${{ github.event.inputs.force_copy }}" == "true" ]; then
+            echo "ENTIRE_RUN_SKIP_IF_UNCHANGED=0" >> $GITHUB_ENV
+          else
+            echo "ENTIRE_RUN_SKIP_IF_UNCHANGED=1" >> $GITHUB_ENV
+          fi
+
+          echo "PAUSE_BETWEEN_TABS_SEC=0.5" >> $GITHUB_ENV
+          echo "CHECKSUM_ROWS=50" >> $GITHUB_ENV
+          echo "CHECKSUM_COLS=50" >> $GITHUB_ENV
+
+      - name: Run Commissioner Sheet Copy (Dry Run)
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "DRY RUN MODE - Checking if copy would be needed..."
+          # Run with a modified script that only checks, doesn't copy
+          # For now, just show what would happen
+          echo "Would copy from Commissioner Sheet: $COMMISSIONER_SHEET_ID"
+          echo "To League Sheet Copy: $LEAGUE_SHEET_COPY_ID"
+          echo "With tabs: $OWNER_TABS"
+          echo "Skip if unchanged: $ENTIRE_RUN_SKIP_IF_UNCHANGED"
+
+          # Could run the script with a --dry-run flag if we add that feature
+          python -c "
+import os
+print('Environment configured:')
+for key in ['COMMISSIONER_SHEET_ID', 'LEAGUE_SHEET_COPY_ID', 'LOG_PARENT_ID', 'OWNER_TABS']:
+    print(f'  {key}: {os.getenv(key, \"NOT SET\")}')
+"
+
+      - name: Run Commissioner Sheet Copy
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          python scripts/ingest/copy_league_sheet.py
+        env:
+          PYTHONUNBUFFERED: 1
+
+      - name: Capture run status
+        if: always()
+        id: run_status
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "status_emoji=✅" >> $GITHUB_OUTPUT
+            echo "status_text=completed successfully" >> $GITHUB_OUTPUT
+          elif [ "${{ job.status }}" == "cancelled" ]; then
+            echo "status_emoji=⚠️" >> $GITHUB_OUTPUT
+            echo "status_text=was cancelled" >> $GITHUB_OUTPUT
+          else
+            echo "status_emoji=❌" >> $GITHUB_OUTPUT
+            echo "status_text=failed" >> $GITHUB_OUTPUT
+          fi
+          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Send Discord notification
+        if: always() && env.DISCORD_WEBHOOK_URL != ''
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          # Only send notifications for failures in scheduled runs
+          # or always for manual runs
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] || [ "${{ job.status }}" != "success" ]; then
+            curl -H "Content-Type: application/json" \
+              -X POST \
+              -d "{
+                \"content\": \"${{ steps.run_status.outputs.status_emoji }} Commissioner Sheet copy ${{ steps.run_status.outputs.status_text }} at ${{ steps.run_status.outputs.timestamp }}\\n**Trigger:** ${{ github.event_name }}\\n**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+              }" \
+              "$DISCORD_WEBHOOK_URL" || echo "Discord notification failed (non-critical)"
+          fi
+
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: commissioner-sheet-copy-logs-${{ github.run_id }}
+          path: |
+            *.log
+            /tmp/copy_league_sheet_*.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Commissioner Sheet Copy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ steps.run_status.outputs.status_emoji }} ${{ steps.run_status.outputs.status_text }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** ${{ steps.run_status.outputs.timestamp }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.force_copy }}" == "true" ]; then
+            echo "- **Mode:** Force copy (skip check disabled)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "- **Mode:** Dry run only" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- Commissioner Sheet: \`${{ env.COMMISSIONER_SHEET_ID }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- League Copy Sheet: \`${{ env.LEAGUE_SHEET_COPY_ID }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Log Location: Shared Drive \`${{ env.LOG_PARENT_ID }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Logs Spreadsheet](https://docs.google.com/spreadsheets/d/1wbykU_-3kkSXT-sQXQOuMToUu2PPIzBJDrxZWaqdnsk)" >> $GITHUB_STEP_SUMMARY

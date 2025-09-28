@@ -34,7 +34,7 @@
 
 A consolidated, dynasty‑format fantasy analytics platform that unifies commissioner‑managed league data, public NFL statistics, and market signals (e.g., KTC players and rookie picks) into a reproducible, auditable, cloud‑first analytics stack. The system favors simple batch updates, preservation of raw data, schema‑on‑read flexibility, and a cost‑efficient footprint. Normal operations run on a twice‑daily automated schedule with secure ad‑hoc remote triggers. Primary consumers are hosted notebooks (Google Colab), with flexibility to add a lightweight UI later without re‑architecting.
 
----
+______________________________________________________________________
 
 ## Requirements (MoSCoW)
 
@@ -62,7 +62,7 @@ A consolidated, dynasty‑format fantasy analytics platform that unifies commiss
 
 - Real‑time/streaming game‑time mode; heavy microservices/enterprise warehouse features.
 
----
+______________________________________________________________________
 
 ## Method
 
@@ -155,9 +155,20 @@ gs://ff-analytics/
 
 - Seed `dim_scoring_rule` and policy lookups from league rules constants (e.g., scoring, roster limits, contracts/proration, tag logic). Keep seeds versioned and reference them in downstream marts.
 
----
+______________________________________________________________________
 
 ## Provider Ingestion Notes (Selected)
+
+### Commissioner Google Sheet (Complex Source)
+
+- **Challenge**: Direct API reads timeout due to sheet complexity (formulas, external connections)
+- **Solution**: Server-side copy strategy (see ADR-005)
+  - Use `copyTo()` API to duplicate tabs without reading values
+  - Freeze formulas to values via batch operations
+  - Atomic rename/swap for consistency
+  - Log to Shared Drive (avoids service account 0GB quota issue)
+- **Skip Logic**: Check source `modifiedTime` to avoid unnecessary copies
+- **Output**: Simple values-only sheet that downstream pipeline can read reliably
 
 ### KTC (Dynasty 1QB + Picks)
 
@@ -169,7 +180,7 @@ gs://ff-analytics/
 
 - Enforce uniqueness on `(provider, provider_id)` or `(provider, normalized_name, team, position)` before mapping to canonical IDs.
 
----
+______________________________________________________________________
 
 ## Data Lifecycle & Cost Controls
 
@@ -180,7 +191,7 @@ gs://ff-analytics/
 - **Compaction Playbook**
   1. Read partition with projection pushdown; 2) Write to temp with `row_group_size≈256MB`; 3) Atomic swap and cleanup.
 
----
+______________________________________________________________________
 
 ## Data Quality & Freshness Gates (dbt)
 
@@ -188,7 +199,7 @@ gs://ff-analytics/
 - `fresher_than` macros: e.g., KTC `asof_date >= today-2`; Sheets `dt >= today-2`.
 - Row‑delta tests (± thresholds) on `fact_player_stats`, `mart_*_weekly`.
 
----
+______________________________________________________________________
 
 ## Backfill & Historical Loads
 
@@ -196,7 +207,7 @@ gs://ff-analytics/
 - Build dbt models season‑by‑season to limit working set.
 - Compact and transition old seasons to Coldline.
 
----
+______________________________________________________________________
 
 ## Notebook UX Conventions
 
@@ -204,33 +215,35 @@ gs://ff-analytics/
 - Display freshness banner from `ops` + marts.
 - Convenience views: `vw_trade_value_default` selects 1QB columns by default.
 
----
+______________________________________________________________________
 
 ## Legal & ToS Hygiene
 
 - Scrape politely; cache KTC; avoid redistribution of full vendor tables; respect rate limits for all providers.
 
----
+______________________________________________________________________
 
 ## ADRs (Examples)
 
 - **ADR‑001** Canonical stat dictionary (neutral names; provider maps).
 - **ADR‑002** Twice‑daily cron (08:00, 16:00 UTC).
 - **ADR‑003** Versioning strategy for breaking changes (`_vN` + compat views).
+- **ADR‑004** GitHub Actions for Sheets access (CI/CD authentication).
+- **ADR‑005** Commissioner Sheet ingestion via server-side copy strategy (handles complex sheets).
 
----
+______________________________________________________________________
 
 ## Issue Backlog — Starter
 
 1. Buckets & IAM: create `ff-analytics` and service accounts; apply lifecycle policies.
-2. Ingestors: implement Sheets, Sleeper, nflreadpy, KTC (players+picks 1QB); retries + LKG.
-3. dbt project: external Parquet config; sources; stage models; seeds (Half‑PPR + stat map).
-4. Core marts: weekly real‑world & fantasy; asset market marts; default views.
-5. Ops: run ledger, model metrics, DQ tests; Discord webhook; health notebook.
-6. Compaction: monthly job and metrics; partition audits.
-7. Notebooks: roster health, waiver, start/sit, trade scenarios with 1QB default.
+1. Ingestors: implement Sheets, Sleeper, nflreadpy, KTC (players+picks 1QB); retries + LKG.
+1. dbt project: external Parquet config; sources; stage models; seeds (Half‑PPR + stat map).
+1. Core marts: weekly real‑world & fantasy; asset market marts; default views.
+1. Ops: run ledger, model metrics, DQ tests; Discord webhook; health notebook.
+1. Compaction: monthly job and metrics; partition audits.
+1. Notebooks: roster health, waiver, start/sit, trade scenarios with 1QB default.
 
----
+______________________________________________________________________
 
 ## (Optional) PlantUML — Component & Flow
 
@@ -251,13 +264,13 @@ User -> Colab : query marts via DuckDB (httpfs)
 @enduml
 ```
 
----
+______________________________________________________________________
 
 ### Notes on Model Readiness for Future ML (Non‑Blocking)
 
 - Keep canonical long‑form facts and feature‑ready marts (e.g., per‑player per‑week table with neutral stat names and scoring) to allow future integration with a feature registry without changing core schema.
 
----
+______________________________________________________________________
 
 ### Appendix — dbt Snippets (Reference)
 
@@ -293,15 +306,16 @@ ff_duckdb:
       extensions: [httpfs]
 ```
 
-
----
+______________________________________________________________________
 
 # Addendum — SPEC v2.2 (Consolidated)
+
 *(generated 2025-09-24T23:36:28.569837Z)*
 
 The following sections supersede or augment parts of v2:
 
 # SPEC-1 Consolidated (v2 → v2.2 patch)
+
 Generated: 2025-09-24T23:30:42.789792Z
 
 ## Orchestration & Language Strategy (CONFIRMED + SHIM DETAILS)
@@ -309,16 +323,20 @@ Generated: 2025-09-24T23:30:42.789792Z
 **Primary orchestrator:** Python (uv-managed).
 
 **Loaders**
+
 - **nflverse:** Python-first via `nflreadpy`, with a **Python shim** that falls back to `nflreadr` (R) when a dataset/utility is unavailable in Python or misbehaves.
 - **FFanalytics (projections):** R-native runner (invoked from Python); not part of the nflverse shim.
 
 ### nflverse Shim (NEW)
+
 A unified Python entrypoint that:
-1) Tries `nflreadpy` for the requested dataset(s).
-2) On `NotImplementedError`, `AttributeError`, or explicit “no coverage” in the registry, calls an R script (`Rscript scripts/nflverse_load.R ...`) that uses `nflreadr`.
-3) Writes partitioned Parquet with a standard metadata footer and returns the output manifest.
+
+1. Tries `nflreadpy` for the requested dataset(s).
+1. On `NotImplementedError`, `AttributeError`, or explicit “no coverage” in the registry, calls an R script (`Rscript scripts/nflverse_load.R ...`) that uses `nflreadr`.
+1. Writes partitioned Parquet with a standard metadata footer and returns the output manifest.
 
 **Function signature (conceptual):**
+
 ```python
 load_nflverse(dataset: str,
               seasons: list[int] | int | None = None,
@@ -329,11 +347,13 @@ load_nflverse(dataset: str,
 ```
 
 **Behavior:**
+
 - **Registry-driven** mapping from logical dataset names to concrete loader calls.
 - **Tracing/logging:** log which path ran (`python` vs `r_fallback`), versions (`nflreadpy.__version__`, `nflreadr` session), and parameters.
 - **Contracts:** always produce the same schema per dataset regardless of loader; any loader-specific quirks are normalized in the shim before write.
 
 **Repo layout (relevant parts)**
+
 ```
 /ingest/nflverse/
   shim.py                 # load_nflverse(...) + registry & fallbacks
@@ -347,25 +367,29 @@ load_nflverse(dataset: str,
 ```
 
 **nflverse scheduling:**
+
 - Weekly Monday 08:00 UTC (in-season) + ad-hoc historical.
 - Optional overlay to twice-daily cron for injuries/depth charts if desired.
 
 **Version pins (as of today):**
+
 - `nflreadr` **1.5.0** (CRAN)
 - `nflreadpy` **0.1.1** (PyPI/GitHub lifecycle: experimental)
 - `polars` **>=0.20**; `pyarrow` **>=15**
 
 ## FFanalytics Runner (CLARIFIED)
+
 - Invoked by Python (`subprocess`), but **not** behind the nflverse shim.
 - Outputs a long-form `fact_player_projections` with consistent schema; stores scrape logs and site coverage stats.
 - Config via YAML (sites, weights, scoring rules) passed to `ffanalytics_run.R`.
 
 ## Storage Path Convention (CONFIRMED)
+
 - Raw: `gs://ff-analytics/raw/<provider>/<dataset>/dt=YYYY-MM-DD/`
 - Stage: `gs://ff-analytics/stage/<provider>/<dataset>/`
 - Mart: `gs://ff-analytics/mart/<domain>/...`
 - Always include `asof_datetime` (UTC), `source_name`, `source_version`, and `loader_path`.
 
 ## Identity, Change Capture, Freshness (CONFIRMED)
-- No change from v2.1 patch; applies equally regardless of loader path.
 
+- No change from v2.1 patch; applies equally regardless of loader path.

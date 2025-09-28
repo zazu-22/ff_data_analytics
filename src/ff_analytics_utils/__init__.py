@@ -3,8 +3,10 @@ from .google_drive_helper import (
     ensure_folder,
     ensure_spreadsheet_in_folder,
     folder_id_from_url,
+    get_drive_info,
     get_file_metadata,
     get_file_modified_time_utc,
+    is_shared_drive,
     move_file_to_folder,
     parse_rfc3339,
 )
@@ -18,4 +20,6 @@ __all__: list[str] = [
     "move_file_to_folder",
     "ensure_folder",
     "folder_id_from_url",
+    "is_shared_drive",
+    "get_drive_info",
 ]

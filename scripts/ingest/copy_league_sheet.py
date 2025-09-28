@@ -24,7 +24,7 @@ COMMISSIONER_SHEET_ID="1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"
 # Owner tab names
 OWNER_TABS="Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper"
 # Google Sheet ID for for leage_sheet_copy (destination)
-LEAGUE_SHEET_COPY="1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"
+LEAGUE_SHEET_COPY_ID="1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"
 # Set to "1" or "true" to skip run if source sheet unchanged since last run
 ENTIRE_RUN_SKIP_IF_UNCHANGED=1
 # Configure pause between tab copy
@@ -50,10 +50,15 @@ from datetime import UTC, datetime
 from typing import cast
 
 import gspread
+from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
 from gspread.exceptions import WorksheetNotFound
 from gspread.spreadsheet import Spreadsheet
 from gspread.worksheet import ValueRenderOption
+from rich.pretty import pprint
+
+# Load environment variables from .env file
+load_dotenv()
 
 # === Import helpers ===
 try:
@@ -62,8 +67,10 @@ try:
         build_drive,
         ensure_folder,
         ensure_spreadsheet_in_folder,
+        get_drive_info,
         get_file_metadata,
         get_file_modified_time_utc,
+        is_shared_drive,
         parse_rfc3339,
     )
 except Exception:
@@ -73,8 +80,10 @@ except Exception:
             build_drive,
             ensure_folder,
             ensure_spreadsheet_in_folder,
+            get_drive_info,
             get_file_metadata,
             get_file_modified_time_utc,
+            is_shared_drive,
             parse_rfc3339,
         )
     except Exception:
@@ -85,10 +94,97 @@ except Exception:
             build_drive,
             ensure_folder,
             ensure_spreadsheet_in_folder,
+            get_drive_info,
             get_file_metadata,
             get_file_modified_time_utc,
+            is_shared_drive,
             parse_rfc3339,
         )
+
+# -----------------------
+# Summary Helpers
+# -----------------------
+
+
+def _resolve_parents(drive, parent_ids: list[str] | None):
+    """Return [{'id':..., 'name':...}, ...] for parent folders; tolerates missing perms.
+    Accepts None when the metadata has no 'parents' field."""
+    out = []
+    for pid in parent_ids or []:
+        try:
+            meta = drive.files().get(fileId=pid, fields="id,name").execute()
+            out.append({"id": meta.get("id"), "name": meta.get("name")})
+        except Exception:
+            out.append({"id": pid, "name": None})
+    return out
+
+
+def print_run_summary(
+    *,
+    run_id: str,
+    started_iso: str,
+    finished_iso: str,
+    src_sheet_id: str,
+    dst_sheet_id: str,
+    drive,
+    separate_logs: bool,
+    logs_folder_id: str | None,
+    logs_folder_path: str | None,
+    log_file_id: str | None,
+    src_modified_iso: str,
+    stats: dict[str, int],
+    tab_results: list[dict[str, object]],
+):
+    # File metadata + parents (names if visible)
+    src_meta = get_file_metadata(drive, src_sheet_id, fields="id,name,parents,modifiedTime,version")
+    dst_meta = get_file_metadata(drive, dst_sheet_id, fields="id,name,parents,modifiedTime,version")
+    src_parents = _resolve_parents(drive, src_meta.get("parents"))
+    dst_parents = _resolve_parents(drive, dst_meta.get("parents"))
+
+    payload = {
+        "run": {
+            "run_id": run_id,
+            "started_at_utc": started_iso,
+            "finished_at_utc": finished_iso,
+            "source_modifiedTime_utc": src_modified_iso,
+        },
+        "source_spreadsheet": {
+            "id": src_meta.get("id"),
+            "name": src_meta.get("name"),
+            "parents": src_parents,
+            "modifiedTime": src_meta.get("modifiedTime"),
+            "version": src_meta.get("version"),
+        },
+        "destination_spreadsheet": {
+            "id": dst_meta.get("id"),
+            "name": dst_meta.get("name"),
+            "parents": dst_parents,
+            "modifiedTime": dst_meta.get("modifiedTime"),
+            "version": dst_meta.get("version"),
+        },
+        "logging": {
+            "separate_log_workbook": bool(separate_logs),
+            "log_folder_id": logs_folder_id,
+            "log_folder_path": logs_folder_path,
+            "log_spreadsheet_id": log_file_id if separate_logs else dst_sheet_id,
+        },
+        "stats": {
+            "tabs_total": len(tab_results),
+            "copied": stats.get("copied", 0),
+            "skipped": stats.get("skipped", 0),
+            "errors": stats.get("errors", 0),
+        },
+        "tabs": tab_results,  # per-tab status summaries
+    }
+
+    print("\n===== League Sheets Copy Summary =====")
+    # Pretty-print but keep it compact
+    pprint(payload)
+    print("===== End Summary =====\n")
+
+
+# ------------------------------------
+
 
 # -----------------------
 # CONFIG (can be overridden by env)
@@ -96,8 +192,8 @@ except Exception:
 COMMISSIONER_SHEET_ID: str = os.getenv(
     "COMMISSIONER_SHEET_ID", "1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"
 )
-LEAGUE_SHEET_COPY: str = os.getenv(
-    "LEAGUE_SHEET_COPY", "1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"
+LEAGUE_SHEET_COPY_ID: str = os.getenv(
+    "LEAGUE_SHEET_COPY_ID", "1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"
 )
 
 DEFAULT_TABS: list[str] = [
@@ -163,6 +259,12 @@ SCOPES: list[str] = [
 def ensure_log_sheet(spreadsheet: Spreadsheet, name=LOG_SHEET_NAME):
     try:
         ws = spreadsheet.worksheet(name)
+        # Check if we need to add the new column for existing sheets
+        headers = ws.row_values(1) if ws.row_count > 0 else []
+        if headers and "src_modifiedTime_utc" not in headers:
+            # Add the new column header
+            col_index = len(headers) + 1
+            ws.update_cell(1, col_index, "src_modifiedTime_utc")
     except WorksheetNotFound:
         ws = spreadsheet.add_worksheet(name, rows=5000, cols=20)
         ws.append_row(
@@ -180,6 +282,7 @@ def ensure_log_sheet(spreadsheet: Spreadsheet, name=LOG_SHEET_NAME):
                 "rows",
                 "cols",
                 "checksum",
+                "src_modifiedTime_utc",
             ]
         )
     return ws
@@ -252,6 +355,7 @@ def log_row(log_ws, **k) -> None:
             k.get("rows"),
             k.get("cols"),
             k.get("checksum"),
+            k.get("src_modifiedTime_utc"),
         ],
         value_input_option="RAW",
     )
@@ -278,16 +382,41 @@ def main() -> int:
         print(f"ERROR: cannot open SOURCE spreadsheet: {e}", file=sys.stderr)
         sys.exit(2)
     try:
-        dst = gc.open_by_key(LEAGUE_SHEET_COPY)
+        dst = gc.open_by_key(LEAGUE_SHEET_COPY_ID)
     except Exception as e:
         print(f"ERROR: cannot open DEST spreadsheet: {e}", file=sys.stderr)
         sys.exit(2)
 
     # Decide where logs live
-    if LOG_IN_SEPARATE_SPREADSHEET:
-        folder_id = ensure_folder(drive, LOG_FOLDER_PATH, parent_id=LOG_PARENT_ID)
-        log_file_id = ensure_spreadsheet_in_folder(drive, folder_id, LOG_SHEET_BASENAME)
-        logs_ss = gc.open_by_key(log_file_id)
+    separate_logs_enabled = LOG_IN_SEPARATE_SPREADSHEET
+    folder_id = None
+    log_file_id = None
+
+    if separate_logs_enabled:
+        try:
+            # Check if we're working with a Shared Drive
+            if is_shared_drive(LOG_PARENT_ID):
+                drive_info = get_drive_info(drive, LOG_PARENT_ID)
+                if drive_info:
+                    print(f"Using Shared Drive: {drive_info.get('name')} ({LOG_PARENT_ID})")
+                else:
+                    print(f"Using Shared Drive: {LOG_PARENT_ID}")
+
+            # Create or find the folder path
+            folder_id = ensure_folder(
+                drive, LOG_FOLDER_PATH, parent_id=LOG_PARENT_ID, create_missing=True
+            )
+            print(f"Using log folder at path: {LOG_FOLDER_PATH}")
+
+            # Create or find the spreadsheet in the folder
+            log_file_id = ensure_spreadsheet_in_folder(drive, folder_id, LOG_SHEET_BASENAME)
+            logs_ss = gc.open_by_key(log_file_id)
+            print(f"Using log spreadsheet: {LOG_SHEET_BASENAME}")
+        except Exception as e:
+            print(f"WARNING: Could not create/access separate log sheet: {e}", file=sys.stderr)
+            print("Falling back to using destination sheet for logging.", file=sys.stderr)
+            logs_ss = dst
+            separate_logs_enabled = False  # Update flag for summary
     else:
         logs_ss = dst
 
@@ -301,9 +430,30 @@ def main() -> int:
     prev_src_mtime = state_get(state_ws, "src_modifiedTime_utc")
     if ENTIRE_RUN_SKIP_IF_UNCHANGED and prev_src_mtime:
         try:
-            prev_dt = parse_rfc3339(prev_src_mtime)
+            prev_dt: datetime = parse_rfc3339(prev_src_mtime)
             if prev_dt >= src_modified_utc:
                 print(f"[SKIP] Source workbook unchanged since {prev_dt.isoformat()} – exiting.")
+
+                # Log the whole-run skip
+                run_id: str = uuid.uuid4().hex
+                started_iso = datetime.now(UTC).isoformat()
+                log_row(
+                    log_ws,
+                    run_id=run_id,
+                    tab="[ENTIRE_RUN]",  # Special marker for whole-run entries
+                    status="SKIP_UNCHANGED",
+                    started_at=started_iso,
+                    finished_at=started_iso,  # Same as start for skipped runs
+                    duration_ms=0,
+                    src_sheet_id=COMMISSIONER_SHEET_ID,
+                    src_tab_title="[ALL]",
+                    dst_sheet_id=LEAGUE_SHEET_COPY_ID,
+                    dst_tab_id=None,
+                    rows=None,
+                    cols=None,
+                    checksum=None,
+                    src_modifiedTime_utc=src_modified_utc.isoformat(),
+                )
                 return 0
         except Exception:
             pass
@@ -312,20 +462,34 @@ def main() -> int:
     src_map = {ws.title: ws for ws in src.worksheets()}
 
     # Last per-tab OK
-    last_ok_map = last_success_utc_by_tab(log_ws)
+    last_ok_map: dict[str, datetime] = last_success_utc_by_tab(log_ws)
 
-    run_id = uuid.uuid4().hex
+    run_id: str = uuid.uuid4().hex
     print(f"Starting BK extract run {run_id} at {datetime.now(UTC).isoformat()}")
+
+    run_started_iso = datetime.now(UTC).isoformat()
+
+    stats: dict[str, int] = {"copied": 0, "skipped": 0, "errors": 0}
+    tab_results: list[dict[str, object]] = []  # collect brief per-tab records for the summary
 
     for title in TABS_TO_COPY:
         # Per-tab skip: if we already refreshed this tab at/after the file's modifiedTime, skip it
-        last_ok = last_ok_map.get(title)
+        last_ok: datetime | None = last_ok_map.get(title)
         if last_ok and last_ok >= src_modified_utc:
             message = (
                 f"[SKIP] {title}: already refreshed at {last_ok.isoformat()} "
                 f"(src modified {src_modified_utc.isoformat()})"
             )
             print(message)
+            tab_results.append(
+                {
+                    "tab": title,
+                    "status": "SKIP",
+                    "reason": "unchanged_since_source_modifiedTime",
+                }
+            )
+            stats["skipped"] += 1
+
             continue
 
         t0 = time.perf_counter()
@@ -343,7 +507,7 @@ def main() -> int:
             src_ws = src_map[title]
 
             # 1) Server-side copyTo (no value reads)
-            new_props = src_ws.copy_to(LEAGUE_SHEET_COPY)  # returns dict with 'sheetId'
+            new_props = src_ws.copy_to(LEAGUE_SHEET_COPY_ID)  # returns dict with 'sheetId'
             new_id = new_props["sheetId"]
 
             # Get the new sheet by id
@@ -493,17 +657,61 @@ def main() -> int:
                 duration_ms=duration_ms,
                 src_sheet_id=COMMISSIONER_SHEET_ID,
                 src_tab_title=title,
-                dst_sheet_id=LEAGUE_SHEET_COPY,
+                dst_sheet_id=LEAGUE_SHEET_COPY_ID,
                 dst_tab_id=dst_tab_id,
                 rows=rows,
                 cols=cols,
                 checksum=checksum,
+                src_modifiedTime_utc=src_modified_utc.isoformat(),
             )
+            if status == "OK":
+                stats["copied"] += 1
+            else:
+                stats["errors"] += 1
+
+            tab_results.append(
+                {
+                    "tab": title,
+                    "status": status if status != "OK" else "COPIED",
+                    "dst_tab_id": dst_tab_id,
+                    "rows": rows,
+                    "cols": cols,
+                    "duration_ms": duration_ms,
+                    "checksum16": checksum,
+                }
+            )
+
             time.sleep(PAUSE_BETWEEN_TABS_SEC)
 
     # Persist last seen source modifiedTime (for whole-run skip next time)
     state_set(state_ws, "src_modifiedTime_utc", src_modified_utc.isoformat())
-    print(f"BK extract run {run_id} completed at {datetime.now(UTC).isoformat()}")
+
+    finished_iso: str = datetime.now(UTC).isoformat()
+
+    # Use the separate_logs_enabled flag which may have been updated if fallback occurred
+    separate_logs: bool = separate_logs_enabled
+
+    # These variables were set earlier in the script
+    logs_folder_id: str | None = folder_id
+    logs_folder_path: str | None = LOG_FOLDER_PATH  # Use the constant defined at the top
+    # log_file_id is already defined above
+
+    # Print the summary
+    print_run_summary(
+        run_id=run_id,
+        started_iso=run_started_iso,
+        finished_iso=finished_iso,
+        src_sheet_id=COMMISSIONER_SHEET_ID,
+        dst_sheet_id=LEAGUE_SHEET_COPY_ID,
+        drive=drive,
+        separate_logs=separate_logs,
+        logs_folder_id=logs_folder_id,
+        logs_folder_path=logs_folder_path,
+        log_file_id=log_file_id,
+        src_modified_iso=src_modified_utc.isoformat(),
+        stats=stats,
+        tab_results=tab_results,
+    )
 
     return 0
 

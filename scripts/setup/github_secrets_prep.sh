@@ -66,17 +66,29 @@ REQUIRED SECRETS:
    Value: ${COMMISSIONER_SHEET_URL:-not set in .env}
    Purpose: Google Sheet with league data (source of truth)
 
-5. SLEEPER_LEAGUE_ID
+5. COMMISSIONER_SHEET_ID
+   Value: ${COMMISSIONER_SHEET_ID:-not set in .env}
+   Purpose: Commissioner Sheet ID for copy workflow
+
+6. LEAGUE_SHEET_COPY_ID
+   Value: ${LEAGUE_SHEET_COPY_ID:-not set in .env}
+   Purpose: Destination sheet for Commissioner data copy
+
+7. LOG_PARENT_ID
+   Value: ${LOG_PARENT_ID:-not set in .env}
+   Purpose: Shared Drive ID for ingestion logs
+
+8. SLEEPER_LEAGUE_ID
    Value: ${SLEEPER_LEAGUE_ID}
    Purpose: Identifies your Sleeper league for API calls
 
 OPTIONAL SECRETS:
 -----------------
-6. SPORTS_DATA_IO_API_KEY
+9. SPORTS_DATA_IO_API_KEY
    Value: ${SPORTS_DATA_IO_API_KEY:-not set in .env}
    Purpose: Sports Data IO API access for additional data
 
-7. DISCORD_WEBHOOK_URL
+10. DISCORD_WEBHOOK_URL
    Value: ${DISCORD_WEBHOOK_URL:-not set in .env}
    Purpose: Notifications for pipeline status (recommended)
 
@@ -116,9 +128,12 @@ echo "3. Navigate to Secrets and variables → Actions"
 echo "4. Create a new secret named: GOOGLE_APPLICATION_CREDENTIALS_JSON"
 echo "5. Paste the value from your clipboard"
 echo ""
-echo "Additional secrets to add:"
+echo "Core secrets to add:"
 echo "  - GCP_PROJECT_ID = ${GCP_PROJECT_ID}"
 echo "  - GCS_BUCKET = ${GCS_BUCKET}"
+echo "  - COMMISSIONER_SHEET_ID = ${COMMISSIONER_SHEET_ID:-not set in .env}"
+echo "  - LEAGUE_SHEET_COPY_ID = ${LEAGUE_SHEET_COPY_ID:-not set in .env}"
+echo "  - LOG_PARENT_ID = ${LOG_PARENT_ID:-not set in .env}"
 echo ""
 
 # Show the secrets file
@@ -139,6 +154,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "  - GCS_BUCKET = ${GCS_BUCKET}"
     echo "  - SLEEPER_LEAGUE_ID = ${SLEEPER_LEAGUE_ID}"
     echo "  - COMMISSIONER_SHEET_URL = ${COMMISSIONER_SHEET_URL:-not configured}"
+    echo "  - COMMISSIONER_SHEET_ID = ${COMMISSIONER_SHEET_ID:-not configured}"
+    echo "  - LEAGUE_SHEET_COPY_ID = ${LEAGUE_SHEET_COPY_ID:-not configured}"
+    echo "  - LOG_PARENT_ID = ${LOG_PARENT_ID:-not configured}"
     echo ""
     echo "Optional Secrets:"
     echo "  - SPORTS_DATA_IO_API_KEY = ${SPORTS_DATA_IO_API_KEY:-not configured}"
