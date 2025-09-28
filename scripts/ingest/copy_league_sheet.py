@@ -209,6 +209,7 @@ DEFAULT_TABS: list[str] = [
     "Jason",
     "Kevin",
     "Piper",
+    "TRANSACTIONS",
 ]
 TABS_TO_COPY: list[str] = [
     t.strip() for t in os.getenv("OWNER_TABS", "").split(",") if t.strip()
