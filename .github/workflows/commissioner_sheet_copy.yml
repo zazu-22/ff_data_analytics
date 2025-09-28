@@ -102,7 +102,11 @@ jobs:
           echo "Skip if unchanged: $ENTIRE_RUN_SKIP_IF_UNCHANGED"
 
           # Could run the script with a --dry-run flag if we add that feature
-          python3 -c 'import os; [print(f"  {k}: {os.getenv(k, \"NOT SET\")}") for k in ["COMMISSIONER_SHEET_ID", "LEAGUE_SHEET_COPY_ID", "LOG_PARENT_ID", "OWNER_TABS"]]'
+          echo "Environment check:"
+          echo "  COMMISSIONER_SHEET_ID: $COMMISSIONER_SHEET_ID"
+          echo "  LEAGUE_SHEET_COPY_ID: $LEAGUE_SHEET_COPY_ID"
+          echo "  LOG_PARENT_ID: $LOG_PARENT_ID"
+          echo "  OWNER_TABS: $OWNER_TABS"
 
       - name: Run Commissioner Sheet Copy
         if: github.event.inputs.dry_run != 'true'
@@ -170,8 +174,8 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- Commissioner Sheet: \`${{ env.COMMISSIONER_SHEET_ID }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- League Copy Sheet: \`${{ env.LEAGUE_SHEET_COPY_ID }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Log Location: Shared Drive \`${{ env.LOG_PARENT_ID }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Commissioner Sheet: \`${COMMISSIONER_SHEET_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- League Copy Sheet: \`${LEAGUE_SHEET_COPY_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Log Location: Shared Drive \`${LOG_PARENT_ID}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[View Logs Spreadsheet](https://docs.google.com/spreadsheets/d/1wbykU_-3kkSXT-sQXQOuMToUu2PPIzBJDrxZWaqdnsk)" >> $GITHUB_STEP_SUMMARY
