@@ -30,17 +30,17 @@ REGISTRY: dict[str, DatasetSpec] = {
     ),
     "weekly": DatasetSpec(
         name="weekly",
-        py_loader="nflreadpy.load_player_stats_weekly",
+        py_loader="nflreadpy.load_player_stats",
         r_loader="nflreadr::load_player_stats",
         primary_keys=("season", "week", "gsis_id"),
-        notes="Weekly player stats; ensure consistent schema between loaders.",
+        notes="Weekly player stats; uses summary_level='week' by default.",
     ),
     "season": DatasetSpec(
         name="season",
-        py_loader="nflreadpy.load_player_stats_season",
+        py_loader="nflreadpy.load_player_stats",
         r_loader="nflreadr::load_player_stats",
         primary_keys=("season", "gsis_id"),
-        notes="Season-level player stats.",
+        notes="Season-level player stats; needs summary_level='reg+post'.",
     ),
     "injuries": DatasetSpec(
         name="injuries",

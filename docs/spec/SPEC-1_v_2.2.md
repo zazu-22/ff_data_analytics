@@ -230,6 +230,7 @@ ______________________________________________________________________
 - **ADR‑003** Versioning strategy for breaking changes (`_vN` + compat views).
 - **ADR‑004** GitHub Actions for Sheets access (CI/CD authentication).
 - **ADR‑005** Commissioner Sheet ingestion via server-side copy strategy (handles complex sheets).
+- **ADR‑006** GCS integration strategy (environment-based configuration for local vs cloud storage).
 
 ______________________________________________________________________
 

@@ -31,12 +31,21 @@ ______________________________________________________________________
 
 ## 2) nflverse — Python Shim Bring‑Up
 
-- ☐ Local run (dev):
-  - `python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players'))"`
-  - `python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('weekly', seasons=[2023], weeks=[1]))"`
-- ☐ Verify Parquet & `_meta.json` under temp output (or configured GCS mount), schemas align with dbt expectations.
-- ☐ Test **R fallback** path works: `loader_preference="r_only"` for `schedule`.
-- ☐ Extend `ingest/nflverse/registry.py` if we add datasets (injuries, depth_charts, teams, etc.)
+- ☑ Local run (dev):
+  - `python -c "from ingest.nflverse.shim import load_nflverse; result = load_nflverse('players', out_dir='data/raw/nflverse')"`
+  - `python -c "from ingest.nflverse.shim import load_nflverse; result = load_nflverse('weekly', seasons=[2023], out_dir='data/raw/nflverse')"`
+  - Fixed registry: `load_player_stats` (not `load_player_stats_weekly`)
+  - Fixed shim to handle varying function signatures (inspect params before calling)
+- ☑ Verify Parquet & `_meta.json` under temp output (or configured GCS mount), schemas align with dbt expectations.
+  - Successfully creates partitioned output: `data/raw/nflverse/{dataset}/dt=YYYY-MM-DD/`
+  - Metadata includes loader_path, source_version, asof_datetime
+- ☑ Test **R fallback** path works: `loader_preference="r_only"` for `schedule`.
+  - R packages installed: lubridate, nflreadr, arrow, jsonlite
+  - Fixed shim to properly return R loader manifest
+  - Successfully tested: schedule (285 games), players via R
+- ☑ Extend `ingest/nflverse/registry.py` if we add datasets (injuries, depth_charts, teams, etc.)
+  - Registry already includes: players, weekly, season, injuries, depth_charts, schedule, teams
+  - Tested: injuries (5599 records), teams (768 records)
 
 ## 3) Sleeper — Minimal Ingest Checks
 
