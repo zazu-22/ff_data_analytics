@@ -1,27 +1,59 @@
 [project]
-name = "ff-data-analytics"
+name = "ff-analytics"
 version = "0.1.0"
 description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
 requires-python = ">=3.13.6"
 dependencies = [
+    "altair>=5.5.0",
+    "basedpyright>=1.31.5",
+    "duckdb>=1.4.0",
     "google-api-python-client>=2.183.0",
     "google-auth>=2.40.3",
+    "google-cloud-storage>=3.4.0",
     "gspread>=6.2.1",
     "jupyter>=1.1.1",
     "marimo>=0.16.2",
     "matplotlib>=3.10.6",
     "nflreadpy>=0.1.3",
     "oauth2client>=4.1.3",
+    "openai>=1.109.1",
     "pandas>=2.3.2",
-    "polars>=1.33.1",
+    "polars[pyarrow]>=1.33.1",
     "pyarrow>=21.0.0",
     "pydrive2>=1.21.3",
+    "pyrefly>=0.34.0",
+    "pytest>=8.4.2",
+    "python-lsp-ruff>=2.2.2",
+    "python-lsp-server>=1.13.1",
+    "rich>=14.1.0",
+    "ruff>=0.13.2",
+    "sqlglot>=27.19.0",
+    "vegafusion>=2.0.2",
+    "vl-convert-python>=1.8.0",
+    "websockets>=15.0.1",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "docs",
+    "migrations",
+    "venv",
+    "**/*script_snippets/**",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
@@ -39,6 +71,15 @@ line-ending = "lf"
 [tool.mdformat]
 wrap = 100
 number = false
+
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/*venv/**/*",
+    "**/*script_snippets",
+]
 
 [dependency-groups]
 dev = [

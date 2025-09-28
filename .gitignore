@@ -11,7 +11,7 @@ wheels/
 .venv
 
 # Environment and secrets
-.env
+*.env
 .env.local
 config/secrets/
 *.json.key

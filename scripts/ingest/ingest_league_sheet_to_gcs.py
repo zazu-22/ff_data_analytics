@@ -9,7 +9,7 @@ import json
 import logging
 import signal
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import gspread
@@ -17,12 +17,15 @@ import pandas as pd
 from google.cloud import storage
 from google.oauth2.service_account import Credentials
 
+
 # Timeout handler for hung operations
 class TimeoutError(Exception):
     pass
 
+
 def timeout_handler(signum, frame):
     raise TimeoutError("Operation timed out")
+
 
 signal.signal(signal.SIGALRM, timeout_handler)
 
@@ -94,18 +97,18 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
 
     try:
         # First, get worksheet dimensions
-        logger.info(f"  Getting worksheet properties...")
+        logger.info("  Getting worksheet properties...")
         props = worksheet._properties
-        if 'gridProperties' in props:
-            rows = props['gridProperties'].get('rowCount', 100)
-            cols = props['gridProperties'].get('columnCount', 50)
+        if "gridProperties" in props:
+            rows = props["gridProperties"].get("rowCount", 100)
+            cols = props["gridProperties"].get("columnCount", 50)
             logger.info(f"  Worksheet size: {rows} rows × {cols} columns")
         else:
             rows, cols = 100, 50  # Default if properties not available
             logger.info(f"  Using default range: {rows} rows × {cols} columns")
 
         # First try a small test read to verify access works
-        logger.info(f"  Testing with small read (A1:C3)...")
+        logger.info("  Testing with small read (A1:C3)...")
         signal.alarm(10)
         try:
             test_values = worksheet.get("A1:C3")
@@ -128,7 +131,7 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
             end_row = min(start_row + chunk_size - 1, max_rows)
 
             # Convert column number to letter
-            col_letter = ''
+            col_letter = ""
             n = max_cols
             while n > 0:
                 n, remainder = divmod(n - 1, 26)
@@ -170,6 +173,7 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
     except Exception as e:
         logger.error(f"  ✗ Failed to export {owner_name}: {e}")
         import traceback
+
         traceback.print_exc()
         return pd.DataFrame()
 
@@ -183,8 +187,8 @@ def upload_to_gcs(
         return False
 
     # Generate paths
-    dt = datetime.utcnow().strftime("%Y-%m-%d")
-    timestamp = datetime.utcnow().isoformat()
+    dt = datetime.now(UTC).strftime("%Y-%m-%d")
+    timestamp = datetime.now(UTC).isoformat()
 
     # Path structure: raw/commissioner/rosters/{owner}/dt={date}/
     blob_path = f"raw/commissioner/rosters/{owner_name}/dt={dt}/data.parquet"
@@ -290,7 +294,7 @@ def main():
 
         # Write summary for workflow artifact
         summary = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "sheet_id": sheet_id,
             "sheet_title": sheet.title,
             "tabs_processed": tabs_to_export,
