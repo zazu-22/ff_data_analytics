@@ -21,8 +21,8 @@ Env overrides (optional)
 ------------------------
 # Commissioner's Google Sheet ID (source sheet)
 COMMISSIONER_SHEET_ID="1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY"
-# Owner tab names
-OWNER_TABS="Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper"
+# Sheets tab names to copy
+SHEETS_TABS="Eric,Gordon,Joe,JP,Andy,Chip,McCreary,TJ,James,Jason,Kevin,Piper"
 # Google Sheet ID for for leage_sheet_copy (destination)
 LEAGUE_SHEET_COPY_ID="1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0"
 # Set to "1" or "true" to skip run if source sheet unchanged since last run
@@ -197,7 +197,7 @@ LEAGUE_SHEET_COPY_ID: str = os.getenv(
 )
 
 DEFAULT_TABS: list[str] = [
-    "Eric",
+    "TRANSACTIONS" "Eric",
     "Gordon",
     "Joe",
     "JP",
@@ -209,10 +209,9 @@ DEFAULT_TABS: list[str] = [
     "Jason",
     "Kevin",
     "Piper",
-    "TRANSACTIONS",
 ]
 TABS_TO_COPY: list[str] = [
-    t.strip() for t in os.getenv("OWNER_TABS", "").split(",") if t.strip()
+    t.strip() for t in os.getenv("SHEETS_TABS", "").split(",") if t.strip()
 ] or DEFAULT_TABS
 
 # Logging destination
