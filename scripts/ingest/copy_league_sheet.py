@@ -197,7 +197,8 @@ LEAGUE_SHEET_COPY_ID: str = os.getenv(
 )
 
 DEFAULT_TABS: list[str] = [
-    "TRANSACTIONS" "Eric",
+    "TRANSACTIONS",
+    "Eric",
     "Gordon",
     "Joe",
     "JP",
