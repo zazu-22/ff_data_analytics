@@ -54,8 +54,15 @@ ______________________________________________________________________
   - Source: `COMMISSIONER_SHEET_ID`
   - Destination: `LEAGUE_SHEET_COPY_ID`
   - Logs: Shared Drive `LOG_PARENT_ID`
-- ☐ Export small samples per tab from the copied sheet:
-  - `uv run tools/make_samples.py sheets --tabs $OWNER_TABS --sheet-url $LEAGUE_SHEET_COPY_URL --out ./samples`
+- ☑ Export small samples per tab from the copied sheet:
+  - `uv run tools/make_samples.py sheets --tabs Eric Gordon Joe JP Andy Chip McCreary TJ James Jason Kevin Piper --sheet-url https://docs.google.com/spreadsheets/d/1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0 --out ./samples`
+  - Fixed credential loading (supports both GOOGLE_APPLICATION_CREDENTIALS and GOOGLE_APPLICATION_CREDENTIALS_JSON)
+  - Added handling for duplicate/empty column headers in sheets
+- ☐ Parse raw commissioner sheets into logical tables:
+  - Note: Raw sheets contain multiple embedded tables (Active Roster, Cut Contracts, Draft Picks, Trade Contingencies)
+  - Need to extract and normalize into staging-ready formats: `contracts`, `rosters`, `cap`, `draft_assets`, `trade_conditions`
+  - Include owner/GM metadata from each tab
+  - Consider creating `scripts/ingest/parse_commissioner_sheets.py` or similar
 - ☐ Verify natural keys per tab (unique per date partition) and numeric domains (cap ≥ 0, years 1..5, etc.).
 
 ## 5) KeepTradeCut — Replace Sampler Stub

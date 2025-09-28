@@ -53,6 +53,10 @@ import random
 from pathlib import Path
 
 import pandas as pd
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 SEED = 42
 random.seed(SEED)
@@ -204,14 +208,31 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
     import gspread  # pip install gspread google-auth
     from google.oauth2.service_account import Credentials
 
+    # Try GOOGLE_APPLICATION_CREDENTIALS_JSON first (JSON content)
     creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    if not creds_json:
-        raise SystemExit(
-            "Set GOOGLE_APPLICATION_CREDENTIALS_JSON with service-account JSON to sample Sheets."
+    # Fallback to GOOGLE_APPLICATION_CREDENTIALS (file path)
+    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    if creds_json:
+        # Environment variable contains JSON content directly
+        creds = Credentials.from_service_account_info(
+            json.loads(creds_json), scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
         )
-    creds = Credentials.from_service_account_info(
-        json.loads(creds_json), scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    )
+    elif creds_path:
+        # Environment variable contains path to JSON file
+        if os.path.exists(creds_path):
+            with open(creds_path) as f:
+                creds_info = json.load(f)
+            creds = Credentials.from_service_account_info(
+                creds_info, scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
+            )
+        else:
+            raise SystemExit(f"Credentials file not found at: {creds_path}")
+    else:
+        raise SystemExit(
+            "Set GOOGLE_APPLICATION_CREDENTIALS_JSON (JSON content) or "
+            "GOOGLE_APPLICATION_CREDENTIALS (file path) to sample Sheets."
+        )
     gc = gspread.authorize(creds)
     sh = gc.open_by_url(sheet_url)
 
@@ -219,7 +240,21 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
     for tab in tabs:
         ws = sh.worksheet(tab)
         values = ws.get_all_values()
-        df = pd.DataFrame(values[1 : max_rows + 1], columns=values[0]) if values else pd.DataFrame()
+        if values:
+            # Handle duplicate column names by appending a suffix
+            columns = values[0]
+            col_counts = {}
+            unique_columns = []
+            for col in columns:
+                if col in col_counts:
+                    col_counts[col] += 1
+                    unique_columns.append(f"{col}_{col_counts[col]}")
+                else:
+                    col_counts[col] = 0
+                    unique_columns.append(col)
+            df = pd.DataFrame(values[1 : max_rows + 1], columns=unique_columns)
+        else:
+            df = pd.DataFrame()
         out_dir = _ensure_out(out, "sheets", tab)
         paths = _write_outputs(
             df, out_dir, "sheets", tab, {"sheet_url": sheet_url}, max_rows=max_rows
