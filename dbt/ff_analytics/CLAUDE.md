@@ -1,0 +1,115 @@
+# dbt Project Context
+
+**Location**: `dbt/ff_analytics/`
+**Purpose**: DuckDB + external Parquet dimensional models following Kimball patterns
+
+## Quick Commands
+
+```bash
+# From repo root
+make dbt-run    # dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+make dbt-test   # dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+make sqlfix     # Auto-fix SQL style issues
+
+# From this directory
+dbt run --profiles-dir .
+dbt test --profiles-dir .
+```
+
+## Model Organization
+
+Each subdirectory has a README.md with specific guidance:
+
+| Directory  | Purpose                     | Naming Pattern                  |
+| ---------- | --------------------------- | ------------------------------- |
+| `sources/` | Provider source definitions | `src_<provider>.yml`            |
+| `staging/` | Normalized from raw         | `stg_<provider>__<dataset>.sql` |
+| `core/`    | Facts/dimensions (Kimball)  | `fact_*`, `dim_*`               |
+| `markets/` | KTC trade values            | Market-specific marts           |
+| `ops/`     | Data quality/lineage        | `ops.*` tables                  |
+| `seeds/`   | Reference data              | `dim_*` crosswalks, rules       |
+| `macros/`  | Reusable SQL functions      | Freshness gates, helpers        |
+
+## Key Patterns
+
+### Grain Declaration
+
+**CRITICAL**: Every fact table MUST explicitly declare and test its grain.
+
+```yaml
+# models/core/fact_player_stats.yml
+tests:
+  - dbt_utils.unique_combination_of_columns:
+      combination_of_columns:
+        - player_id
+        - season
+        - week
+        - measure_domain
+        - stat_kind
+        - provider
+        - stat_name
+```
+
+### Conformed Dimensions
+
+- Reference `{{ ref('dim_player') }}` everywhere
+- NEVER duplicate dimension logic
+- Use crosswalk seeds (`dim_player_id_xref`) for identity resolution
+
+### External Parquet
+
+```yaml
+{{ config(
+    materialized='table',
+    external=true,
+    partition_by=['season', 'week']
+) }}
+```
+
+All large models use external Parquet. DuckDB catalog is in-memory only.
+
+### SQL Style
+
+- **Staging models**: Allow raw provider column names (ignore `RF04`, `CV06`)
+- **Core/marts**: Enforce strict style (lowercase, terminators)
+- **Manual fix**: `make sqlfix` runs SQLFluff auto-fix
+
+## Common Tasks
+
+**Add new source**:
+
+1. Define in `sources/src_<provider>.yml`
+1. Create staging model `staging/stg_<provider>__<dataset>.sql`
+1. Add tests to YAML file
+1. Reference in downstream models
+
+**Add conformed dimension**:
+
+1. Create seed or base table
+1. Model in `core/dim_<entity>.sql`
+1. Add unique key test
+1. Document grain and keys
+
+**Add fact table**:
+
+1. Model in `core/fact_<process>.sql`
+1. Declare grain in docstring
+1. Add grain uniqueness test
+1. Add foreign key relationship tests
+
+## Testing Strategy
+
+| Test Type                                 | Purpose                 | Location      |
+| ----------------------------------------- | ----------------------- | ------------- |
+| `not_null`                                | Key fields populated    | Column level  |
+| `unique`                                  | Surrogate keys unique   | Dimension PKs |
+| `relationships`                           | Foreign keys valid      | Fact FKs      |
+| `dbt_utils.unique_combination_of_columns` | Grain enforcement       | Fact grain    |
+| `accepted_values`                         | Controlled vocabularies | Enums, flags  |
+| `freshness`                               | Data recency            | Source level  |
+
+## References
+
+- **Kimball guide**: `../../docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`
+- **Repo conventions**: `../../docs/dev/repo_conventions_and_structure.md`
+- **SPEC**: `../../docs/spec/SPEC-1_v_2.2.md`

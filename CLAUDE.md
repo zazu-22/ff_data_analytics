@@ -6,137 +6,110 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Fantasy Football Analytics data architecture project combining commissioner league data, NFL statistics, and market signals (dynasty format) using a batch-processing cloud-first stack. Primary consumers are Jupyter notebooks (local and Google Colab).
 
+## Directory-Specific Guidance
+
+For detailed context on specific areas, see:
+
+- `dbt/ff_analytics/CLAUDE.md` - dbt modeling, testing, SQL style
+- `tools/CLAUDE.md` - CLI utilities and workflows
+- `scripts/CLAUDE.md` - Operational scripts by category
+- `src/ingest/CLAUDE.md` - Provider integration patterns
+
+## Package Structure
+
+- `src/ingest/` - Packaged ingestion modules (importable)
+- `src/ff_analytics_utils/` - Shared utility functions
+- Top-level `ingest/` - Legacy location (deprecated, use `src/ingest/`)
+
 ## Development Commands
 
 ### Python Environment
 
 - **Package Manager**: UV (v0.8.8)
 - **Python Version**: 3.13.6 (managed via .python-version)
-- **Setup & Install dependencies**: `uv sync` (creates venv and installs from pyproject.toml)
-- **Add new dependency**: `uv add <package>` (e.g., `uv add pandas`)
-- **Activate virtual environment**: `source .venv/bin/activate`
-- **Run with uv**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`
+- **Setup**: `uv sync`
+- **Add dependency**: `uv add <package>`
+- **Run with uv**: `uv run python <script.py>`
 
-### Jupyter Notebooks
+### Quick Start
 
-- **Start JupyterLab**: `jupyter lab`
-- **Primary notebooks location**: `/notebooks/`
-  - `load_nflverse_data.ipynb` - NFL data loading via nflreadpy
-  - `keep_trade_cut_ingest.ipynb` - KTC dynasty valuations
-  - `sheets_to_csv_gdrive.ipynb` - Google Sheets commissioner data
+```bash
+# 1. Setup
+uv sync
 
-### R Scripts
+# 2. Generate samples
+make samples-nflverse
 
-- **FFAnalytics projections**: `Rscript scripts/R/ffanalytics_run.R --config config/projections/ffanalytics_projections_config.yaml --scoring config/scoring/sleeper_scoring_rules.yaml`
-- **NFLverse data load**: `Rscript scripts/R/nflverse_load.R`
+# 3. Run dbt models
+make dbt-run
 
-## Architecture Decisions
+# 4. Test
+make dbt-test
+```
 
-### Data Layer Structure
+See `Makefile` for all targets: `make help`
 
-- **Raw immutable snapshots**: All source data preserved with timestamps (UTC) for time-travel/backfill
-- **Data path pattern**: `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/` (e.g., `data/raw/nflverse/players/dt=2024-09-24/`)
-- **Batch processing schedule**: Twice daily at 08:00 and 16:00 UTC via GitHub Actions
-- **Storage format**: Parquet files optimized for analytics queries, columnar format with PyArrow
-- **Schema-on-read**: Flexible data exploration without rigid schemas
+## Key Components
 
-### Key Components
+| Component       | Location            | Purpose                                               |
+| --------------- | ------------------- | ----------------------------------------------------- |
+| **Ingest**      | `src/ingest/`       | Provider data loaders (see `src/ingest/CLAUDE.md`)    |
+| **Tools**       | `tools/`            | CLI utilities (see `tools/CLAUDE.md`)                 |
+| **Scripts**     | `scripts/`          | Operational runners (see `scripts/CLAUDE.md`)         |
+| **dbt Project** | `dbt/ff_analytics/` | Dimensional models (see `dbt/ff_analytics/CLAUDE.md`) |
+| **Config**      | `config/`           | Projections, scoring rules                            |
+| **Docs**        | `docs/`             | Specifications, architecture, guides                  |
 
-**Ingest Layer** (`/ingest/`)
+## Data Layer Structure
 
-- `registry.py`: Dataset specifications mapping logical names to loaders (nflreadpy/nflreadr)
-- `shim.py`: Unified loader interface between Python and R implementations
+- **Raw immutable snapshots**: `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/`
+- **Storage format**: Parquet with PyArrow, columnar optimized
+- **Metadata**: Each load includes `_meta.json` with lineage
+- **Cloud**: GCS (`gs://ff-analytics/{raw,stage,mart,ops}`)
+- **Local dev**: Mirror cloud structure under `data/`
 
-**Configuration** (`/config/`)
+## Data Sources & Identity Resolution
 
-- `projections/ffanalytics_projections_config.yaml`: FFAnalytics projection settings
-- `scoring/sleeper_scoring_rules.yaml`: League-specific scoring rules
+| Source                    | Purpose                          | Authority            |
+| ------------------------- | -------------------------------- | -------------------- |
+| Commissioner Google Sheet | League roster/contracts/picks    | Authoritative        |
+| NFLverse/nflreadpy        | NFL statistics                   | Primary stats source |
+| Sleeper                   | League platform data             | Integration          |
+| KTC                       | Dynasty valuations (1QB default) | Market signals       |
 
-**GitHub Actions** (`.github/workflows/data-pipeline.yml`)
-
-- Monday 08:00 UTC: NFLverse weekly data update
-- Tuesday 08:00 UTC: FFAnalytics projections update
-- Manual triggers via workflow_dispatch
-
-### Data Sources & Identity Resolution
-
-**Core Sources**:
-
-1. Commissioner Google Sheet (authoritative league data)
-1. NFLverse/nflreadpy (NFL statistics and player data)
-1. Sleeper (league platform data)
-1. KTC (Keep/Trade/Cut dynasty valuations, 1QB default)
-1. Injuries and depth charts
-
-**Entity Resolution**: Canonical player/team/franchise IDs resolved across providers using staging guards and alias mapping.
+**Entity Resolution**: Canonical player/team/franchise IDs via `dim_player_id_xref` crosswalk. See Kimball guide for patterns.
 
 ## Data Quality & Testing
 
-- **Test framework**: `pytest` with test files in `tests/` directory following `test_*.py` naming
-- **Run tests**: `pytest -q` (add fixtures for small CSV/Parquet samples where feasible)
-- **Primary keys enforcement**: Each dataset in registry.py defines unique keys for validation
-- **Loader validation**: Verify schema/keys and non-null key coverage
-- **Idempotent operations**: All ingestion jobs are retryable without data corruption
-- **Failure handling**: Last-known-good (LKG) pattern for resilience
-
-## dbt Usage
-
-- Project: `dbt/ff_analytics/` (DuckDB + external Parquet).
-- Run: `dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics`
-- Test: `dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics`
-- Profiles: see `dbt/ff_analytics/profiles.example.yml` and use env vars (`DBT_TARGET`, `DBT_THREADS`, `EXTERNAL_ROOT`).
-- SQL Linting: SQLFluff (templater-dbt, dialect duckdb). Manual fix: `make sqlfix`.
-- Generated artifacts (target/logs) are ignored by VCS and pre-commit.
-
-## Contributing & Conventions
-
-- Conventions: Follow `docs/dev/repo_conventions_and_structure.md` (repo layout, naming, data paths, dbt org).
-- Pre-commit: Install and run locally — `uv run pre-commit install`; `uv run pre-commit run --all-files`.
-- SQL style policy: staging models allow provider-raw names (ignore `RF04`, `CV06`); core/marts can be stricter.
-- Make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`.
+- **Test framework**: `pytest` (`pytest -q`)
+- **dbt tests**: Grain, referential integrity, freshness
+- **Primary keys**: Defined in `src/ingest/<provider>/registry.py`
+- **Idempotent**: All jobs retryable
+- **Failure handling**: Last-known-good (LKG) pattern
 
 ## Critical Specifications
 
-Refer to `/docs/spec/SPEC-1_v_2.2.md` for the complete data architecture specification including:
-
-- 2×2 stat model (actual vs projected × real-world vs fantasy)
-- Trade valuation system for players + draft picks
-- Data lineage and metadata tracking
-- Schema evolution strategy
-- Security and IAM requirements
-
-**Dimensional Modeling**: See `/docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` for Kimball dimensional modeling techniques applied to SPEC-1, including:
-
-- Four-step dimensional design process (business process, grain, dimensions, facts)
-- Dimension surrogate keys and conformed dimensions
-- SCD (Slowly Changing Dimensions) patterns
-- Fact table types (transaction, periodic snapshot, accumulating snapshot)
-- Implementation patterns for dbt, DuckDB, and external Parquet
-
-## Working with Sample Data
-
-Use the sample generator tool for development/testing:
-
-- `python tools/make_samples.py`
-- See `/docs/dev/how_to_use_the_sample_generator_tools_make_samples.md` for detailed usage
+| Document                                                         | Purpose                                                               |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `docs/spec/SPEC-1_v_2.2.md`                                      | Complete data architecture (2×2 stat model, trade valuation, lineage) |
+| `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` | Dimensional modeling patterns for dbt                                 |
+| `docs/dev/repo_conventions_and_structure.md`                     | Repo layout, naming, data paths                                       |
+| `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md`         | Implementation status and sequencing                                  |
 
 ## Coding Conventions
 
-- **Python**: PEP 8, 4-space indent, type hints where practical; snake_case for modules/functions, PascalCase for classes
-- **DataFrames**: Prefer Polars and PyArrow; write columnar Parquet; avoid implicit type casts
-- **Notebooks**: Name with pattern `topic_action.ipynb` (e.g., `load_nflverse_data.ipynb`)
-- **Commits**: Use conventional commits (`feat:`, `docs:`, `chore:`, `init:`)
-  - Example: `feat: add nflverse weekly loader with Parquet output`
+- **Python**: PEP 8, 4-space indent, type hints; snake_case for modules/functions, PascalCase for classes
+- **DataFrames**: Prefer Polars and PyArrow; write columnar Parquet
+- **Notebooks**: Pattern `topic_action.ipynb`
+- **Commits**: Conventional commits (`feat:`, `docs:`, `chore:`)
 
 ## Environment Variables & Security
 
-Required in `.env`:
+Required in `.env` (see `.env.template`):
 
-- Google API credentials for Sheets access
-- Sleeper API keys (if applicable)
-- Discord webhook for notifications (optional)
+- `GOOGLE_APPLICATION_CREDENTIALS` or `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- `SLEEPER_LEAGUE_ID`
+- `COMMISSIONER_SHEET_ID`, `LEAGUE_SHEET_COPY_ID`
+- `GCS_BUCKET` (for cloud operations)
 
-**Security notes**:
-
-- Never commit keys/tokens; use repo secrets for CI
-- Make `out_dir` explicit for local runs; avoid writing to cloud buckets during tests
+**Security**: Never commit secrets; use repo secrets for CI
