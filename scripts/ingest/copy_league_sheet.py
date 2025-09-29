@@ -253,6 +253,13 @@ SCOPES: list[str] = [
     "https://www.googleapis.com/auth/drive",
 ]
 
+# Optional: use core copier for copyTo + paste-values step
+try:
+    from ingest.sheets.copier import CopyOptions, copy_league_sheet
+except Exception:  # pragma: no cover - fallback if package not importable
+    CopyOptions = None  # type: ignore
+    copy_league_sheet = None  # type: ignore
+
 
 # -----------------------
 # Utility helpers (local)
@@ -529,8 +536,22 @@ def main() -> int:
             src_ws = src_map[title]
 
             # 1) Server-side copyTo (no value reads)
-            new_props = src_ws.copy_to(LEAGUE_SHEET_COPY_ID)  # returns dict with 'sheetId'
-            new_id = new_props["sheetId"]
+            if copy_league_sheet is not None and CopyOptions is not None:
+                # Delegate the copy + paste-values to the core library for consistency
+                summary = copy_league_sheet(
+                    COMMISSIONER_SHEET_ID,
+                    LEAGUE_SHEET_COPY_ID,
+                    [title],
+                    CopyOptions(paste_values_only=True),
+                )
+                tab_res = (summary.get("tabs") or [{}])[0]
+                if tab_res.get("status") != "copied":
+                    raise RuntimeError(f"Copy failed for {title}: {tab_res}")
+                new_id = tab_res.get("new_sheet_id")
+            else:
+                # Fallback: gspread's worksheet.copy_to
+                new_props = src_ws.copy_to(LEAGUE_SHEET_COPY_ID)  # returns dict with 'sheetId'
+                new_id = new_props["sheetId"]
 
             # Get the new sheet by id
             new_ws = next(w for w in dst.worksheets() if w.id == new_id)

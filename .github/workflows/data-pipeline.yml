@@ -1,0 +1,67 @@
+name: Data Pipeline (nflverse + dbt)
+
+"on":
+  workflow_dispatch:
+    inputs:
+      out_dir:
+        description: "Output root (local path or gs:// bucket)"
+        required: false
+        default: "data/raw/nflverse"
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Sync deps
+        run: uv sync
+
+      - name: Configure GCS credentials (optional)
+        if: env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON || '' }}
+        run: |
+          if [ -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
+            echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 -d > /tmp/gcp.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json" >> "$GITHUB_ENV"
+          fi
+
+      - name: Load nflverse (players sample)
+        env:
+          OUT_DIR: ${{ inputs.out_dir }}
+        run: |
+          uv run python - << 'PY'
+          from ingest.nflverse.shim import load_nflverse
+          print(load_nflverse('players', seasons=[2024], out_dir='${{ inputs.out_dir }}'))
+          PY
+
+      - name: dbt run (local parquet glob)
+        env:
+          DBT_TARGET: local
+          RAW_NFLVERSE_PLAYERS_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/players/dt=*/*.parquet"
+          RAW_NFLVERSE_WEEKLY_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/weekly/dt=*/*.parquet"
+        run: |
+          uv run dbt --project-dir dbt/ff_analytics run
+
+      - name: dbt test
+        env:
+          DBT_TARGET: local
+          RAW_NFLVERSE_PLAYERS_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/players/dt=*/*.parquet"
+          RAW_NFLVERSE_WEEKLY_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/weekly/dt=*/*.parquet"
+        run: |
+          uv run dbt --project-dir dbt/ff_analytics test
