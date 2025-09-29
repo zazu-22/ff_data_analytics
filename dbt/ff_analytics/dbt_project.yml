@@ -1,0 +1,31 @@
+name: ff_analytics
+version: "1.0"
+config-version: 2
+
+profile: ff_duckdb
+
+vars:
+  external_root: "{{ env_var('EXTERNAL_ROOT', 'gs://ff-analytics/mart') }}"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+
+models:
+  +materialized: table
+  +external:
+  sources:
+    +materialized: view
+  staging:
+    +schema: staging
+  core:
+    +schema: core
+    +partition_by:
+  markets:
+    +schema: markets
+    +partition_by:
+  ops:
+    +schema: ops

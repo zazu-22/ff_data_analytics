@@ -1,0 +1,21 @@
+version: 2
+
+sources:
+  - name: nflverse
+    description: "Raw nflverse snapshots loaded via shim; local dev reads Parquet under data/raw."
+    schema: raw
+    tables:
+      - name: players
+        description: "Canonical player reference including cross-IDs."
+      - name: weekly
+        description: "Weekly player stats at week grain."
+      - name: season
+        description: "Season-level player stats."
+      - name: injuries
+        description: "Weekly injury reports."
+      - name: depth_charts
+        description: "Team depth charts."
+      - name: schedule
+        description: "NFL schedules and results."
+      - name: teams
+        description: "Team reference data."
