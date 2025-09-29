@@ -12,16 +12,16 @@ def build_drive(creds):
 
 
 def is_shared_drive(drive_id: str) -> bool:
-    """
-    Check if a drive ID appears to be a Shared Drive ID.
+    """Check if a drive ID appears to be a Shared Drive ID.
+
     Shared Drive IDs typically start with '0A'.
     """
     return drive_id and drive_id.startswith("0A")
 
 
 def get_drive_info(drive, drive_id: str) -> dict[str, Any] | None:
-    """
-    Get information about a Shared Drive.
+    """Get information about a Shared Drive.
+
     Returns None if it's not a Shared Drive or not accessible.
     """
     if not is_shared_drive(drive_id):
@@ -36,11 +36,11 @@ def get_drive_info(drive, drive_id: str) -> dict[str, Any] | None:
 def get_file_metadata(
     drive, file_id: str, fields: str = "id,name,modifiedTime,version,owners"
 ) -> dict[str, Any]:
-    """
-    Fetch Drive file metadata with selected fields.
+    """Fetch Drive file metadata with selected fields.
+
     Useful fields:
       - modifiedTime (RFC3339)
-      - version (monotonic integer, often increments with content edits)
+      - version (monotonic integer, often increments with content edits).
     """
     try:
         # Try with Shared Drive support first
@@ -66,8 +66,8 @@ def get_file_modified_time_utc(drive, file_id: str) -> tuple[datetime, dict[str,
 
 
 def ensure_spreadsheet_in_folder(drive, folder_id: str, name: str) -> str:
-    """
-    Return the fileId of a Google Sheets file named `name` inside `folder_id`.
+    """Return the fileId of a Google Sheets file named `name` inside `folder_id`.
+
     If it doesn't exist, create it in that folder and return its id.
     Works with both regular folders and Shared Drives.
     """
@@ -131,8 +131,8 @@ def ensure_spreadsheet_in_folder(drive, folder_id: str, name: str) -> str:
 
 
 def move_file_to_folder(drive, file_id: str, folder_id: str) -> dict:
-    """
-    Move an existing file to the target Drive folder by replacing its parents.
+    """Move an existing file to the target Drive folder by replacing its parents.
+
     Safe if the file has zero or many parents.
     """
     meta = drive.files().get(fileId=file_id, fields="parents").execute()
@@ -154,9 +154,9 @@ def move_file_to_folder(drive, file_id: str, folder_id: str) -> dict:
 
 
 def folder_id_from_url(url: str) -> str:
-    """
-    Extract a Google Drive folder ID from a standard folder URL.
-    Example: https://drive.google.com/drive/folders/<FOLDER_ID>
+    """Extract a Google Drive folder ID from a standard folder URL.
+
+    Example: https://drive.google.com/drive/folders/<FOLDER_ID>.
     """
     import re
 
@@ -167,8 +167,8 @@ def folder_id_from_url(url: str) -> str:
 
 
 def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: bool = True) -> str:
-    """
-    Resolve/ensure a nested folder PATH under PARENT_ID (default 'root').
+    """Resolve/ensure a nested folder PATH under PARENT_ID (default 'root').
+
     - PATH uses '/' separators, e.g. "BellKeg/Logs/Prod"
     - For 'My Drive', keep parent_id='root' (default).
     - For Shared drives, pass the shared drive's ID as parent_id.
