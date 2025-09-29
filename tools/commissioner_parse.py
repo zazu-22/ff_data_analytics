@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from ingest.sheets.commissioner_parser import (
     ParsedGM,
     parse_commissioner_dir,
-    write_normalized,
+    write_normalized_v2,
 )
 
 
@@ -132,6 +132,16 @@ def main() -> int:
     p.add_argument(
         "--out-csv", default="data/review/commissioner", help="CSV preview output base (local only)"
     )
+    default_raw_tabs = (
+        f"gs://{os.environ.get('GCS_BUCKET')}/raw/commissioner_tabs"
+        if os.environ.get("GCS_BUCKET")
+        else None
+    )
+    p.add_argument(
+        "--out-raw-tabs",
+        default=default_raw_tabs,
+        help="Optional raw tabs Parquet base (e.g., gs://.../raw/commissioner_tabs)",
+    )
     p.add_argument("--max-rows", type=int, default=2000)
     args = p.parse_args()
 
@@ -158,21 +168,69 @@ def main() -> int:
 
     parsed = parse_commissioner_dir(Path(input_dir))
 
-    # Write Parquet via helper
-    write_normalized(parsed, out_dir=args.out_raw)
+    # Write normalized v2 Parquet via helper
+    write_normalized_v2(parsed, out_dir=args.out_raw)
+
+    # Optionally write raw tabs (Tier 0) to Parquet if requested
+    if args.out_raw_tabs:
+        from ingest.common.storage import write_parquet_any
+
+        dt = datetime.now(UTC).strftime("%Y-%m-%d")
+        base = args.out_raw_tabs.rstrip("/")
+        for gm_dir in sorted([p for p in Path(input_dir).iterdir() if p.is_dir()]):
+            tab = gm_dir.name
+            csv_file = gm_dir / f"{tab}.csv"
+            if not csv_file.exists():
+                continue
+            table_data = pl.read_csv(csv_file)
+            uri = f"{base}/{tab}/dt={dt}/{tab}.parquet"
+            write_parquet_any(table_data, uri)
 
     # Write CSV previews for review
     dt = datetime.now(UTC).strftime("%Y-%m-%d")
     out_csv_base = Path(args.out_csv)
     out_csv_base.mkdir(parents=True, exist_ok=True)
-    tables = _concat(parsed)
-    for name, df in tables.items():
-        if df.height == 0:
+    # Build v2 tables for CSV preview
+    roster_all = (
+        pl.concat([p.roster for p in parsed if p.roster.height > 0], how="diagonal")
+        if parsed
+        else pl.DataFrame()
+    )
+    cuts_all = (
+        pl.concat([p.cuts for p in parsed if p.cuts.height > 0], how="diagonal")
+        if parsed
+        else pl.DataFrame()
+    )
+    picks_all = (
+        pl.concat([p.picks for p in parsed if p.picks.height > 0], how="diagonal")
+        if parsed
+        else pl.DataFrame()
+    )
+
+    from ingest.sheets.commissioner_parser import (
+        _to_long_cuts,
+        _to_long_roster,
+        _to_picks_tables,
+    )
+
+    contracts_active = _to_long_roster(roster_all)
+    contracts_cut = _to_long_cuts(cuts_all)
+    picks_tbl, conds_tbl = _to_picks_tables(picks_all)
+
+    previews = {
+        "contracts_active": contracts_active,
+        "contracts_cut": contracts_cut,
+        "draft_picks": picks_tbl,
+        "draft_pick_conditions": conds_tbl,
+    }
+
+    for name, frame in previews.items():
+        if frame.is_empty():
             continue
         tdir = out_csv_base / name / f"dt={dt}"
         tdir.mkdir(parents=True, exist_ok=True)
-        (tdir / f"{name}.csv").write_text(df.write_csv())
-    print(json.dumps({k: int(v.height) for k, v in tables.items()}))
+        (tdir / f"{name}.csv").write_text(frame.write_csv())
+    print(json.dumps({k: int(v.height) for k, v in previews.items()}))
     return 0
 
 
