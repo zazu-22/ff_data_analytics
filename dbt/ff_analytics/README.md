@@ -19,3 +19,7 @@ Badges
 ## Defaults
 
 - `dbt_project.yml` sets external Parquet writes and partitions per domain.
+
+## Dimensional Modeling
+
+For guidance on designing facts, dimensions, and marts using Kimball techniques, see `../../docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`.

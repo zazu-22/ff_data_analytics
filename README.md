@@ -8,6 +8,7 @@
 
 - SPEC: docs/spec/SPEC-1_v_2.2.md
 - Conventions & Structure: docs/dev/repo_conventions_and_structure.md
+- Kimball Dimensional Modeling Guide: docs/architecture/kimball_modeling_guidance/kimbal_modeling.md
 - Sample Generator Guide: docs/dev/how_to_use_the_sample_generator_tools_make_samples.md
 - Polars DataFrame Patterns: docs/dev/polars_dataframes.md
 - dbt Project Overview: dbt/ff_analytics/README.md

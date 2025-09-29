@@ -57,6 +57,7 @@
 ## Architecture & CI
 
 - Data layout: immutable, partitioned Parquet under `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/` (+ `_meta.json` sidecar from the loader). See spec: `docs/spec/SPEC-1_v_2.2.md`.
+- Dimensional modeling: Apply Kimball techniques per `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` when designing facts, dimensions, and marts in dbt.
 - CI: `.github/workflows/data-pipeline.yml` runs nflverse Mondays 08:00 UTC and projections Tuesdays 08:00 UTC; supports manual dispatch.
 
 ## dbt Project

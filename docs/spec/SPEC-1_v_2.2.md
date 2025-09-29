@@ -103,6 +103,8 @@ gs://ff-analytics/
 - `dim_name_alias(player_id, alias, source, first_seen_at)` for fuzzy/alternate names.
 - Separate NFL `team_id` vs league `franchise_id` (seasonal mapping).
 
+**Dimensional Modeling Guidance:** For detailed patterns on implementing conformed dimensions, surrogate keys, SCDs, and fact table design, see `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`.
+
 ### 2×2 Stat Model (Actual vs Projected × Real‑world vs Fantasy)
 
 - **Canonical long store:**

@@ -105,6 +105,14 @@ Refer to `/docs/spec/SPEC-1_v_2.2.md` for the complete data architecture specifi
 - Schema evolution strategy
 - Security and IAM requirements
 
+**Dimensional Modeling**: See `/docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` for Kimball dimensional modeling techniques applied to SPEC-1, including:
+
+- Four-step dimensional design process (business process, grain, dimensions, facts)
+- Dimension surrogate keys and conformed dimensions
+- SCD (Slowly Changing Dimensions) patterns
+- Fact table types (transaction, periodic snapshot, accumulating snapshot)
+- Implementation patterns for dbt, DuckDB, and external Parquet
+
 ## Working with Sample Data
 
 Use the sample generator tool for development/testing:

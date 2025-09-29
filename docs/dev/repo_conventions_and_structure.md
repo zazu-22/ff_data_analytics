@@ -62,6 +62,7 @@ Purpose: establish consistent naming, directory layout, and data organization to
   - `+materialized: table`, `+external: true` (Parquet), partitions per folder: `core` (season/week), `markets` (asof_date).
   - `vars.external_root: gs://ff-analytics/mart`.
 - Profiles (`profiles.yml`): DuckDB `:memory:` with `extensions: [httpfs]`.
+- **Dimensional modeling patterns**: Follow Kimball techniques documented in `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` for fact/dimension design, grain declaration, conformed dimensions, and SCDs.
 
 ### SQL Style & Linting
 

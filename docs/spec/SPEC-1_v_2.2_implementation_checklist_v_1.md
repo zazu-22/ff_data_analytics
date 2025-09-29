@@ -34,6 +34,7 @@ ______________________________________________________________________
 ### 0a) Conventions & Structure
 
 - ☑ Document repository conventions and layout (`docs/dev/repo_conventions_and_structure.md`).
+- ☑ Document Kimball dimensional modeling guidance (`docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`) for dbt fact/dimension design.
 - ☐ Align existing files to conventions (naming, placement):
   - Scripts named `verb_noun.py` under a domain folder
   - Ensure ingest shims stay in `ingest/<provider>/`; reusable helpers live in `src/ff_analytics_utils/`
