@@ -1,0 +1,10 @@
+[sqlfluff]
+templater = dbt
+dialect = duckdb
+exclude_rules = L034,L044
+
+[sqlfluff:templater:dbt]
+project_dir = ./dbt/ff_analytics
+profiles_dir = ./dbt/ff_analytics
+profile = ff_duckdb
+target = local
