@@ -66,7 +66,7 @@
 
 ## nflverse Play-by-Play Data
 
-There are three ways to obtain nflverse pbp data. 
+There are three ways to obtain nflverse pbp data.
 
 1. We recommend using `nflreadr::load_pbp()` or `nflfastR::load_pbp()` as the primary method of retrieving pbp data. This uses our automated data infrastructure to download clean data, and [we update this](https://github.com/nflverse/nflverse-pbp/blob/866020fdf54bee79ea11b6cf69168d438dd26dea/.github/workflows/update_data.yaml#L3-L13) on a nightly basis after each game day (and additionally at specific points on game days) during the season.
 2. If this is not quick enough, `nflfastR::build_nflfastR_pbp()` parses raw pbp json files we save, **usually available within 15 minutes after a game has ended**.
@@ -86,7 +86,7 @@ At the moment, it is not possible to speed up this process with a function in nf
 
 ## nflverse Participation Data
 
-[Participation data](https://nflreadr.nflverse.com/reference/load_participation.html) prior to 2023 is from NFL NGS. The data source died during the 2023 season. 
+[Participation data](https://nflreadr.nflverse.com/reference/load_participation.html) prior to 2023 is from NFL NGS. The data source died during the 2023 season.
 
 Participation data from 2023 onwards is courtesy of FTN and is provided **after all post-season games are completed**. It does not update during the season!
 
@@ -112,7 +112,7 @@ Player level [weekly stats](https://nflreadr.nflverse.com/reference/load_nextgen
 
 ## Depth Chart Data
 
-[Depth Charts](https://nflreadr.nflverse.com/articles/dictionary_depth_charts.html) update every day at 7AM UTC throughout the year. 
+[Depth Charts](https://nflreadr.nflverse.com/articles/dictionary_depth_charts.html) update every day at 7AM UTC throughout the year.
 
 Please note that the data source has changed after the 2024 season. From 2025 onwards, depth charts are not assigned a week. Instead, each update provides a new ISO8601-formatted timestamp that users can assign to any point in time during the season. Each update is appended to the existing data with a new timestamp.
 

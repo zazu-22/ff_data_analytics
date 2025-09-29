@@ -28,7 +28,7 @@ repos:
         additional_dependencies: [ruff]
         args: ["--fix", "--unsafe-fixes"]
         files: ^notebooks/.*\.ipynb$
-        exclude: \.ipynb_checkpoints
+        exclude: ^notebooks/.*/\.ipynb_checkpoints/.*
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.17

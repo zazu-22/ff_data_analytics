@@ -17,11 +17,12 @@ A GCS lifecycle policy is a JSON file with this structure:
 ## Each Rule Has Two Parts
 
 1. **action**: What to do (SetStorageClass, Delete)
-2. **condition**: When to do it (age, matchesPrefix, etc.)
+1. **condition**: When to do it (age, matchesPrefix, etc.)
 
 ## Example Rules Explained
 
 ### Rule 1: Move raw/ data to Nearline after 30 days
+
 ```json
 {
   "action": {
@@ -36,6 +37,7 @@ A GCS lifecycle policy is a JSON file with this structure:
 ```
 
 ### Rule 2: Move raw/ data to Coldline after 180 days
+
 ```json
 {
   "action": {
@@ -50,6 +52,7 @@ A GCS lifecycle policy is a JSON file with this structure:
 ```
 
 ### Rule 3: Delete old ops logs after 90 days
+
 ```json
 {
   "action": {
@@ -72,10 +75,11 @@ A GCS lifecycle policy is a JSON file with this structure:
 ## For FF Analytics
 
 Based on the SPEC, you need:
+
 1. **raw/** - Immutable snapshots, accessed rarely → good for cold storage
-2. **mart/** - Analytics queries, accessed frequently → keep in Standard
-3. **stage/** - Intermediate data → maybe Nearline after 30 days
-4. **ops/** - Logs and metrics → delete old ones to save costs
+1. **mart/** - Analytics queries, accessed frequently → keep in Standard
+1. **stage/** - Intermediate data → maybe Nearline after 30 days
+1. **ops/** - Logs and metrics → delete old ones to save costs
 
 ## Complete Example for Your Project
 
@@ -101,6 +105,7 @@ Based on the SPEC, you need:
 ```
 
 This policy:
+
 - Moves raw/ and stage/ to Nearline after 30 days
 - Moves raw/ to Coldline after 180 days (further cost savings)
 - Deletes old logs after 90 days

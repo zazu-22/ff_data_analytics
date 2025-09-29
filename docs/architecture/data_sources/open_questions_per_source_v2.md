@@ -2,7 +2,7 @@
 
 Below are the outstanding questions, decisions, or missing details to finalize each source’s ingestion and documentation. Answering these will let us lock schemas, dbt sources, and schedules.
 
----
+______________________________________________________________________
 
 ## Sleeper API — Resolutions
 
@@ -15,7 +15,7 @@ Below are the outstanding questions, decisions, or missing details to finalize e
 - Change capture: daily snapshot + hash-based roster changelog.
 - Tests: light set (freshness, uniqueness, not_nulls, roster count, player_id format, starters length).
 
----
+______________________________________________________________________
 
 ## Google Sheets — Commissioner SSoT
 
@@ -25,7 +25,7 @@ Below are the outstanding questions, decisions, or missing details to finalize e
 - **Service account access:** Has the SA been shared with the Sheet? (confirm email & perms)
 - **Backfill:** Do we import the entire sheet each run or incremental changes only?
 - **Golden sources:** Which fields in Sheets override external sources (e.g., contract $/yrs)?
-- **DQ gates:** Required checks (e.g., cap never negative, contract years in [1..X], roster count in bounds).
+- **DQ gates:** Required checks (e.g., cap never negative, contract years in \[1..X\], roster count in bounds).
 - **Release notes:** How do managers communicate schema changes (e.g., add column → update registry)?
 
 ## SportsDataIO Discovery Lab (NFL)
@@ -72,7 +72,7 @@ Below are the outstanding questions, decisions, or missing details to finalize e
 - **Identifiers:** Confirm canonical IDs and crosswalk coverage.
 - **dbt tests:** Freshness thresholds and key constraints per table (unique game_id, etc.).
 
----
+______________________________________________________________________
 
 ## Cross-cutting
 

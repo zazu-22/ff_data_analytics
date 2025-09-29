@@ -4,6 +4,8 @@ A pragmatic, step‑by‑step list to stand up the data pipeline with our latest
 
 Legend: ☐ todo · ☑ done/verified · (owner) · (notes)
 
+Updated: 2025-09-29 — reflects current repo status and a sequenced plan. Note: one key objective of the sample generators is to keep schemas aligned with raw provider structures so we can refine and lock contracts before dbt modeling.
+
 ______________________________________________________________________
 
 ## 0) Repo Prep & Version Pins
@@ -19,6 +21,28 @@ ______________________________________________________________________
 - ☑ Add `renv.lock` pinning: `nflreadr (>=1.5.0)`, `arrow`, `jsonlite`, `yaml`, `optparse`, `lubridate`, `remotes`, `ffanalytics` (GitHub), plus `digest`.
 - ☑ Commit files and open PR "SPEC v2.2 integration". (Committed directly to main)
 
+### Recommended Sequencing (High‑Level)
+
+1. Wire storage paths (local ↔ GCS) in nflverse shim and runners.
+1. Produce raw‑aligned samples across providers; validate schemas/PKs.
+1. Implement Commissioner Sheet parser → normalized staging tables.
+1. Implement KTC fetcher (players+picks; cache/throttle).
+1. Bring up dbt‑duckdb project (sources → staging → marts + ops).
+1. Extend CI to write to GCS and run dbt with tests + freshness.
+1. Enhance projections runner to weighted outputs per config/scoring.
+
+### 0a) Conventions & Structure
+
+- ☑ Document repository conventions and layout (`docs/dev/repo_conventions_and_structure.md`).
+- ☐ Align existing files to conventions (naming, placement):
+  - Scripts named `verb_noun.py` under a domain folder
+  - Ensure ingest shims stay in `ingest/<provider>/`; reusable helpers live in `src/ff_analytics_utils/`
+  - Confirm data folders mirror cloud layout (`data/{raw,stage,mart,ops}` for local dev)
+  - Add `dbt/ff_analytics/` scaffold with `models/{sources,staging,core,markets,ops}`
+- ☑ Link conventions doc from README.
+- ☑ Add Makefile shortcuts for local iteration (`samples-nflverse`, `dbt-run`, `dbt-test`, `quickstart-local`).
+- ☑ Add dev dependency: `dbt-duckdb` and include in dev setup instructions.
+
 ## 1) Cloud Paths & Secrets
 
 - ☑ Confirm GCS bucket/prefix: `gs://ff-analytics/{raw,stage,mart}` (bucket created with lifecycle policies).
@@ -27,25 +51,37 @@ ______________________________________________________________________
   - `GCP_PROJECT_ID`, `GCS_BUCKET`, `SLEEPER_LEAGUE_ID`, `COMMISSIONER_SHEET_URL` (all configured).
   - `SPORTS_DATA_IO_API_KEY` (configured as optional).
 - ☑ Validate service account access to GCS (verified with test workflow).
-- ☑ Validate service account access to Commissioner Sheet (
+- ☑ Validate service account access to Commissioner Sheet (verified via copy runner and troubleshooting scripts).
 
 ## 2) nflverse — Python Shim Bring‑Up
 
 - ☑ Local run (dev):
+
   - `python -c "from ingest.nflverse.shim import load_nflverse; result = load_nflverse('players', out_dir='data/raw/nflverse')"`
   - `python -c "from ingest.nflverse.shim import load_nflverse; result = load_nflverse('weekly', seasons=[2023], out_dir='data/raw/nflverse')"`
   - Fixed registry: `load_player_stats` (not `load_player_stats_weekly`)
   - Fixed shim to handle varying function signatures (inspect params before calling)
+
 - ☑ Verify Parquet & `_meta.json` under temp output (or configured GCS mount), schemas align with dbt expectations.
+
   - Successfully creates partitioned output: `data/raw/nflverse/{dataset}/dt=YYYY-MM-DD/`
   - Metadata includes loader_path, source_version, asof_datetime
+
 - ☑ Test **R fallback** path works: `loader_preference="r_only"` for `schedule`.
+
   - R packages installed: lubridate, nflreadr, arrow, jsonlite
   - Fixed shim to properly return R loader manifest
   - Successfully tested: schedule (285 games), players via R
+
 - ☑ Extend `ingest/nflverse/registry.py` if we add datasets (injuries, depth_charts, teams, etc.)
+
   - Registry already includes: players, weekly, season, injuries, depth_charts, schedule, teams
   - Tested: injuries (5599 records), teams (768 records)
+
+- ☐ Add GCS write support (Python path)
+
+  - Use DuckDB httpfs or PyArrow + `gcsfs` to allow `out_dir` to be `gs://...`
+  - Gate by env; default local writes to `data/raw/...`
 
 ## 3) Sleeper — Minimal Ingest Checks
 
@@ -55,6 +91,11 @@ ______________________________________________________________________
   - Key fields present: owner_id, roster_id, players, starters
 - ☑ Validate row counts ~ league expectations (12 teams; starters per roster rules).
   - Confirmed: 12 rosters, 13 users (co-owners), league ID matches
+
+Notes on Samples Objective:
+
+- Ensure Sleeper samples preserve raw column names/types where feasible; avoid premature renames.
+- Use samples to validate PKs and downstream identity mapping before staging transforms.
 
 ## 4) Google Sheets — Commissioner SSoT
 
@@ -75,6 +116,8 @@ ______________________________________________________________________
   - Need to extract and normalize into staging-ready formats: `contracts`, `rosters`, `cap`, `draft_assets`, `trade_conditions`
   - Include owner/GM metadata from each tab
   - Consider creating `scripts/ingest/parse_commissioner_sheets.py` or similar
+- ☐ Write parsed tables as Parquet to `data/raw/commissioner/<table>/dt=YYYY-MM-DD/` with `_meta.json`
+- ☐ Add unit tests with small fixtures to validate extraction and PKs
 - ☐ Verify natural keys per tab (unique per date partition) and numeric domains (cap ≥ 0, years 1..5, etc.).
 
 ## 5) KeepTradeCut — Replace Sampler Stub
@@ -82,7 +125,8 @@ ______________________________________________________________________
 - ☐ Implement real KTC fetcher (players + picks) respecting ToS and polite rate limits (randomized sleeps, caching).
 - ☐ Update `tools/make_samples.py::sample_ktc` to call actual fetcher; keep `--top-n` sampling to limit size.
 - ☐ Normalize to long‑form `asset_type ∈ {player,pick}` with `asof_date`, `rank`, `value`.
-- [ ] Export small samples from the KTC fetcher
+- ☐ Write Parquet to `data/raw/ktc/{players,picks}/dt=YYYY-MM-DD/` with `_meta.json`
+- ☐ Export small samples from the KTC fetcher
 
 ## 6) FFanalytics — Wire Runner (R) to Real Projections
 
@@ -100,9 +144,12 @@ ______________________________________________________________________
 
 ## 7) dbt — Seeds, Staging, and Marts
 
+- ☑ Scaffold dbt project structure under `dbt/ff_analytics/` with external Parquet defaults.
 - ☐ Create/refresh **seeds**: `dim_player_id_xref`, `dim_name_alias`, `dim_pick`, `dim_asset`, `dim_scoring_rule`, and **neutral stat dictionary** from nflreadr dictionaries.
 - ☐ Stage models per provider:
   - `stg_nflverse_*` (players, weekly, season, injuries, depth_charts, schedule, teams)
+    - ☑ `stg_nflverse__players.sql` reading local `data/raw` Parquet (tests: not_null + unique `gsis_id`)
+    - ☑ `stg_nflverse__weekly.sql` with PK tests: not_null (`season`,`week`,`gsis_id`) + singular uniqueness test on key
   - `stg_sleeper_*` (league, users, rosters, roster_players)
   - `stg_sheets_*` (contracts, rosters, cap, draft_assets, trade_conditions)
   - `stg_ktc_assets`, `stg_ffanalytics_projections`
@@ -110,11 +157,16 @@ ______________________________________________________________________
   - `stg_sleeper_roster_changelog` (stable roster hash)
   - `stg_sheets_change_log` (row hash per tab)
 - ☐ Marts:
+  - `fact_player_stats` (long‑form; actuals + projections compatible)
   - `fact_asset_market_values` (KTC players + picks)
   - `fact_player_projections` (FFanalytics)
+  - Fantasy scoring marts (weekly actuals, projections) using scoring seeds
   - `dim_player`, `dim_team`, `dim_schedule` (nflverse)
 - ☐ DQ tests: uniqueness, referential integrity to canonical IDs, numeric ranges, enumerations.
 - ☐ Freshness tests: provider‑specific thresholds + LKG banner flags.
+- ☑ External Parquet defaults (dbt_project.yml) with partitions; profiles.example.yml using DuckDB httpfs.
+- ☐ Ops schema: `ops.run_ledger`, `ops.model_metrics`, `ops.data_quality`.
+- ☑ Profiles: support env toggles (e.g., `DBT_TARGET`, `DBT_THREADS`); default local `:memory:`.
 
 ## 8) CI/CD — Schedules & Jobs
 
@@ -124,6 +176,8 @@ ______________________________________________________________________
   - **projections weekly** (Tue 08:00 UTC).
   - **sheets & sleeper** twice daily (08:00 & 16:00 UTC) if desired.
 - ☐ Upload build artifacts (logs, `_meta.json`) for traceability.
+- ☐ Wire GCS writes and dbt run/test steps using repo secrets; post basic notifications (optional).
+  - ☑ Parameterize dbt vars for `external_root` and allow profile selection via env.
 
 ## 9) Samples & Fixtures
 
@@ -135,6 +189,10 @@ ______________________________________________________________________
   - ☐ `python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --out ./samples`
   - ☐ `python tools/make_samples.py sdio --paths <export files> --out ./samples`
 
+Notes:
+
+- Use samples to validate schemas and primary keys; keep samples as raw‑aligned as possible (names/types) to reduce friction in staging.
+
 ## 10) Ops & Monitoring
 
 - ☐ Add ingestion logs & metrics: source version, loader path, as‑of timestamps (from `_meta.json`).
@@ -143,23 +201,26 @@ ______________________________________________________________________
 
 ## 11) Documentation
 
-- ☐ Commit **SPEC v2.2** (consolidated) to `docs/spec/` and link in README.
-- ☐ Add **How to Use the Sample Generator** guide to `docs/dev/` and keep in sync with code.
+- ☑ **SPEC v2.2** consolidated doc is present in `docs/spec/`.
+- ☑ Link SPEC in README for quick discovery and add badges (Spec, Conventions, CI).
+- ☑ **How to Use the Sample Generator** guide present in `docs/dev/`; keep in sync with code.
 - ☐ Record **Orchestration & Language Strategy** (Python‑first with R escape hatch) in contributor docs.
 
 ______________________________________________________________________
 
-## Current Status Snapshot (as of v2.2 handoff)
+## Current Status Snapshot (updated)
 
 - ☑ SPEC v2.2 patch + consolidated doc
-- ☑ nflverse shim (Python) + R fallback runner (stubs ready)
-- ☑ ffanalytics runner (stub) + projections YAML + site weights mapped (sites‑only)
+- ☑ nflverse shim (Python‑first) + R fallback runner
+- ☑ ffanalytics raw scrape runner + projections config + site weights mapped
 - ☑ Sleeper scoring YAML exported from league
-- ☑ `tools/make_samples.py` implemented with provider subcommands
+- ☑ `tools/make_samples.py` implemented (nflverse, sleeper, sheets, ffanalytics raw, sdio; ktc stub)
+- ☐ Python shim GCS writes (local‑only today)
+- ☐ Commissioner Sheet parsing to normalized tables
 - ☐ KTC: real fetcher integration (replace stub)
-- ☐ FFanalytics: wire real `getProjections(...)` and outputs
-- ☐ Seeds/dbt staging/marts/tests to finalize
-- ☐ CI schedules & secrets finalized
+- ☐ Projections: weighted aggregation + scoring outputs
+- ☐ dbt project (partially implemented: scaffold + initial staging/tests)
+- ☐ CI: GCS writes, dbt runs, artifacts, notifications
 
 ______________________________________________________________________
 

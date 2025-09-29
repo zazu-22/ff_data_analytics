@@ -28,7 +28,7 @@
 
 - **Freshness:** weekly facts within 3 days in-season.
 - **Keys:** uniqueness on endpoint-specific natural keys (e.g., `game_id, player_id, season, week`).
-- **Types & Ranges:** numeric stats ≥ 0; snap counts in [0, 100%].
+- **Types & Ranges:** numeric stats ≥ 0; snap counts in \[0, 100%\].
 - **Row deltas:** guard rails on weekly volume swings (±30% typical).
 
 ## dbt Notes
