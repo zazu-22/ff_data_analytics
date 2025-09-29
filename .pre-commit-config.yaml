@@ -12,6 +12,8 @@ exclude: |
     notebooks/\.ipynb_checkpoints/|
     \.claude/|
     samples/
+    |dbt/.*/target/
+    |dbt/.*/logs/
   )
 
 repos:

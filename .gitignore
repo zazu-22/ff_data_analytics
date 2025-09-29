@@ -24,6 +24,10 @@ data/stage/
 data/mart/
 samples/
 
+# dbt build artifacts
+dbt/**/target/
+dbt/**/logs/
+
 # Temporary files
 *.tmp
 *.log
