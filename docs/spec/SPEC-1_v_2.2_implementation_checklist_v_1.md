@@ -168,6 +168,13 @@ Notes on Samples Objective:
 - ☐ Ops schema: `ops.run_ledger`, `ops.model_metrics`, `ops.data_quality`.
 - ☑ Profiles: support env toggles (e.g., `DBT_TARGET`, `DBT_THREADS`); default local `:memory:`.
 
+SQL style & lint policy (staging vs core)
+
+- ☑ Enforce lowercase keywords/functions/identifiers via SQLFluff.
+- ☑ Staging models: ignore `RF04` (keywords as identifiers) and `CV06` (semicolon terminator) to preserve raw‑aligned schemas and dbt ergonomics.
+- ☐ Core/marts: consider re‑enabling `RF04` and requiring non‑keyword identifiers (rename/quote) and terminators if desired.
+- ☑ Add manual sqlfluff auto‑fix: `sqlfluff-fix` hook (run via `pre-commit run sqlfluff-fix --all-files`).
+
 ## 8) CI/CD — Schedules & Jobs
 
 - ☐ Install starter workflow: `.github/workflows/data-pipeline.yml`.
