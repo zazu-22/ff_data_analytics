@@ -2,6 +2,17 @@
 # Install:   pip install pre-commit && pre-commit install
 # Run all:   pre-commit run --all-files
 
+# Global excludes: never modify archived or large/raw data folders
+exclude: |
+  (?x)^(
+    \.archive/|
+    data/raw/|
+    data/data_dictionaries/|
+    \notebooks/|
+    \.claude/|
+    \samples/
+  )
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.4
@@ -57,7 +68,11 @@ repos:
     hooks:
       - id: sqlfluff-lint
         files: \.(sql|sql\.j2)$
-        additional_dependencies: ["dbt-core>=1.8.0", "dbt-duckdb>=1.8.0"]
+        additional_dependencies: [
+          "dbt-core>=1.8.0",
+          "dbt-duckdb>=1.8.0",
+          "sqlfluff-templater-dbt>=3.1.1",
+        ]
         args: [--config, pyproject.toml]
 
   - repo: https://github.com/rhysd/actionlint
