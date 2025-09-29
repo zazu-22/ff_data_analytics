@@ -23,13 +23,13 @@ ______________________________________________________________________
 
 ### Recommended Sequencing (High‑Level)
 
-1. Wire storage paths (local ↔ GCS) in nflverse shim and runners.
-1. Produce raw‑aligned samples across providers; validate schemas/PKs.
-1. Implement Commissioner Sheet parser → normalized staging tables.
-1. Implement KTC fetcher (players+picks; cache/throttle).
-1. Bring up dbt‑duckdb project (sources → staging → marts + ops).
-1. Extend CI to write to GCS and run dbt with tests + freshness.
-1. Enhance projections runner to weighted outputs per config/scoring.
+1. Populate dbt seeds (player xref, aliases, picks/assets, scoring rules, neutral stat dictionary).
+1. Sheets: add dbt sources + staging (with SCD change tracking) for commissioner tables.
+1. CI (Sheets): copy_league_sheet → commissioner_parse → dbt run/test, with CSV previews + dbt summary and LKG fallback.
+1. Implement KTC fetcher (players + picks; cache/throttle) and update samples.
+1. Projections: weighted aggregation per config + apply scoring rules, output long‑form.
+1. Core marts + ops (run ledger, model metrics, data quality) and freshness banners.
+1. Change‑capture staging models (roster/sheets change logs) and compaction playbook docs.
 
 ### 0a) Conventions & Structure
 
@@ -121,6 +121,14 @@ Notes on Samples Objective:
 - ☑ Add unit tests with small fixtures: `tests/test_sheets_commissioner_parser.py`
 - ☑ Verify non-null keys for GM and player fields in roster sample test
 
+Normalization policy and dbt expectations:
+
+- Long‑form normalization in parser for Sheets (semi‑structured) to simplify dbt:
+  - `contracts_active(gm, player, position, year, amount, rfa, franchise)`
+  - `contracts_cut(gm, player, position, year, dead_cap_amount)`
+  - `draft_picks(gm, year, round, source_type, original_owner, acquired_from, acquisition_note, condition_flag)`
+  - `draft_pick_conditions(gm, year, round, condition_text)`
+
 ## 5) KeepTradeCut — Replace Sampler Stub
 
 - ☐ Implement real KTC fetcher (players + picks) respecting ToS and polite rate limits (randomized sleeps, caching).
@@ -128,6 +136,12 @@ Notes on Samples Objective:
 - ☐ Normalize to long‑form `asset_type ∈ {player,pick}` with `asof_date`, `rank`, `value`.
 - ☐ Write Parquet to `data/raw/ktc/{players,picks}/dt=YYYY-MM-DD/` with `_meta.json`
 - ☐ Export small samples from the KTC fetcher
+
+Acceptance criteria:
+
+- Contract test: `asset_type ∈ {player,pick}`, `market_scope='dynasty_1qb'`, values ≥ 0, `asof_date` present.
+- Cache + throttle with randomized sleeps; backoff on errors.
+- Samples updated to use real client.
 
 ## 6) FFanalytics — Wire Runner (R) to Real Projections
 
@@ -143,6 +157,16 @@ Notes on Samples Objective:
   - Covers all positions: QB, RB, WR, TE, K, DST
 - ☑ Document site availability: 8 working sources for 2024 season-long projections
 
+Next step (scoring and weighted aggregation):
+
+- ☐ Weighted aggregation per config/weights (site weights in projections config).
+- ☐ Apply `sleeper_scoring_rules.yaml` to produce fantasy points.
+- ☐ Output canonical long‑form with `measure_domain=fantasy`, `stat_kind=projection`.
+
+Acceptance criteria:
+
+- Deterministic long‑form output; staging validates presence and value ranges.
+
 ## 7) dbt — Seeds, Staging, and Marts
 
 - ☑ Scaffold dbt project structure under `dbt/ff_analytics/` with external Parquet defaults.
@@ -152,7 +176,14 @@ Notes on Samples Objective:
     - ☑ `stg_nflverse__players.sql` reading local `data/raw` Parquet (tests: not_null + unique `gsis_id`)
     - ☑ `stg_nflverse__weekly.sql` with PK tests: not_null (`season`,`week`,`gsis_id`) + singular uniqueness test on key
   - `stg_sleeper_*` (league, users, rosters, roster_players)
-  - `stg_sheets_*` (contracts, rosters, cap, draft_assets, trade_conditions)
+  - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions)
+    - ☐ Add `stg_sheets__roster_changelog` (hash-based SCD tracking)
+    - ☐ Add `stg_sheets__change_log` (row hash per tab/dt)
+    - ☐ Tests:
+      - unique: `contracts_active (gm,player,year)`, `contracts_cut (gm,player,year)`, `draft_picks (gm,year,round)`
+      - FK: `contracts_cut (gm,player,year) → contracts_active (gm,player,year)` (when present)
+      - FK: `draft_pick_conditions (gm,year,round) → draft_picks (gm,year,round)`
+      - not_null and numeric ranges (amounts ≥ 0), enumerations on `source_type`
   - `stg_ktc_assets`, `stg_ffanalytics_projections`
 - ☐ Add **change‑capture** tables:
   - `stg_sleeper_roster_changelog` (stable roster hash)
@@ -187,6 +218,12 @@ SQL style & lint policy (staging vs core)
 - ☐ Wire GCS writes and dbt run/test steps using repo secrets; post basic notifications (optional).
   - ☑ Parameterize dbt vars for `external_root` and allow profile selection via env.
 
+Sheets pipeline specifics:
+
+- Order: `copy_league_sheet.py` → `commissioner_parse.py` → dbt run/test (ADR‑005).
+- Artifacts: CSV previews and dbt test summary.
+- LKG fallback: on parser/API failure, use previous `dt` partition; verify in CI (acceptance).
+
 ## 9) Samples & Fixtures
 
 - ☐ Generate minimal fixtures for each dataset and commit to a fixture bucket (or store as CI artifacts):
@@ -207,12 +244,28 @@ Notes:
 - ☐ Dashboard banners when freshness thresholds breached or LKG in effect.
 - ☐ Alerts on schema drift (dbt run failures) and DQ violations.
 
+ops schema details:
+
+- `ops.run_ledger` captures `asof_datetime`, `loader_path`, `source_version` from `_meta.json`.
+- Freshness banner UX per notebook conventions.
+
 ## 11) Documentation
 
 - ☑ **SPEC v2.2** consolidated doc is present in `docs/spec/`.
 - ☑ Link SPEC in README for quick discovery and add badges (Spec, Conventions, CI).
 - ☑ **How to Use the Sample Generator** guide present in `docs/dev/`; keep in sync with code.
 - ☐ Record **Orchestration & Language Strategy** (Python‑first with R escape hatch) in contributor docs.
+
+## 12) Backfill Strategy
+
+- ☐ Document backfill approach: dt‑based reprocess, idempotent writes, and LKG behavior.
+- ☐ Provide scripts to re‑parse raw tabs across a date range and re‑run dbt.
+
+## 13) Compaction Playbook
+
+- ☐ Document compaction strategy for Parquet partitions (monthly job):
+  - Consolidate small files; preserve partition invariants
+  - Write compaction manifest for audit
 
 ## 12) Sheets Copier Core & Script
 
