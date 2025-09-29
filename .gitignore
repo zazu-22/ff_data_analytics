@@ -5,10 +5,17 @@ build/
 dist/
 wheels/
 *.egg-info
+.eggs/
+*.egg
 *.DS_Store
 
 # Virtual environments
 .venv
+
+# Python tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # Environment and secrets
 *.env
@@ -27,6 +34,24 @@ samples/
 # dbt build artifacts
 dbt/**/target/
 dbt/**/logs/
+dbt/**/profiles.yml
+
+# Jupyter notebook artifacts
+.ipynb_checkpoints/
+notebooks/*.csv
+
+# R project artifacts
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
 # Temporary files
 *.tmp
