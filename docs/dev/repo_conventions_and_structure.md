@@ -63,6 +63,16 @@ Purpose: establish consistent naming, directory layout, and data organization to
   - `vars.external_root: gs://ff-analytics/mart`.
 - Profiles (`profiles.yml`): DuckDB `:memory:` with `extensions: [httpfs]`.
 
+### SQL Style & Linting
+
+- Use SQLFluff with `templater: dbt` and `dialect: duckdb`.
+- Enforce lowercase for keywords, identifiers, and function names.
+- Staging models: allow raw‑aligned column names (ignore `RF04`) and omit statement terminators (ignore `CV06`).
+- Core/marts: optionally re‑enable `RF04` and terminators as policy tightens.
+- Pre‑commit hooks:
+  - `sqlfluff-lint` runs on `dbt/ff_analytics/models/**.{sql,sql.j2}`
+  - Manual fixer available via `pre-commit run sqlfluff-fix --all-files`.
+
 ## Ingest Module Structure
 
 - `ingest/<provider>/` packages for each provider shim.

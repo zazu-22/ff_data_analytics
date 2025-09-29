@@ -135,7 +135,7 @@ indent_unit = "space"
 templater = "dbt"
 dialect = "duckdb"
 sql_file_exts = ".sql,.sql.j2,.dml,.ddl"
-exclude_rules = "L034,L044"  # L034: Select wildcards, L044: No blank line after CTE
+exclude_rules = "L034,L044,RF04,CV06"  # Allow keywords as identifiers; ignore semicolon terminator
 
 [tool.sqlfluff.indentation]
 indent_unit = "space"
@@ -144,13 +144,13 @@ tab_space_size = 2
 [tool.sqlfluff.layout.type.comma]
 line_position = "trailing"
 
-[tool.sqlfluff.rules.L010]  # Inconsistent capitalisation of keywords
+[tool.sqlfluff.rules.capitalisation.keywords]
 capitalisation_policy = "lower"
 
-[tool.sqlfluff.rules.L014]  # Inconsistent capitalisation of unquoted identifiers
+[tool.sqlfluff.rules.capitalisation.identifiers]
 capitalisation_policy = "lower"
 
-[tool.sqlfluff.rules.L030]  # Inconsistent capitalisation of function names
+[tool.sqlfluff.rules.capitalisation.functions]
 capitalisation_policy = "lower"
 
 [tool.sqlfluff.templater.dbt]
