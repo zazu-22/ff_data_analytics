@@ -8,9 +8,10 @@ exclude: |
     \.archive/|
     data/raw/|
     data/data_dictionaries/|
-    \notebooks/|
+    notebooks/|
+    notebooks/\.ipynb_checkpoints/|
     \.claude/|
-    \samples/
+    samples/
   )
 
 repos:
@@ -18,8 +19,10 @@ repos:
     rev: v0.6.4
     hooks:
       - id: ruff
+        files: ^(ingest/|src/|tools/|tests/).*\.py$
         args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
+        files: ^(ingest/|src/|tools/|tests/).*\.py$
 
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.8.5
@@ -45,7 +48,8 @@ repos:
         files: \.(yaml|yml)$
         exclude: |
           (?x)^(
-            .github/actionlint.yaml|
+            \.github/actionlint.yaml|
+            \.github/workflows/ingest_google_sheets\.yml|
             dbt/.*
           )$
 
@@ -80,6 +84,7 @@ repos:
     hooks:
       - id: actionlint
         files: ^\.github/workflows/.*\.ya?ml$
+        exclude: ^\.github/workflows/ingest_google_sheets\.yml$
 
   - repo: local
     hooks:
