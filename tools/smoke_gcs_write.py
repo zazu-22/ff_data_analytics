@@ -11,6 +11,7 @@ Env:
 from __future__ import annotations
 
 import argparse
+import os
 from datetime import UTC, datetime
 
 import polars as pl
@@ -24,7 +25,20 @@ def main() -> int:
     # Load .env to pick up GOOGLE_APPLICATION_CREDENTIALS or GCS_SERVICE_ACCOUNT_JSON
     load_dotenv()
     p = argparse.ArgumentParser()
-    p.add_argument("--dest", required=True, help="Base destination path or gs:// URI")
+    # Default destination derives from GCS_BUCKET if present
+    default_dest = (
+        f"gs://{os.environ.get('GCS_BUCKET')}/test/ff_analytics"
+        if os.environ.get("GCS_BUCKET")
+        else "data/tmp/gcs_smoke"
+    )
+    p.add_argument(
+        "--dest",
+        default=default_dest,
+        help=(
+            "Base destination path or gs:// URI (defaults to "
+            "gs://$GCS_BUCKET/test/ff_analytics if set)"
+        ),
+    )
     args = p.parse_args()
 
     now = datetime.now(UTC).isoformat()

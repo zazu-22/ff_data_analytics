@@ -120,8 +120,14 @@ def main() -> int:
     g.add_argument("--sheet-url", help="Google Sheets URL (copied league sheet)")
     g.add_argument("--input-dir", help="Local directory of per-tab CSVs (like samples/sheets)")
     p.add_argument("--tabs", nargs="*", help="Tabs to pull when using --sheet-url")
+    # Default out-raw uses GCS_BUCKET if present
+    default_out_raw = (
+        f"gs://{os.environ.get('GCS_BUCKET')}/raw/commissioner"
+        if os.environ.get("GCS_BUCKET")
+        else "data/raw/commissioner"
+    )
     p.add_argument(
-        "--out-raw", default="data/raw/commissioner", help="Parquet output base (local or gs://)"
+        "--out-raw", default=default_out_raw, help="Parquet output base (local or gs://)"
     )
     p.add_argument(
         "--out-csv", default="data/review/commissioner", help="CSV preview output base (local only)"
