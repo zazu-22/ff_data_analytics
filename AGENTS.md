@@ -13,16 +13,23 @@
 ## Build, Test, and Development Commands
 
 - Setup (Python 3.13.6 via `.python-version`): `pip install uv && uv sync`.
-- Run nflverse loader: `python -c "from ingest.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
+- Run nflverse loader: `python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
 - Run projections (R): `Rscript scripts/R/ffanalytics_run.R --config config/projections/ffanalytics_projections_config.yaml --scoring config/scoring/sleeper_scoring_rules.yaml`.
 - Notebooks: `jupyter lab` (install via project deps) for local analysis.
 
 ## Dependency Management (uv)
 
 - Add runtime deps: `uv add pandas polars pyarrow`.
-- Add dev deps: `uv add --dev pre-commit` (optionally `ruff mdformat mdformat-gfm yamlfix nbqa`).
+- Add dev deps: `uv add --dev pre-commit ruff mdformat mdformat-gfm yamllint nbqa sqlfluff sqlfluff-templater-dbt dbt-duckdb`.
 - Sync and run: `uv sync`; execute tools via `uv run <cmd>` (e.g., `uv run ruff format .`).
 - Install Git hook: `uv run pre-commit install` (then `uv run pre-commit run --all-files`).
+
+### Makefile shortcuts
+
+- `make samples-nflverse` — generate minimal nflverse samples
+- `make dbt-run` / `make dbt-test` — run/test dbt locally (DuckDB)
+- `make quickstart-local` — samples → dbt run → dbt test
+- `make sqlfix` — manual sqlfluff auto-fix for dbt models
 
 ## Coding Style & Naming Conventions
 
@@ -51,6 +58,21 @@
 
 - Data layout: immutable, partitioned Parquet under `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/` (+ `_meta.json` sidecar from the loader). See spec: `docs/spec/SPEC-1_v_2.2.md`.
 - CI: `.github/workflows/data-pipeline.yml` runs nflverse Mondays 08:00 UTC and projections Tuesdays 08:00 UTC; supports manual dispatch.
+
+## dbt Project
+
+- Location: `dbt/ff_analytics/` (DuckDB + external Parquet)
+- Profiles: see `dbt/ff_analytics/profiles.example.yml` (env toggles `DBT_TARGET`, `DBT_THREADS`)
+- SQL linting: SQLFluff with dbt templater; staging models allow raw-aligned names; manual fix via `make sqlfix`.
+
+Note: dbt build artifacts are ignored (`dbt/**/target`, `dbt/**/logs`).
+
+## Contributing & Conventions
+
+- Conventions: See `docs/dev/repo_conventions_and_structure.md` for repo layout, naming, data paths, and dbt organization.
+- Pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files` before pushing.
+- SQL style: SQLFluff (dbt templater, DuckDB dialect). Staging allows raw-aligned names (ignores `RF04`, `CV06`); core can be stricter.
+- Make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`.
 
 ## Sample Data
 

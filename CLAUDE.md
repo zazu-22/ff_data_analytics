@@ -15,7 +15,7 @@ Fantasy Football Analytics data architecture project combining commissioner leag
 - **Setup & Install dependencies**: `uv sync` (creates venv and installs from pyproject.toml)
 - **Add new dependency**: `uv add <package>` (e.g., `uv add pandas`)
 - **Activate virtual environment**: `source .venv/bin/activate`
-- **Run with uv**: `uv run python -c "from ingest.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`
+- **Run with uv**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`
 
 ### Jupyter Notebooks
 
@@ -78,6 +78,22 @@ Fantasy Football Analytics data architecture project combining commissioner leag
 - **Loader validation**: Verify schema/keys and non-null key coverage
 - **Idempotent operations**: All ingestion jobs are retryable without data corruption
 - **Failure handling**: Last-known-good (LKG) pattern for resilience
+
+## dbt Usage
+
+- Project: `dbt/ff_analytics/` (DuckDB + external Parquet).
+- Run: `dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics`
+- Test: `dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics`
+- Profiles: see `dbt/ff_analytics/profiles.example.yml` and use env vars (`DBT_TARGET`, `DBT_THREADS`, `EXTERNAL_ROOT`).
+- SQL Linting: SQLFluff (templater-dbt, dialect duckdb). Manual fix: `make sqlfix`.
+- Generated artifacts (target/logs) are ignored by VCS and pre-commit.
+
+## Contributing & Conventions
+
+- Conventions: Follow `docs/dev/repo_conventions_and_structure.md` (repo layout, naming, data paths, dbt org).
+- Pre-commit: Install and run locally — `uv run pre-commit install`; `uv run pre-commit run --all-files`.
+- SQL style policy: staging models allow provider-raw names (ignore `RF04`, `CV06`); core/marts can be stricter.
+- Make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`.
 
 ## Critical Specifications
 

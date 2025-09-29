@@ -26,3 +26,11 @@
 - `data/` — local dev data (raw/stage/mart/ops)
 - `dbt/ff_analytics/` — dbt project (duckdb + external Parquet)
 - `docs/` — spec, ADRs, dev guides, analytics
+
+## Contributing
+
+- Read AGENTS guide: `AGENTS.md` (developer workflows, commands, expectations)
+- Read Claude guide: `CLAUDE.md` (LLM/code assistant tips for this repo)
+- Follow repo conventions: `docs/dev/repo_conventions_and_structure.md`
+- Set up pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files`
+- Useful make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`
