@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13.6"
 dependencies = [
     "altair>=5.5.0",
-    "basedpyright>=1.31.5",
     "duckdb>=1.4.0",
     "google-api-python-client>=2.183.0",
     "google-auth>=2.40.3",
@@ -43,7 +42,7 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py313"  # Updated to match requires-python = ">=3.13.6"
 exclude = [
     ".git",
     "__pycache__",
@@ -52,16 +51,41 @@ exclude = [
     "docs",
     "migrations",
     "venv",
+    ".venv",  # Added for uv virtual environment
     "**/*script_snippets/**",
+    "data/**",  # Exclude data files from linting
+    "notebooks/**/*.py",  # Exclude Jupyter notebook exports
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
-ignore = []
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "D",    # pydocstyle
+    "S",    # flake8-bandit (security)
+    "C90",  # mccabe complexity
+    "N",    # pep8-naming
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "PTH",  # flake8-use-pathlib
+    "PD",   # pandas-vet
+    "NPY",  # NumPy-specific rules
+]
+ignore = [
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D203",  # 1 blank line required before class docstring
+    "D213",  # Multi-line docstring summary should start at the second line
+    "S101",  # Use of assert detected (needed for tests)
+]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ingest", "tools"]
+known-first-party = ["ingest", "tools", "tests"]  # Added tests module
 combine-as-imports = true
+force-single-line = false  # Allow multi-line imports for readability
 
 [tool.ruff.format]
 quote-style = "double"
@@ -73,15 +97,107 @@ wrap = 100
 number = false
 
 [tool.pyrefly]
-project-includes = ["**/*"]
+project-includes = [
+    "ingest/**/*.py",  # Core ingestion modules
+    "tools/**/*.py",   # Project tools
+    "tests/**/*.py",   # Test suite
+    "scripts/**/*.py", # Python scripts
+]
 project-excludes = [
     "**/node_modules",
     "**/__pycache__",
     "**/*venv/**/*",
+    "**/.venv/**/*",  # UV virtual environment
     "**/*script_snippets",
+    "data/**",  # Exclude data directories
+    "notebooks/**",  # Exclude notebooks (analyzed separately)
+    "dbt/**",  # DBT has its own linting
 ]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
+    "dbt-duckdb>=1.8.0",
+    "sqlfluff>=3.1.1",
+    "yamllint>=1.35.1",
+]
+
+# Type checking configuration
+# Note: This project uses Pyrefly (Meta's Rust-based type checker) for fast type checking
+# Pyrefly config is already in [tool.pyrefly] section above
+
+# SQL linting configuration
+[tool.sqlfluff.core]
+max_line_length = 120
+indent_unit = "space"
+templater = "dbt"
+sql_file_exts = ".sql,.sql.j2,.dml,.ddl"
+exclude_rules = "L034,L044"  # L034: Select wildcards, L044: No blank line after CTE
+
+[tool.sqlfluff.indentation]
+indent_unit = "space"
+tab_space_size = 2
+
+[tool.sqlfluff.layout.type.comma]
+line_position = "trailing"
+
+[tool.sqlfluff.rules.L010]  # Inconsistent capitalisation of keywords
+capitalisation_policy = "lower"
+
+[tool.sqlfluff.rules.L014]  # Inconsistent capitalisation of unquoted identifiers
+capitalisation_policy = "lower"
+
+[tool.sqlfluff.rules.L030]  # Inconsistent capitalisation of function names
+capitalisation_policy = "lower"
+
+# YAML linting configuration
+[tool.yamllint]
+extends = "default"
+ignore = [
+    ".venv/",
+    "venv/",
+    "data/",
+]
+
+[tool.yamllint.rules.line-length]
+max = 120
+level = "warning"
+
+[tool.yamllint.rules.document-start]
+disable = true
+
+[tool.yamllint.rules.truthy]
+allowed-values = ["true", "false", "yes", "no"]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["ingest", "tools"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+    "*/venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-ra -q --strict-markers"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
 ]

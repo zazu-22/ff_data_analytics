@@ -1,0 +1,14 @@
+linters: linters_with_defaults(
+    line_length_linter(120),
+    object_name_linter = object_name_linter(styles = c("snake_case", "CamelCase")),
+    indentation_linter = indentation_linter(indent = 2L),
+    assignment_linter = NULL,  # Allow = and <- for assignment
+    commented_code_linter = NULL,  # Allow commented code during development
+    cyclocomp_linter = cyclocomp_linter(complexity_limit = 20L)
+  )
+exclusions: list(
+    "renv",
+    "packrat",
+    ".Rproj.user"
+  )
+encoding: "UTF-8"

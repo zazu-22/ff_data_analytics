@@ -1,0 +1,18 @@
+# actionlint configuration
+# https://github.com/rhysd/actionlint
+
+self-hosted-runner:
+  labels: []
+
+# Ignore specific errors
+ignore:
+  - 'label ".+" is unknown'  # Ignore unknown runner labels
+  - 'unexpected key "permissions" for "workflow_call" event'  # Allow permissions in reusable workflows
+
+# Python version configuration
+pyflakes:
+  enabled: true
+
+# Shell script checking
+shellcheck:
+  enabled: true
