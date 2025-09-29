@@ -5,7 +5,9 @@
 
 with src as (
   select *
-  from read_parquet('data/raw/nflverse/players/dt=*/*.parquet')
+  from read_parquet(
+    '{{ env_var("RAW_NFLVERSE_PLAYERS_GLOB", "data/raw/nflverse/players/dt=*/*.parquet") }}'
+  )
 )
 
 select
