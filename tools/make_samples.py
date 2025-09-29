@@ -1,5 +1,4 @@
-"""
-tools/make_samples.py
+"""tools/make_samples.py.
 
 Programmatically create *small* deterministic samples for each target dataset so we can
 validate dbt contracts, DQ tests, and loaders without pulling full tables.
@@ -42,6 +41,7 @@ Notes:
 - All samplers write both Parquet and CSV,
   with a small sidecar _meta.json recording source + params.
 - Random sampling uses a fixed seed for determinism.
+
 """
 
 from __future__ import annotations
@@ -69,16 +69,17 @@ def _ensure_out(root: Path, provider: str, dataset: str) -> Path:
 
 
 def _write_outputs(
-    df: pd.DataFrame, out_dir: Path, provider: str, dataset: str, meta: dict, max_rows: int = 500
+    frame: pd.DataFrame, out_dir: Path, provider: str, dataset: str, meta: dict, max_rows: int = 500
 ):
+    """Write sampled CSV/Parquet outputs and a small _meta.json sidecar."""
     # thin the data deterministically
-    if len(df) > max_rows:
-        df = df.sample(n=max_rows, random_state=SEED)
+    if len(frame) > max_rows:
+        frame = frame.sample(n=max_rows, random_state=SEED)
     parquet = out_dir / f"{dataset}.parquet"
     csv = out_dir / f"{dataset}.csv"
-    df.to_parquet(parquet.as_posix(), index=False)
-    df.to_csv(csv.as_posix(), index=False)
-    meta = {**meta, "provider": provider, "dataset": dataset, "rows": int(len(df)), "seed": SEED}
+    frame.to_parquet(parquet.as_posix(), index=False)
+    frame.to_csv(csv.as_posix(), index=False)
+    meta = {**meta, "provider": provider, "dataset": dataset, "rows": int(len(frame)), "seed": SEED}
     (out_dir / "_meta.json").write_text(json.dumps(meta, indent=2))
     return {
         "csv": csv.as_posix(),
@@ -96,6 +97,7 @@ def sample_nflverse(
     r_fallback: bool = False,
     max_rows: int = 1000,
 ):
+    """Generate nflverse samples via shim (players/weekly/etc.), thinned to max_rows."""
     from ingest.nflverse.shim import load_nflverse  # expects your repo layout
 
     manifest = {}
@@ -123,10 +125,10 @@ def sample_nflverse(
             }
             continue
         # Concatenate and thin
-        df = pd.concat((pd.read_parquet(f) for f in files), ignore_index=True)
+        combined_df = pd.concat((pd.read_parquet(f) for f in files), ignore_index=True)
         out_dir = _ensure_out(out, "nflverse", ds)
         paths = _write_outputs(
-            df,
+            combined_df,
             out_dir,
             "nflverse",
             ds,
@@ -149,6 +151,7 @@ def _sleeper_get(endpoint: str, **params):
 
 
 def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_rows: int = 1000):
+    """Generate Sleeper samples for selected datasets given a league id."""
     if not league_id:
         league_id = os.getenv("LEAGUE_ID")
     if not league_id:
@@ -158,18 +161,18 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
     for ds in datasets:
         if ds == "league":
             data = _sleeper_get(f"/v1/league/{league_id}")
-            df = pd.json_normalize(data)
+            league_df = pd.json_normalize(data)
         elif ds == "users":
             data = _sleeper_get(f"/v1/league/{league_id}/users")
-            df = pd.json_normalize(data)
+            league_df = pd.json_normalize(data)
         elif ds == "rosters":
             data = _sleeper_get(f"/v1/league/{league_id}/rosters")
-            df = pd.json_normalize(data)
+            league_df = pd.json_normalize(data)
         elif ds == "players":
             # Use compact players; keep just a small subset of columns for sample
             data = _sleeper_get("/v1/players/nfl")
             # data is a dict keyed by player_id
-            df = (
+            league_df = (
                 pd.DataFrame.from_dict(data, orient="index")
                 .reset_index()
                 .rename(columns={"index": "sleeper_player_id"})
@@ -186,16 +189,16 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
                     "status",
                     "injury_status",
                 ]
-                if c in df.columns
+                if c in league_df.columns
             ]
             if keep_cols:
-                df = df[keep_cols]
+                league_df = league_df[keep_cols]
         else:
             raise SystemExit(f"Unknown Sleeper dataset: {ds}")
 
         out_dir = _ensure_out(out, "sleeper", ds)
         paths = _write_outputs(
-            df, out_dir, "sleeper", ds, {"league_id": league_id}, max_rows=max_rows
+            league_df, out_dir, "sleeper", ds, {"league_id": league_id}, max_rows=max_rows
         )
         manifest[ds] = paths
     return manifest
@@ -203,9 +206,7 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
 
 # ---------- Google Sheets (export sample rows using Sheets API) ----------
 def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 1000):
-    """
-    Requires Google credentials set up. For sampling, we pull only the first N rows per tab.
-    """
+    """Pull only the first N rows per tab from a Google Sheet (creds required)."""
     import gspread  # pip install gspread google-auth
     from google.oauth2.service_account import Credentials
 
@@ -221,8 +222,9 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
         )
     elif creds_path:
         # Environment variable contains path to JSON file
-        if os.path.exists(creds_path):
-            with open(creds_path) as f:
+        creds_file = Path(creds_path)
+        if creds_file.exists():
+            with creds_file.open() as f:
                 creds_info = json.load(f)
             creds = Credentials.from_service_account_info(
                 creds_info, scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -253,12 +255,17 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
                 else:
                     col_counts[col] = 0
                     unique_columns.append(col)
-            df = pd.DataFrame(values[1 : max_rows + 1], columns=unique_columns)
+            sheet_df = pd.DataFrame(values[1 : max_rows + 1], columns=unique_columns)
         else:
-            df = pd.DataFrame()
+            sheet_df = pd.DataFrame()
         out_dir = _ensure_out(out, "sheets", tab)
         paths = _write_outputs(
-            df, out_dir, "sheets", tab, {"sheet_url": sheet_url}, max_rows=max_rows
+            sheet_df,
+            out_dir,
+            "sheets",
+            tab,
+            {"sheet_url": sheet_url},
+            max_rows=max_rows,
         )
         manifest[tab] = paths
     return manifest
@@ -266,11 +273,10 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
 
 # ---------- KeepTradeCut (players + picks; top-N) ----------
 def sample_ktc(out: Path, assets: list[str], top_n: int = 100, max_rows: int = 1000):
-    """
-    Respectful scraping: small, top-N only; use cached endpoints if you have them.
+    """Respectful scraping: small, top-N only; use cached endpoints if you have them.
+
     This function is a placeholder — wire it to your existing KTC fetcher.
     """
-    # Placeholder small frame for contract. Replace with your actual fetch logic.
     rows = []
     for asset_type in assets:
         for i in range(min(top_n, 50)):
@@ -283,10 +289,15 @@ def sample_ktc(out: Path, assets: list[str], top_n: int = 100, max_rows: int = 1
                     "asof_date": "2025-08-01",
                 }
             )
-    df = pd.DataFrame(rows)
+    ktc_df = pd.DataFrame(rows)
     out_dir = _ensure_out(out, "ktc", "assets")
     return _write_outputs(
-        df, out_dir, "ktc", "assets", {"assets": assets, "top_n": top_n}, max_rows=max_rows
+        ktc_df,
+        out_dir,
+        "ktc",
+        "assets",
+        {"assets": assets, "top_n": top_n},
+        max_rows=max_rows,
     )
 
 
@@ -300,6 +311,7 @@ def sample_ffanalytics(
     sites: list[str] | None = None,
     max_rows: int = 1000,
 ):
+    """Run ffanalytics R scraper, filter results, and write sampled outputs."""
     import subprocess
 
     # Build arg list for the new simplified runner
@@ -332,23 +344,23 @@ def sample_ffanalytics(
     # The runner just gets raw projections without scoring calculations
 
     # Run the R runner
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    subprocess.run(cmd, check=True, capture_output=True, text=True)  # noqa: S603
 
     # Locate parquet (the runner writes it with different name pattern now)
     dt = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
     df_path = out / "ffanalytics" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
     if df_path.exists():
-        df = pd.read_parquet(df_path)
+        proj_df = pd.read_parquet(df_path)
         # Filter based on the actual column names in the raw projections
-        if positions is not None and "pos" in df.columns:
-            df = df[df["pos"].isin(positions)]
-        if weeks is not None and "week" in df.columns:
-            df = df[df["week"].isin(weeks)]
-        if sites is not None and "data_src" in df.columns:
-            df = df[df["data_src"].isin(sites)]
+        if positions is not None and "pos" in proj_df.columns:
+            proj_df = proj_df[proj_df["pos"].isin(positions)]
+        if weeks is not None and "week" in proj_df.columns:
+            proj_df = proj_df[proj_df["week"].isin(weeks)]
+        if sites is not None and "data_src" in proj_df.columns:
+            proj_df = proj_df[proj_df["data_src"].isin(sites)]
         out_dir = _ensure_out(out, "ffanalytics", "projections")
         return _write_outputs(
-            df,
+            proj_df,
             out_dir,
             "ffanalytics",
             "projections",
@@ -360,17 +372,25 @@ def sample_ffanalytics(
 
 # ---------- SDIO FantasyData (local files) ----------
 def sample_sdio(paths: list[str], out: Path, max_rows: int = 1000):
+    """Sample local SDIO files (CSV/Parquet), thin, and write outputs."""
     manifest = {}
     for p in paths:
         pth = Path(p)
         if not pth.exists():
             manifest[pth.name] = {"error": "file not found"}
             continue
-        df = pd.read_parquet(pth) if pth.suffix.lower() in {".parquet", ".pq"} else pd.read_csv(pth)
+        file_df = (
+            pd.read_parquet(pth) if pth.suffix.lower() in {".parquet", ".pq"} else pd.read_csv(pth)
+        )
         dataset = pth.stem
         out_dir = _ensure_out(out, "sdio", dataset)
         paths_out = _write_outputs(
-            df, out_dir, "sdio", dataset, {"source_file": pth.as_posix()}, max_rows=max_rows
+            file_df,
+            out_dir,
+            "sdio",
+            dataset,
+            {"source_file": pth.as_posix()},
+            max_rows=max_rows,
         )
         manifest[dataset] = paths_out
     return manifest
@@ -378,6 +398,7 @@ def sample_sdio(paths: list[str], out: Path, max_rows: int = 1000):
 
 # ---------- CLI ----------
 def main():
+    """CLI entrypoint for generating provider sample datasets."""
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="provider", required=True)
 
