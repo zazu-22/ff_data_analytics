@@ -1,4 +1,4 @@
-name: Commissioner Sheet Copy to League Sheet
+name: Ingest Raw Google Sheets
 
 on:
   schedule:
@@ -26,8 +26,8 @@ on:
           - "false"
 
 jobs:
-  copy-commissioner-sheet:
-    name: Copy Commissioner Sheet to League Sheet
+  copy-league-sheet:
+    name: Copy Commissioner League Sheet to Internal Sheet
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -89,7 +89,7 @@ jobs:
           echo "CHECKSUM_ROWS=50" >> $GITHUB_ENV
           echo "CHECKSUM_COLS=50" >> $GITHUB_ENV
 
-      - name: Run Commissioner Sheet Copy (Dry Run)
+      - name: Run Copy League Sheet (Dry Run)
         if: github.event.inputs.dry_run == 'true'
         run: |
           echo "DRY RUN MODE - Checking if copy would be needed..."
@@ -107,7 +107,7 @@ jobs:
           echo "  LOG_PARENT_ID: $LOG_PARENT_ID"
           echo "  DEFAULT_TABS: $DEFAULT_TABS"
 
-      - name: Run Commissioner Sheet Copy
+      - name: Run Copy League Sheet
         if: github.event.inputs.dry_run != 'true'
         run: |
           # Run with uv which handles the environment and imports correctly
@@ -136,9 +136,8 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || '' }}
         if: always() && env.DISCORD_WEBHOOK_URL
         run: |
-          # Only send notifications for failures in scheduled runs
-          # or always for manual runs
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ] || [ "${{ job.status }}" != "success" ]; then
+          # Send notifications for all scheduled runs and manual runs
+          if [ "${{ github.event_name }}" == "schedule" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             curl -H "Content-Type: application/json" \
               -X POST \
               -d "{
