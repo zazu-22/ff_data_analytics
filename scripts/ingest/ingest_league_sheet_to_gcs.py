@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Ingest Commissioner Google Sheet data to GCS.
+"""Ingest Commissioner Google Sheet data to GCS.
 Designed to run in GitHub Actions where network access works.
 """
 
@@ -284,9 +283,8 @@ def main():
             worksheet = all_worksheets[tab_name]
             df = export_worksheet(worksheet, tab_name)
 
-            if not df.empty:
-                if upload_to_gcs(df, args.bucket, tab_name, gcs_client):
-                    success_count += 1
+            if not df.empty and upload_to_gcs(df, args.bucket, tab_name, gcs_client):
+                success_count += 1
 
         logger.info("=" * 60)
         logger.info(f"✅ Ingestion complete: {success_count}/{len(tabs_to_export)} tabs uploaded")

@@ -28,6 +28,7 @@ Note:
     - "Can List Children" to browse folder contents
     - "Can Add Children" or "Can Create" to add new files
     - For Shared Drives, must have appropriate role assigned
+
 """
 
 import os
@@ -58,6 +59,7 @@ def main():
 
     Returns:
         int: 0 on success, 1 if folder access fails
+
     """
     # Authenticate
     creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)

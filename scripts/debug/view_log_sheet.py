@@ -26,6 +26,7 @@ Note:
 
     Special entries with tab='[ENTIRE_RUN]' indicate whole-run skips
     where the source hadn't changed since the last successful run.
+
 """
 
 import os
@@ -54,6 +55,7 @@ def main():
 
     Returns:
         int: Always returns 0 (success)
+
     """
     # Authenticate
     creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)

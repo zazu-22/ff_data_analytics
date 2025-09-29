@@ -20,6 +20,7 @@ Note:
     Service accounts typically have 0GB quota and cannot create files
     in their own Drive. They must create files in shared folders or
     Shared Drives where they have been granted access.
+
 """
 
 import os
@@ -43,6 +44,7 @@ def main():
 
     Returns:
         int: 0 on success, non-zero on error
+
     """
     # Authenticate
     creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)

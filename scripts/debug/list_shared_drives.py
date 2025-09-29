@@ -26,6 +26,7 @@ Note:
     IDs have different patterns. Service accounts work best with
     Shared Drives as they can have full permissions without the
     quota limitations of personal My Drive folders.
+
 """
 
 import os
@@ -52,6 +53,7 @@ def main():
 
     Returns:
         int: 0 on success, non-zero on error
+
     """
     # Authenticate
     creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)

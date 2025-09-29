@@ -1,6 +1,5 @@
 # copy_league_sheet.py
-"""
-Programmatically copy specific tabs from the heavy “commissioner” workbook
+"""Programmatically copy specific tabs from the heavy “commissioner” workbook
 to a destination workbook via server-side copyTo, freeze to values, and do
 atomic rename + protection + metadata + logging.
 
@@ -108,7 +107,8 @@ except Exception:
 
 def _resolve_parents(drive, parent_ids: list[str] | None):
     """Return [{'id':..., 'name':...}, ...] for parent folders; tolerates missing perms.
-    Accepts None when the metadata has no 'parents' field."""
+    Accepts None when the metadata has no 'parents' field.
+    """
     out = []
     for pid in parent_ids or []:
         try:

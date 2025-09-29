@@ -5,47 +5,57 @@ This directory contains one-time setup and validation scripts for the FF Analyti
 ## Scripts
 
 ### 1. `env_setup.sh`
+
 **Purpose**: Interactive helper to create your `.env` file from the template
 
 **Usage**:
+
 ```bash
 ./scripts/setup/env_setup.sh
 ```
 
 **What it does**:
+
 - Copies `.env.template` to `.env`
 - Prompts for your GCP project ID
 - Auto-detects current gcloud project
 - Updates the `.env` file with your values
 
 ### 2. `gcs_setup.sh`
+
 **Purpose**: Creates and configures the complete GCS infrastructure
 
 **Usage**:
+
 ```bash
 ./scripts/setup/gcs_setup.sh
 ```
 
 **What it does**:
+
 - Creates GCS bucket with folder structure (raw/, stage/, mart/, ops/)
 - Applies lifecycle policies for cost optimization
 - Creates service account with appropriate IAM roles
 - Optionally generates service account key for CI/CD
 
 **Prerequisites**:
+
 - `.env` file with GCP_PROJECT_ID configured
 - `gcloud` CLI installed and authenticated
 - Appropriate permissions to create buckets and service accounts
 
 ### 3. `gcs_validate.sh`
+
 **Purpose**: Validates that GCS infrastructure is correctly configured
 
 **Usage**:
+
 ```bash
 ./scripts/setup/gcs_validate.sh
 ```
 
 **What it does**:
+
 - Verifies bucket exists and is accessible
 - Checks folder structure
 - Validates lifecycle policies are applied
@@ -58,6 +68,7 @@ This directory contains one-time setup and validation scripts for the FF Analyti
 ## Setup Workflow
 
 1. **First time setup**:
+
    ```bash
    # 1. Create your .env file
    ./scripts/setup/env_setup.sh
@@ -69,7 +80,8 @@ This directory contains one-time setup and validation scripts for the FF Analyti
    ./scripts/setup/gcs_validate.sh
    ```
 
-2. **Generate service account key for GitHub Actions**:
+1. **Generate service account key for GitHub Actions**:
+
    ```bash
    # If not done during setup
    gcloud iam service-accounts keys create \
@@ -80,7 +92,8 @@ This directory contains one-time setup and validation scripts for the FF Analyti
    base64 -i config/secrets/gcp-service-account-key.json | pbcopy
    ```
 
-3. **Add to GitHub Secrets**:
+1. **Add to GitHub Secrets**:
+
    - Go to Settings → Secrets and variables → Actions
    - Add secret named `GOOGLE_APPLICATION_CREDENTIALS_JSON`
    - Paste the base64-encoded key
