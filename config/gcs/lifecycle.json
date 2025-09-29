@@ -8,7 +8,10 @@
         },
         "condition": {
           "age": 30,
-          "matchesPrefix": ["raw/", "stage/"]
+          "matchesPrefix": [
+            "raw/",
+            "stage/"
+          ]
         }
       },
       {
@@ -18,7 +21,9 @@
         },
         "condition": {
           "age": 180,
-          "matchesPrefix": ["raw/"]
+          "matchesPrefix": [
+            "raw/"
+          ]
         }
       },
       {
@@ -27,7 +32,9 @@
         },
         "condition": {
           "age": 90,
-          "matchesPrefix": ["ops/logs/"]
+          "matchesPrefix": [
+            "ops/logs/"
+          ]
         }
       }
     ]
