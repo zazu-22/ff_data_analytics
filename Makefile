@@ -1,6 +1,6 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test quickstart-local
+.PHONY: help samples-nflverse dbt-run dbt-test quickstart-local sqlfix
 
 help:
 	@echo "Available targets:"
@@ -8,6 +8,7 @@ help:
 	@echo "  dbt-run           Run dbt models locally (DuckDB)"
 	@echo "  dbt-test          Run dbt tests locally"
 	@echo "  quickstart-local  Samples -> dbt run -> dbt test"
+	@echo "  sqlfix            Run sqlfluff auto-fix on dbt models"
 
 samples-nflverse:
 	PYTHONPATH=. uv run python tools/make_samples.py nflverse \
@@ -23,3 +24,6 @@ dbt-test:
 
 quickstart-local: samples-nflverse dbt-run dbt-test
 	@echo "Done."
+
+sqlfix:
+	uv run pre-commit run --hook-stage manual sqlfluff-fix --all-files
