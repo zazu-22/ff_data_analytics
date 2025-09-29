@@ -14,12 +14,15 @@ import argparse
 from datetime import UTC, datetime
 
 import polars as pl
+from dotenv import load_dotenv
 
 from ingest.common.storage import write_parquet_any, write_text_sidecar
 
 
 def main() -> int:
     """Write a tiny DataFrame to a local or GCS destination for smoke testing."""
+    # Load .env to pick up GOOGLE_APPLICATION_CREDENTIALS or GCS_SERVICE_ACCOUNT_JSON
+    load_dotenv()
     p = argparse.ArgumentParser()
     p.add_argument("--dest", required=True, help="Base destination path or gs:// URI")
     args = p.parse_args()
@@ -33,7 +36,7 @@ def main() -> int:
     )
 
     parquet_uri = (
-        args.dest.rstrip("/") + f"/smoke/dt={now[:10]}/smoke_{now[11:19].replace(':','')}.parquet"
+        args.dest.rstrip("/") + f"/smoke/dt={now[:10]}/smoke_{now[11:19].replace(':', '')}.parquet"
     )
     meta_uri = args.dest.rstrip("/") + f"/smoke/dt={now[:10]}/_meta.json"
 
