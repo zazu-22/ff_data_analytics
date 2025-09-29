@@ -9,6 +9,12 @@
 - SPEC: docs/spec/SPEC-1_v_2.2.md
 - Conventions & Structure: docs/dev/repo_conventions_and_structure.md
 - Sample Generator Guide: docs/dev/how_to_use_the_sample_generator_tools_make_samples.md
+- Polars DataFrame Patterns: docs/dev/polars_dataframes.md
+- dbt Project Overview: dbt/ff_analytics/README.md
+- Staging Norms: dbt/ff_analytics/models/staging/README.md
+- CI: .github/workflows/data-pipeline.yml, .github/workflows/ingest_google_sheets.yml
+- Projections Config: config/projections/ffanalytics_projections_config.yaml
+- Scoring Rules (Sleeper): config/scoring/sleeper_scoring_rules.yaml
 
 ## Getting Started
 
@@ -34,3 +40,10 @@
 - Follow repo conventions: `docs/dev/repo_conventions_and_structure.md`
 - Set up pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files`
 - Useful make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`
+
+## Cloud Storage (GCS) Output Support
+
+- The nflverse Python shim now writes to both local paths and `gs://` URIs.
+- Credentials: set `GOOGLE_APPLICATION_CREDENTIALS` (path) or `GCS_SERVICE_ACCOUNT_JSON` (inline JSON).
+- Example: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='gs://<bucket>/raw/nflverse'))"`
+- Smoke test: `uv run python tools/smoke_gcs_write.py --dest gs://<bucket>/test/ff_analytics`
