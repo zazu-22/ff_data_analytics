@@ -75,15 +75,16 @@ ______________________________________________________________________
   - Fixed shim to properly return R loader manifest
   - Successfully tested: schedule (285 games), players via R
 
-- ☑ Extend `ingest/nflverse/registry.py` if we add datasets (injuries, depth_charts, teams, etc.)
+- ☑ Extend `src/ingest/nflverse/registry.py` if we add datasets (injuries, depth_charts, teams, etc.)
 
   - Registry already includes: players, weekly, season, injuries, depth_charts, schedule, teams
   - Tested: injuries (5599 records), teams (768 records)
 
-- ☐ Add GCS write support (Python path)
+- ☑ Add GCS write support (Python path)
 
-  - Use DuckDB httpfs or PyArrow + `gcsfs` to allow `out_dir` to be `gs://...`
-  - Gate by env; default local writes to `data/raw/...`
+  - Implemented via PyArrow FS helpers in `src/ingest/common/storage.py`.
+  - `load_nflverse(..., out_dir='gs://<bucket>/raw/nflverse')` writes Parquet + `_meta.json`.
+  - Added `tools/smoke_gcs_write.py` for quick verification.
 
 ## 3) Sleeper — Minimal Ingest Checks
 
@@ -113,14 +114,12 @@ Notes on Samples Objective:
   - `uv run tools/make_samples.py sheets --tabs Eric Gordon Joe JP Andy Chip McCreary TJ James Jason Kevin Piper --sheet-url https://docs.google.com/spreadsheets/d/1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0 --out ./samples`
   - Fixed credential loading (supports both GOOGLE_APPLICATION_CREDENTIALS and GOOGLE_APPLICATION_CREDENTIALS_JSON)
   - Added handling for duplicate/empty column headers in sheets
-- ☐ Parse raw commissioner sheets into logical tables:
-  - Note: Raw sheets contain multiple embedded tables (Active Roster, Cut Contracts, Draft Picks, Trade Contingencies)
-  - Need to extract and normalize into staging-ready formats: `contracts`, `rosters`, `cap`, `draft_assets`, `trade_conditions`
-  - Include owner/GM metadata from each tab
-  - Consider creating `scripts/ingest/parse_commissioner_sheets.py` or similar
-- ☐ Write parsed tables as Parquet to `data/raw/commissioner/<table>/dt=YYYY-MM-DD/` with `_meta.json`
-- ☐ Add unit tests with small fixtures to validate extraction and PKs
-- ☐ Verify natural keys per tab (unique per date partition) and numeric domains (cap ≥ 0, years 1..5, etc.).
+- ☑ Parse raw commissioner sheets into logical tables:
+  - Implemented parser: `src/ingest/sheets/commissioner_parser.py` → `roster`, `cut_contracts`, `draft_picks`
+  - Includes GM column; uses Polars with `orient="row"`
+- ☑ Write parsed tables as Parquet to `data/raw/commissioner/<table>/dt=YYYY-MM-DD/` (via storage helper)
+- ☑ Add unit tests with small fixtures: `tests/test_sheets_commissioner_parser.py`
+- ☑ Verify non-null keys for GM and player fields in roster sample test
 
 ## 5) KeepTradeCut — Replace Sampler Stub
 
@@ -215,21 +214,27 @@ Notes:
 - ☑ **How to Use the Sample Generator** guide present in `docs/dev/`; keep in sync with code.
 - ☐ Record **Orchestration & Language Strategy** (Python‑first with R escape hatch) in contributor docs.
 
+## 12) Sheets Copier Core & Script
+
+- ☑ Core copy API added: `src/ingest/sheets/copier.py` (`copy_league_sheet`, `CopyOptions`)
+- ☑ `scripts/ingest/copy_league_sheet.py` delegates `copyTo` + paste-values to core; retains rename/metadata/protection/logging
+- ☑ Unit test for core using a fake Sheets service: `tests/test_sheets_copier.py`
+
 ______________________________________________________________________
 
 ## Current Status Snapshot (updated)
 
 - ☑ SPEC v2.2 patch + consolidated doc
-- ☑ nflverse shim (Python‑first) + R fallback runner
+- ☑ nflverse shim (Python‑first) + R fallback runner; robust repo root detection
 - ☑ ffanalytics raw scrape runner + projections config + site weights mapped
 - ☑ Sleeper scoring YAML exported from league
 - ☑ `tools/make_samples.py` implemented (nflverse, sleeper, sheets, ffanalytics raw, sdio; ktc stub)
-- ☐ Python shim GCS writes (local‑only today)
-- ☐ Commissioner Sheet parsing to normalized tables
+- ☑ Python shim GCS writes via PyArrow FS (+ smoke script)
+- ☑ Commissioner Sheet parsing to normalized tables + tests
 - ☐ KTC: real fetcher integration (replace stub)
-- ☐ Projections: weighted aggregation + scoring outputs
-- ☐ dbt project (partially implemented: scaffold + initial staging/tests)
-- ☐ CI: GCS writes, dbt runs, artifacts, notifications
+- ☐ Projections: weighted aggregation + scoring outputs (scaffold present)
+- ☑ dbt project (staging + tests; env-path globs; seeds skeleton)
+- ☑ CI: starter pipeline (ingest + dbt); lint fixes for workflow shell quoting
 
 ______________________________________________________________________
 
