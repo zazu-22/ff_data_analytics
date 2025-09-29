@@ -33,7 +33,8 @@ try:
 except Exception:
     pl = None  # allow import when polars not installed (e.g., doc builds)
 
-import contextlib
+
+from ingest.common.storage import write_parquet_any, write_text_sidecar
 
 from .registry import REGISTRY
 
@@ -51,29 +52,20 @@ class LoaderResolutionError(RuntimeError):
 def _write_parquet(
     frame, out_path: str, dataset: str, loader_path: str, source_name: str, source_version: str
 ):
-    """Write a polars or pandas dataframe to Parquet with a sidecar _meta.json."""
+    """Write a dataframe to Parquet with a sidecar _meta.json.
+
+    Supports both local paths and `gs://` destinations via PyArrow FS.
+    """
     dt = datetime.now(UTC).strftime("%Y-%m-%d")
-    partition_dir = Path(out_path) / dataset / f"dt={dt}"
-    partition_dir.mkdir(parents=True, exist_ok=True)
+    # Build partition directory URI (works for local and GCS)
+    # Ensure no trailing slash duplication
+    base = out_path.rstrip("/")
+    partition_uri = f"{base}/{dataset}/dt={dt}"
     file_name = f"{dataset}_{uuid.uuid4().hex[:8]}.parquet"
-    file_path = partition_dir / file_name
+    parquet_uri = f"{partition_uri}/{file_name}"
 
-    # Convert to polars if possible
-    if pl is not None:
-        if not isinstance(frame, pl.DataFrame):
-            with contextlib.suppress(Exception):
-                frame = pl.from_pandas(frame) if hasattr(frame, "to_dict") else pl.DataFrame(frame)
-        frame.write_parquet(file_path.as_posix())
-    else:
-        # Try pandas fallback
-        try:
-            import pandas as pd
-
-            if not isinstance(frame, pd.DataFrame):
-                frame = pd.DataFrame(frame)
-            frame.to_parquet(file_path.as_posix(), index=False, engine="pyarrow")
-        except Exception as e:
-            raise RuntimeError(f"Failed to write Parquet: {e}") from e
+    # Write parquet using common storage helper (polars/pandas supported)
+    write_parquet_any(frame, parquet_uri)
 
     meta = {
         "dataset": dataset,
@@ -81,13 +73,15 @@ def _write_parquet(
         "loader_path": loader_path,
         "source_name": source_name,
         "source_version": source_version,
-        "output_parquet": file_path.as_posix(),
+        "output_parquet": parquet_uri,
     }
-    (partition_dir / "_meta.json").write_text(json.dumps(meta, indent=2))
+    # Write sidecar metadata using the same FS abstraction
+    write_text_sidecar(json.dumps(meta, indent=2), f"{partition_uri}/_meta.json")
+
     return {
         "dataset": dataset,
-        "partition_dir": partition_dir.as_posix(),
-        "parquet_file": file_path.as_posix(),
+        "partition_dir": partition_uri,
+        "parquet_file": parquet_uri,
         "meta": meta,
     }
 
@@ -123,35 +117,37 @@ def _load_with_python(spec, seasons=None, weeks=None, **kwargs):
     return result_frame, f"python:{loader_path}", "nflverse", source_version
 
 
-def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
-    # Call Rscript runner
-    script = Path(__file__).resolve().parents[2] / "scripts" / "R" / "nflverse_load.R"
+def _repo_root(start: Path) -> Path:
+    for p in start.parents:
+        if (p / "pyproject.toml").exists():
+            return p
+    return start.parents[3] if len(start.parents) >= 4 else start.parents[-1]
+
+
+def _build_r_command(script: Path, spec, seasons=None, weeks=None, out_dir=None) -> list[str]:
     cmd = ["Rscript", script.as_posix(), "--dataset", spec.name]
     if seasons is not None:
-        if isinstance(seasons, list | tuple):
-            cmd += ["--seasons", ",".join(map(str, seasons))]
-        else:
-            cmd += ["--seasons", str(seasons)]
+        cmd += [
+            "--seasons",
+            ",".join(map(str, seasons)) if isinstance(seasons, list | tuple) else str(seasons),
+        ]
     if weeks is not None:
-        if isinstance(weeks, list | tuple):
-            cmd += ["--weeks", ",".join(map(str, weeks))]
-        else:
-            cmd += ["--weeks", str(weeks)]
+        cmd += [
+            "--weeks",
+            ",".join(map(str, weeks)) if isinstance(weeks, list | tuple) else str(weeks),
+        ]
     if out_dir:
         cmd += ["--out_dir", out_dir]
-    # extra args are ignored by default; extend runner if needed
-    env = os.environ.copy()
-    proc = subprocess.run(  # noqa: S603
-        cmd, capture_output=True, text=True, check=False, env=env
-    )
+    return cmd
+
+
+def _parse_r_output(proc: subprocess.CompletedProcess) -> tuple[dict, str, str, str]:
     if proc.returncode != 0:
         raise LoaderResolutionError(f"R loader failed: {proc.stderr[:500]}")
-    # Expect runner to print a single-line JSON manifest to stdout
     try:
         manifest = json.loads(proc.stdout.strip().splitlines()[-1])
         return manifest, "r:nflreadr", "nflverse", "nflreadr"
     except Exception:
-        # If no JSON manifest, return minimal info
         return (
             {
                 "note": "Runner did not return JSON manifest; check logs.",
@@ -161,6 +157,16 @@ def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
             "nflverse",
             "nflreadr",
         )
+
+
+def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
+    here = Path(__file__).resolve()
+    script = _repo_root(here) / "scripts" / "R" / "nflverse_load.R"
+    cmd = _build_r_command(script, spec, seasons=seasons, weeks=weeks, out_dir=out_dir)
+    proc = subprocess.run(  # noqa: S603
+        cmd, capture_output=True, text=True, check=False, env=os.environ.copy()
+    )
+    return _parse_r_output(proc)
 
 
 def load_nflverse(

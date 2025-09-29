@@ -27,7 +27,9 @@ def test_weekly_composite_key_unique():
     parquet = SAMPLES / "weekly" / "weekly.parquet"
     _require_sample(parquet)
     weekly_df = pd.read_parquet(parquet)
-    for col in ("season", "week", "gsis_id"):
+    # Accept either 'gsis_id' or 'player_id' as the raw identifier; staging will normalize
+    id_col = "gsis_id" if "gsis_id" in weekly_df.columns else "player_id"
+    for col in ("season", "week", id_col):
         assert col in weekly_df.columns, f"weekly should include '{col}'"
-    key = weekly_df[["season", "week", "gsis_id"]].astype(str).agg("|".join, axis=1)
+    key = weekly_df[["season", "week", id_col]].astype(str).agg("|".join, axis=1)
     assert key.is_unique, "(season, week, gsis_id) must be unique in weekly sample"
