@@ -42,6 +42,8 @@ ______________________________________________________________________
 - ☑ Link conventions doc from README.
 - ☑ Add Makefile shortcuts for local iteration (`samples-nflverse`, `dbt-run`, `dbt-test`, `quickstart-local`).
 - ☑ Add dev dependency: `dbt-duckdb` and include in dev setup instructions.
+- ☑ Ignore build artifacts in VCS and lint: add `dbt/**/target/`, `dbt/**/logs/` to `.gitignore` and pre-commit excludes.
+- ☑ Add manual SQL auto-fix helper: `make sqlfix` (runs `sqlfluff-fix` in manual stage).
 
 ## 1) Cloud Paths & Secrets
 
@@ -177,7 +179,7 @@ SQL style & lint policy (staging vs core)
 
 ## 8) CI/CD — Schedules & Jobs
 
-- ☐ Install starter workflow: `.github/workflows/data-pipeline.yml`.
+- ☑ Install starter workflow: `.github/workflows/data-pipeline.yml`.
 - ☐ Add jobs:
   - **nflverse weekly** (Mon 08:00 UTC) + optional cron overlay for injuries/depth charts.
   - **projections weekly** (Tue 08:00 UTC).
