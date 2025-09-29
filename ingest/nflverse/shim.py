@@ -1,5 +1,4 @@
-"""
-ingest/nflverse/shim.py
+"""ingest/nflverse/shim.py.
 
 Python-first loader for nflverse datasets.
 - Tries nflreadpy
@@ -34,6 +33,8 @@ try:
 except Exception:
     pl = None  # allow import when polars not installed (e.g., doc builds)
 
+import contextlib
+
 from .registry import REGISTRY
 
 
@@ -42,11 +43,13 @@ def _utcnow_iso() -> str:
 
 
 class LoaderResolutionError(RuntimeError):
+    """Raised when a loader path fails to produce output."""
+
     pass
 
 
 def _write_parquet(
-    df, out_path: str, dataset: str, loader_path: str, source_name: str, source_version: str
+    frame, out_path: str, dataset: str, loader_path: str, source_name: str, source_version: str
 ):
     """Write a polars or pandas dataframe to Parquet with a sidecar _meta.json."""
     dt = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -57,20 +60,18 @@ def _write_parquet(
 
     # Convert to polars if possible
     if pl is not None:
-        if not isinstance(df, pl.DataFrame):
-            try:
-                df = pl.from_pandas(df) if hasattr(df, "to_dict") else pl.DataFrame(df)
-            except Exception:
-                pass
-        df.write_parquet(file_path.as_posix())
+        if not isinstance(frame, pl.DataFrame):
+            with contextlib.suppress(Exception):
+                frame = pl.from_pandas(frame) if hasattr(frame, "to_dict") else pl.DataFrame(frame)
+        frame.write_parquet(file_path.as_posix())
     else:
         # Try pandas fallback
         try:
             import pandas as pd
 
-            if not isinstance(df, pd.DataFrame):
-                df = pd.DataFrame(df)
-            df.to_parquet(file_path.as_posix(), index=False, engine="pyarrow")
+            if not isinstance(frame, pd.DataFrame):
+                frame = pd.DataFrame(frame)
+            frame.to_parquet(file_path.as_posix(), index=False, engine="pyarrow")
         except Exception as e:
             raise RuntimeError(f"Failed to write Parquet: {e}") from e
 
@@ -113,13 +114,13 @@ def _load_with_python(spec, seasons=None, weeks=None, **kwargs):
         if k in params:
             call_kwargs[k] = v
 
-    df = func(**call_kwargs)
+    result_frame = func(**call_kwargs)
     # Get version if available
     try:
         source_version = importlib.import_module("nflreadpy").__version__
     except Exception:
         source_version = "unknown"
-    return df, f"python:{loader_path}", "nflverse", source_version
+    return result_frame, f"python:{loader_path}", "nflverse", source_version
 
 
 def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
@@ -140,7 +141,9 @@ def _load_with_r(spec, seasons=None, weeks=None, out_dir=None, **kwargs):
         cmd += ["--out_dir", out_dir]
     # extra args are ignored by default; extend runner if needed
     env = os.environ.copy()
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
+    proc = subprocess.run(  # noqa: S603
+        cmd, capture_output=True, text=True, check=False, env=env
+    )
     if proc.returncode != 0:
         raise LoaderResolutionError(f"R loader failed: {proc.stderr[:500]}")
     # Expect runner to print a single-line JSON manifest to stdout
@@ -168,8 +171,7 @@ def load_nflverse(
     loader_preference: str = "python_first",
     **kwargs,
 ) -> dict[str, Any]:
-    """
-    Unified loader for nflverse datasets.
+    """Unified loader for nflverse datasets.
 
     Returns a manifest dict with keys:
       - dataset, partition_dir, parquet_file (if python path wrote it), meta
@@ -197,10 +199,10 @@ def load_nflverse(
 
     # Try python path first
     try:
-        df, loader_path, source_name, source_version = _load_with_python(
+        frame, loader_path, source_name, source_version = _load_with_python(
             spec, seasons=seasons, weeks=weeks, **kwargs
         )
-        manifest = _write_parquet(df, out_dir, dataset, loader_path, source_name, source_version)
+        manifest = _write_parquet(frame, out_dir, dataset, loader_path, source_name, source_version)
         return manifest
     except (NotImplementedError, AttributeError, ModuleNotFoundError):
         # Fallback to R

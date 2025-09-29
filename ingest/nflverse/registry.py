@@ -1,5 +1,4 @@
-"""
-ingest/nflverse/registry.py
+"""ingest/nflverse/registry.py.
 
 Dataset registry for the nflverse loader shim.
 Maps logical dataset names to loader call details for both python (nflreadpy) and R (nflreadr).
@@ -12,6 +11,11 @@ from dataclasses import dataclass
 
 @dataclass
 class DatasetSpec:
+    """Dataset specification for nflverse shim registry.
+
+    Captures loader entrypoints and expected primary keys for DQ.
+    """
+
     name: str
     py_loader: str | None  # dotted callable in nflreadpy, e.g., "nflreadpy.load_players"
     r_loader: str | None  # R function in nflreadr, e.g., "nflreadr::load_players"
