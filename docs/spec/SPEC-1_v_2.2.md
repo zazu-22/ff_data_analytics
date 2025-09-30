@@ -25,7 +25,7 @@
   - [Backfill & Historical Loads](#backfill--historical-loads)
   - [Notebook UX Conventions](#notebook-ux-conventions)
   - [Legal & ToS Hygiene](#legal--tos-hygiene)
-  - [ADRs (Examples)](#adrs-examples)
+  - [Architecture Decision Records](#architecture-decision-records)
   - [Issue Backlog — Starter](#issue-backlog--starter)
   - [(Optional) PlantUML — Component & Flow](#optional-plantuml--component--flow)
   - [Notes on Model Readiness for Future ML (Non‑Blocking)](#notes-on-model-readiness-for-future-ml-nonblocking)
@@ -259,7 +259,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## ADRs (Architecture Decision Records)
+## Architecture Decision Records
 
 - **ADR‑001** Canonical stat dictionary (neutral names; provider maps).
 - **ADR‑002** Twice‑daily cron (08:00, 16:00 UTC).
