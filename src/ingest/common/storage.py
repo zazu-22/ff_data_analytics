@@ -110,6 +110,11 @@ def write_parquet_any(dataframe: Any, dest_uri: str) -> str:
     # Create parent dirs for local files
     _ensure_local_dir_for_uri(dest_uri)
 
+    # Convert relative paths to absolute paths for PyArrow
+    # PyArrow's from_uri requires either a URI scheme or an absolute path
+    if not is_gcs_uri(dest_uri):
+        dest_uri = Path(dest_uri).expanduser().resolve().as_posix()
+
     filesystem, normalized_path = pafs.FileSystem.from_uri(dest_uri)
     pq.write_table(table, normalized_path, filesystem=filesystem)
     return dest_uri
@@ -125,6 +130,11 @@ def write_text_sidecar(text: str, dest_uri: str) -> str:
 
     _maybe_stage_inline_gcs_key()
     _ensure_local_dir_for_uri(dest_uri)
+
+    # Convert relative paths to absolute paths for PyArrow
+    # PyArrow's from_uri requires either a URI scheme or an absolute path
+    if not is_gcs_uri(dest_uri):
+        dest_uri = Path(dest_uri).expanduser().resolve().as_posix()
 
     filesystem, normalized_path = pafs.FileSystem.from_uri(dest_uri)
     with filesystem.open_output_stream(normalized_path) as out:
