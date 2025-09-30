@@ -1,0 +1,139 @@
+timeframe_string,season,period_type,week,sort_sequence
+2012 Rookie Draft,2012,rookie_draft,,1
+2013 Rookie Draft,2013,rookie_draft,,61
+2014 Rookie Draft,2014,rookie_draft,,121
+2015 Rookie Draft,2015,rookie_draft,,181
+2016 Rookie Draft,2016,rookie_draft,,243
+2017 Rookie Draft,2017,rookie_draft,,306
+2018 Rookie Draft,2018,rookie_draft,,373
+2018 Offseason,2018,offseason,,427
+2019 Rookie Draft,2019,rookie_draft,,514
+2019 FAAD,2019,faad,,570
+2019 Week 1,2019,regular,1,656
+2019 Week 2,2019,regular,2,670
+2019 Week 3,2019,regular,3,686
+2019 Week 4,2019,regular,4,712
+2019 Week 5,2019,regular,5,739
+2019 Week 6,2019,regular,6,766
+2019 Week 7,2019,regular,7,801
+2019 Week 8,2019,regular,8,846
+2019 Week 9,2019,regular,9,879
+2019 Week 10,2019,regular,10,897
+2019 Week 11,2019,regular,11,907
+2019 Week 12,2019,regular,12,912
+2019 Week 13 Deadline,2019,deadline,13,925
+2019 Week 14,2019,regular,14,944
+2019 Week 15,2019,regular,15,950
+2019 Week 16,2019,regular,16,959
+2019 Offseason,2019,offseason,,975
+2020 Rookie Draft,2020,rookie_draft,,1049
+2020 FAAD,2020,faad,,1101
+2020 Preseason Week 4,2020,preseason,4,1201
+2020 Week 1,2020,regular,1,1227
+2020 Week 2,2020,regular,2,1247
+2020 Week 3,2020,regular,3,1300
+2020 Week 4,2020,regular,4,1325
+2020 Week 5,2020,regular,5,1337
+2020 Week 6,2020,regular,6,1350
+2020 Week 7,2020,regular,7,1362
+2020 Week 8,2020,regular,8,1396
+2020 Week 9,2020,regular,9,1416
+2020 Week 10,2020,regular,10,1433
+2020 Week 11,2020,regular,11,1446
+2020 Week 12,2020,regular,12,1488
+2020 Week 13 Deadline,2020,deadline,13,1502
+2020 Week 14,2020,regular,14,1511
+2020 Week 15,2020,regular,15,1523
+2020 Week 16,2020,regular,16,1545
+2020 Offseason,2020,offseason,,1559
+2021 Rookie Draft,2021,rookie_draft,,1634
+2021 FAAD,2021,faad,,1692
+2021 Preseason Week 3,2021,preseason,3,1776
+2021 Preseason Week 4,2021,preseason,4,1814
+2021 Week 1,2021,regular,1,1836
+2021 Week 2,2021,regular,2,1850
+2021 Week 3,2021,regular,3,1873
+2021 Week 4,2021,regular,4,1882
+2021 Week 5,2021,regular,5,1894
+2021 Week 6,2021,regular,6,1910
+2021 Week 7,2021,regular,7,1930
+2021 Week 8,2021,regular,8,1938
+2021 Week 9,2021,regular,9,1941
+2021 Week 10,2021,regular,10,1950
+2021 Week 11,2021,regular,11,1952
+2021 Week 12,2021,regular,12,1985
+2021 Week 13,2021,regular,13,2008
+2021 Week 14 Deadline,2021,deadline,14,2045
+2021 Week 15,2021,regular,15,2066
+2021 Week 16,2021,regular,16,2080
+2021 Week 17,2021,regular,17,2095
+2021 Offseason,2021,offseason,,2106
+2022 Rookie Draft,2022,rookie_draft,,2184
+2022 FAAD,2022,faad,,2240
+2022 Preseason Week 3,2022,preseason,3,2318
+2022 Preseason Week 4,2022,preseason,4,2324
+2022 Week 1,2022,regular,1,2357
+2022 Week 2,2022,regular,2,2367
+2022 Week 3,2022,regular,3,2377
+2022 Week 4,2022,regular,4,2385
+2022 Week 5,2022,regular,5,2395
+2022 Week 6,2022,regular,6,2405
+2022 Week 7,2022,regular,7,2418
+2022 Week 8,2022,regular,8,2436
+2022 Week 9,2022,regular,9,2445
+2022 Week 10,2022,regular,10,2460
+2022 Week 11,2022,regular,11,2489
+2022 Week 12,2022,regular,12,2515
+2022 Week 13,2022,regular,13,2528
+2022 Week 14,2022,regular,14,2541
+2022 Week 15 Deadline,2022,deadline,15,2555
+2022 Week 16,2022,regular,16,2571
+2022 Week 17,2022,regular,17,2575
+2022 Offseason,2022,offseason,,2586
+2023 Rookie Draft,2023,rookie_draft,,2662
+2023 FAAD,2023,faad,,2755
+2023 Preseason Week 3,2023,preseason,3,2813
+2023 Preseason Week 4,2023,preseason,4,2820
+2023 Week 1,2023,regular,1,2843
+2023 Week 2,2023,regular,2,2860
+2023 Week 3,2023,regular,3,2882
+2023 Week 4,2023,regular,4,2896
+2023 Week 5,2023,regular,5,2920
+2023 Week 6,2023,regular,6,2972
+2023 Week 7,2023,regular,7,2994
+2023 Week 8,2023,regular,8,3021
+2023 Week 9,2023,regular,9,3027
+2023 Week 10,2023,regular,10,3037
+2023 Week 11,2023,regular,11,3048
+2023 Week 12 Deadline,2023,deadline,12,3060
+2023 Week 13,2023,regular,13,3078
+2023 Week 14,2023,regular,14,3083
+2023 Week 15,2023,regular,15,3097
+2023 Week 16,2023,regular,16,3105
+2023 Week 17,2023,regular,17,3122
+2023 Offseason,2023,offseason,,3126
+2024 Rookie Draft,2024,rookie_draft,,3206
+2024 FAAD,2024,faad,,3317
+2024 Week 1,2024,regular,1,3361
+2024 Week 2,2024,regular,2,3366
+2024 Week 3,2024,regular,3,3375
+2024 Week 4,2024,regular,4,3385
+2024 Week 5,2024,regular,5,3401
+2024 Week 6,2024,regular,6,3420
+2024 Week 7,2024,regular,7,3435
+2024 Week 8,2024,regular,8,3447
+2024 Week 9,2024,regular,9,3466
+2024 Week 10,2024,regular,10,3479
+2024 Week 11,2024,regular,11,3499
+2024 Week 12,2024,regular,12,3530
+2024 Week 13,2024,regular,13,3546
+2024 Week 14,2024,regular,14,3557
+2024 Week 15,2024,regular,15,3561
+2024 Week 16,2024,regular,16,3577
+2024 Offseason,2024,offseason,,3593
+2025 Rookie Draft,2025,rookie_draft,,3648
+2025 FAAD,2025,faad,,3763
+2025 Week 1,2025,regular,1,3858
+2025 Week 2,2025,regular,2,3871
+2025 Week 3,2025,regular,3,3880
+2025 Week 4,2025,regular,4,3893
