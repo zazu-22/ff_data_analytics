@@ -23,13 +23,22 @@ ______________________________________________________________________
 
 ### Recommended Sequencing (High‑Level)
 
-1. Populate dbt seeds (player xref, aliases, picks/assets, scoring rules, neutral stat dictionary).
-1. Sheets: add dbt sources + staging (with SCD change tracking) for commissioner tables.
-1. CI (Sheets): copy_league_sheet → commissioner_parse → dbt run/test, with CSV previews + dbt summary and LKG fallback.
-1. Implement KTC fetcher (players + picks; cache/throttle) and update samples.
-1. Projections: weighted aggregation per config + apply scoring rules, output long‑form.
-1. Core marts + ops (run ledger, model metrics, data quality) and freshness banners.
-1. Change‑capture staging models (roster/sheets change logs) and compaction playbook docs.
+1. **Phase 1 - Seeds (BLOCKER)**: Populate dbt seeds (player xref, aliases, picks/assets, scoring rules, neutral stat dictionary). **Required for TRANSACTIONS parsing and projections player mapping.**
+
+1. **Phase 2 - Parallel Tracks (After Seeds):**
+
+   - **Track A (NFL Actuals)**: nflverse staging → fact_player_stats → dim_player/team/schedule → mart_real_world_actuals_weekly → mart_fantasy_actuals_weekly
+   - **Track B (League Data)**: Parse TRANSACTIONS tab → sheets staging (contracts, picks, transactions) → fact_league_transactions → trade analysis marts
+   - **Track C (Market Data)**: Implement KTC fetcher → stg_ktc_assets → fact_asset_market_values
+   - **Track D (Projections)**: FFanalytics weighted aggregation → stg_ffanalytics\_\_projections → fact_player_projections → mart_real_world_projections → mart_fantasy_projections
+
+1. **Phase 3 - Integration & Analysis:**
+
+   - Variance marts: mart_projection_variance (actuals vs projections)
+   - Trade valuations: mart_trade_valuations (TRANSACTIONS vs KTC market)
+   - CI (Sheets): copy_league_sheet → commissioner_parse → dbt run/test, with CSV previews + dbt summary and LKG fallback
+   - Ops: run ledger, model metrics, data quality, freshness banners
+   - Change‑capture staging models (roster/sheets change logs) and compaction playbook docs
 
 ### 0a) Conventions & Structure
 
@@ -121,6 +130,18 @@ Notes on Samples Objective:
 - ☑ Write parsed tables as Parquet to `data/raw/commissioner/<table>/dt=YYYY-MM-DD/` (via storage helper)
 - ☑ Add unit tests with small fixtures: `tests/test_sheets_commissioner_parser.py`
 - ☑ Verify non-null keys for GM and player fields in roster sample test
+- ☐ **Parse TRANSACTIONS tab → league transaction history**:
+  - **Depends on**: Section 7 seeds (`dim_player_id_xref`, `dim_pick`, `dim_asset`) for name resolution
+  - Remove skip logic for TRANSACTIONS tab in parser
+  - Implement `parse_transactions()` in `commissioner_parser.py`
+  - Grain: one row per asset per transaction (matches raw TRANSACTIONS structure)
+  - Map player names to canonical `player_id` via `dim_player_id_xref`
+  - Group multi-asset trades via `transaction_id` (from Sort column)
+  - Asset types: player, pick, cap_space
+  - Capture: transaction_date, transaction_type, from_franchise, to_franchise, contract details
+  - Write to `data/raw/commissioner/transactions/dt=YYYY-MM-DD/`
+  - Update `tools/make_samples.py` to include TRANSACTIONS tab
+- ☐ Add unit tests for TRANSACTIONS parsing with trade/cut/waiver fixtures
 
 Normalization policy and dbt expectations:
 
@@ -129,6 +150,7 @@ Normalization policy and dbt expectations:
   - `contracts_cut(gm, player, position, year, dead_cap_amount)`
   - `draft_picks(gm, year, round, source_type, original_owner, acquired_from, acquisition_note, condition_flag)`
   - `draft_pick_conditions(gm, year, round, condition_text)`
+  - `transactions(transaction_id, transaction_date, transaction_type, from_franchise_id, to_franchise_id, asset_type, player_id?, pick_id?, contract_years?, contract_total?, contract_split?, rfa_matched, faad_compensation)` (NEW)
 
 ## 5) KeepTradeCut — Replace Sampler Stub
 
@@ -158,15 +180,25 @@ Acceptance criteria:
   - Covers all positions: QB, RB, WR, TE, K, DST
 - ☑ Document site availability: 8 working sources for 2024 season-long projections
 
-Next step (scoring and weighted aggregation):
+Next steps (weighted aggregation and normalization):
 
-- ☐ Weighted aggregation per config/weights (site weights in projections config).
-- ☐ Apply `sleeper_scoring_rules.yaml` to produce fantasy points.
-- ☐ Output canonical long‑form with `measure_domain=fantasy`, `stat_kind=projection`.
+- ☐ **Weighted aggregation across sources** (site weights in projections config)
+  - Apply site weights from `config/projections/ffanalytics_projection_weights_mapped.csv`
+  - Compute consensus projection per player per stat
+  - Output provider='ffanalytics_consensus'
+- ☐ **Normalize to staging format**
+  - Map player names to canonical `player_id` via `dim_player_id_xref` (DEPENDS ON SEEDS)
+  - Derive `horizon` from projection type ('weekly', 'rest_of_season', 'full_season')
+  - Output real-world stats only (`measure_domain='real_world'`)
+  - Fantasy scoring applied in marts (not in raw projections)
+- ☐ Write to `data/raw/ffanalytics/projections/dt=YYYY-MM-DD/` with `_meta.json`
 
 Acceptance criteria:
 
-- Deterministic long‑form output; staging validates presence and value ranges.
+- Deterministic long‑form real-world projections
+- Player name → ID mapping validates via seeds
+- Staging validates stat ranges and horizon values
+- **Note:** Fantasy points computed in `mart_fantasy_projections` by applying `dim_scoring_rule` to real-world projections (2×2 model)
 
 ## 7) dbt — Seeds, Staging, and Marts
 
@@ -177,24 +209,68 @@ Acceptance criteria:
     - ☑ `stg_nflverse__players.sql` reading local `data/raw` Parquet (tests: not_null + unique `gsis_id`)
     - ☑ `stg_nflverse__weekly.sql` with PK tests: not_null (`season`,`week`,`gsis_id`) + singular uniqueness test on key
   - `stg_sleeper_*` (league, users, rosters, roster_players)
-  - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions)
+  - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions, transactions)
     - ☐ Add `stg_sheets__roster_changelog` (hash-based SCD tracking)
     - ☐ Add `stg_sheets__change_log` (row hash per tab/dt)
+    - ☐ Add `stg_sheets__transactions.sql` (NEW - transaction history)
+      - Source: `data/raw/commissioner/transactions/dt=*/`
+      - Map player names → canonical `player_id` via `dim_player_id_xref`
+      - Join to `dim_pick` for draft pick validation
+      - Join to `dim_asset` for unified asset tracking
     - ☐ Tests:
       - unique: `contracts_active (gm,player,year)`, `contracts_cut (gm,player,year)`, `draft_picks (gm,year,round)`
       - FK: `contracts_cut (gm,player,year) → contracts_active (gm,player,year)` (when present)
       - FK: `draft_pick_conditions (gm,year,round) → draft_picks (gm,year,round)`
       - not_null and numeric ranges (amounts ≥ 0), enumerations on `source_type`
-  - `stg_ktc_assets`, `stg_ffanalytics_projections`
+      - **transactions tests** (NEW):
+        - unique: `(transaction_id, asset_type, player_id, pick_id)` within dt
+        - FK: `player_id → dim_player_id_xref.player_id` (when asset_type=player)
+        - FK: `pick_id → dim_pick.pick_id` (when asset_type=pick)
+        - FK: `from_franchise_id, to_franchise_id → dim_franchise.franchise_id`
+        - enums: `transaction_type ∈ {trade, cut, waivers, signing, faad}`
+        - enums: `asset_type ∈ {player, pick, cap_space}`
+        - not_null: `transaction_date, transaction_id`
+        - check: at least one of (from_franchise_id, to_franchise_id) is not null
+  - `stg_ktc_assets`
+  - `stg_ffanalytics__projections` (NEW - projections staging)
+    - Source: `data/raw/ffanalytics/projections/dt=*/`
+    - Map player names → canonical `player_id` via `dim_player_id_xref`
+    - Normalize `horizon` enum values
+    - Keep real-world stats only (fantasy scoring in marts)
 - ☐ Add **change‑capture** tables:
   - `stg_sleeper_roster_changelog` (stable roster hash)
   - `stg_sheets_change_log` (row hash per tab)
 - ☐ Marts:
-  - `fact_player_stats` (long‑form; actuals + projections compatible)
-  - `fact_asset_market_values` (KTC players + picks)
-  - `fact_player_projections` (FFanalytics)
-  - Fantasy scoring marts (weekly actuals, projections) using scoring seeds
-  - `dim_player`, `dim_team`, `dim_schedule` (nflverse)
+  - **Core facts** (real-world measures only; 2×2 model base layer):
+    - `fact_player_stats` (per-game actuals from nflverse; stat_kind='actual')
+    - `fact_player_projections` (weekly/season projections from ffanalytics; stat_kind='projection')
+      - Source: `stg_ffanalytics__projections`
+      - Grain: one row per player per stat per horizon per asof_date
+      - Partitioned by: `season`
+      - Incremental on: `asof_date`
+      - Includes `horizon` column: 'weekly', 'rest_of_season', 'full_season'
+      - No `game_id` (projections are not game-specific)
+    - `fact_asset_market_values` (KTC players + picks)
+    - `fact_league_transactions` (NEW - commissioner transaction history)
+      - Source: `stg_sheets__transactions`
+      - Grain: one row per asset per transaction
+      - Partitioned by: `transaction_date` (or `transaction_year` if high volume)
+      - Links to: `dim_player`, `dim_pick`, `dim_asset`, `dim_franchise`
+  - **Dimensions**:
+    - `dim_player`, `dim_team`, `dim_schedule` (nflverse)
+    - `dim_franchise` (NEW - league team/owner dimension from sheets/sleeper)
+  - **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
+    - Real-world marts:
+      - `mart_real_world_actuals_weekly` (nflverse actuals, weekly grain)
+      - `mart_real_world_projections` (ffanalytics projections, weekly/season grain)
+    - Fantasy scoring marts (apply `dim_scoring_rule` to real-world base):
+      - `mart_fantasy_actuals_weekly` (scored actuals)
+      - `mart_fantasy_projections` (scored projections)
+    - Analysis marts:
+      - `mart_projection_variance` (actuals vs projections comparison)
+      - `mart_trade_history` (NEW - aggregated trade summaries by franchise)
+      - `mart_trade_valuations` (NEW - actual trades vs KTC market comparison)
+      - `mart_roster_timeline` (NEW - reconstruct roster state at any point in time)
 - ☐ DQ tests: uniqueness, referential integrity to canonical IDs, numeric ranges, enumerations.
 - ☐ Freshness tests: provider‑specific thresholds + LKG banner flags.
 - ☑ External Parquet defaults (dbt_project.yml) with partitions; profiles.example.yml using DuckDB httpfs.
@@ -231,6 +307,7 @@ Sheets pipeline specifics:
   - ☑ `PYTHONPATH=. uv run tools/make_samples.py nflverse --datasets players weekly injuries schedule teams --seasons 2024 --weeks 1 --out ./samples`
   - ☑ `uv run tools/make_samples.py sleeper --datasets league users rosters players --league-id 1230330435511275520 --out ./samples`
   - ☑ `uv run tools/make_samples.py sheets --tabs Eric Gordon Joe JP Andy Chip McCreary TJ James Jason Kevin Piper --sheet-url https://docs.google.com/spreadsheets/d/1HktJj-VB5Rc35U6EXQJLwa_h4ytiur6A8QSJGN0tRy0 --out ./samples`
+  - ☐ `uv run tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <copy-sheet-url> --out ./samples` (NEW - after TRANSACTIONS parsing implemented)
   - ☐ `python tools/make_samples.py ktc --assets players picks --top-n 50 --out ./samples`
   - ☐ `python tools/make_samples.py ffanalytics --config ... --scoring ... --weeks 1 --out ./samples`
   - ☐ `python tools/make_samples.py sdio --paths <export files> --out ./samples`
@@ -284,9 +361,13 @@ ______________________________________________________________________
 - ☑ Sleeper scoring YAML exported from league
 - ☑ `tools/make_samples.py` implemented (nflverse, sleeper, sheets, ffanalytics raw, sdio; ktc stub)
 - ☑ Python shim GCS writes via PyArrow FS (+ smoke script)
-- ☑ Commissioner Sheet parsing to normalized tables + tests
+- ☑ Commissioner Sheet parsing to normalized tables + tests (roster, contracts, picks)
+- ☐ **TRANSACTIONS tab parsing** (NEW - blocked by seeds; adds fact_league_transactions)
+- ☐ **Projections integration** (NEW - separate fact table; 2×2 model alignment)
+  - FFanalytics: weighted aggregation (blocked by seeds for player mapping)
+  - fact_player_projections with horizon column
+  - Real-world projections → fantasy projections (scoring in marts)
 - ☐ KTC: real fetcher integration (replace stub)
-- ☐ Projections: weighted aggregation + scoring outputs (scaffold present)
 - ☑ dbt project (staging + tests; env-path globs; seeds skeleton)
 - ☑ CI: starter pipeline (ingest + dbt); lint fixes for workflow shell quoting
 
@@ -295,15 +376,60 @@ ______________________________________________________________________
 ## Open Questions / Inputs Needed
 
 - Final GCS bucket names/prefixes and environment naming (dev/prod).
-- Weekly run windows acceptable? (Mon nflverse; Tue projections)
-- Confirm site list and any caps/floors on weights for projections.
-- Provide initial seeds (`dim_*`) and any existing ID crosswalks for validation.
+- Weekly run windows acceptable?
+  - Mon 08:00 UTC: nflverse (stats, injuries, depth charts)
+  - Tue 08:00 UTC: projections (ffanalytics weighted aggregation)
+  - Twice daily (08:00 & 16:00 UTC): sheets + sleeper (if desired)
+  - Weekly: KTC market values
+- Confirm site list and any caps/floors on weights for projections (currently 8 sources; see Section 6).
+- **Provide initial seeds (`dim_*`) and any existing ID crosswalks for validation** — CRITICAL BLOCKER for:
+  - TRANSACTIONS parsing (player/pick name → canonical ID mapping)
+  - Projections player mapping (FFanalytics player names → canonical player_id)
+  - All staging models requiring player identity resolution
 
 ______________________________________________________________________
 
 ## Sign‑off Criteria
 
-- All provider samplers produce non‑empty sample files (CSV + Parquet + `_meta.json`).
-- dbt passes: `dbt seed`, `dbt run` (staging + marts), `dbt test` (DQ & freshness) on samples.
-- CI schedules run without errors; artifacts uploaded.
-- Documentation merged; contributors can reproduce samples end‑to‑end with the guide.
+### Phase 1 - Seeds & Samples
+
+- All provider samplers produce non‑empty sample files (CSV + Parquet + `_meta.json`):
+  - ☑ nflverse (players, weekly, injuries, schedule, teams)
+  - ☑ sleeper (league, users, rosters, players)
+  - ☑ sheets (GM roster tabs)
+  - ☐ sheets (TRANSACTIONS tab - NEW)
+  - ☐ ffanalytics (weighted consensus projections - NEW)
+  - ☐ ktc (players + picks market values)
+- Seeds created and validated:
+  - ☐ `dim_player_id_xref` (provider IDs → canonical player_id)
+  - ☐ `dim_name_alias` (alternate names for fuzzy matching)
+  - ☐ `dim_pick` (draft pick dimension)
+  - ☐ `dim_asset` (unified player/pick/cap asset catalog)
+  - ☐ `dim_scoring_rule` (league scoring rules SCD2)
+  - ☐ Neutral stat dictionary (from nflreadr)
+
+### Phase 2 - Core Models
+
+- dbt passes: `dbt seed`, `dbt run` (staging + marts), `dbt test` (DQ & freshness) on samples
+- Core facts built successfully:
+  - ☐ `fact_player_stats` (per-game actuals from nflverse)
+  - ☐ `fact_player_projections` (weekly/season projections from ffanalytics - NEW)
+  - ☐ `fact_league_transactions` (commissioner transaction history - NEW)
+  - ☐ `fact_asset_market_values` (KTC market valuations)
+- Key marts validated:
+  - ☐ `mart_real_world_actuals_weekly`
+  - ☐ `mart_real_world_projections` (NEW)
+  - ☐ `mart_fantasy_actuals_weekly` (scoring applied)
+  - ☐ `mart_fantasy_projections` (scoring applied - NEW)
+  - ☐ `mart_projection_variance` (NEW)
+  - ☐ `mart_trade_history` (NEW)
+
+### Phase 3 - CI/CD & Operations
+
+- CI schedules run without errors; artifacts uploaded:
+  - ☐ nflverse weekly ingest (Mon 08:00 UTC)
+  - ☐ Projections weekly ingest (Tue 08:00 UTC)
+  - ☐ Sheets + Sleeper twice daily (if configured)
+- ops schema operational: `run_ledger`, `model_metrics`, `data_quality`
+- LKG fallback tested and functional per source
+- Documentation merged; contributors can reproduce samples end‑to‑end with the guide
