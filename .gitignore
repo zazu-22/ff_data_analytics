@@ -33,6 +33,8 @@ samples/
 
 # dbt build artifacts
 dbt/**/target/
+dbt/**/target/*.duckdb
+dbt/**/target/*.duckdb.wal
 dbt/**/logs/
 dbt/**/profiles.yml
 

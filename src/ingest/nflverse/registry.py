@@ -36,20 +36,23 @@ REGISTRY: dict[str, DatasetSpec] = {
         "yahoo_id, pfr_id, ktc_id, etc.). "
         "Required for dim_player_id_xref seed generation.",
     ),
-    # Existing datasets
+    # Existing datasets (DEPRECATED - use ff_playerids for crosswalk)
     "players": DatasetSpec(
         name="players",
         py_loader="nflreadpy.load_players",
         r_loader="nflreadr::load_players",
         primary_keys=("gsis_id",),
-        notes="Canonical player reference including cross-IDs.",
+        notes="DEPRECATED for crosswalk: Use ff_playerids for canonical player ID mapping. "
+        "This dataset lacks mfl_id and many provider IDs. "
+        "Retained only for supplemental reference data (headshots, jersey numbers, etc.).",
     ),
     "weekly": DatasetSpec(
         name="weekly",
         py_loader="nflreadpy.load_player_stats",
         r_loader="nflreadr::load_player_stats",
-        primary_keys=("season", "week", "gsis_id"),
-        notes="Weekly player stats; uses summary_level='week' by default.",
+        primary_keys=("season", "week", "player_id"),
+        notes="Weekly player stats; uses summary_level='week' by default. "
+        "Raw column 'player_id' contains gsis_id values; map to mfl_id via crosswalk.",
     ),
     "season": DatasetSpec(
         name="season",
