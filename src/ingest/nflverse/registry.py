@@ -25,6 +25,18 @@ class DatasetSpec:
 
 # Initial registry; extend as needed
 REGISTRY: dict[str, DatasetSpec] = {
+    # TIER 1: Critical for Phase 1 seeds (ADR-010)
+    "ff_playerids": DatasetSpec(
+        name="ff_playerids",
+        py_loader="nflreadpy.load_ff_playerids",
+        r_loader="nflreadr::load_ff_playerids",
+        primary_keys=("mfl_id",),
+        notes="Fantasy platform ID crosswalk; mfl_id is canonical player_id. "
+        "Contains 19 provider ID mappings (gsis_id, sleeper_id, espn_id, "
+        "yahoo_id, pfr_id, ktc_id, etc.). "
+        "Required for dim_player_id_xref seed generation.",
+    ),
+    # Existing datasets
     "players": DatasetSpec(
         name="players",
         py_loader="nflreadpy.load_players",
@@ -73,5 +85,25 @@ REGISTRY: dict[str, DatasetSpec] = {
         r_loader="nflreadr::load_teams",
         primary_keys=("team", "season"),
         notes="Team reference data.",
+    ),
+    # TIER 2: Expanded stats for fact_player_stats (ADR-009)
+    "snap_counts": DatasetSpec(
+        name="snap_counts",
+        py_loader="nflreadpy.load_snap_counts",
+        r_loader="nflreadr::load_snap_counts",
+        primary_keys=("season", "week", "pfr_player_id", "team"),
+        notes="Snap participation by phase (offense, defense, ST). "
+        "Integrates into fact_player_stats (6 stat types). "
+        "Maps to mfl_id via pfr_id in crosswalk.",
+    ),
+    "ff_opportunity": DatasetSpec(
+        name="ff_opportunity",
+        py_loader="nflreadpy.load_ff_opportunity",
+        r_loader="nflreadr::load_ff_opportunity",
+        primary_keys=("season", "week", "player_id", "game_id"),
+        notes="Expected stats, variances, team shares (170+ columns). "
+        "Integrates into fact_player_stats (~40 key stat types selected). "
+        "Enables variance analysis without manual calculation. "
+        "player_id field is gsis_id; maps to mfl_id via crosswalk.",
     ),
 }
