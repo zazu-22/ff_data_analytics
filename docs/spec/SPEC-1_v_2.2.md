@@ -259,16 +259,23 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## ADRs (Examples)
+## ADRs (Architecture Decision Records)
 
 - **ADR‑001** Canonical stat dictionary (neutral names; provider maps).
 - **ADR‑002** Twice‑daily cron (08:00, 16:00 UTC).
 - **ADR‑003** Versioning strategy for breaking changes (`_vN` + compat views).
 - **ADR‑004** GitHub Actions for Sheets access (CI/CD authentication).
+  [`docs/adr/ADR-004-github-actions-for-sheets.md`](../adr/ADR-004-github-actions-for-sheets.md)
 - **ADR‑005** Commissioner Sheet ingestion via server-side copy strategy
   (handles complex sheets).
+  [`docs/adr/ADR-005-commissioner-sheet-ingestion-strategy.md`](../adr/ADR-005-commissioner-sheet-ingestion-strategy.md)
 - **ADR‑006** GCS integration strategy (environment-based configuration for
   local vs cloud storage).
+  [`docs/adr/ADR-006-gcs-integration-strategy.md`](../adr/ADR-006-gcs-integration-strategy.md)
+- **ADR‑007** Separate fact tables for actuals vs projections (2×2 model implementation).
+  [`docs/adr/ADR-007-separate-fact-tables-actuals-vs-projections.md`](../adr/ADR-007-separate-fact-tables-actuals-vs-projections.md)
+- **ADR‑008** League transaction history integration (TRANSACTIONS tab).
+  [`docs/adr/ADR-008-league-transaction-history-integration.md`](../adr/ADR-008-league-transaction-history-integration.md)
 
 ______________________________________________________________________
 
