@@ -1,0 +1,44 @@
+rule_id,stat_category,stat_name,points_per_unit,valid_from_season,valid_to_season,is_current,notes
+1,passing,pass_yard_point,0.04,2012,9999,true,
+2,passing,pass_td,4.0,2012,9999,true,
+3,passing,pass_int,-2.0,2012,9999,true,
+4,passing,pass_two_pt,2.0,2012,9999,true,
+5,rushing,rush_yard_point,0.1,2012,9999,true,
+6,rushing,rush_td,6.0,2012,9999,true,
+7,rushing,rush_lost_fumble,-2.0,2012,9999,true,
+8,rushing,rush_two_pt,2.0,2012,9999,true,
+9,receiving,rec_reception,0.5,2012,9999,true,
+10,receiving,rec_yard_point,0.1,2012,9999,true,
+11,receiving,rec_td,6.0,2012,9999,true,
+12,receiving,rec_lost_fumble,-2.0,2012,9999,true,
+13,receiving,rec_two_pt,2.0,2012,9999,true,
+14,idp,idp_tackle,0.5,2012,9999,true,
+15,idp,idp_qb_hit,1.0,2012,9999,true,
+16,idp,idp_tfl,1.5,2012,9999,true,
+17,idp,idp_sack,1.5,2012,9999,true,compound_events: sack includes tackle+qb_hit+tfl+sack
+18,idp,idp_pass_defended,3.0,2012,9999,true,
+19,idp,idp_forced_fumble,3.0,2012,9999,true,
+20,idp,idp_fumble_recovered,6.0,2012,9999,true,
+21,idp,idp_td,6.0,2012,9999,true,
+22,idp,idp_interception,6.0,2012,9999,true,
+23,idp,idp_safety,9.0,2012,9999,true,
+24,idp,idp_blocked_kick,12.0,2012,9999,true,
+25,team_dst,pts_allow_0,15.0,2012,9999,true,Points allowed range: 0
+26,team_dst,pts_allow_1-6,9.0,2012,9999,true,Points allowed range: 1-6
+27,team_dst,pts_allow_7-13,4.5,2012,9999,true,Points allowed range: 7-13
+28,team_dst,pts_allow_14-20,2.25,2012,9999,true,Points allowed range: 14-20
+29,team_dst,pts_allow_21-27,0.0,2012,9999,true,Points allowed range: 21-27
+30,team_dst,pts_allow_28-34,-2.25,2012,9999,true,Points allowed range: 28-34
+31,team_dst,pts_allow_35+,-4.5,2012,9999,true,Points allowed range: 35+
+32,team_dst,dst_sack,0.5,2012,9999,true,
+33,team_dst,dst_fumble_recovered,1.5,2012,9999,true,
+34,team_dst,dst_interception,1.5,2012,9999,true,
+35,team_dst,dst_safety,3.0,2012,9999,true,
+36,team_dst,dst_blocked_kick,3.0,2012,9999,true,
+37,team_dst,dst_td,6.0,2012,9999,true,
+38,kicking,fg_made_per_yard,0.1,2012,9999,true,Field goal yards * 0.1
+39,kicking,pat_made,1.0,2012,9999,true,
+40,kicking,pat_missed,-1.0,2012,9999,true,
+41,kicking,fg_miss_0-29,-3.0,2012,9999,true,Missed FG range: 0-29 yards
+42,kicking,fg_miss_30-39,-2.0,2012,9999,true,Missed FG range: 30-39 yards
+43,kicking,fg_miss_40-49,-1.0,2012,9999,true,Missed FG range: 40-49 yards
