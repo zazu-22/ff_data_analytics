@@ -1,0 +1,6 @@
+version: 2
+
+# Source-level documentation
+# Individual source configs are in src_<provider>.yml files
+
+models: []

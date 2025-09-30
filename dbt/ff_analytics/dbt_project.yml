@@ -16,16 +16,5 @@ analysis-paths: ["analyses"]
 
 models:
   +materialized: table
-  +external:
-  sources:
-    +materialized: view
-  staging:
-    +schema: staging
-  core:
-    +schema: core
-    +partition_by:
-  markets:
-    +schema: markets
-    +partition_by:
-  ops:
-    +schema: ops
+  # Model-specific configs are defined in individual model files
+  # Directory-level configs will be added as needed

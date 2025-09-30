@@ -1,0 +1,10 @@
+version: 2
+
+# Operational models (data quality, lineage, monitoring)
+#
+# Planned models:
+# - ops_data_freshness (freshness checks)
+# - ops_load_history (ingestion metadata)
+# - ops_test_results (dbt test results over time)
+
+models: []

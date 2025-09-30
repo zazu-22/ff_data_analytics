@@ -1,0 +1,15 @@
+version: 2
+
+# Core dimensional models (facts and dimensions)
+# Following Kimball methodology
+#
+# Planned models:
+# - fact_player_stats (consolidated NFL stats)
+# - fact_player_projections (FFAnalytics projections)
+# - fact_transactions (league transactions)
+# - dim_player (player dimension)
+# - dim_team (NFL team dimension)
+# - dim_game (game dimension)
+# - dim_season_week (calendar dimension)
+
+models: []

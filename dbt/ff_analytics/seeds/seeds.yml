@@ -1,0 +1,132 @@
+version: 2
+
+seeds:
+  - name: dim_player_id_xref
+    description: "Player ID crosswalk mapping 20 provider IDs to canonical mfl_id"
+    config:
+      column_types:
+        player_id: BIGINT
+        mfl_id: BIGINT
+    columns:
+      - name: player_id
+        description: "Canonical player ID (same as mfl_id)"
+        tests:
+          - not_null
+          - unique
+      - name: mfl_id
+        description: "MyFantasyLeague player ID (canonical)"
+        tests:
+          - not_null
+      - name: gsis_id
+        description: "NFL GSIS ID"
+      - name: name
+        description: "Player name"
+        tests:
+          - not_null
+
+  - name: dim_timeframe
+    description: "Maps TRANSACTIONS timeframe strings to structured season/week/period"
+    columns:
+      - name: timeframe_string
+        description: "Original commissioner timeframe string"
+        tests:
+          - not_null
+          - unique
+      - name: season
+        description: "NFL season year"
+        tests:
+          - not_null
+      - name: sort_sequence
+        description: "Chronological sort order"
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_franchise
+    description: "Franchise ownership history (SCD Type 2)"
+    columns:
+      - name: franchise_id
+        description: "Franchise identifier (F001-F012)"
+        tests:
+          - not_null
+      - name: owner_name
+        description: "Owner during this period"
+        tests:
+          - not_null
+      - name: season_start
+        description: "First season of ownership"
+        tests:
+          - not_null
+      - name: season_end
+        description: "Last season of ownership (9999 = current)"
+        tests:
+          - not_null
+
+  - name: dim_pick
+    description: "Base draft picks 2012-2030 (compensatory picks added via TRANSACTIONS)"
+    columns:
+      - name: pick_id
+        description: "Unique pick identifier (e.g., 2024_R1_P01)"
+        tests:
+          - not_null
+          - unique
+      - name: season
+        description: "Draft season"
+        tests:
+          - not_null
+      - name: round
+        description: "Round number (1-5)"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      - name: round_slot
+        description: "Pick number within round (1-12 for base picks)"
+        tests:
+          - not_null
+      - name: pick_type
+        description: "Pick type (base or compensatory)"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              arguments:
+                values: ['base', 'compensatory']
+
+  - name: dim_scoring_rule
+    description: "Fantasy scoring rules (SCD Type 2)"
+    columns:
+      - name: rule_id
+        description: "Unique rule identifier"
+        tests:
+          - not_null
+          - unique
+      - name: stat_category
+        description: "Stat category"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              arguments:
+                values: ['passing', 'rushing', 'receiving', 'idp', 'team_dst', 'kicking']
+      - name: stat_name
+        description: "Stat name"
+        tests:
+          - not_null
+      - name: points_per_unit
+        description: "Points awarded per unit"
+        tests:
+          - not_null
+      - name: valid_from_season
+        description: "First season this rule is valid"
+        tests:
+          - not_null
+      - name: is_current
+        description: "Is this the current rule?"
+        tests:
+          - not_null

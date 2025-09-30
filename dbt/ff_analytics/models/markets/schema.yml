@@ -1,0 +1,9 @@
+version: 2
+
+# Market signal models (KTC trade values, dynasty rankings)
+#
+# Planned models:
+# - dim_ktc_values (Keep/Trade/Cut player values)
+# - mart_player_value_history (historical value trends)
+
+models: []
