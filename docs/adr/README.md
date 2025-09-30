@@ -14,6 +14,8 @@ This directory contains Architecture Decision Records (ADRs) for the Fantasy Foo
 | [ADR-006](ADR-006-gcs-integration-strategy.md)                    | GCS integration strategy                        | Accepted   | 2024-09 |
 | [ADR-007](ADR-007-separate-fact-tables-actuals-vs-projections.md) | Separate fact tables for actuals vs projections | Accepted   | 2025-09 |
 | [ADR-008](ADR-008-league-transaction-history-integration.md)      | League transaction history integration          | Accepted   | 2025-09 |
+| [ADR-009](ADR-009-single-consolidated-fact-table-nfl-stats.md)    | Single consolidated fact table for NFL stats    | Accepted   | 2025-09 |
+| [ADR-010](ADR-010-mfl-id-canonical-player-identity.md)            | mfl_id as canonical player identity             | Accepted   | 2025-09 |
 
 \*Note: ADRs 001-003 are documented in the main specification as examples and will be formalized as separate documents when implementation decisions are finalized.
 

@@ -9,8 +9,9 @@
 
 - **v4.1** - Projections Integration (FFanalytics; separate fact table for 2×2 model alignment)
 - **v4.2** - League Transaction History (Commissioner TRANSACTIONS tab; trade analysis)
+- **v4.3** - Expanded NFL Stats + mfl_id Identity (snap counts, ff_opportunity; mfl_id as canonical player_id)
 
-Both addenda are blocked by seeds completion (Phase 1) and are parallel tracks after that.
+All addenda are blocked by seeds completion (Phase 1) and are parallel tracks after that.
 
 ## What Changed From v3 (Fixes Applied)
 
@@ -421,7 +422,7 @@ WHERE p.provider = 'ffanalytics_consensus'
   AND p.asof_date <= a.game_date  -- only compare to projections made before the game
 ```
 
-### Implementation Sequence
+### Implementation Sequence (v4.1)
 
 Per updated implementation checklist:
 
@@ -523,7 +524,7 @@ FROM {{ ref('stg_sheets__transactions') }}
    - Current roster = initial state + cumulative transactions
    - Enables "what was my roster on 2024-10-15?" queries
 
-### Implementation Sequence
+### Implementation Sequence (v4.2)
 
 Per updated implementation checklist:
 
@@ -535,4 +536,457 @@ Per updated implementation checklist:
 
 ______________________________________________________________________
 
-If approved, I can apply these snippets to the dbt project and wire schema tests accordingly.
+## Addendum: Expanded NFL Stats + mfl_id Identity (v4.3)
+
+**Added:** 2025-09-30
+**Scope:** Comprehensive nflverse stats integration and player identity architecture
+**Related ADRs:** ADR-009, ADR-010
+
+### Decisions Made
+
+#### 1. Single Consolidated Fact Table for All NFL Stats (ADR-009)
+
+**Problem:** nflverse provides multiple stat datasets with identical grain:
+
+- `load_player_stats`: Base stats (passing, rushing, receiving, defense, kicking) - ~50 stat types
+- `load_snap_counts`: Snap participation (offense, defense, ST) - 6 stat types
+- `load_ff_opportunity`: Expected stats, variances, team shares - ~40 stat types
+
+**Decision:** Integrate all three sources into single `fact_player_stats` table.
+
+**Rationale:**
+
+- **Same grain:** player-game-stat across all sources
+- **Manageable scale:** 12-15M rows (5 years), well within DuckDB's 10M-1B row sweet spot
+- **Avoids fact-to-fact joins:** Kimball anti-pattern (guidance p. 724-759)
+- **Simpler queries:** Single table scan vs complex multi-table joins
+- **Better compression:** Parquet columnar storage benefits from unified schema
+
+Scale Analysis:
+
+```text
+Active players: 2,000
+Games per player per season: 15 (avg with injuries/backups)
+Seasons: 5
+Stat types: 96 (50 base + 6 snap + 40 opportunity)
+Sparsity: 0.4 (position-specific stats)
+
+Total: 2,000 × 15 × 5 × 96 × 0.4 = 28.8M worst case
+Realistic after sparsity: 12-15M rows
+Storage: 900 MB - 1.8 GB (Parquet compressed)
+Partitions: 115 (5 seasons × 23 weeks), ~130K rows each
+```
+
+#### 2. mfl_id as Canonical Player Identity (ADR-010)
+
+**Problem:** Original plan used `gsis_id` as canonical `player_id`, but:
+
+- `gsis_id` is NFL-specific (couples architecture to NFL systems)
+- Fantasy platforms use different IDs (Sleeper, ESPN, Yahoo, KTC, etc.)
+- `load_ff_playerids` provides 19 provider IDs with platform-neutral crosswalk
+
+**Decision:** Use nflverse's `mfl_id` as canonical `player_id`.
+
+**Rationale:**
+
+- **Platform agnostic:** Created by nflverse specifically as neutral crosswalk ID
+- **Separates concerns:** Canonical ID distinct from provider IDs
+- **Comprehensive:** Maps to 19 fantasy platforms/stat providers
+- **Stable:** Doesn't change with team/platform migrations
+- **Future-proof:** Can add new platforms without schema changes
+
+**Provider Coverage (from ff_playerids):**
+
+```text
+mfl_id (canonical), gsis_id, sleeper_id, espn_id, yahoo_id, pfr_id,
+fantasypros_id, pff_id, cbs_id, ktc_id, sportradar_id, fleaflicker_id,
+rotowire_id, rotoworld_id, stats_id, stats_global_id, fantasy_data_id,
+swish_id, cfbref_id, nfl_id
+```
+
+### Updated Schemas
+
+#### dim_player_id_xref (Seed Table)
+
+**Source:** `samples/nflverse/ff_playerids/`
+
+```sql
+CREATE TABLE dim_player_id_xref (
+    player_id VARCHAR PRIMARY KEY,  -- mfl_id (canonical)
+
+    -- All 19 provider IDs from ff_playerids
+    mfl_id VARCHAR,
+    gsis_id VARCHAR,
+    sleeper_id INTEGER,
+    espn_id INTEGER,
+    yahoo_id VARCHAR,
+    pfr_id VARCHAR,
+    fantasypros_id INTEGER,
+    pff_id INTEGER,
+    cbs_id INTEGER,
+    ktc_id INTEGER,
+    sportradar_id VARCHAR,
+    fleaflicker_id VARCHAR,
+    rotowire_id INTEGER,
+    rotoworld_id VARCHAR,
+    stats_id INTEGER,
+    stats_global_id INTEGER,
+    fantasy_data_id VARCHAR,
+    swish_id VARCHAR,
+    cfbref_id VARCHAR,
+    nfl_id INTEGER,
+
+    -- Attributes for name-based matching
+    name VARCHAR,
+    merge_name VARCHAR,  -- Normalized for TRANSACTIONS fuzzy matching
+    position VARCHAR,
+    team VARCHAR,
+    birthdate DATE,
+    draft_year INTEGER
+);
+```
+
+#### fact_player_stats (Expanded)
+
+**Grain:** One row per player per game per stat per provider
+
+```sql
+{{
+  config(
+    materialized='incremental',
+    unique_key=['player_id','game_id','stat_name','provider','measure_domain','stat_kind'],
+    partition_by=['season','week'],
+    external=true,
+    location="{{ var('external_root') }}/core/fact_player_stats"
+  )
+}}
+
+-- Incremental logic (unchanged)
+WITH max_season AS (
+  SELECT COALESCE(MAX(season), 0) AS max_season FROM {{ this }}
+), max_week AS (
+  SELECT COALESCE(MAX(week), 0) AS max_week
+  FROM {{ this }}, max_season
+  WHERE {{ this }}.season = max_season.max_season
+), max_built AS (
+  SELECT max_season.max_season, max_week.max_week FROM max_season, max_week
+)
+
+-- Union all three stat sources
+SELECT * FROM {{ ref('stg_nflverse__player_stats') }}  -- Base stats (~50 types)
+{% if is_incremental() %}
+WHERE (season > (SELECT max_season FROM max_built)
+    OR (season = (SELECT max_season FROM max_built) AND week > (SELECT max_week FROM max_built)))
+{% endif %}
+
+UNION ALL
+
+SELECT * FROM {{ ref('stg_nflverse__snap_counts') }}  -- Snap stats (6 types)
+{% if is_incremental() %}
+WHERE (season > (SELECT max_season FROM max_built)
+    OR (season = (SELECT max_season FROM max_built) AND week > (SELECT max_week FROM max_built)))
+{% endif %}
+
+UNION ALL
+
+SELECT * FROM {{ ref('stg_nflverse__ff_opportunity') }}  -- Expected stats (~40 types)
+{% if is_incremental() %}
+WHERE (season > (SELECT max_season FROM max_built)
+    OR (season = (SELECT max_season FROM max_built) AND week > (SELECT max_week FROM max_built)))
+{% endif %}
+```
+
+### Updated Staging Models
+
+#### stg_nflverse\_\_player_stats.sql
+
+**Updated to use mfl_id:**
+
+```sql
+{{ config(materialized='view') }}
+
+WITH base AS (
+  SELECT
+    -- Map gsis_id → mfl_id via crosswalk
+    COALESCE(xref.player_id, -1) AS player_id,  -- mfl_id
+
+    -- Game identifiers
+    COALESCE(s.game_id,
+      {{ dbt_utils.generate_surrogate_key([
+        'w.season','w.week','w.team','w.opponent_team','w.player_id'
+      ]) }}
+    ) AS game_id,
+
+    w.season,
+    w.week,
+    w.season_type,
+
+    -- Base stats (existing - ~50 columns)
+    w.completions,
+    w.attempts,
+    w.passing_yards,
+    w.passing_tds,
+    -- ... (all other base stats)
+
+  FROM {{ source('raw_nflverse', 'player_stats') }} w
+  LEFT JOIN {{ ref('dim_player_id_xref') }} xref
+    ON w.player_id = xref.gsis_id  -- Explicit mapping
+  LEFT JOIN {{ ref('dim_schedule') }} s
+    ON s.season = w.season AND s.week = w.week
+    AND (s.home_team_id = w.team OR s.away_team_id = w.team)
+),
+
+unpivoted AS (
+  -- Unpivot to long form (existing logic)
+  SELECT player_id, game_id, season, week, season_type,
+         'completions' AS stat_name, completions AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE completions IS NOT NULL
+  UNION ALL
+  -- ... (all other stats)
+)
+
+SELECT * FROM unpivoted
+```
+
+#### stg_nflverse\_\_snap_counts.sql (NEW)
+
+```sql
+{{ config(materialized='view') }}
+
+WITH base AS (
+  SELECT
+    COALESCE(xref.player_id, -1) AS player_id,  -- mfl_id
+    s.game_id,
+    s.season,
+    s.week,
+    s.game_type AS season_type,
+
+    -- Snap stats
+    s.offense_snaps,
+    s.offense_pct,
+    s.defense_snaps,
+    s.defense_pct,
+    s.st_snaps,
+    s.st_pct
+
+  FROM {{ source('raw_nflverse', 'snap_counts') }} s
+  LEFT JOIN {{ ref('dim_player_id_xref') }} xref
+    ON s.pfr_player_id = xref.pfr_id  -- Map via PFR ID
+),
+
+unpivoted AS (
+  SELECT player_id, game_id, season, week, season_type,
+         'offense_snaps' AS stat_name, offense_snaps AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE offense_snaps IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'offense_pct' AS stat_name, offense_pct AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE offense_pct IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'defense_snaps' AS stat_name, defense_snaps AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE defense_snaps IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'defense_pct' AS stat_name, defense_pct AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE defense_pct IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'st_snaps' AS stat_name, st_snaps AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE st_snaps IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'st_pct' AS stat_name, st_pct AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE st_pct IS NOT NULL
+)
+
+SELECT * FROM unpivoted
+```
+
+#### stg_nflverse\_\_ff_opportunity.sql (NEW)
+
+```sql
+{{ config(materialized='view') }}
+
+-- Note: ff_opportunity has 170+ columns
+-- Unpivot key metrics: expected stats, variances, team shares
+
+WITH base AS (
+  SELECT
+    COALESCE(xref.player_id, -1) AS player_id,  -- mfl_id
+    o.game_id,
+    CAST(o.season AS INTEGER) AS season,
+    CAST(o.week AS INTEGER) AS week,
+    'REG' AS season_type,  -- ff_opportunity doesn't have season_type
+
+    -- Expected stats
+    o.pass_yards_gained_exp,
+    o.rush_yards_gained_exp,
+    o.rec_yards_gained_exp,
+    o.receptions_exp,
+    o.pass_touchdown_exp,
+    o.rec_touchdown_exp,
+    o.rush_touchdown_exp,
+
+    -- Variances (actual - expected)
+    o.pass_yards_gained_diff,
+    o.rush_yards_gained_diff,
+    o.rec_yards_gained_diff,
+    o.receptions_diff,
+
+    -- Team shares
+    o.pass_air_yards,
+    o.rec_air_yards,
+    o.pass_attempt,
+    o.rec_attempt,
+    o.rush_attempt
+
+  FROM {{ source('raw_nflverse', 'ff_opportunity') }} o
+  LEFT JOIN {{ ref('dim_player_id_xref') }} xref
+    ON o.player_id = xref.gsis_id  -- ff_opportunity uses gsis_id
+),
+
+unpivoted AS (
+  -- Expected stats
+  SELECT player_id, game_id, season, week, season_type,
+         'pass_yards_gained_exp' AS stat_name, pass_yards_gained_exp AS stat_value,
+         'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
+  FROM base WHERE pass_yards_gained_exp IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'rush_yards_gained_exp', rush_yards_gained_exp,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE rush_yards_gained_exp IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'rec_yards_gained_exp', rec_yards_gained_exp,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE rec_yards_gained_exp IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'receptions_exp', receptions_exp,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE receptions_exp IS NOT NULL
+
+  -- Variances
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'pass_yards_gained_diff', pass_yards_gained_diff,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE pass_yards_gained_diff IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'rec_yards_gained_diff', rec_yards_gained_diff,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE rec_yards_gained_diff IS NOT NULL
+
+  -- Team shares (sample - add more as needed)
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'pass_air_yards', pass_air_yards,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE pass_air_yards IS NOT NULL
+  UNION ALL
+  SELECT player_id, game_id, season, week, season_type,
+         'rec_air_yards', rec_air_yards,
+         'real_world', 'actual', 'nflverse'
+  FROM base WHERE rec_air_yards IS NOT NULL
+  -- ... (add remaining key metrics)
+)
+
+SELECT * FROM unpivoted
+```
+
+### Implementation Sequence
+
+Per updated implementation checklist:
+
+1. **Phase 1 (BLOCKER)**: Generate ff_playerids sample and create dim_player_id_xref seed
+
+   - Add ff_playerids to nflverse registry
+   - Run `make samples-nflverse DATASETS=ff_playerids`
+   - Generate seed CSV with all 19 provider IDs
+
+1. **Phase 2**: Add snap_counts and ff_opportunity datasets
+
+   - Add to nflverse registry
+   - Run `make samples-nflverse DATASETS=snap_counts,ff_opportunity`
+
+1. **Phase 2**: Create new staging models
+
+   - `stg_nflverse__snap_counts.sql`
+   - `stg_nflverse__ff_opportunity.sql`
+
+1. **Phase 2**: Update existing staging models
+
+   - Replace `player_id` with crosswalk join to get mfl_id
+   - Update `stg_nflverse__player_stats.sql`
+
+1. **Phase 2**: Expand fact_player_stats with UNION ALL
+
+1. **Phase 3**: Update marts to leverage new stats
+
+   - Snap efficiency analysis: rushing yards per offensive snap
+   - Variance analysis: actual vs expected (using ff_opportunity built-in xStats)
+   - Target/opportunity share analysis
+
+### Query Examples
+
+**Snap efficiency:**
+
+```sql
+SELECT
+    p.display_name,
+    f.season,
+    f.week,
+    MAX(CASE WHEN f.stat_name = 'rushing_yards' THEN f.stat_value END) AS rushing_yards,
+    MAX(CASE WHEN f.stat_name = 'offense_snaps' THEN f.stat_value END) AS offense_snaps,
+    rushing_yards / NULLIF(offense_snaps, 0) AS yards_per_snap
+FROM {{ ref('fact_player_stats') }} f
+JOIN {{ ref('dim_player') }} p ON f.player_id = p.player_id
+WHERE f.season = 2024 AND f.week = 5
+GROUP BY 1,2,3
+HAVING offense_snaps > 0
+ORDER BY yards_per_snap DESC
+LIMIT 20;
+```
+
+**Built-in variance analysis:**
+
+```sql
+SELECT
+    p.display_name,
+    f.season,
+    SUM(CASE WHEN f.stat_name = 'receptions' THEN f.stat_value END) AS receptions_actual,
+    SUM(CASE WHEN f.stat_name = 'receptions_exp' THEN f.stat_value END) AS receptions_expected,
+    SUM(CASE WHEN f.stat_name = 'receptions_diff' THEN f.stat_value END) AS receptions_variance
+FROM {{ ref('fact_player_stats') }} f
+JOIN {{ ref('dim_player') }} p ON f.player_id = p.player_id
+WHERE f.season = 2024 AND p.position = 'WR'
+GROUP BY 1,2
+ORDER BY receptions_variance DESC
+LIMIT 20;
+-- Top overperformers vs expected receptions
+```
+
+### Benefits
+
+1. **Comprehensive stats:** 96 stat types per player-game vs previous 50
+1. **Built-in variance:** ff_opportunity provides expected stats + variances (no need to calculate)
+1. **Opportunity metrics:** Team shares, air yards, target rates for advanced analysis
+1. **Snap context:** Correlate production with playing time
+1. **Platform-agnostic identity:** Support all 19 fantasy platforms via single crosswalk
+1. **Future-proof:** Can add new providers without schema changes
+
+**Status:** Approved; implementation blocked by Phase 1 seeds (ff_playerids required first).
+
+______________________________________________________________________
+
+If approved, these addenda can be implemented following the phased approach in the updated implementation checklist.

@@ -90,6 +90,20 @@ ______________________________________________________________________
   - Registry already includes: players, weekly, season, injuries, depth_charts, schedule, teams
   - Tested: injuries (5599 records), teams (768 records)
 
+- ☐ **Add v4.3 datasets** (ADR-009, ADR-010):
+
+  - ☐ Add `ff_playerids` to registry (TIER 1 - BLOCKER for seeds)
+    - Primary key: `mfl_id` (canonical player_id)
+    - Contains 19 provider ID mappings (gsis_id, sleeper_id, espn_id, yahoo_id, pfr_id, ktc_id, etc.)
+    - Required for `dim_player_id_xref` seed generation
+  - ☐ Add `snap_counts` to registry (TIER 2)
+    - Snap participation by phase (offense, defense, ST)
+    - Integrates into `fact_player_stats` (6 stat types)
+  - ☐ Add `ff_opportunity` to registry (TIER 2)
+    - Expected stats, variances, team shares (170+ columns)
+    - Integrates into `fact_player_stats` (~40 key stat types selected)
+    - Enables variance analysis without manual calculation
+
 - ☑ Add GCS write support (Python path)
 
   - Implemented via PyArrow FS helpers in `src/ingest/common/storage.py`.
@@ -203,11 +217,49 @@ Acceptance criteria:
 ## 7) dbt — Seeds, Staging, and Marts
 
 - ☑ Scaffold dbt project structure under `dbt/ff_analytics/` with external Parquet defaults.
-- ☐ Create/refresh **seeds**: `dim_player_id_xref`, `dim_name_alias`, `dim_pick`, `dim_asset`, `dim_scoring_rule`, and **neutral stat dictionary** from nflreadr dictionaries.
+- ☐ Create/refresh **seeds**: `dim_player_id_xref`, `dim_name_alias`, `dim_pick`, `dim_asset`, `dim_scoring_rule`, `dim_franchise`, and **neutral stat dictionary** from nflreadr dictionaries.
+  - ☐ **`dim_player_id_xref`** (ADR-010 - CRITICAL):
+    - Source: `samples/nflverse/ff_playerids/` (requires `ff_playerids` dataset added to registry first)
+    - Primary key: `mfl_id` (canonical player_id, NOT gsis_id)
+    - Include ALL 19 provider IDs: mfl_id, gsis_id, sleeper_id, espn_id, yahoo_id, pfr_id, fantasypros_id, pff_id, cbs_id, ktc_id, sportradar_id, fleaflicker_id, rotowire_id, rotoworld_id, stats_id, stats_global_id, fantasy_data_id, swish_id, cfbref_id, nfl_id
+    - Include name matching columns: `name`, `merge_name` (normalized for TRANSACTIONS fuzzy matching)
+    - Include player attributes: `position`, `team`, `birthdate`, `draft_year`
+  - ☐ **`dim_franchise`** (v4.2 - League teams/owners with SCD2):
+    - Source: `docs/spec/league_config_data/franchises.json` + `sleeper_league_mapping.json`
+    - Columns: `franchise_id` (F001-F012), `franchise_name`, `division`, `established_year`, `owner_id`, `owner_name`, `owner_valid_from`, `owner_valid_to`, `is_current_owner`, `sleeper_roster_id`
+    - SCD Type 2 for ownership history (e.g., F001: Jon 2012, Alec 2013-2024, Jason 2025-current)
+  - ☐ **`dim_scoring_rule`** (Half-PPR league with IDP):
+    - Source: `docs/spec/league_config_data/rules_constants.json` (scoring section)
+    - Transform to SCD2 structure: `rule_id`, `rule_name`, `stat_name`, `points_per_unit`, `valid_from`, `valid_to`, `is_current`
+    - Include offensive scoring: Half-PPR (0.5 reception), passing/rushing/receiving yards, TDs
+    - Include IDP scoring: tackles (0.5), sacks (1.5), interceptions (6.0), etc.
+  - ☐ **`dim_pick`** (Draft pick dimension):
+    - 5 rounds × 12 teams = 60 picks per year
+    - Columns: `pick_id`, `season`, `round`, `overall_pick`, `round_slot`
+  - ☐ **`dim_asset`** (Unified player/pick/cap asset catalog):
+    - Union of players + picks
+    - Link `asset_id` to `asset_type` (player/pick/cap_space), `player_id` (mfl_id), `pick_id`
+  - ☐ **`stat_dictionary.csv`** (neutral stat names):
+    - Map provider-specific stat names to canonical neutral names
+  - ☐ **`dim_name_alias`** (fuzzy matching):
+    - Alternate spellings/variations for TRANSACTIONS tab player name resolution
 - ☐ Stage models per provider:
-  - `stg_nflverse_*` (players, weekly, season, injuries, depth_charts, schedule, teams)
+  - `stg_nflverse_*` (players, weekly, season, injuries, depth_charts, schedule, teams, **snap_counts**, **ff_opportunity**)
     - ☑ `stg_nflverse__players.sql` reading local `data/raw` Parquet (tests: not_null + unique `gsis_id`)
     - ☑ `stg_nflverse__weekly.sql` with PK tests: not_null (`season`,`week`,`gsis_id`) + singular uniqueness test on key
+    - ☐ **`stg_nflverse__player_stats.sql`** (v4.3 - updated for mfl_id):
+      - Map `gsis_id` → `mfl_id` via `dim_player_id_xref` crosswalk
+      - Unpivot base stats (~50 types) to long form
+      - Generate or resolve `game_id` via schedule join
+    - ☐ **`stg_nflverse__snap_counts.sql`** (v4.3 - NEW):
+      - Map `pfr_player_id` → `mfl_id` via crosswalk
+      - Unpivot snap stats (6 types): offense_snaps, offense_pct, defense_snaps, defense_pct, st_snaps, st_pct
+    - ☐ **`stg_nflverse__ff_opportunity.sql`** (v4.3 - NEW):
+      - Map `gsis_id` → `mfl_id` via crosswalk
+      - Unpivot key opportunity metrics (~40 selected from 170+ columns):
+        - Expected stats: pass_yards_gained_exp, rush_yards_gained_exp, rec_yards_gained_exp, receptions_exp
+        - Variances: pass_yards_gained_diff, rush_yards_gained_diff, rec_yards_gained_diff
+        - Team shares: pass_air_yards, rec_air_yards, pass_attempt, rec_attempt
   - `stg_sleeper_*` (league, users, rosters, roster_players)
   - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions, transactions)
     - ☐ Add `stg_sheets__roster_changelog` (hash-based SCD tracking)
@@ -242,7 +294,14 @@ Acceptance criteria:
   - `stg_sheets_change_log` (row hash per tab)
 - ☐ Marts:
   - **Core facts** (real-world measures only; 2×2 model base layer):
-    - `fact_player_stats` (per-game actuals from nflverse; stat_kind='actual')
+    - **`fact_player_stats`** (v4.3 - expanded single consolidated table; ADR-009):
+      - Grain: one row per player per game per stat per provider
+      - Sources: UNION ALL of `stg_nflverse__player_stats` + `stg_nflverse__snap_counts` + `stg_nflverse__ff_opportunity`
+      - Stat types: ~96 total (50 base + 6 snap + 40 opportunity)
+      - Scale: 12-15M rows (5 years), 900 MB - 1.8 GB compressed
+      - Partitioned by: `season`, `week`
+      - Player ID: `mfl_id` (canonical, mapped via crosswalk; ADR-010)
+      - stat_kind='actual', measure_domain='real_world'
     - `fact_player_projections` (weekly/season projections from ffanalytics; stat_kind='projection')
       - Source: `stg_ffanalytics__projections`
       - Grain: one row per player per stat per horizon per asof_date
