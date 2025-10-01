@@ -94,7 +94,7 @@ with base as (
     w.fantasy_points_ppr
 
   from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_WEEKLY_GLOB", "data/raw/nflverse/weekly/dt=*/*.parquet") }}'
+    '{{ env_var("RAW_NFLVERSE_WEEKLY_GLOB", "../../data/raw/nflverse/weekly/dt=*/*.parquet") }}'
   ) w
   where w.player_id is not null
     and w.season is not null
@@ -113,72 +113,72 @@ crosswalk as (
 
 unpivoted as (
   -- Unpivot all stats to long form
-  -- Pattern: SELECT player_id, game_id, season, week, season_type,
+  -- Pattern: SELECT player_id, game_id, season, week, season_type, position,
   --          'stat_name' AS stat_name, stat_value,
   --          'real_world' AS measure_domain, 'actual' AS stat_kind, 'nflverse' AS provider
   --  FROM crosswalk WHERE stat_value IS NOT NULL
 
   -- Passing
-  select player_id, game_id, season, week, season_type, 'completions' as stat_name, cast(completions as double) as stat_value, 'real_world' as measure_domain, 'actual' as stat_kind, 'nflverse' as provider from crosswalk where completions is not null
-  union all select player_id, game_id, season, week, season_type, 'attempts', cast(attempts as double), 'real_world', 'actual', 'nflverse' from crosswalk where attempts is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_yards', cast(passing_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_tds', cast(passing_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_tds is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_interceptions', cast(passing_interceptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_interceptions is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_air_yards', cast(passing_air_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_air_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_yards_after_catch', cast(passing_yards_after_catch as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_yards_after_catch is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_first_downs', cast(passing_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_first_downs is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_epa', cast(passing_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_epa is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_2pt_conversions', cast(passing_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_2pt_conversions is not null
-  union all select player_id, game_id, season, week, season_type, 'passing_cpoe', cast(passing_cpoe as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_cpoe is not null
+  select player_id, game_id, season, week, season_type, position, 'completions' as stat_name, cast(completions as double) as stat_value, 'real_world' as measure_domain, 'actual' as stat_kind, 'nflverse' as provider from crosswalk where completions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'attempts', cast(attempts as double), 'real_world', 'actual', 'nflverse' from crosswalk where attempts is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_yards', cast(passing_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_tds', cast(passing_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_tds is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_interceptions', cast(passing_interceptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_interceptions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_air_yards', cast(passing_air_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_air_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_yards_after_catch', cast(passing_yards_after_catch as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_yards_after_catch is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_first_downs', cast(passing_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_first_downs is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_epa', cast(passing_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_epa is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_2pt_conversions', cast(passing_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_2pt_conversions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'passing_cpoe', cast(passing_cpoe as double), 'real_world', 'actual', 'nflverse' from crosswalk where passing_cpoe is not null
 
   -- Rushing
-  union all select player_id, game_id, season, week, season_type, 'carries', cast(carries as double), 'real_world', 'actual', 'nflverse' from crosswalk where carries is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_yards', cast(rushing_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_tds', cast(rushing_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_tds is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_fumbles', cast(rushing_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_fumbles is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_fumbles_lost', cast(rushing_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_fumbles_lost is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_first_downs', cast(rushing_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_first_downs is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_epa', cast(rushing_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_epa is not null
-  union all select player_id, game_id, season, week, season_type, 'rushing_2pt_conversions', cast(rushing_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_2pt_conversions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'carries', cast(carries as double), 'real_world', 'actual', 'nflverse' from crosswalk where carries is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_yards', cast(rushing_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_tds', cast(rushing_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_tds is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_fumbles', cast(rushing_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_fumbles is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_fumbles_lost', cast(rushing_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_fumbles_lost is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_first_downs', cast(rushing_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_first_downs is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_epa', cast(rushing_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_epa is not null
+  union all select player_id, game_id, season, week, season_type, position, 'rushing_2pt_conversions', cast(rushing_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where rushing_2pt_conversions is not null
 
   -- Receiving
-  union all select player_id, game_id, season, week, season_type, 'targets', cast(targets as double), 'real_world', 'actual', 'nflverse' from crosswalk where targets is not null
-  union all select player_id, game_id, season, week, season_type, 'receptions', cast(receptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where receptions is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_yards', cast(receiving_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_tds', cast(receiving_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_tds is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_fumbles', cast(receiving_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_fumbles is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_fumbles_lost', cast(receiving_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_fumbles_lost is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_air_yards', cast(receiving_air_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_air_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_yards_after_catch', cast(receiving_yards_after_catch as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_yards_after_catch is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_first_downs', cast(receiving_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_first_downs is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_epa', cast(receiving_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_epa is not null
-  union all select player_id, game_id, season, week, season_type, 'receiving_2pt_conversions', cast(receiving_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_2pt_conversions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'targets', cast(targets as double), 'real_world', 'actual', 'nflverse' from crosswalk where targets is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receptions', cast(receptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where receptions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_yards', cast(receiving_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_tds', cast(receiving_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_tds is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_fumbles', cast(receiving_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_fumbles is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_fumbles_lost', cast(receiving_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_fumbles_lost is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_air_yards', cast(receiving_air_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_air_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_yards_after_catch', cast(receiving_yards_after_catch as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_yards_after_catch is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_first_downs', cast(receiving_first_downs as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_first_downs is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_epa', cast(receiving_epa as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_epa is not null
+  union all select player_id, game_id, season, week, season_type, position, 'receiving_2pt_conversions', cast(receiving_2pt_conversions as double), 'real_world', 'actual', 'nflverse' from crosswalk where receiving_2pt_conversions is not null
 
   -- Defensive
-  union all select player_id, game_id, season, week, season_type, 'def_tackles_solo', cast(def_tackles_solo as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_solo is not null
-  union all select player_id, game_id, season, week, season_type, 'def_tackles_with_assist', cast(def_tackles_with_assist as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_with_assist is not null
-  union all select player_id, game_id, season, week, season_type, 'def_tackle_assists', cast(def_tackle_assists as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackle_assists is not null
-  union all select player_id, game_id, season, week, season_type, 'def_tackles_for_loss', cast(def_tackles_for_loss as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_for_loss is not null
-  union all select player_id, game_id, season, week, season_type, 'def_tackles_for_loss_yards', cast(def_tackles_for_loss_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_for_loss_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'def_fumbles', cast(def_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_fumbles is not null
-  union all select player_id, game_id, season, week, season_type, 'def_fumbles_forced', cast(def_fumbles_forced as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_fumbles_forced is not null
-  union all select player_id, game_id, season, week, season_type, 'def_interceptions', cast(def_interceptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_interceptions is not null
-  union all select player_id, game_id, season, week, season_type, 'def_interception_yards', cast(def_interception_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_interception_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'def_pass_defended', cast(def_pass_defended as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_pass_defended is not null
-  union all select player_id, game_id, season, week, season_type, 'def_sacks', cast(def_sacks as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_sacks is not null
-  union all select player_id, game_id, season, week, season_type, 'def_sack_yards', cast(def_sack_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_sack_yards is not null
-  union all select player_id, game_id, season, week, season_type, 'def_qb_hits', cast(def_qb_hits as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_qb_hits is not null
-  union all select player_id, game_id, season, week, season_type, 'def_tds', cast(def_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tds is not null
-  union all select player_id, game_id, season, week, season_type, 'def_safeties', cast(def_safeties as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_safeties is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tackles_solo', cast(def_tackles_solo as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_solo is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tackles_with_assist', cast(def_tackles_with_assist as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_with_assist is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tackle_assists', cast(def_tackle_assists as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackle_assists is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tackles_for_loss', cast(def_tackles_for_loss as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_for_loss is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tackles_for_loss_yards', cast(def_tackles_for_loss_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tackles_for_loss_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_fumbles', cast(def_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_fumbles is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_fumbles_forced', cast(def_fumbles_forced as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_fumbles_forced is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_interceptions', cast(def_interceptions as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_interceptions is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_interception_yards', cast(def_interception_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_interception_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_pass_defended', cast(def_pass_defended as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_pass_defended is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_sacks', cast(def_sacks as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_sacks is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_sack_yards', cast(def_sack_yards as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_sack_yards is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_qb_hits', cast(def_qb_hits as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_qb_hits is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_tds', cast(def_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_tds is not null
+  union all select player_id, game_id, season, week, season_type, position, 'def_safeties', cast(def_safeties as double), 'real_world', 'actual', 'nflverse' from crosswalk where def_safeties is not null
 
   -- Sacks suffered
-  union all select player_id, game_id, season, week, season_type, 'sacks_suffered', cast(sacks_suffered as double), 'real_world', 'actual', 'nflverse' from crosswalk where sacks_suffered is not null
-  union all select player_id, game_id, season, week, season_type, 'sack_yards_lost', cast(sack_yards_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_yards_lost is not null
-  union all select player_id, game_id, season, week, season_type, 'sack_fumbles', cast(sack_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_fumbles is not null
-  union all select player_id, game_id, season, week, season_type, 'sack_fumbles_lost', cast(sack_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_fumbles_lost is not null
+  union all select player_id, game_id, season, week, season_type, position, 'sacks_suffered', cast(sacks_suffered as double), 'real_world', 'actual', 'nflverse' from crosswalk where sacks_suffered is not null
+  union all select player_id, game_id, season, week, season_type, position, 'sack_yards_lost', cast(sack_yards_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_yards_lost is not null
+  union all select player_id, game_id, season, week, season_type, position, 'sack_fumbles', cast(sack_fumbles as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_fumbles is not null
+  union all select player_id, game_id, season, week, season_type, position, 'sack_fumbles_lost', cast(sack_fumbles_lost as double), 'real_world', 'actual', 'nflverse' from crosswalk where sack_fumbles_lost is not null
 
   -- Special teams
-  union all select player_id, game_id, season, week, season_type, 'special_teams_tds', cast(special_teams_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where special_teams_tds is not null
+  union all select player_id, game_id, season, week, season_type, position, 'special_teams_tds', cast(special_teams_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where special_teams_tds is not null
 )
 
 select * from unpivoted

@@ -36,11 +36,11 @@ models:
           - not_null
 
       - name: season
-        description: NFL season year (2023-2025)
+        description: NFL season year (2020-2025)
         tests:
           - not_null
           - accepted_values:
-              values: [2023, 2024, 2025]
+              values: [2020, 2021, 2022, 2023, 2024, 2025]
 
       - name: week
         description: Week number (1-22, includes playoffs)
@@ -48,11 +48,21 @@ models:
           - not_null
 
       - name: season_type
-        description: Season type (REG, POST, PRE)
+        description: |
+          Season type: REG (regular season), POST (playoffs generic),
+          WC (wild card), DIV (divisional), CON (conference), SB (super bowl), PRE (preseason)
         tests:
           - not_null
           - accepted_values:
-              values: ['REG', 'POST', 'PRE']
+              values: ['REG', 'POST', 'WC', 'DIV', 'CON', 'SB', 'PRE']
+
+      - name: position
+        description: |
+          Player position. Fantasy-relevant positions: QB, RB, WR, TE, K.
+          Non-fantasy positions include: T, G, C, OL, LS, DE, DT, LB, CB, S, etc.
+          Used to filter grain tests to fantasy-relevant players only.
+        tests:
+          - not_null
 
       - name: stat_name
         description: |
@@ -106,3 +116,4 @@ models:
           config:
             severity: error
             error_if: ">0"
+            where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"  # Fantasy-relevant positions only

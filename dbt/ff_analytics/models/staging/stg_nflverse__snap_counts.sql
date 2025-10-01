@@ -31,7 +31,7 @@ with base as (
     s.st_pct
 
   from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
+    '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "../../data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
   ) s
   where s.pfr_player_id is not null
     and s.season is not null
@@ -50,12 +50,12 @@ crosswalk as (
 
 unpivoted as (
   -- Unpivot snap stats to long form (6 stat types)
-  select player_id, game_id, season, week, season_type, 'offense_snaps' as stat_name, cast(offense_snaps as double) as stat_value, 'real_world' as measure_domain, 'actual' as stat_kind, 'nflverse' as provider from crosswalk where offense_snaps is not null
-  union all select player_id, game_id, season, week, season_type, 'offense_pct', cast(offense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where offense_pct is not null
-  union all select player_id, game_id, season, week, season_type, 'defense_snaps', cast(defense_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_snaps is not null
-  union all select player_id, game_id, season, week, season_type, 'defense_pct', cast(defense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_pct is not null
-  union all select player_id, game_id, season, week, season_type, 'st_snaps', cast(st_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_snaps is not null
-  union all select player_id, game_id, season, week, season_type, 'st_pct', cast(st_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_pct is not null
+  select player_id, game_id, season, week, season_type, position, 'offense_snaps' as stat_name, cast(offense_snaps as double) as stat_value, 'real_world' as measure_domain, 'actual' as stat_kind, 'nflverse' as provider from crosswalk where offense_snaps is not null
+  union all select player_id, game_id, season, week, season_type, position, 'offense_pct', cast(offense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where offense_pct is not null
+  union all select player_id, game_id, season, week, season_type, position, 'defense_snaps', cast(defense_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_snaps is not null
+  union all select player_id, game_id, season, week, season_type, position, 'defense_pct', cast(defense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_pct is not null
+  union all select player_id, game_id, season, week, season_type, position, 'st_snaps', cast(st_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_snaps is not null
+  union all select player_id, game_id, season, week, season_type, position, 'st_pct', cast(st_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_pct is not null
 )
 
 select * from unpivoted
