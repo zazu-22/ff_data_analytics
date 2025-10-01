@@ -40,9 +40,11 @@ with base as (
 
 crosswalk as (
   select
-    base.*,
+    base.* exclude (position),
     -- Map pfr_player_id → mfl_id (canonical player_id)
-    coalesce(xref.player_id, -1) as player_id
+    coalesce(xref.player_id, -1) as player_id,
+    -- Use position from crosswalk if raw data has null
+    coalesce(base.position, xref.position) as position
   from base
   left join {{ ref('dim_player_id_xref') }} xref
     on base.pfr_player_id = xref.pfr_id
