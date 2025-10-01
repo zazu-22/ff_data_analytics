@@ -28,6 +28,18 @@ models:
               config:
                 where: "player_id != -1"  # Allow unmapped players
 
+      - name: player_key
+        description: |
+          Composite player identifier ensuring grain uniqueness.
+          - Mapped players: player_key = player_id (canonical mfl_id as varchar)
+          - Unmapped players: player_key = raw provider ID (gsis_id or pfr_id)
+          - Unknown players: player_key = 'UNKNOWN_' || game_id (fail-safe)
+
+          This prevents duplicate grain violations when multiple unmapped players
+          appear in the same game (e.g., depth TEs without crosswalk entries).
+        tests:
+          - not_null
+
       - name: game_id
         description: |
           Game identifier. For player_stats: surrogate key (season_week_team_opponent).
@@ -107,7 +119,7 @@ models:
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
-            - player_id
+            - player_key
             - game_id
             - stat_name
             - provider
