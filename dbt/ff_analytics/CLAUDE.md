@@ -37,18 +37,26 @@ Each subdirectory has a README.md with specific guidance:
 **CRITICAL**: Every fact table MUST explicitly declare and test its grain.
 
 ```yaml
-# models/core/fact_player_stats.yml
+# models/core/schema.yml (fact_player_stats)
 tests:
   - dbt_utils.unique_combination_of_columns:
       combination_of_columns:
-        - player_id
-        - season
-        - week
+        - player_key  # Composite identifier (not player_id!)
+        - game_id
+        - stat_name
+        - provider
         - measure_domain
         - stat_kind
-        - provider
-        - stat_name
+      config:
+        severity: error
+        error_if: ">0"
+        where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"  # Fantasy-relevant only
 ```
+
+**Why player_key instead of player_id?**
+- Multiple unmapped players in same game would all have `player_id = -1`
+- `player_key` uses raw provider IDs as fallback to preserve identity
+- See `models/staging/README.md` for player identity resolution pattern
 
 ### Conformed Dimensions
 
