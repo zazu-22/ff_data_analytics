@@ -1,15 +1,108 @@
 version: 2
 
-# Core dimensional models (facts and dimensions)
-# Following Kimball methodology
-#
-# Planned models:
-# - fact_player_stats (consolidated NFL stats)
-# - fact_player_projections (FFAnalytics projections)
-# - fact_transactions (league transactions)
-# - dim_player (player dimension)
-# - dim_team (NFL team dimension)
-# - dim_game (game dimension)
-# - dim_season_week (calendar dimension)
+models:
+  - name: fact_player_stats
+    description: |
+      Consolidated fact table for all NFL player statistics across multiple sources.
 
-models: []
+      Combines base player stats (passing, rushing, receiving, defense), snap counts,
+      and fantasy opportunity metrics into a single long-form table following the 2x2
+      stat model (actual vs projected × real-world vs fantasy).
+
+      **Grain**: One row per player per game per stat per provider
+      **Sources**: nflverse (player_stats, snap_counts, ff_opportunity)
+      **Seasons**: 2023-2025 (2.7M rows, 88 stat types)
+      **Architecture**: ADR-009 (single consolidated fact table), ADR-010 (mfl_id canonical identity)
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id from dim_player_id_xref).
+          Maps to 19 fantasy platform provider IDs.
+          Value of -1 indicates unmapped player (no crosswalk match).
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: player_id
+              config:
+                where: "player_id != -1"  # Allow unmapped players
+
+      - name: game_id
+        description: |
+          Game identifier. For player_stats: surrogate key (season_week_team_opponent).
+          For snap_counts/ff_opportunity: nflverse game_id.
+        tests:
+          - not_null
+
+      - name: season
+        description: NFL season year (2023-2025)
+        tests:
+          - not_null
+          - accepted_values:
+              values: [2023, 2024, 2025]
+
+      - name: week
+        description: Week number (1-22, includes playoffs)
+        tests:
+          - not_null
+
+      - name: season_type
+        description: Season type (REG, POST, PRE)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['REG', 'POST', 'PRE']
+
+      - name: stat_name
+        description: |
+          Name of the statistic (e.g., passing_yards, receptions, offense_snaps).
+          88 unique stat types across all sources:
+          - 50 base stats (passing, rushing, receiving, defense)
+          - 6 snap stats (offense_snaps, offense_pct, defense_snaps, defense_pct, st_snaps, st_pct)
+          - 32 opportunity stats (*_exp, *_diff, air_yards, attempt metrics)
+        tests:
+          - not_null
+
+      - name: stat_value
+        description: Numeric value of the statistic
+        tests:
+          - not_null
+
+      - name: measure_domain
+        description: |
+          Measurement domain (real_world or fantasy).
+          Currently all values are 'real_world' (fantasy scoring applied in marts).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['real_world', 'fantasy']
+
+      - name: stat_kind
+        description: |
+          Type of statistic (actual or projection).
+          Currently all values are 'actual' (projections in separate fact table per ADR-007).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['actual', 'projection']
+
+      - name: provider
+        description: Data source provider (currently all 'nflverse')
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['nflverse']
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_id
+            - game_id
+            - stat_name
+            - provider
+            - measure_domain
+            - stat_kind
+          config:
+            severity: error
+            error_if: ">0"

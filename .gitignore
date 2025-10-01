@@ -37,6 +37,7 @@ dbt/**/target/*.duckdb
 dbt/**/target/*.duckdb.wal
 dbt/**/logs/
 dbt/**/profiles.yml
+dbt/**/dbt_packages/
 
 # Jupyter notebook artifacts
 .ipynb_checkpoints/
