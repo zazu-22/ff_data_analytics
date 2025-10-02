@@ -1,0 +1,510 @@
+,,THE BELL KEG LEAGUE CONSTITUTION
+,,
+I.,,Background and Introduction
+,A.,  The league is run solely by the commissioner
+,B.,  The commissioner's duties include but are not limited to:
+,,    - Maintaining the league on Sleeper
+,,    - Maintaining the league files on Google Sheets
+,,    - Tracking all league history
+,,    - Tracking all league contracts and salaries
+,,    - Tracking all league cap transactions
+,,    - Tracking and issuing all league draft picks
+,,    - Overseeing and processing all drafts
+,,    - Processing all trades
+,,    - Ensuring proper roster usage
+,C.,  All official league information is held within the Google Sheet
+,,    - Any errors should be reported to the commissioner
+,,    - It is at the commissioner's sole discression maintain or change any errors
+,D.,  The commissioner's power includes but is not limited to:
+,,    - Proposing any in-season or offseason rule changes and/or league ammendments
+,,    - Any retroactive roster adjustments due to illegal rosters
+,,"    - Proposing any league cap fines, draft pick losses and/or roster edits for any illegal transactions and/or rosters"
+,,    - Immediately and retroactively closing any exploited rule loopholes
+,,    - Editing starting line-ups at an owners request
+,,    - Roster oversight and action for any inactive owner(s)
+,,    - Offseason rule change proposals in accordance with a dynamically evolving league
+,E.,  The league is designed to evolve and any suggestions for change are openly encouraged
+,F.,  The commissioner reserves the right to amend and/or clarify any rules and regulations contained within this document when necessary
+,,
+II.,,Rosters
+,A.,  Official rosters are housed on both Sleeper and the Google Sheet
+,B.,  Each roster consists of the following 31 slots:
+,,    - QB
+,,    - RB
+,,    - RB
+,,    - WR
+,,    - WR
+,,    - TE
+,,    - FLEX (RB/WR/TE)
+,,    - DL
+,,    - DL
+,,    - LB
+,,    - LB
+,,    - DB
+,,    - DB
+,,    - IDP FLEX (DL/LB/DB)
+,,    - TEAM D/ST
+,,    - K
+,,    - BENCH
+,,    - BENCH
+,,    - BENCH
+,,    - BENCH
+,,    - BENCH
+,,    - BENCH
+,,    - BENCH
+,,    - IDP ONLY BENCH
+,,    - IDP ONLY BENCH
+,,    - TAXI RED SHIRT
+,,    - TAXI RED SHIRT
+,,    - TAXI RED SHIRT
+,,    - TAXI RED SHIRT
+,,    - IDP ONLY TAXI RED SHIRT
+,,    - IR
+,,    - IR
+,,    - IR
+,C.,  Each owner is reponsible for maintaining a legal and correct roster
+,D.,  Owners of illegal rosters my be disciplined by the commissioner's with peanlties including but not limtied to:
+,,    - Draft pick losses
+,,    - League cap fines
+,,    - Null and voiding of contract(s)
+,,    - Removal of players from starting line-ups
+,E.,  Injury designations are declared once updated on Sleeper
+,,    - Players listed with a Questionable tag may remain on IR if previously placed on IR but are not eligible to be placed on IR from the active roster
+,,"    - Players listed with a Doubtful, Out or IR tag are eligible for immediate IR designation at any time"
+,F.,  Sleeper does not allow IDP only bench designations and these designations are seen on Google Sheet only but must be maintained on Sleeper as well
+,,    - IDP players are eligible for standard BENCH slots in addition to IDP only bench slots
+,,    - TEAM D/ST and K positions are considered IDP positions for bench designation purposes
+,G.,  Players are eligible for a Taxi Red Shirt roster slot if they meet the following criteria:
+,,    - Have made 0 career starts in this fantasy league
+,,    - Currently have rookie status in the NFL
+,,    - Were selected in the most recent fantasy league rookie draft
+,,    - Currently are on their first contract
+,,  OR
+,,    - Have made 0 career starts in this fantasy league
+,,    - Signed their current contract before the current fantasy year
+,,    - Do not qualify at TEAM D/ST
+,,    - Non-guaranteed contracts that are not converted to yearly contracts are not considered yearly contracts for Taxi Red Shirt roster slot eligiblity purposes
+,H.,  When activating and starting a player from a Taxi Red Shirt roster slot a team must have an open roster slot on their main roster in order to make the activation
+,,    - Teams that do not meet this criteria are subject to discipline and penalties from the commissioner
+,,    - The standard penalty for this infraction is for the most recently signed contract to be voided and fully guaranteed
+,I.,"  Rosters may never exceed the 25 active player, 5 taxi red shirt player, and 3 IR player cap at any point"
+,,
+III.,,League Construction and Schedule
+,A.,  The league consissts of 12 teams that are split into 3 divisions
+,,    - Each division consists of 4 teams
+,B.,  Each team plays 13 regular season games broken down by the following categories:
+,,"    - Three inter-division games, one against each divisional opponent in Weeks 1-3"
+,,"    - Seven out of division games, one against each of your non-division opponents in Weeks 4-11"
+,,"    - Three more inter-division games, again one against each divisional opponent in Weeks 12-14"
+,C.,  Teams qualify for the playoffs by completing any of the following:
+,,    - Having the best record in their division
+,,    - Having one of the three best records out of teams that did not win their division
+,D.,  The division winners with two best records receive a bye in the first round of the playoffs in Week 15
+,,    - The divsion winner with the worst record plays the wildcard with the worst record in Week 15
+,,    - The two remaining wildcard teams then also play eachother in Week 15
+,,    - The number #2 seed plays the winner of the division winner with the worst record vs the wildcard with the worst record in Week 16
+,,    - The number #1 seed plays the winner of the two remaining wildcard teams in Week 16
+,,    - The winner of each Week 16 game then plays eachother in the championship game Week 17
+,,
+IV.,,Ties and Tie-Breakers
+,A.,  Regular season games do not have tie-breakers and are logged in the standings as a tie
+,,    - For playoff qualifying and seeding purposes ties are worth 0.49 wins
+,,    - (ex.) A team finishing 9-4-0 always finishes ahead of a team finishing 8-5-2 with no tie-breakers needed
+,B.,  Playoff qualifying tie-breakers are in the following order:
+,,     - Head-to-Head record
+,,     - Regular season total points
+,,     - Inter-division record
+,,     - Total bench points in all head-to-head matchups
+,,     - Total full season bench points
+,,     - Remaining cap space in the current season
+,,     - Remaining cap space in the current season and the next four seasons combined
+,,     - Commissioner's coin flip
+,C.,  The order for deiciding tie-breakers when there are multiple tie breakers is the following order:
+,,     - Division Winners
+,,     - Byes
+,,     - Wildcards
+,C.,  Postseason game tie-breakers are in the following order:
+,,     - Current week bench points
+,,     - Regular season win loss record
+,,     - Head-to-Head record
+,,     - Regular season total points
+,,     - Inter-division record
+,,     - Total bench points in all head-to-head matchups
+,,     - Total full season bench points
+,,     - Remaining cap space in the current season
+,,     - Remaining cap space in the current season and the next four seasons combined
+,,     - Commissioner's coin flip
+,D.,  All contract tie-breakers for the Free Agent Auction Draft (FAAD) awarded to owner placing a bid first
+,E.,  All contract tie-breakers for the Free Agent Silent Auction (FASA) revert to playoff qualifying tie breakers for the current fantasy season
+,,
+V.,,Scoring
+,A.,  The following is a breakdown for scoring within the league
+,B.,  Passing
+,,     - 0.04 points per yard (1.00 points per 25 yards)
+,,     - 4.00 points per touchdown
+,,     - negative 2.00 points per interception
+,,     - 2.00 points per passing 2 point conversation
+,C.,  Rushing
+,,     - 0.10 points per yard (1.00 points per 10 yards)
+,,     - 6.00 points per touchdown
+,,     - negative 2.00 points per lost fumble
+,,     - 2.00 points per rushing 2 point conversation
+,D.,  Receiving
+,,     - 0.50 points per reception (1.00 points per 2 receptions)
+,,     - 0.10 points per yard (1.00 points per 10 yards)
+,,     - 6.00 points per touchdown
+,,     - negative 2.00 points per lost fumble
+,,     - 2.00 points per receiving 2 point conversation
+,E.,  Individual Defensive Players (IDPs)
+,,     - 0.50 points per tackle (1.00 points per 2 tackles)
+,,     - 1.00 points per QB hit
+,,     - 1.50 points per tackle for loss
+,,     - 1.50 points per sack
+,,     - 3.00 points per pass defended
+,,     - 3.00 points per forced fumble
+,,     - 6.00 points per fumble recovered
+,,     - 6.00 points per touchdown
+,,     - 6.00 points per interception
+,,     - 9.00 points per safety
+,,     - 12.00 points per blocked kick
+,,     - Points compound (ex. a Sack is 0.50 per tackle + 1.00 per QB hit + 1.50 per tackle for loss + 1.50 per sack)
+,F., Team Defense and Special Teams (TEAM D/ST)
+,,     - 15.00 points for 0 points allowed
+,,     - 9.00 points for 1-6 points allowed
+,,     - 4.50 points for 7-13 points allowed
+,,     - 2.25 points for 14-20 points allowed
+,,     - 0.00 points for 21-27 points allowed
+,,     - negative 2.25 points for 28-34 points allowed
+,,     - negative 4.50 points for 35+ points allowed
+,,     - 0.50 per sack
+,,     - 1.50 per fumble recovererd
+,,     - 1.50 per interception
+,,     - 3.00 per safety
+,,     - 3.00 per blocked kick
+,,     - 6.00 per touchdown
+,G.,  Kicking
+,,     - 0.10 points per yard per made FG (1.00 points per 10 yards)
+,,     - 1.00 points per made PAT
+,,     - negative 1.00 points per missed PAT
+,,     - negative 3.00 points per missed FG from 0-29 yards
+,,     - negative 2.00 points per missed FG from 30-39 yards
+,,     - negative 1.00 points per missed FG from 40-49 yards
+,H.,  All scoring is officially decided by Sleeper
+,,     - Sleeper reserves the right to make any stat corrections after games have been completed
+,,     - The commissioner reserves the right to make changes to any stat corrections on an as needed basis with league majority approval
+,,
+VI.,,Salary Cap
+,A.,  Each team starts each year with $250 in total salary cap
+,,     - The initial salary cap starts at fixed at $250 each year and does not ever increase or decrease
+,,     - The initial salary cap is released 5 years in advance to a season
+,B.,  Teams are eligible to trade cap in whole dollar amounts in released seasons at any time while trading is open
+,,
+VII.,,Trades
+,A.,  All assets are eligible for trade at any time when trading is open
+,B.,  Trading is open every day of the year except during the following periods:
+,,     - All league playoff weeks (Weeks 15-17 of the NFL season)
+,,     - The final two weeks of the regular season starting after the Week 13 FASA (Weeks 13-14 of the NFL season)
+,,     - Midnight EST the day prior to the day when the yearly FAAD take place
+,C.,"  Tradeable assets include but are not limited to: signed players, cap, future cap, draft picks, future draft picks, free agent rights, and auction nominations"
+,,     - Players are any players currently on an owner's active roster signed to an active yearly or weekly contract
+,,     - Cap is any dollar amount assigned to a teams eligible cap space in a given year used to own and sign players to yearly or weekly contracts
+,,     - Future cap may only be traded for the period of the current fantasy season and up to 5 fantasy season in advance
+,,     - Draft picks are any draft slots that a team is automatically given each season or has additionally acquired
+,,     - Draft picks may only be traded for the period of the current fantasy season and up to 5 fantasy seasons in advance
+,,     - Free agent rights are the rights to a given player to be used for RFA matching or draft pick compensation
+,,     - Free agent rights are only eligible to be traded on players who were on an active full season contract that has currently expired & it is the offseason prior to the FAAD
+,,     - Auction nominations are the player nominations that each team is awarded for the yearly FAAD
+,,     - Auction nominations may only be traded for the period of the current fantasy season and up to 5 fantasy seasons in advance
+,D.,  All teams involved in any part of a trade must remain under their salary cap constraints for the current fantasy season
+,,     - Teams are allowed to be over the salary cap projections for future seasons
+,,     - Teams may opt to conditionally cut players in order for a team to remain under the salary cap constraints in the current fantasy season
+,E.,  All teams involved in any part of a trade must remain under their roster limits
+,,     - Teams may opt to conditionally cut players in order for a team to remain under the roster limits
+,F.,  Assets are eligible to be traded for conditional assets as long as the following criteria is met:
+,,     - All conditions are absolute and clear
+,,     - All conditions must be announced to the commissioner at the time of the trade
+,,     - All assets tied to a condition must also have a secondary conditions should a conditional asset no longer be owned by a team at the time the conditions matures
+,,     - Players to be named later (PTBNLs) are allowed as long as all PTBNL conditional details are revealed to the commissioner at the time of the trade
+,,     - Players may only be traded once during a trade including in any trade conditions
+,,     - All conditions must be reasonable
+,G.,  The commissioner reserves the right to reject any trade conditions for not being reasonable
+,H.,  All trades must be agreed upon by both parties
+,,     - Failure to provide evidence upon request if a party involved contests a trade may result in discipline from the commissioner
+,I.,  Terminated contracts are not considered assets and are not eligible to be traded
+,J.,"  Multi-year contracts are considered one asset, cannot be split into parts, and must be traded in their entirety"
+,K.,  Renting of players is strictly forbidden
+,,     - Rentals are considered the transferring of a player for a fixed period of time only to have the player return to the original team at a vastly reduced cost
+,,     - Owners reserve the right to propose the veto of any trade that the GM sees as violating this rule and propose any discipline any owners as the see needed
+,L.,  Collusion between owners is strictly forbidden
+,,     - Collusion is when any number of team owners intentionally sabatoge competitive league play with the sole purpose of increasing one sole teams chance of success
+,,     - Inclusion of any assets that are not part of the fantasy league in a trade such as real money can be considered collusion
+,,     - Teams attempting to complete trades during periods where trading is not open are considered to be colluding
+,,     - Owners reserve the right to propose the veto of any trade that the GM sees as violating this rule and propose any discipline any owners as the see needed
+,,
+VIII.,,Contracts
+,A.,  All rostered players are always under contract with the team that is rostering them
+,,     - All contacts must always be in whole dollar amounts
+,B.,"  Players that are on a fantasy roster are always signed to either a weekly contract, yearly contract or non-guaranteed contract"
+,C.,  Weekly contracts are definted by the following items:
+,,     - All weekly contracts are for a fixed amount of $1 and length of 1 week
+,,     - Teams who do not have at least $1 in cap space for each weekly contract on their roster are ineligible to sign any addiional weekly contracts
+,,     - All weekly contracts always expire once the final game of the current week is played
+,,     - Players signed to weekly contracts are always released from Sleeper after all of game of the week are finalized
+,,     - All weekly contracts do not count for any dollar amount against a teams cap once they expire
+,,     - All weekly contracts can be terminated at any time via cutting the player in Sleeper or informing the commissioner directly
+,,     - Players with weekly contracts who are cut prior to their contracts expiring are not subject to waivers
+,,     - Players with weekly contracts who are cut prior to their contracts expiring are eligible immediately to be signed to another weekly contract
+,,     - Players cannot be signed to a weekly contract until the Free Agent Silent Auction (FASA) is completed each week
+,D.,  Yearly contracts are definted by the following items:
+,,     - All yearly contracts can be for any whole dollar amount 
+,,     - Teams who do not have cap space for each new yearly contract on their roster are ineligible to sign any new yearly contracts without corresponding moves to create cap space
+,,     - Teams may opt to conditionally cut players in order for a team to sign players to yearly contracts
+,,"     - All yearly contracts are either 1, 2, 3, 4, or 5 years in length"
+,,     - All yearly contracts expire at the end of the NFL season the day after the Super Bowl and never at any other time
+,,     - All yearly contracts signed during any point during the NFL season always counts towards one full year of service
+,,     - All yearly contracts can be terminated at any time via cutting the player in Sleeper or informing the commissioner directly
+,,     - All yearly contracts are always signed through either the Free Agent Silent Auction (FASA) or Free Agent Auction Draft (FAAD)
+,E.,  When a yearly contracts is cut a portion of the contract remains and counts against a teams cap
+,,     - The percentage breakdown of money owed on a teams cap when a yearly contract is cut before the contract expires is as follows:
+,,     - Year 1 (current season) = 50% of dollar amount
+,,     - Year 2 = 50% of the origional dollar amount
+,,     - Year 3 = 25% of the origional dollar amount
+,,     - Year 4 = 25% of the origional dollar amount
+,,     - Year 5 = 25% of the origional dollar amount
+,,     - Fractional amounts by this formula are all always rounded up to the nearest whole dollar
+,F.,  Non-guaranteed contracts are defined by the following items:
+,,     - All non-guaranteed contracts are for fixed amounts and given solely to rookies selected in the Roukey Draft
+,,     - All non-guaranteed contracts convert to yearly contracts once the FASA for the 1st week of the NFL season is completed
+,,     - All non-guaranteed contracts can be cut prior to converting to yearly contracts with all cap amounts rounding down to $0
+,G.,  Players may be signed to only one active contract at any time
+,H.,  Players are eligible to be signed to an unlimited amount of cut contracts at any time
+,,     - Owners signing players to new yearly contracts who are still owed money on cut contracts do not receive any sort of cap benefits
+,,
+IX.,,Pro-rates
+,A.,"  Yearly contacts that are 3, 4, or 5 years in length can be pro-rated at the time of signing"
+,B.,  All pro-rated contracts must be either in either an ascending or descending order over the entire length of the contract
+,,     - Pro-rated contracts can feature consecutive years at the same amount before continuing to ascending or decending in the same direction again
+,C.,  All 5 year pro-ratred contracts must have the third year be within 150% of both the first and fifth year cap amounts
+,,    - (ex.) A legal contract for $100 over 5 years is split 10-15-20-25-30
+,,    - (ex.) An illegal contract for $100 over 5 years is split 31-26-20-14-9
+,C.,  All 4 year pro-rated contracts must have the average of the second and third year be within 150% of both the first and fourth year cap amounts
+,,    - (ex.) A legal contract for $100 over 4 years is split 10-20-30-40
+,,    - (ex.) An illegal contract for $100 over 5 years is split 41-31-19-9
+,D.,  All 3 year pro-ratred contracts must have the second year be within 150% of both the first and third year cap amounts
+,,    - (ex.) A legal contract for $100 over 3 years is split 17-34-49
+,,    - (ex.) An illegal contract for $100 over 3 years is split 51-33-16
+,E.,  Illegal pro-rates are immediately deemed illegal and players signed to contracts with illegal pro-rats have their contracts convert to standard non pro-rated contracts
+,,    - The commissioner will attempt to inform any owner offering an illegal pro-rate that the contract is illegal and give the owner a chance to rebid a legal pro-rate prior to signing
+,F.,  Contracts that are not pro-rated are split equally among all years in the contract with any excess remainder amounts being backloaded evenly across the back end of the contract
+,G.,  Pro-rates are final and cannot be changed under any circumstances once submitted
+,,
+X.,,Waivers
+,A.,  All players signed to yearly contracts who are cut by their team are subject to a 24 hour waiver claim period
+,,     - Team owners also reserve the right to place any active roster player who has not been cut on waivers
+,,     - Players who are not cut who are placed on waivers and are not claimed remain on the waiving teams roster after they have passed through waivers
+,,     - Players can only pass through waivers one time while on the same roster
+,B.,  The waiver claim order is the reverse order of the current fantasy seasons win-loss-tie standings
+,,     - The waiver claim order for players cut during the fantasy offseason is the reverse order of the most recently completed season win-loss-tie standings
+,C.,  Any team that claims a player off waivers is awarded the player at their current cut contract value and length
+,,     - Teams claiming a waived player claim the entirety of the contract and length including the current year value if a contract is waived during the fantasy season
+,,     - Teams losing a claimed waived player owe $0 of the claimed players contract with the claiming team absorbing the full remaining value and length of the contract
+,,     - For cut players that that means the entirety of their contracts guaranteed dollar amount and not the full yearly contract amount at the pre-cut price
+,,     - For players who are placed on waivers but not cut this means the entirety of the full yearly contract amounts
+,,     - Players who were claimed on waivers and are cut again do not see a reduction in value as the waiver claim contract is at a fully guaranteed value
+,D.,  All claiming teams must have available cap in the current season in order to make a waiver claim valid
+,,     - Teams may opt to conditionally cut players in order for a team to remain under the salary cap constraints in the current fantasy season
+,E.,  All claiming teams must have available roster space in order to make a waiver claim valid
+,,     - Teams may opt to conditionally cut players in order for a team to remain under the roster limits
+,F.,  Teams who have placed a player on waivers cannot remove a player off waivers or claim their own waived player off waivers
+,G.,  Owners wishing to claim a player must contact the commissioner with their intent within 24 hours of the announcement to the league a player has been waived
+,,     - Players who are waived during the fantasy season less than 24 hours prior to their teams kickoff can be claimed either before or after the kickoff of their game
+,,     - If an owner claims a player prior to the kickoff that owner does not receive the waived player on their roster until the following week
+,,     - The player that is on waivers is eligible to be added on a weekly contract by the claiming or a different team to be used in the current week prior to the waiver claim processing
+,H.,  Players who are cut and waived within 24 hours of the weekly in-season FASA are not eligible to be bid upon in the current FASA and only gain eligiblie during the next FASA
+,I.,  Players on non-guaranteed contracts who are claimed on waivers see their contracts automatically vest and convert to a yearly contract
+,,
+XI.,,Roukey Draft
+,A.,  The roukey draft is a standard draft of all incoming NFL roukey eligible players that takes place once a year starting in the second season of this league
+,,     - For the first season of the league all rookies are eligible for the initial FAAD and there is no roukey draft
+,B.,  The roukey draft typically starts three weeks before the start of the NFL season
+,,     - Each owner is expected to make reasonable accommodations in order to attend the roukey draft
+,,     - Owners who cannot attend the roukey draft can select another person to complete the draft in their place
+,,     - Owners who cannot attend the roukey draft can send a detailed list of selections with contigencies in lieu of attending the draft
+,C.,  The roukey draft consists of five rounds
+,,     - Each team is automatically given 5 total picks in each roukey draft with each teaming having one pick per round
+,,     - The pick number of each team is dependent on where a team finishes the previous season
+,D.,  The first 12 picks of each draft round for each roukey draft are determined by the following breakdown:
+,,     - #1 The lowest potential points total among all teams who did not make the playoffs
+,,     - #2 The second lowest potential points total among all teams who did not make the playoffs
+,,     - #3 The third lowest potential points total among all teams who did not make the playoffs
+,,     - #4 The fourth lowest potential points total among all teams who did not make the playoffs
+,,     - #5 The fifth lowest potential points total among all teams who did not make the playoffs
+,,     - #6 The sixth lowest potential points total among all teams who did not make the playoffs
+,,     - #7 Team with the worse regular season finishing position between the two teams that lost in the playoff play-in round
+,,     - #8 Team with the best regular season finishing position between the two teams that lost in the playoff play-in round
+,,     - #9 Team with the worse regular season finishing position between the two teams that lost in the playoff semi-final round
+,,     - #10 Team with the best regular season finishing position between the two teams that lost in the playoff semi-final round
+,,     - #11 The league runner-up
+,,     - #12 The league champion
+,E.,  The roukey contract scale is fixed each draft and breaks down as the following:
+,,     - R1.P1 through R1.P2 = 3 year contract at $6 per year
+,,     - R1.P3 through R1.P4 = 3 year contract at $5 per year
+,,     - R1.P5 through R1.P6 = 3 year contract at $4 per year
+,,     - R1.P7 through R1.P8 = 3 year contract at $3 per year
+,,     - R1.P9 through the end of the second round = 3 year contract at $2 per year
+,,     - R3.P1 through the end of the end of the draft = 3 year contract at $1 per year
+,G.,  All drafted players who are still under their first contract at the end of their first fantasy season are eligible for 4th year team option at the following rates:
+,,     - R1.P1 through R1.P2 = 1 year fourth season contract at $24
+,,     - R1.P3 through R1.P4 = 1 year fourth season contract at $20
+,,     - R1.P5 through R1.P6 = 1 year fourth season contract at $16
+,,     - R1.P7 through R1.P8 = 1 year fourth season contract at $12
+,,     - R1.P9 through the end of the second round = 1 year fourth season contract at $8
+,,     - R3.P1 through the end of the end of the draft = 1 year fourth season contract at $4
+,H.,  All 4th year contract option years are 100% guaranteed and do not reduce in any amount if a player is cut
+,,"     - The deadline for exercising a 4th year contract option is August 1st the year after the rookie completes their first NFL season, prior to start off their second NFL season"
+,I.,  Players who have 4th year contract options exercised are inelgiible to be RFA matched during the off-season of their 5th season
+,J.,"  All 3rd, 4th, and 5th round roukey contracts are considered non-guaranteed contracts prior to the first FASA prior to Week 1 of the NFL season"
+,,"     - Once the first FASA prior to Week 1 of the NFL season is complete, all roukey contracts convert to yearly contracts"
+,K.,  Rookies who are cut while on a non-guaranteed contract are exposed to waivers
+,L.,  Owners may choose to forfeit a draft pick and pass on making a selection at any time during the roukey draft
+,M.,  All teams who lose Restrictied Free Agents (RFAs) to another team during the FAAD receive draft pick compensation in the following roukey draft
+,,     - This RFA compensation process will end once the 2026 offseason begins
+,N.,  The draft pick compensation picks are based on the average annual dollar amount of the RFAs new contract and are broken out as follows:
+,,     - $10 to $14 per year = 3rd round pick
+,,     - $15 to $24 per year = 2nd round pick
+,,     - $25+ per year = 1st round pick
+,,     - For draft pick compensation calculation purposes all fractional amounts are rounded up to the nearest whole dollar
+,,     - All draft pick compensation picks are awarded at the end of each round
+,,     - All draft pick compensation picks are awarded immediately after a FAAD contract is signed and in the order of the FAAD
+,,     - All draft pick compensation picks are treated as standard draft picks that are assets and can be traded
+,,
+XII.,,Free Agency
+,A.,  In-league Free Agency takes place during the NFL offseason starting exclusively in the Free Agent Auction Draft (FAAD)
+,B.,  Players are eligible for in-league free agency if they meet any of the following criteria:
+,,     - Any player who is who has exhausted their NFL rookie status and is not under a yearly contract at the end of the NFL regular season
+,,     - Any player who is in the final season of their yearly contract at the end of the NFL regular season
+,C.,  Players who were not under a yearly contact at the end of a fantasy season are classified as Unrestricted Free Agents (UFAs)
+,,     - UFAs may be bid upon in the FAAD with no constraints of any kind
+,D.,  Players who have the final year of their yearly contract expire at the end of a fantasy season are classified as Restrictred Free Agents (RFAs)
+,,     - RFAs have their rights held and owned by the team who rostered the RFA at the end of the fantasy season
+,,     - RFA rights are held by a team only during the period between the end of the fantasy season and the completion of the FAAD
+,,     - RFA rights are treated as players and are considered assets that are tradeable
+,,     - RFA rights are converted into a franchse tag by an owner announcing this intention to the commissioner at any time prior to August 1st in the offseason before the FAAD
+,E.,  All teams are given the option to match the contract of one offensive and one defensive RFA contract per offseason during the FAAD
+,,     - Teams chosing to exercise their RFA match must do so immediately after the player contract is announced during the FAAD
+,,     - Teams who use a franchise tag on a RFA prior to the FAAD forfeit their ability to match a RFA at their given offensive or defensive label
+,,     - Players may only be given a RFA match designation one time in their career
+,F.,  All teams are given the option to convert one offensive and one defensive RFA rights to a one year franchise tag contract during the fantasy offseason
+,,     - Franchise tag amounts are determined by the top 3 values assigned to any player during the current seasons
+,,     - For the purposes of calculating and using the franchise tag both Team D/ST and K are considered defensive RFAs
+,,     - For the purposes of calculating the franchse tag amounts cut contract amoungs are eligible to be included in dollar amount determinations
+,,     - For the purposes of calculating the franchse tag amounts all fractional dollar amounts are rounded up
+,,     - For the purposes of calculating the franchse tag amounts players who are eligible at multiple positions qualify at all positions in dollar amount determinations
+,,     - RFAs who are eligible at multiple positions are given the franchise designation at the position that is the most expensive franchise tag amount
+,,     - Players who have their 4th year roukey contract option picked up lose their eligiblity to be RFA matched the following season
+,,     - Players may only be given the franchise tag one time in their career
+,,     - Teams who intend to use a franchise tag on a player must announce their tag(s) prior to August 1st each offseason
+,,     - Teams must annouce to the commissioner that a RFA rights are being converted into a franchse tag any time prior to August 1st each offseason
+,,
+XII.,,Free Agent Auction Draft (FAAD)
+,A.,"  Before the start of each NFL season, the league completes a FAAD"
+,,     - The FAAD typically takes place two weeks before the start of the NFL season
+,,     - The commissioner decides the exact date and start time for each FAAD after considering all league members schedules
+,,     - Each owner is expected to make reasonable accommodations in order to attend the FAAD
+,,     - Owners who cannot attend the FAAD can select another person to complete the auction in their place
+,,     - Owners who cannot attend the FAAD can send a detailed list of bids with contigencies in lieu of attending the draft
+,B.,  The nomination order for the FAAD is the same as the original draft order prior to any trades for the roukey draft
+,,     - For each round of the FAAD the nomination order remains the same unless a nominations has been traded
+,,     - The initial FAAD the nomination order is decided by the commissioner at random
+,,     - Nominations are considered assets and are tradable
+,C.,  Owners bid from their current available cap space and roster space for the upcoming year in order to sign players to a yearly contracts
+,,     - Owners must always have enough cap space in the current season in order to make a valid bid on a player
+,,     - All bids are final the moment they are announced and cannot be redacted
+,,     - All pro-rated bids must follow all pro-rate rules or are otherwise considered invalid
+,,     - Owners who do not have enough cap space in the current year can place bid using legal pro-rated offers that cannot be adjusted at any time after a signing
+,,"     - After signing a player, owners can submit an updated pro-rated contract up until the Wednesday before Week 1, for the same total dollar amount the contract was won at"
+,D.,  Owners may refrain from making a nomination under the following condition:
+,,     - Owners cannot sign any more players during the FAAD to any contracts including the matching of any RFA contracts
+,E.,  All bid nominations are presented in the following order:
+,,     - [Player Name] - [Total Dollar Amount for entire contact] / [Total Years]
+,F.,  Bid leaders and winners are determined by the largest amount of total money in a contract
+,,     - Guaranteed money is broken down by the following:
+,,     - Year 1 = 100% of the dollar amount
+,,     - Year 1 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Fractional amounts are all always rounded up to the nearest whole dollar
+,G.,  Any ties between bids that have the same amount of total money are broken in the following order:
+,,     - Fewest years in the contract offer
+,,     - The team that submitted their bid first
+,,     - Commissioner's coin flip
+,H.,  The FAAD is a standard auction that is completed in the following steps:
+,,     - Step 1 = A player is announced my the nominating team as being up for bid
+,,     - Step 2 = All owners have the option to immediately place a bid on the nominated player or inform the commissioner and/or other GMs they are opting to not place any bids
+,,"     - Step 3 = After an appropriate amount of time has passed, the commissioner decries ""3.... 2... 1... BID FINAL"" with the timegap between the 3, 2, 1 & BID FINAL all being equal"
+,,     - Teams may adjust the length of their offers at any time during the bid process so long as the total dollar value of the contract increases
+,,     - The team that wins the players wins the player under the highest dollar value for the contract that they bid
+,I.,  Owners are allowed to exceed roster limits during the FAAD
+,,"     - However, any bids that are illegal and not eligible to be made due to cap constraints are illegal and do not count"
+,,     - The commissioner reserves the right to discipline any owner who submits an illegal bid intentionally
+,J.,  Players may not be cut at any time during the FAAD and are only eligible to be cut once the FAAD has completed in its entirety
+,,     - Teams may not make any corresponding cuts in order to sign a player or match an RFA contract during the FAAD
+,K.,  Roukeys that went undrafted in the roukey draft or have been waived and passed through waivers are eligible for the FAAD
+,,
+XIV.,,Free Agent Silent Auction (FASA)
+,A.,  Before the start of each week during the NFL season the league completes a FASA
+,,     - The FASA starts immediately after the final game of a week ends and typically ends Wednesday at midnight EST the day before the first game of the following week
+,,     - Owners can submit bids at any time after the final game of a week ends and midnight EST the day before the first game of the following week
+,,     - The commissioner reserves the right to adjust the completion date and start time for each FASA on an as needed basis
+,B.,  Owners bid from their current available cap space
+,,     - Owners must always have enough cap space in the current season in order to make a valid bid on a player
+,,     - All bids are final the moment they are announced and cannot be redacted
+,,     - All pro-rated bids must follow all pro-rate rules or are otherwise considered invalid
+,,     - Teams may make corresponding cuts as contigencies in order to sign a player that are executed upon a successful signing of a player(s)
+,C.,  Owners may refrain from participating in the FASA
+,D.,  The FASA is the only way to sign players to yearly contracts during the fantasy season
+,E.,  The following is a list of the rules that must be followed when placing bids in the FASA:
+,,     - Owners may increase their bid at any time after placing an initial bid prior to the announced reveal of the FASA results
+,,     - Owners may decrease or remove their bid entirely at any time after placing an initial bid but prior to the announced reveal of the FASA results
+,F.,  All bid nominations are presented in the following order:
+,,     - [Player Name] - [Total Dollar Amount for entire contact] / [Total Years]
+,G.,  Bid leaders and winners are determined by the largest amount of total money in a contract
+,,     - Total money is broken down by the following:
+,,     - Year 1 = 100% of the dollar amount
+,,     - Year 1 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Year 3 = 100% of the dollar amount
+,,     - Fractional amounts are all always rounded up to the nearest whole dollar
+,H.,  Any ties between bids that have the same amount of guaranteed money are broken in the following order:
+,,     - Fewest years in the contract offer
+,,     - The team that submitted their bid first
+,,     - Commissioner's coin flip
+,I.,  Owners are not allowed to exceed roster limits during the FASA
+,,     - Teams may make corresponding cuts as contigencies in order to sign a player that are executed upon a successful signing of a player(s)
+,,     - Any bids that are illegal and not eligible to be made due to cap or roster constraints are illegal and do not count
+,,     - The commissioner reserves the right to discipline any owner who submits an illegal bid intentionally
+,J.,  Owners wishing to pro-rate a contract must submit any pro-rate during their initial submittal and not after the FASA results are revealed
+,K.,  Upon the completion of the FASA the commissioner announces the results to the league and adds or cuts all players involved from league rosters
+,,     - The commissioner also reveals all losing bids in addition to all winning bids in order ot maintain league transparency
+,L.,  All free agents not signed during the FASA are eligible for immediate pick-up to weekly contracts on a first come-first serve basis
+,,
+XV.,,League Owners
+,A.,  The league consists of 12 owners with their names list as follows:
+,,     - Eric Cookmeyer
+,,     - Gordon Peterson
+,,     - Joe Stanek
+,,     - J.P. Hummer
+,,     - Andy Shepard
+,,     - Chip Buckley
+,,     - Nick McCreary
+,,     - T.J. Hrabek
+,,     - James Vecchio
+,,     - Jason Shaffer
+,,     - Kevin Eichenbaum
+,,     - Nic Piper
+,B.,  New owners taking over for existing owners may be extended the following courtesies:
+,,     - The ability to amnesty contracts to make their payroll more competitive
+,,     - Additional compensatory draft picks including potential replacement of traded draft picks
+,,     - The commissioner reserves the right to extend any additional courtesies on an as needed basis

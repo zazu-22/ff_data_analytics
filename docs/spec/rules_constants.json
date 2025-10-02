@@ -1,0 +1,507 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-09-01T20:41:01.345452Z",
+  "league": {
+    "name": "The Bell Keg League",
+    "tz": "America/New_York",
+    "sheet_is_canonical": true,
+    "official_platform": "Sleeper",
+    "owners_count": 12,
+    "divisions_count": 3,
+    "teams_per_division": 4
+  },
+  "schedule": {
+    "regular_season": {
+      "games": 14,
+      "weeks": [
+        1,
+        14
+      ],
+      "structure": [
+        {
+          "weeks": [
+            1,
+            3
+          ],
+          "type": "intra_division",
+          "games": 3
+        },
+        {
+          "weeks": [
+            4,
+            11
+          ],
+          "type": "out_of_division",
+          "games": 7
+        },
+        {
+          "weeks": [
+            12,
+            14
+          ],
+          "type": "intra_division",
+          "games": 3
+        }
+      ]
+    },
+    "postseason": {
+      "weeks": [
+        15,
+        17
+      ],
+      "byes": {
+        "count": 2,
+        "eligibility": "top two division winners by record"
+      },
+      "seeding": {
+        "division_winners": 3,
+        "wildcards": 3
+      },
+      "bracket": [
+        {
+          "week": 15,
+          "games": [
+            "DivWinner #3 vs Wildcard #3",
+            "Wildcard #1 vs Wildcard #2"
+          ]
+        },
+        {
+          "week": 16,
+          "games": [
+            "#2 seed vs winner(DW3 vs WC3)",
+            "#1 seed vs winner(WC1 vs WC2)"
+          ]
+        },
+        {
+          "week": 17,
+          "games": [
+            "Championship: winners of Week 16"
+          ]
+        }
+      ]
+    }
+  },
+  "roster": {
+    "limits": {
+      "active": 25,
+      "taxi_red_shirt": 5,
+      "injured_reserve": 3,
+      "total_slots_defined": 31
+    },
+    "slots": [
+      "QB",
+      "RB",
+      "RB",
+      "WR",
+      "WR",
+      "TE",
+      "FLEX(RB/WR/TE)",
+      "DL",
+      "DL",
+      "LB",
+      "LB",
+      "DB",
+      "DB",
+      "IDP_FLEX(DL/LB/DB)",
+      "TEAM_D_ST",
+      "K",
+      "BENCH",
+      "BENCH",
+      "BENCH",
+      "BENCH",
+      "BENCH",
+      "BENCH",
+      "BENCH",
+      "IDP_ONLY_BENCH",
+      "IDP_ONLY_BENCH",
+      "TAXI_RED_SHIRT",
+      "TAXI_RED_SHIRT",
+      "TAXI_RED_SHIRT",
+      "TAXI_RED_SHIRT",
+      "IDP_ONLY_TAXI_RED_SHIRT",
+      "IR",
+      "IR",
+      "IR"
+    ],
+    "idp_notes": {
+      "idp_players_allowed_on_standard_bench": true,
+      "team_dst_and_k_considered_idp_for_bench": true
+    },
+    "taxi_red_shirt_eligibility": {
+      "path_a": {
+        "career_starts_in_league": 0,
+        "nfl_rookie_status": true,
+        "selected_in_most_recent_rookie_draft": true,
+        "on_first_contract": true
+      },
+      "path_b": {
+        "career_starts_in_league": 0,
+        "contract_signed_before_current_fantasy_year": true,
+        "not_team_dst": true,
+        "non_guaranteed_not_counted_as_yearly": true
+      },
+      "activation_rule": "Must have an open main-roster slot to activate from Taxi; violation standard penalty applies."
+    },
+    "illegal_roster_penalty_standard": "Most recent signed contract voided and fully guaranteed"
+  },
+  "scoring": {
+    "official_provider": "Sleeper",
+    "passing": {
+      "yard_point": 0.04,
+      "td": 4.0,
+      "int": -2.0,
+      "two_pt": 2.0
+    },
+    "rushing": {
+      "yard_point": 0.1,
+      "td": 6.0,
+      "lost_fumble": -2.0,
+      "two_pt": 2.0
+    },
+    "receiving": {
+      "reception": 0.5,
+      "yard_point": 0.1,
+      "td": 6.0,
+      "lost_fumble": -2.0,
+      "two_pt": 2.0
+    },
+    "idp": {
+      "tackle": 0.5,
+      "qb_hit": 1.0,
+      "tfl": 1.5,
+      "sack": 1.5,
+      "pass_defended": 3.0,
+      "forced_fumble": 3.0,
+      "fumble_recovered": 6.0,
+      "td": 6.0,
+      "interception": 6.0,
+      "safety": 9.0,
+      "blocked_kick": 12.0,
+      "compound_events": {
+        "sack": [
+          "tackle",
+          "qb_hit",
+          "tfl",
+          "sack"
+        ]
+      }
+    },
+    "team_dst": {
+      "points_allowed_bins": [
+        {
+          "range": "0",
+          "points": 15.0
+        },
+        {
+          "range": "1-6",
+          "points": 9.0
+        },
+        {
+          "range": "7-13",
+          "points": 4.5
+        },
+        {
+          "range": "14-20",
+          "points": 2.25
+        },
+        {
+          "range": "21-27",
+          "points": 0.0
+        },
+        {
+          "range": "28-34",
+          "points": -2.25
+        },
+        {
+          "range": "35+",
+          "points": -4.5
+        }
+      ],
+      "sack": 0.5,
+      "fumble_recovered": 1.5,
+      "interception": 1.5,
+      "safety": 3.0,
+      "blocked_kick": 3.0,
+      "td": 6.0
+    },
+    "kicking": {
+      "fg_made_point_per_yard": 0.1,
+      "pat_made": 1.0,
+      "pat_missed": -1.0,
+      "fg_missed_bins": [
+        {
+          "range": "0-29",
+          "points": -3.0
+        },
+        {
+          "range": "30-39",
+          "points": -2.0
+        },
+        {
+          "range": "40-49",
+          "points": -1.0
+        }
+      ]
+    }
+  },
+  "salary_cap": {
+    "base_cap_per_season": 250,
+    "tradeable": true,
+    "tradeable_years_ahead": 5
+  },
+  "trading": {
+    "open_all_year_except": [
+      "NFL Weeks 15-17 (playoffs)",
+      "After Week 13 FASA through end of Week 14",
+      "Midnight ET before FAAD day"
+    ],
+    "must_meet_cap_current_season": true,
+    "must_meet_roster_limits": true,
+    "conditional_trades_allowed": true,
+    "conditions_requirements": [
+      "Absolute and clear",
+      "Disclosed to commissioner at time of trade",
+      "Secondary conditions if asset not owned when condition matures",
+      "PTBNL allowed with full details provided",
+      "Player can appear only once within a trade"
+    ],
+    "collusion_policy": "Strictly forbidden; owners may propose veto and discipline"
+  },
+  "contracts": {
+    "types": {
+      "weekly": {
+        "amount": 1,
+        "length_weeks": 1,
+        "expires_end_of_week": true,
+        "eligible_after_fasa_only": true,
+        "cut_before_expire_allowed": true,
+        "subject_to_waivers_when_cut": false
+      },
+      "yearly": {
+        "amount_whole_dollars": true,
+        "length_years_allowed": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "signed_via": [
+          "FAAD",
+          "FASA"
+        ],
+        "expires_day_after_super_bowl": true,
+        "season_signed_counts_full_year": true
+      },
+      "non_guaranteed": {
+        "rookies_only": true,
+        "converts_to_yearly_after_week1_fasa": true,
+        "cut_before_convert_rounds_down_to_zero": true
+      }
+    },
+    "cut_liability": {
+      "year1_pct": 0.5,
+      "year2_pct": 0.5,
+      "year3_pct": 0.25,
+      "year4_pct": 0.25,
+      "year5_pct": 0.25,
+      "rounding": "ceil"
+    },
+    "simultaneous_contracts": {
+      "one_active_per_player": true,
+      "unlimited_cut_contracts_per_player": true
+    }
+  },
+  "proration": {
+    "allowed_year_lengths": [
+      3,
+      4,
+      5
+    ],
+    "direction": "ascending_or_descending_with_plateaus",
+    "constraints": {
+      "5yr": "Year3 within 150% of both Year1 and Year5",
+      "4yr": "Avg(Year2,Year3) within 150% of both Year1 and Year4",
+      "3yr": "Year2 within 150% of both Year1 and Year3"
+    },
+    "non_prorated_split": "equal_split_with_remainder_backloaded_evenly",
+    "final_on_submit": true
+  },
+  "waivers": {
+    "window_hours": 24,
+    "order": {
+      "in_season": "reverse_current_standings",
+      "offseason": "reverse_last_season_final_standings"
+    },
+    "claim_effects": {
+      "claim_absorbs_cut_value_and_length": true,
+      "waiving_team_owes_zero_if_claimed": true,
+      "subsequent_cuts_from_claimed_contract_not_reduced": true
+    },
+    "constraints": {
+      "must_have_cap_space_current_season": true,
+      "must_have_roster_space": true
+    },
+    "notes": {
+      "cannot_claim_own_waived_player": true,
+      "weekly_contract_pickup_allowed_before_processing": true,
+      "cut_within_24h_of_fasa_not_eligible_until_next_fasa": true,
+      "non_guaranteed_claims_vest_to_yearly": true
+    }
+  },
+  "rookie_draft": {
+    "rounds": 5,
+    "timing_relative_to_nfl": "typically three weeks before NFL season",
+    "contract_scale": [
+      {
+        "bucket": "R1.P1-2",
+        "y1_y3": 6
+      },
+      {
+        "bucket": "R1.P3-4",
+        "y1_y3": 5
+      },
+      {
+        "bucket": "R1.P5-6",
+        "y1_y3": 4
+      },
+      {
+        "bucket": "R1.P7-8",
+        "y1_y3": 3
+      },
+      {
+        "bucket": "R1.P9-R2.END",
+        "y1_y3": 2
+      },
+      {
+        "bucket": "R3.P1-END",
+        "y1_y3": 1
+      }
+    ],
+    "option_year": {
+      "amounts": [
+        {
+          "bucket": "R1.P1-2",
+          "y4": 24
+        },
+        {
+          "bucket": "R1.P3-4",
+          "y4": 20
+        },
+        {
+          "bucket": "R1.P5-6",
+          "y4": 16
+        },
+        {
+          "bucket": "R1.P7-8",
+          "y4": 12
+        },
+        {
+          "bucket": "R1.P9-R2.END",
+          "y4": 8
+        },
+        {
+          "bucket": "R3.P1-END",
+          "y4": 4
+        }
+      ],
+      "guaranteed": true,
+      "deadline": "August 1 (year after rookie completes first NFL season)",
+      "rfa_match_ineligible_after_exercised": true
+    },
+    "rfa_compensation": {
+      "active_until_offseason": 2026,
+      "buckets": [
+        {
+          "avg_annual": "10-14",
+          "pick": "3rd"
+        },
+        {
+          "avg_annual": "15-24",
+          "pick": "2nd"
+        },
+        {
+          "avg_annual": "25+",
+          "pick": "1st"
+        }
+      ],
+      "rounding": "ceil",
+      "awarded_at_end_of_rounds": true,
+      "awarded_immediately_after_faad_contract": true
+    }
+  },
+  "free_agency": {
+    "FAAD": {
+      "timing": "two weeks before NFL season (typical)",
+      "bid_order": "largest_total_dollars",
+      "guarantee_breakdown_assumption": "Year1..Year5 entries at 100% of each year's amount (assumption pending commissioner confirmation)",
+      "tie_breakers": [
+        "fewest_years",
+        "earliest_submission",
+        "coin_flip"
+      ],
+      "illegal_bids": "lack of current-year cap space or invalid proration",
+      "reveal_policy": "standard live auction; no cuts during FAAD"
+    },
+    "FASA": {
+      "timing": "weekly in-season; opens after last game; ends ~Wednesday midnight ET",
+      "bid_order": "largest_total_dollars",
+      "tie_breakers": [
+        "fewest_years",
+        "earliest_submission",
+        "coin_flip"
+      ],
+      "allow_increase_before_reveal": true,
+      "allow_decrease_or_remove_before_reveal": true,
+      "losing_bids_revealed": true,
+      "must_meet_roster_limits": true,
+      "proration_must_be_in_initial_submission": true
+    }
+  },
+  "franchise_tag": {
+    "eligibility": "one offensive and one defensive RFA rights per offseason",
+    "basis": "top 3 values assigned during the current season",
+    "include_cut_contracts": true,
+    "rounding": "ceil",
+    "multi_positional_counting": "contract counts in all eligible positions when computing top-3; player awarded most expensive applicable tag",
+    "deadline": "August 1",
+    "one_time_per_career": true,
+    "k_and_dst_considered_defensive": true
+  },
+  "tie_breakers": {
+    "regular_season_game": "no tiebreakers; ties recorded",
+    "qualifying_and_seeding_order": [
+      "head_to_head_record",
+      "regular_season_total_points",
+      "inter_division_record",
+      "total_bench_points_in_h2h",
+      "total_full_season_bench_points",
+      "remaining_cap_space_current_season",
+      "remaining_cap_space_current_and_next_four",
+      "commissioner_coin_flip"
+    ],
+    "multi_tie_resolution_sequence": [
+      "division_winners",
+      "byes",
+      "wildcards"
+    ],
+    "postseason_game_order": [
+      "current_week_bench_points",
+      "regular_season_record",
+      "head_to_head_record",
+      "regular_season_total_points",
+      "inter_division_record",
+      "total_bench_points_in_h2h",
+      "total_full_season_bench_points",
+      "remaining_cap_space_current_season",
+      "remaining_cap_space_current_and_next_four",
+      "commissioner_coin_flip"
+    ]
+  },
+  "rounding_rules": {
+    "dead_cap_on_cut": "ceil to nearest whole dollar",
+    "franchise_tag_calc": "ceil to nearest whole dollar",
+    "faad_fasa_money": "ceil fractional amounts to whole dollar"
+  },
+  "rule_ids_note": "In downstream tables, store basis_rule_id fields that point to these sections; for narrative mapping use the constitution section references."
+}
