@@ -23,15 +23,16 @@ ______________________________________________________________________
 
 ### Recommended Sequencing (High‑Level)
 
-1. **Phase 1 - Seeds**: ☑ **COMPLETE** (5/8 done, 3 optional) - ALL TRACKS UNBLOCKED!
+1. **Phase 1 - Seeds**: ☑ **COMPLETE** (6/8 done, 2 optional) - ALL TRACKS UNBLOCKED!
    - ☑ dim_player_id_xref (12,133 players, 19 provider IDs)
    - ☑ dim_franchise, dim_pick, dim_scoring_rule, dim_timeframe
-   - ☐ dim_asset, stat_dictionary, dim_name_alias (optional)
+   - ☑ dim_name_alias (78 alias mappings for 100% player coverage)
+   - ☐ dim_asset, stat_dictionary (optional)
 
 1. **Phase 2 - Parallel Tracks** (ALL UNBLOCKED):
 
    - **Track A (NFL Actuals)**: ☑ 85% COMPLETE - nflverse staging ✅ → fact_player_stats ✅ → player_key solution ✅ → dim_player/team/schedule → mart_real_world_actuals_weekly → mart_fantasy_actuals_weekly
-   - **Track B (League Data)**: ☐ 30% COMPLETE - Parse TRANSACTIONS tab → sheets staging (contracts, picks, transactions) → fact_league_transactions → trade analysis marts
+   - **Track B (League Data)**: ☑ 80% COMPLETE - Parse TRANSACTIONS tab ✅ → stg_sheets__transactions ✅ → fact_league_transactions ✅ → dim_player_contract_history (Phase 3) → trade analysis marts (Phase 3)
    - **Track C (Market Data)**: ☐ 0% - Implement KTC fetcher → stg_ktc_assets → fact_asset_market_values
    - **Track D (Projections)**: ☐ 20% - FFanalytics weighted aggregation → stg_ffanalytics\_\_projections → fact_player_projections → mart_real_world_projections → mart_fantasy_projections
 

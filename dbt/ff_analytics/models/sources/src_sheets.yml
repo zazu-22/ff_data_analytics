@@ -1,0 +1,199 @@
+version: 2
+
+sources:
+  - name: sheets_raw
+    description: "Raw Commissioner Google Sheets data loaded via commissioner_parser; local dev reads Parquet under ../../data/raw/commissioner/ (relative to dbt project)."
+    schema: raw
+    tables:
+      - name: transactions
+        external_location: "../../data/raw/commissioner/transactions/dt=*/transactions.parquet"
+        description: |
+          League transaction history from TRANSACTIONS tab.
+
+          **Grain**: One row per transaction event per asset
+          **Source**: Commissioner Google Sheet TRANSACTIONS tab
+          **Parser**: src/ingest/sheets/commissioner_parser.py::parse_transactions()
+          **Load Pattern**: Batch snapshot to data/raw/commissioner/transactions/dt=YYYY-MM-DD/transactions.parquet
+
+          **Special Notes**:
+          - Extension transactions show full remaining contract in split_array (not just extension amount)
+          - This creates intentional length mismatches: len(split_array) > contract_years for Extensions
+          - See docs/analysis/TRANSACTIONS_contract_validation_analysis.md for details
+
+        meta:
+          owner: "@jason"
+          external_location: "data/raw/commissioner/transactions/dt=*/transactions.parquet"
+
+        columns:
+          - name: transaction_id_unique
+            description: |
+              Unique identifier for each transaction asset row (PK).
+              Format: {transaction_id}_{asset_index} (e.g., "3910_0", "2145_2")
+            tests:
+              - unique
+              - not_null
+
+          - name: transaction_id
+            description: |
+              Transaction event identifier (groups all assets in same trade/event).
+              Multiple rows share same transaction_id for multi-asset trades.
+
+          - name: transaction_type_refined
+            description: |
+              Precise transaction type derived from dim_timeframe.period_type.
+
+              Values: rookie_draft_selection, cut, trade, waiver_claim, fasa_signing,
+              faad_ufa_signing, faad_rfa_matched, offseason_ufa_signing,
+              contract_extension, franchise_tag, amnesty_cut, unknown
+            tests:
+              - not_null
+
+          - name: asset_type
+            description: |
+              Type of asset being transacted.
+
+              Values: player, pick, defense, cap_space, unknown
+            tests:
+              - not_null
+
+          - name: Time Frame
+            description: |
+              Original timeframe string from sheet (e.g., "2024 Offseason", "2024 Week 10").
+              Maps to dim_timeframe for transaction_date derivation.
+            tests:
+              - not_null
+
+          - name: season
+            description: "Fantasy season year (2012-2025)"
+
+          - name: period_type
+            description: |
+              Period classification from dim_timeframe.
+
+              Values: rookie_draft, faad, offseason, preseason, regular, deadline
+
+          - name: week
+            description: "NFL week number (1-18 for regular season, null for offseason events)"
+
+          - name: sort_sequence
+            description: "Chronological sort order within season (from dim_timeframe)"
+
+          - name: From
+            description: |
+              Source party (owner name or "Waiver Wire").
+
+              Maps to dim_franchise.owner_name for franchise_id derivation.
+              Null indicates waiver wire source.
+
+          - name: To
+            description: |
+              Destination party (owner name or "Waiver Wire").
+
+              Maps to dim_franchise.owner_name for franchise_id derivation.
+              Null indicates waiver wire destination.
+
+          - name: Original Order
+            description: |
+              Original franchise that owned a draft pick (for picks only).
+              Used to track pick trading history.
+
+          - name: Round
+            description: |
+              Draft round (e.g., "R1", "R2") for draft picks.
+              Null for non-pick assets.
+
+          - name: Pick
+            description: |
+              Pick number within round (e.g., "P04", "P12") for draft picks.
+              Null for non-pick assets.
+
+          - name: Position
+            description: |
+              Player position (QB, RB, WR, TE, K, D/ST, defensive positions).
+              Used for asset_type inference (D/ST → defense).
+
+          - name: Player
+            description: |
+              Player name, pick reference, or cap space indicator.
+
+              Examples:
+              - Players: "Patrick Mahomes", "Justin Jefferson"
+              - Picks: "2025 1st Round", "2024 2nd Round (TBD)"
+              - Cap Space: "2025 Cap Space"
+              - Defense: "San Francisco 49ers"
+
+          - name: player_id
+            description: |
+              Canonical player identifier (mfl_id from dim_player_id_xref).
+
+              - Mapped players: positive integer mfl_id
+              - Unmapped players: -1 (crosswalk miss)
+              - Non-players: null (picks, cap space, defense)
+
+              100% player mapping coverage achieved via dim_name_alias seed.
+
+          - name: pick_id
+            description: |
+              Standardized pick identifier (format: YYYY_R#_P## or YYYY_R#_TBD).
+
+              Examples: "2025_R1_P04", "2024_R2_TBD"
+              Null for non-pick assets.
+
+          - name: Contract
+            description: |
+              Contract specification in total/years format (e.g., "49/3", "8/1").
+
+              **Semantics vary by transaction_type**:
+              - Draft: initial rookie contract
+              - Extension: extension amount ONLY (not full remaining)
+              - Signing: new contract total
+              - Cut: remaining guaranteed amount
+
+              Parsed into total and years columns.
+
+          - name: Split
+            description: |
+              Year-by-year cap hits as hyphen-delimited string (e.g., "6-6-10-13-13").
+
+              **For Extensions**: shows FULL remaining schedule (base years + extension)
+              This creates intentional mismatch with Contract field.
+
+              Parsed into split_array column.
+
+          - name: total
+            description: |
+              Contract total amount (parsed from Contract field).
+              Whole dollar amount.
+
+          - name: years
+            description: |
+              Contract length in years (parsed from Contract field).
+
+              **For Extensions**: shows extension years only (1 year for 4th year options)
+              May not match len(split_array) - see contract validation analysis.
+
+          - name: split_array
+            description: |
+              Parsed split as integer array.
+
+              **Validation notes**:
+              - For Extensions: len(split_array) > years (expected)
+              - For most contracts: sum(split_array) should equal total (±$1 rounding acceptable)
+              - See docs/analysis/TRANSACTIONS_contract_validation_analysis.md
+
+          - name: RFA Matched
+            description: |
+              RFA match indicator (values: "yes" or "-" for blank/null).
+              Only relevant for FAAD signings where owner matched RFA offer.
+
+          - name: FAAD Comp
+            description: |
+              FAAD RFA compensation amount given to losing team (whole dollars).
+              Only populated for RFA signings with compensation.
+
+          - name: Type
+            description: |
+              Raw transaction type from sheet.
+
+              Values: Trade, Cut, Signing, Draft, FA, Waivers, Extension, Franchise, Amnesty
+              Refined into transaction_type_refined using dim_timeframe context.

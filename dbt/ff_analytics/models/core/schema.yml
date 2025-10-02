@@ -129,3 +129,237 @@ models:
             severity: error
             error_if: ">0"
             where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"  # Fantasy-relevant positions only
+
+  - name: fact_league_transactions
+    description: |
+      League transaction history fact table - immutable event log.
+
+      Records all league transactions (trades, signings, cuts, drafts, etc.) from
+      Commissioner Google Sheet TRANSACTIONS tab with raw event fidelity.
+
+      **Grain**: One row per transaction event per asset
+      **Source**: Commissioner Sheet → parse_transactions() → stg_sheets__transactions
+      **History**: 2012-2025 (~4,474 transactions)
+      **Architecture**: Transaction fact table (Kimball pattern)
+
+      **Contract Semantics**:
+      - Extensions: Contract=extension only, Split=full remaining schedule
+      - This creates intentional length mismatches (see validation_notes)
+      - Deferred: dim_player_contract_history for clean contract state (Phase 3)
+
+      **Data Quality**:
+      - 100% player mapping coverage (via dim_name_alias seed)
+      - ~0.9% length mismatches (expected for Extensions)
+      - ~1.4% sum mismatches (mostly ±$1 rounding)
+      - See: docs/analysis/TRANSACTIONS_contract_validation_analysis.md
+
+    columns:
+      - name: transaction_id_unique
+        description: |
+          Unique identifier for each transaction-asset row (Primary Key).
+          Format: {transaction_id}_{asset_index}
+        tests:
+          - unique
+          - not_null
+
+      - name: transaction_id
+        description: |
+          Transaction event identifier (groups all assets in same trade/event).
+          Multi-asset trades share the same transaction_id.
+        tests:
+          - not_null
+
+      - name: player_key
+        description: |
+          Composite identifier to prevent grain violations.
+          - Mapped players: player_id (mfl_id as varchar)
+          - Unmapped players: player_name
+          - Picks: pick_id or 'PICK_' prefix
+          - Defense: player_name or 'DEFENSE_' prefix
+          - Cap space: 'CAP_' prefix
+        tests:
+          - not_null
+
+      - name: transaction_type
+        description: |
+          Refined transaction type (11 types).
+
+          Derived from dim_timeframe.period_type + raw Type field.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - rookie_draft_selection
+                - cut
+                - trade
+                - waiver_claim
+                - fasa_signing
+                - faad_ufa_signing
+                - faad_rfa_matched
+                - offseason_ufa_signing
+                - contract_extension
+                - franchise_tag
+                - amnesty_cut
+                - unknown
+
+      - name: asset_type
+        description: |
+          Asset classification (4 types + unknown).
+
+          Inferred from Player/Position fields.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - player
+                - pick
+                - defense
+                - cap_space
+                - unknown
+
+      - name: transaction_date
+        description: |
+          Derived transaction date.
+
+          Calculated from timeframe_string and period_type:
+          - rookie_draft: Aug 1
+          - faad: Aug 15
+          - offseason: Mar 1
+          - regular: week-based calculation from NFL season start
+        tests:
+          - not_null
+
+      - name: transaction_year
+        description: Year extracted from transaction_date (2012-2025)
+        tests:
+          - not_null
+
+      - name: season
+        description: Fantasy season year (2012-2025)
+        tests:
+          - not_null
+
+      - name: from_franchise_id
+        description: |
+          Source franchise ID (null for waiver wire sources).
+
+          FK to dim_franchise (SCD Type 2 temporal join on season).
+        tests:
+          - relationships:
+              to: ref('dim_franchise')
+              field: franchise_id
+              config:
+                where: "from_franchise_id is not null"
+
+      - name: to_franchise_id
+        description: |
+          Destination franchise ID (null for waiver wire destinations).
+
+          FK to dim_franchise (SCD Type 2 temporal join on season).
+        tests:
+          - relationships:
+              to: ref('dim_franchise')
+              field: franchise_id
+              config:
+                where: "to_franchise_id is not null"
+
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id from dim_player_id_xref).
+
+          - Mapped players: positive integer mfl_id
+          - Unmapped players: -1
+          - Non-players: null
+
+          100% player mapping coverage achieved.
+        tests:
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: player_id
+              config:
+                where: "asset_type = 'player' and player_id != -1"
+
+      - name: pick_id
+        description: |
+          Standardized pick identifier.
+
+          Format: YYYY_R#_P## (e.g., "2025_R1_P04") or YYYY_R#_TBD for unknown slot.
+
+          **Note**: Compensatory picks (P13+) and TBD picks may not exist in dim_pick seed.
+          This is expected - not all transaction picks are in the standard 12-team seed.
+        tests:
+          - relationships:
+              to: ref('dim_pick')
+              field: pick_id
+              config:
+                where: "asset_type = 'pick' and pick_id is not null and pick_id not like '%_TBD'"
+                severity: warn  # Compensatory picks expected to fail
+
+      - name: contract_total
+        description: |
+          Contract total amount (whole dollars).
+
+          **Semantics vary by transaction_type**:
+          - Draft: initial rookie contract
+          - Extension: extension amount ONLY (not full remaining)
+          - Signing: new contract total
+          - Cut: remaining guaranteed amount
+
+      - name: contract_years
+        description: |
+          Contract length in years (1-5).
+
+          **For Extensions**: shows extension years only.
+          May not match len(contract_split_array) - this is expected.
+
+      - name: contract_split_json
+        description: |
+          Year-by-year cap hits as JSON array for DuckDB.
+
+          **For Extensions**: shows FULL remaining schedule (base + extension).
+          Use DuckDB json_extract() or list functions for analysis.
+
+      - name: has_contract_length_mismatch
+        description: |
+          Data quality flag: len(split) != years.
+
+          True for ~35 Extensions (0.9%) - EXPECTED behavior.
+          See validation_notes for explanation.
+
+      - name: has_contract_sum_mismatch
+        description: |
+          Data quality flag: sum(split) != total.
+
+          True for ~55 contracts (1.4%) - mostly ±$1 rounding.
+          See validation_notes for details.
+
+      - name: validation_notes
+        description: |
+          Explanation of validation issues.
+
+          Values:
+          - "Extension shows full remaining schedule (expected per league accounting)"
+          - "Large sum mismatch (>$5) - review with commissioner"
+          - "Minor rounding variance (±$1-2)"
+          - null (no issues)
+
+      - name: rfa_matched
+        description: |
+          RFA match indicator (boolean).
+
+          True when owner matched another team's RFA offer during FAAD.
+          Only relevant for faad_rfa_matched transaction type.
+
+      - name: faad_compensation
+        description: |
+          FAAD RFA compensation amount (whole dollars).
+
+          Compensation given to losing team when RFA is signed by another team.
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - transaction_id_unique
+          config:
+            severity: error
+            error_if: ">0"
