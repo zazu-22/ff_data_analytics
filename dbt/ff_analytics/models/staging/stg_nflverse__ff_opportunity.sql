@@ -87,8 +87,8 @@ crosswalk as (
   -- Mapping coverage: 99.86% of identifiable ff_opportunity players map successfully
   select
     base.* exclude (position),
-    -- Map gsis_id → mfl_id (canonical player_id)
-    coalesce(xref.player_id, -1) as player_id,
+    -- Map gsis_id → mfl_id (canonical player_id per ADR-010)
+    coalesce(xref.mfl_id, -1) as player_id,
     -- Use position from crosswalk if raw data has null
     coalesce(base.position, xref.position) as position,
     -- Composite key for grain uniqueness (uses raw ID when unmapped)
@@ -97,8 +97,8 @@ crosswalk as (
     -- Unmapped players: player_key = gsis_id (preserves identity via raw provider ID)
     -- Unknown edge case: player_key = 'UNKNOWN_' || game_id (defensive fail-safe)
     case
-      when coalesce(xref.player_id, -1) != -1
-        then cast(xref.player_id as varchar)
+      when coalesce(xref.mfl_id, -1) != -1
+        then cast(xref.mfl_id as varchar)
       else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base

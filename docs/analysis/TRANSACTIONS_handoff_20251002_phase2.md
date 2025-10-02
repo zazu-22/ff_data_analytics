@@ -11,6 +11,7 @@
 **CRITICAL BUG DISCOVERED AND FIXED**: Parser was creating duplicate rows due to team placeholder entries in `dim_player_id_xref` seed. Root cause identified in nflverse source data, fixed by regenerating seed with proper filtering.
 
 ### Final Status
+
 - ✅ Parser bug fixed (75% reduction in false duplicates)
 - ✅ Clean seed regeneration script created
 - ✅ All dbt models running and tests passing
@@ -421,11 +422,13 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 **Observation**: 192 pick_ids in transactions don't exist in `dim_pick` seed.
 
 **Explanation**: `dim_pick` contains only the **original 60 picks per year** (12 franchises × 5 rounds = 60 standard picks). Transactions include:
+
 - **Compensatory picks** (P13+, P14+, etc.)
 - **TBD picks** (not yet assigned a specific slot)
 - **Traded duplicate slots** (same round/pick traded multiple times)
 
 **Examples from data**:
+
 - `2020_R1_P14` - Compensatory 1st round pick
 - `2020_R2_P23` - Compensatory 2nd round pick
 - `2020_R1_TBD` - Future pick, slot unknown
@@ -433,6 +436,7 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 **Tests adjusted**: Changed `severity: error` → `severity: warn` for pick_id FK tests, documented as expected behavior.
 
 **Phase 3 Requirement**: Create **dim_pick_order** (or similar) that shows:
+
 - Full pick sequence including compensatory picks (1, 2, 3... 72, 73+)
 - By year and round
 - Distinguishes original vs compensatory picks
@@ -447,6 +451,7 @@ This has been documented in specs/handoffs - we don't want to lose sight of this
 **Priority 1: Clean Contract State (Deferred from Phase 2)**
 
 Create `dim_player_contract_history` to resolve Extension double-counting:
+
 - Process `fact_league_transactions` event log
 - Apply Extension logic: extension split REPLACES base contract tail (not additive)
 - Handle Cuts with dead cap calculation
@@ -474,6 +479,7 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 ## Files Created/Modified
 
 **Created**:
+
 - `scripts/ingest/run_commissioner_transactions.py` (ingestion script)
 - `dbt/ff_analytics/models/sources/src_sheets.yml` (source definition)
 - `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql` (staging model)
@@ -482,6 +488,7 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 - `docs/analysis/TRANSACTIONS_contract_validation_analysis.md` (validation findings)
 
 **Modified**:
+
 - `dbt/ff_analytics/models/core/schema.yml` (added fact_league_transactions tests)
 - `docs/adr/ADR-008-league-transaction-history-integration.md` (resolution)
 - `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` (Track B → 80%)
@@ -501,6 +508,7 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 ### Problem Discovery
 
 During final validation, discovered **suspicious row count mismatch**:
+
 - **Source CSV**: 3,912 rows
 - **Parsed output**: 4,474 rows  
 - **Difference**: 562 extra rows (14.4% inflation)
@@ -512,16 +520,19 @@ Investigation revealed parser was creating **duplicate rows** for 313 transactio
 **Issue**: Join explosion in `_map_player_names()` function
 
 The `dim_player_id_xref` seed contained **2,399 team placeholder entries** from nflverse source data:
+
 - Entries like "Buffalo Bills" (DT), "Buffalo Bills" (OT), "New England Patriots" (DT/OT)
 - These are **MFL internal records**, not real players
 - They have `mfl_id` but **no other platform IDs** (gsis_id, sleeper_id, etc. are NULL)
 
 When parser joined player names to the seed:
+
 - Defense transaction: "Buffalo Bills" (D/ST)
 - Matched 4 placeholder entries: Buffalo Bills (DT), Buffalo Bills (OT), etc.
 - **Created 4 duplicate rows** instead of 1
 
 **Pattern observed**:
+
 - 1 source row → 4 parsed rows (3x duplication)
 - 2 source rows → 6 parsed rows (also 3x duplication)
 
@@ -532,6 +543,7 @@ When parser joined player names to the seed:
 File: `scripts/seeds/generate_dim_player_id_xref.py`
 
 Features:
+
 - Loads latest nflverse `ff_playerids` parquet from `data/raw/nflverse/`
 - **Filters out team placeholder entries** (those with only `mfl_id`, no other IDs)
 - Adds sequential `player_id` as surrogate key
@@ -546,6 +558,7 @@ uv run python scripts/seeds/generate_dim_player_id_xref.py
 **2. Regenerated Clean Seed**
 
 Results:
+
 - **Before**: 12,133 total rows (including 2,399 placeholders)
 - **After**: 9,734 valid player rows
 - **Removed**: 2,399 team placeholder entries
@@ -570,17 +583,20 @@ uv run dbt test --select stg_sheets__transactions fact_league_transactions
 ### Results
 
 **Parser Output Improvement**:
+
 - **Before fix**: 4,474 rows (562 duplicate rows, 14.4% inflation)
 - **After fix**: 4,055 rows (143 extra rows, 3.7% inflation)
 - **Eliminated**: 419 false duplicate rows (**75% reduction in inflation**)
 
 **Remaining 3.7% Inflation** (143 rows):
+
 - This is **legitimate and expected**
 - Caused by real player name ambiguities (e.g., 4 different "Chris Jones" players in NFL history)
 - Cannot be resolved without additional context (team, year, etc.) or manual aliases
 - Affects 120 transactions with common names
 
 **dbt Test Results**: ✅ **All tests passing**
+
 - 30 PASS
 - 2 WARN (expected - pick references to TBD picks)
 - 0 ERROR
@@ -588,17 +604,20 @@ uv run dbt test --select stg_sheets__transactions fact_league_transactions
 ### Architecture Notes
 
 **Current Approach (Pragmatic Fix)**:
+
 - `dim_player_id_xref` is a **CSV seed** (manually regenerated when nflverse updates)
 - `scripts/seeds/generate_dim_player_id_xref.py` automates regeneration with proper filtering
 - Follows existing `scripts/ingest/`, `scripts/debug/` organizational pattern
 
 **Future Improvement (Recommended)**:
 The current seed-based approach is **architecturally inconsistent** with other nflverse data. Other datasets use the pattern:
+
 1. Define source in `src_nflverse.yml`
 2. Create staging model `stg_nflverse__*` that reads from raw parquet
 3. Reference staging model in downstream models
 
 **Recommended refactor** (separate PR):
+
 1. Add `ff_playerids` to `dbt/ff_analytics/models/sources/src_nflverse.yml`
 2. Create `stg_nflverse__ff_playerids.sql` that:
    - Reads from raw parquet with `read_parquet()`
@@ -608,6 +627,7 @@ The current seed-based approach is **architecturally inconsistent** with other n
 4. Remove seed file
 
 Benefits:
+
 - **Always fresh** (no manual regeneration)
 - **Consistent** with other nflverse staging models
 - **Self-documenting** source lineage
@@ -615,9 +635,11 @@ Benefits:
 ### Files Created/Modified
 
 **Created**:
+
 - `scripts/seeds/generate_dim_player_id_xref.py` - Seed regeneration script
 
 **Modified**:
+
 - `dbt/ff_analytics/seeds/dim_player_id_xref.csv` - Regenerated with 9,734 clean rows (was 12,133)
 - `data/raw/commissioner/transactions/dt=2025-10-02/transactions.parquet` - Re-parsed with clean seed
 
@@ -626,6 +648,7 @@ Benefits:
 ### Validation Queries
 
 **Check for duplicates**:
+
 ```python
 import polars as pl
 
@@ -645,6 +668,7 @@ print(f'Total extra rows: {(mismatches["parquet_rows"] - mismatches["csv_rows"])
 ```
 
 **Check seed quality**:
+
 ```python
 import polars as pl
 
@@ -664,4 +688,3 @@ for team in team_names:
 ✅ **DATA QUALITY VALIDATED** - 3.7% inflation is expected from legitimate name ambiguities
 
 The TRANSACTIONS integration is now **production ready** for Phase 3 downstream modeling.
-

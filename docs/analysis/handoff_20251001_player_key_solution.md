@@ -4,6 +4,21 @@
 **Status**: Phase 2A Track A (NFL Actuals) - 85% Complete
 **Test Results**: 19/19 passing (100%) ✅
 
+## Phase 2B Update — 2025-10-02
+
+Following additional review and fixes, Track A is architecturally correct and aligned with ADR-010 and the 2×2 model:
+
+- ✅ Canonical Player ID: All models now use `mfl_id` as `player_id` (ADR-010)
+- ✅ Fantasy Scoring: `mart_fantasy_actuals_weekly` reads coefficients from `dim_scoring_rule` (no hardcoded constants)
+- ✅ Team Dimension: `dim_team` deduplicated by latest season per `team_abbr`
+
+Remaining Follow-ups (non-blocking):
+
+- Load nflverse `teams` and `schedule` parquet where missing so dims build consistently
+- Consider adding kicking stats (FGM/FGA, XPM/XPA) and wire to existing `kicking` rules
+- Resolve defensive tackles field semantics to avoid double-counting assists
+- Optionally expose weekly team attribution in marts to complement `current_team`
+
 ## Executive Summary
 
 Successfully resolved all grain test failures by implementing a composite `player_key` identifier that preserves unmapped player identity using raw provider IDs. All 19 fact_player_stats tests now passing.

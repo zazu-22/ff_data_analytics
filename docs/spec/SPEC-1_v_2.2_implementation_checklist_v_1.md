@@ -31,7 +31,13 @@ ______________________________________________________________________
 
 1. **Phase 2 - Parallel Tracks** (ALL UNBLOCKED):
 
-   - **Track A (NFL Actuals)**: ☑ 85% COMPLETE - nflverse staging ✅ → fact_player_stats ✅ → player_key solution ✅ → dim_player/team/schedule → mart_real_world_actuals_weekly → mart_fantasy_actuals_weekly
+   - **Track A (NFL Actuals)**: ☑ 95% COMPLETE - nflverse staging ✅ → fact_player_stats ✅ → player_key solution ✅ → dim_player ✅ → dim_team ✅ (dedupe added) → dim_schedule ✅ (requires teams data availability) → mart_real_world_actuals_weekly ✅ → mart_fantasy_actuals_weekly ✅ (data-driven scoring)
+
+   **Critical Fixes Applied (Oct 2)**:
+   - ✅ Player ID architecture corrected: Using mfl_id as canonical player_id (ADR-010 compliance restored)
+   - ✅ Fantasy scoring refactored: Data-driven from dim_scoring_rule (2×2 model compliance restored)
+   - ✅ Team dimension: Deduplication added for multi-season dataset support
+   - ⏳ Follow-ups: Load teams/schedule datasets, add kicking stats, resolve defensive tackles fields, consider weekly team attribution
    - **Track B (League Data)**: ☑ 80% COMPLETE - Parse TRANSACTIONS tab ✅ → stg_sheets__transactions ✅ → fact_league_transactions ✅ → dim_player_contract_history (Phase 3) → trade analysis marts (Phase 3)
    - **Track C (Market Data)**: ☐ 0% - Implement KTC fetcher → stg_ktc_assets → fact_asset_market_values
    - **Track D (Projections)**: ☐ 20% - FFanalytics weighted aggregation → stg_ffanalytics\_\_projections → fact_player_projections → mart_real_world_projections → mart_fantasy_projections
@@ -302,7 +308,7 @@ Acceptance criteria:
 - ☐ Add **change‑capture** tables:
   - `stg_sleeper_roster_changelog` (stable roster hash)
   - `stg_sheets_change_log` (row hash per tab)
-- ☑ **Marts - Track A fact table COMPLETE**:
+- ☑ **Marts - Track A COMPLETE**:
   - **Core facts** (real-world measures only; 2×2 model base layer):
     - ☑ **`fact_player_stats`** (COMPLETE ✅ - with player_key solution):
       - Grain: one row per `(player_key, game_id, stat_name, provider, measure_domain, stat_kind)`
@@ -325,20 +331,22 @@ Acceptance criteria:
       - Includes `horizon` column: 'weekly', 'rest_of_season', 'full_season'
       - No `game_id` (projections are not game-specific)
     - `fact_asset_market_values` (KTC players + picks)
-    - `fact_league_transactions` (NEW - commissioner transaction history)
+    - ☑ `fact_league_transactions` (COMPLETE ✅ - commissioner transaction history)
       - Source: `stg_sheets__transactions`
       - Grain: one row per asset per transaction
-      - Partitioned by: `transaction_date` (or `transaction_year` if high volume)
+      - Partitioned by: `transaction_year`
       - Links to: `dim_player`, `dim_pick`, `dim_asset`, `dim_franchise`
   - **Dimensions**:
-    - `dim_player`, `dim_team`, `dim_schedule` (nflverse)
-    - `dim_franchise` (NEW - league team/owner dimension from sheets/sleeper)
+    - ☑ `dim_player` (COMPLETE ✅ - from dim_player_id_xref seed)
+    - ☑ `dim_team` (COMPLETE ✅ - NFL teams from nflverse)
+    - ☑ `dim_schedule` (COMPLETE ✅ - game schedule from nflverse)
+    - ☑ `dim_franchise` (COMPLETE ✅ - league team/owner dimension from seed)
   - **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
     - Real-world marts:
-      - `mart_real_world_actuals_weekly` (nflverse actuals, weekly grain)
+      - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
       - `mart_real_world_projections` (ffanalytics projections, weekly/season grain)
     - Fantasy scoring marts (apply `dim_scoring_rule` to real-world base):
-      - `mart_fantasy_actuals_weekly` (scored actuals)
+      - ☑ `mart_fantasy_actuals_weekly` (COMPLETE ✅ - scored actuals with half-PPR + IDP)
       - `mart_fantasy_projections` (scored projections)
     - Analysis marts:
       - `mart_projection_variance` (actuals vs projections comparison)
@@ -512,3 +520,11 @@ ______________________________________________________________________
 - ops schema operational: `run_ledger`, `model_metrics`, `data_quality`
 - LKG fallback tested and functional per source
 - Documentation merged; contributors can reproduce samples end‑to‑end with the guide
+
+## Follow-ups — Track A (NFL Actuals)
+
+- Load nflverse `teams` and `schedule` datasets in all environments so `dim_team`/`dim_schedule` build consistently
+- Extend staging and marts with kicking stats (FGM/FGA, XPM/XPA) if in scope; wire to existing `kicking` rules in `dim_scoring_rule`
+- Clarify defensive tackles semantics to avoid double-counting (e.g., use either `def_tackles_with_assist` or a single assists metric); align scoring rule if needed
+- Optionally expose weekly team attribution (e.g., `team_id_week`) alongside `current_team` in marts for historical accuracy on trades
+- Add an explicit `special_teams_td` rule in `dim_scoring_rule` (instead of reusing receiving TD) for clarity
