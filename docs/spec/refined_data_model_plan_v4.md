@@ -450,7 +450,7 @@ ______________________________________________________________________
 
 ### Gap Identified
 
-The TRANSACTIONS tab contains ~1,000 rows of detailed league transaction history (trades, cuts, waivers, signings, FAAD) that is not captured by the current v4 plan. Roster snapshots show current state only; transaction history provides:
+The TRANSACTIONS tab contains ~4,000 rows of detailed league transaction history (trades, cuts, waivers, signings, FAAD) that is not captured by the current v4 plan. Roster snapshots show current state only; transaction history provides:
 
 - Multi-asset trades (players, picks, cap space) with parties
 - Historical audit trail

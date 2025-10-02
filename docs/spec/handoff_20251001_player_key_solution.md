@@ -15,6 +15,7 @@ Successfully resolved all grain test failures by implementing a composite `playe
 ## Problem Statement
 
 **Issue**: 18 grain duplicate violations in fact_player_stats from unmapped TEs in 3 Pittsburgh games:
+
 - 2021_16_PIT_KC (John Samuel Shenker, Rodney Williams)
 - 2023_15_PIT_IND (2 unmapped TEs)
 - 2024_06_PIT_LV (2 unmapped TEs)
@@ -36,6 +37,7 @@ end as player_key
 ```
 
 **Behavior by mapping status**:
+
 - **Mapped players**: `player_key = player_id` (canonical mfl_id as varchar)
 - **Unmapped players**: `player_key = raw_provider_id` (gsis_id or pfr_id)
 - **Unknown edge case**: `player_key = 'UNKNOWN_' || game_id` (defensive fail-safe)
@@ -70,16 +72,19 @@ end as player_key
 All staging models now include comprehensive comments documenting:
 
 **Data Quality Filters** (NULL provider ID filtering):
+
 - `weekly`: ~0.12% filtered (113/97,415 rows with NULL player_id)
 - `snap_counts`: 0.00% filtered (0/136,974 rows)
 - `ff_opportunity`: ~6.75% filtered (2,115/31,339 rows with NULL player_id)
 
 **Crosswalk Coverage** (mapping success rates):
+
 - `weekly`: 99.9% of identifiable players map successfully
 - `snap_counts`: 81.8% map (18.2% unmapped, mostly linemen)
 - `ff_opportunity`: 99.86% of identifiable players map successfully
 
 **player_key Logic**:
+
 - Prevents duplicate grain violations when multiple unmapped players in same game
 - Uses raw provider IDs to preserve identity
 - Defensive fail-safe for edge cases
@@ -91,12 +96,14 @@ All staging models now include comprehensive comments documenting:
 ### Complete Data Picture
 
 **FF Opportunity** (most significant NULL filtering):
+
 - **6.75%** unidentifiable (NULL player_id AND NULL position, filtered out)
 - **93.12%** identifiable & successfully mapped to mfl_id
 - **0.13%** identifiable but not in crosswalk (become player_id = -1)
 - **Total: 100.00%**
 
 NULL records characteristics:
+
 - All have NULL position
 - Small opportunity counts (1-4 targets/attempts)
 - Consistent across all 6 seasons (~350-440 per year)
@@ -113,6 +120,7 @@ NULL records characteristics:
 | ff_opportunity  | 31,339   | 6.75%         | 93.25%       | 99.86%  | 0.14%    |
 
 **Key insights**:
+
 - Overall unmapped rate in fact table (~6%) driven by snap_counts linemen/specialists
 - ff_opportunity has high NULL rate but excellent mapping coverage for identifiable players
 - weekly data has nearly perfect coverage
@@ -122,10 +130,12 @@ NULL records characteristics:
 ## Test Results
 
 ### Before Implementation
+
 - **17/18 tests passing** (94.4%)
 - **1 failing test**: grain uniqueness (18 duplicate violations)
 
 ### After Implementation
+
 - **19/19 tests passing** (100%) ✅
 - **0 duplicate violations**
 - All grain tests pass with fantasy-position filtering
@@ -133,6 +143,7 @@ NULL records characteristics:
 ### Test Suite Coverage
 
 **Grain Test** (unique combination):
+
 ```yaml
 - player_key  # Changed from player_id
 - game_id
@@ -144,6 +155,7 @@ where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"
 ```
 
 **All 19 tests**:
+
 - ✅ Grain uniqueness (player_key composite)
 - ✅ Not null tests (all grain columns + player_key)
 - ✅ Enum tests (season, season_type, measure_domain, stat_kind, provider)
@@ -154,6 +166,7 @@ where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"
 ## Current Database State
 
 ### Fact Table Statistics
+
 ```
 Total rows: 6,345,321 (rounded, ~6.3M)
 Seasons: 2020-2025 (6 complete seasons)
@@ -164,6 +177,7 @@ Database size: ~220MB
 ```
 
 ### Source Breakdown
+
 | Source              | Rows      | Stat Types | Coverage              |
 |---------------------|-----------|------------|-----------------------|
 | player_stats (base) | 4,302,543 | 50         | All 6 seasons         |
@@ -175,14 +189,17 @@ Database size: ~220MB
 ## Architecture Decisions
 
 ### ADR-009: Single Consolidated Fact Table
+
 - Maintains single fact table design
 - player_key enables grain enforcement without sacrificing unmapped player visibility
 
 ### ADR-010: mfl_id as Canonical Identity
+
 - player_id remains canonical reference (mfl_id)
 - player_key provides grain uniqueness while preserving raw IDs for traceability
 
 ### Design Principles
+
 1. **Defensive data quality**: Filter NULL provider IDs before staging
 2. **Preserve traceability**: Use raw IDs when crosswalk fails
 3. **Fail-safe**: UNKNOWN fallback for edge cases (never reached in practice)
@@ -197,6 +214,7 @@ Database size: ~220MB
 **Reality**: Seeds mostly complete, NOT blocking!
 
 ### Completed Seeds (5/8)
+
 - ✅ **dim_player_id_xref**: 12,133 players, 19 provider IDs (from nflverse ff_playerids)
 - ✅ **dim_franchise**: SCD2 ownership history (F001-F012)
 - ✅ **dim_pick**: 2012-2030 base draft picks
@@ -204,6 +222,7 @@ Database size: ~220MB
 - ✅ **dim_timeframe**: Season/week/period mapping
 
 ### Optional Seeds (3/8)
+
 - ☐ **dim_asset**: Can generate on-demand via UNION of players + picks
 - ☐ **stat_dictionary**: Only needed for multi-provider normalization (single provider currently)
 - ☐ **dim_name_alias**: Only needed if fuzzy matching fails (add iteratively)
@@ -222,6 +241,7 @@ Database size: ~220MB
 | **D (Projections)**   | 20%      | **UNBLOCKED**| Weighted aggregation + player mapping|
 
 **Track A Remaining Work**:
+
 1. Create dimensional tables:
    - `dim_player` (from dim_player_id_xref + player attributes)
    - `dim_team` (from nflverse teams)
@@ -235,9 +255,11 @@ Database size: ~220MB
 ## Next Steps - Decision Point
 
 ### Option A: Complete Track A (NFL Actuals) ⚙️
+
 **Rationale**: Finish current work stream, get one complete vertical slice
 
 **Tasks** (~2-3 sessions):
+
 - Create dim_player, dim_team, dim_schedule
 - Build real-world and fantasy actuals marts
 - Add comprehensive documentation
@@ -245,9 +267,11 @@ Database size: ~220MB
 **Outcome**: One complete data pipeline (raw → staging → fact → dims → marts)
 
 ### Option B: Start Track B (TRANSACTIONS) ⭐ **RECOMMENDED**
+
 **Rationale**: High business value, natural progression, seeds enable this
 
 **Tasks** (~2-3 sessions):
+
 - Update commissioner_parser.py to parse TRANSACTIONS tab
 - Map player names → player_id via dim_player_id_xref (fuzzy matching)
 - Map pick strings → pick_id via dim_pick
@@ -258,12 +282,14 @@ Database size: ~220MB
 **Outcome**: Unlock historical trade analysis, valuation comparisons
 
 **Why now**:
+
 - Commissioner sheet infrastructure exists
 - Seeds enable name → ID mapping
 - High user value (dynasty league core use case)
 - Natural progression from existing commissioner sheet work
 
 ### Option C: Parallel Development 🔀
+
 **Rationale**: Multiple tracks unblocked, maximize progress
 
 **Session 1**: Create Track A dimensions
@@ -277,11 +303,13 @@ Database size: ~220MB
 ## Technical Notes for Next Developer
 
 ### Working with player_key
+
 - Always use player_key for grain tests and uniqueness checks
 - Use player_id for business logic and FK relationships
 - Filter `player_id != -1` when joining to dimensions
 
 ### Data Refresh Process
+
 ```bash
 # Weekly update (after stats finalized)
 PYTHONPATH=. uv run python -c "
@@ -298,6 +326,7 @@ uv run dbt test --select fact_player_stats
 ```
 
 ### Investigating Unmapped Players
+
 ```python
 import duckdb
 conn = duckdb.connect('dbt/ff_analytics/target/dev.duckdb', read_only=True)
@@ -313,7 +342,9 @@ conn.execute('''
 ```
 
 ### Submitting to nflverse
+
 Missing players identified (good candidates for ff_playerids PR):
+
 - John Samuel Shenker (TE, LV) - gsis_id in snap_counts, not in ff_playerids
 - Rodney Williams (TE, PIT) - gsis_id in snap_counts, not in ff_playerids
 
