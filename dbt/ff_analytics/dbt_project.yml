@@ -1,8 +1,6 @@
 name: ff_analytics
 version: "1.0"
 config-version: 2
-dbt-cloud:
-  project-id: 70471823511762
 profile: ff_duckdb
 
 vars:
