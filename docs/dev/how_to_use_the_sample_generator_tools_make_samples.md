@@ -128,10 +128,8 @@ python tools/make_samples.py sleeper \
 ### 3) Google Sheets (commissioner tabs)
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account", ... }'
 python tools/make_samples.py sheets \
   --tabs contracts rosters cap draft_assets trade_conditions \
-  --sheet-url "https://docs.google.com/..." \
   --out ./samples
 ```
 
@@ -140,6 +138,11 @@ python tools/make_samples.py sheets \
 ```
 ./samples/sheets/<tab>/{<tab>.csv, <tab>.parquet, _meta.json}
 ```
+
+>The sheets sampler automatically loads credentials and the default sheet URL from `.env`
+>(preferring `LEAGUE_SHEET_COPY_URL`, falling back to `COMMISSIONER_SHEET_URL`, and using
+>`GOOGLE_APPLICATION_CREDENTIALS_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`). Use `--sheet-url`
+>only when you need to override the default target.
 
 ### 4) KeepTradeCut (stubbed data)
 

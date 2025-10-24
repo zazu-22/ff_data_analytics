@@ -55,8 +55,14 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (search upwards)
+ENV_LOADED = False
+for candidate in [Path.cwd(), *Path.cwd().parents]:
+    env_path = candidate / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        ENV_LOADED = True
+        break
 
 SEED = 42
 random.seed(SEED)
@@ -205,9 +211,12 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
 
 
 # ---------- Google Sheets (export sample rows using Sheets API) ----------
-def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 1000):
+def sample_sheets(
+    tabs: list[str], out: Path, sheet_url: str | None = None, max_rows: int = 1000
+):
     """Pull only the first N rows per tab from a Google Sheet (creds required)."""
     import gspread  # pip install gspread google-auth
+    from gspread.utils import rowcol_to_a1
     from google.oauth2.service_account import Credentials
 
     # Try GOOGLE_APPLICATION_CREDENTIALS_JSON first (JSON content)
@@ -236,26 +245,35 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str, max_rows: int = 10
             "Set GOOGLE_APPLICATION_CREDENTIALS_JSON (JSON content) or "
             "GOOGLE_APPLICATION_CREDENTIALS (file path) to sample Sheets."
         )
+    if sheet_url is None:
+        sheet_url = os.getenv("LEAGUE_SHEET_COPY_URL") or os.getenv("COMMISSIONER_SHEET_URL")
+        if not sheet_url:
+            raise SystemExit(
+                "Set LEAGUE_SHEET_COPY_URL (or provide --sheet-url) to sample commissioner sheets."
+            )
+
     gc = gspread.authorize(creds)
     sh = gc.open_by_url(sheet_url)
 
     manifest = {}
     for tab in tabs:
         ws = sh.worksheet(tab)
-        values = ws.get_all_values()
-        if values:
-            # Handle duplicate column names by appending a suffix
-            columns = values[0]
-            col_counts = {}
-            unique_columns = []
-            for col in columns:
+        header = ws.row_values(1)
+        if header:
+            col_counts: dict[str, int] = {}
+            unique_columns: list[str] = []
+            for col in header:
                 if col in col_counts:
                     col_counts[col] += 1
                     unique_columns.append(f"{col}_{col_counts[col]}")
                 else:
                     col_counts[col] = 0
                     unique_columns.append(col)
-            sheet_df = pd.DataFrame(values[1 : max_rows + 1], columns=unique_columns)
+
+            end_cell = rowcol_to_a1(max_rows + 1, len(header))
+            data_range = f"A2:{end_cell}"
+            data_rows = ws.get(data_range)
+            sheet_df = pd.DataFrame(data_rows, columns=unique_columns)
         else:
             sheet_df = pd.DataFrame()
         out_dir = _ensure_out(out, "sheets", tab)
@@ -423,7 +441,7 @@ def main():
     # sheets
     p_sh = sub.add_parser("sheets")
     p_sh.add_argument("--tabs", nargs="+", required=True)
-    p_sh.add_argument("--sheet-url", required=True)
+    p_sh.add_argument("--sheet-url")
     p_sh.add_argument("--out", default="./samples")
     p_sh.add_argument("--max-rows", type=int, default=1000)
 

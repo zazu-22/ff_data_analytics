@@ -1,0 +1,9 @@
+{
+  "seasons": null,
+  "weeks": null,
+  "loader_path": null,
+  "provider": "nflverse",
+  "dataset": "weekly",
+  "rows": 200,
+  "seed": 42
+}

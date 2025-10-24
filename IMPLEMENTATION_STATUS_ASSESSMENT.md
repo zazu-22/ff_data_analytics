@@ -390,10 +390,15 @@ help, samples-nflverse, dbt-run, dbt-test, quickstart-local, sqlfix
 **Note**: User indicated certain files pertaining to data and database may not exist in online repo.
 
 **Evidence from assessment**:
-- `data/ops/.gitkeep` exists (empty directory)
-- No `data/raw/`, `data/stage/`, `data/mart/` directories found
+- `data/raw/**` contains checked-in nflverse and commissioner parquet partitions
+- `data/stage/` and `data/mart/` now exist with placeholders (awaiting staged/mart outputs per SPEC Phase 2/3 follow-ups)
+- `data/ops/.gitkeep` retains the ops scaffold
 - Seeds are in repo: `dbt/ff_analytics/seeds/*.csv` (11,158 total rows)
 - Samples likely exist locally but not committed to repo
+
+**Commissioner sheet raw exports**:
+- `data/raw/commissioner/transactions/dt=*` holds parquet drops generated during local parser runs (e.g., 2025-10-02 handoff, 2025-10-24 regression test)
+- Roster / cut / draft pick parquet outputs are scaffolded via `write_normalized(...)` but not yet emitted; automation is slated for Phase 2 commissioner flow (SPEC checklist §4: “Write parsed tables as Parquet to data/raw/commissioner/<table>/dt=YYYY-MM-DD/”)
 
 **Recommendation**: Use `make samples-nflverse` to generate local test data for development.
 

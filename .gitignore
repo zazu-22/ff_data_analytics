@@ -27,9 +27,6 @@ service-account-*.json
 
 # Data directories (for local development)
 data/raw/
-data/stage/
-data/mart/
-samples/
 
 # dbt build artifacts
 dbt/**/target/
@@ -60,3 +57,4 @@ notebooks/*.csv
 *.tmp
 *.log
 .cache/
+samples/**/*cache*
