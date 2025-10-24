@@ -22,12 +22,12 @@ All seed tables exist with real data from nflverse ff_playerids dataset:
 
 | Seed | Status | Row Count | Coverage |
 |------|--------|-----------|----------|
-| dim_player_id_xref | ✅ Complete | 9,735 players | 19 provider IDs (mfl_id canonical) |
-| dim_franchise | ✅ Complete | 21 rows | SCD Type 2 ownership history (F001-F012) |
-| dim_scoring_rule | ✅ Complete | 44 rules | Half-PPR + IDP scoring with validity periods |
-| dim_pick | ✅ Complete | 1,141 picks | 2012-2030 base draft picks (5 rounds × 12 teams) |
-| dim_timeframe | ✅ Complete | 139 rows | TRANSACTIONS timeframe → season/week mapping |
-| dim_name_alias | ✅ Complete | 78 aliases | Fuzzy matching for 100% player coverage |
+| dim_player_id_xref | ✅ Complete | 9,734 players | 19 provider IDs (mfl_id canonical) |
+| dim_franchise | ✅ Complete | 20 rows | SCD Type 2 ownership history (F001-F012) |
+| dim_scoring_rule | ✅ Complete | 43 rules | Half-PPR + IDP scoring with validity periods |
+| dim_pick | ✅ Complete | 1,140 picks | 2012-2030 base draft picks (5 rounds × 12 teams) |
+| dim_timeframe | ✅ Complete | 138 rows | TRANSACTIONS timeframe → season/week mapping |
+| dim_name_alias | ✅ Complete | 77 aliases | Fuzzy matching for 100% player coverage |
 
 **Key Architectural Decisions**:
 - ADR-010 implemented: `mfl_id` (MyFantasyLeague ID) as canonical player_id
