@@ -400,7 +400,7 @@ help, samples-nflverse, dbt-run, dbt-test, quickstart-local, sqlfix
 - `data/raw/commissioner/transactions/dt=*` holds parquet drops generated during local parser runs (e.g., 2025-10-02 handoff, 2025-10-24 regression test)
 - Roster / cut / draft pick parquet outputs are scaffolded via `write_normalized(...)` but not yet emitted; automation is slated for Phase 2 commissioner flow (SPEC checklist §4: “Write parsed tables as Parquet to data/raw/commissioner/<table>/dt=YYYY-MM-DD/”)
 
-**Recommendation**: Use `make samples-nflverse` to generate local test data for development.
+**Tests**: `UV_CACHE_DIR=$PWD/.uv-cache uv run pytest -q` → ✅ (GM tab samples now bundled under `samples/sheets/...`)
 
 ---
 

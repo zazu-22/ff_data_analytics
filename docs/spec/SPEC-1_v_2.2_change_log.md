@@ -13,3 +13,11 @@
 - Implemented intelligent skip logic based on Drive file modification times.
 - Configured Shared Drive for ingestion logging to work around service account 0GB quota limitation.
 - Solution deployed and tested: `scripts/ingest/copy_league_sheet.py` with full observability.
+
+## v2.3 — sample scaffolding + checklist refresh (2025-10-24)
+
+- Added commissioner GM tab samples plus transactions snapshot to repo for test coverage.
+- Updated `tools/make_samples.py` to load .env defaults, bound Sheets range (faster, no hanging).
+- Documented sheets sampler defaults in developer guide; implementation status now reflects green pytest run with bundled fixtures.
+- Promoted implementation checklist to v2.3 and captured Track A/B status plus packaged samples.
+

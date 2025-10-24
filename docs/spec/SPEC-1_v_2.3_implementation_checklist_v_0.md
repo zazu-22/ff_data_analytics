@@ -1,10 +1,10 @@
-# Bell Keg League — Phase Next Implementation Checklist (v2.2)
+# Bell Keg League — Phase Next Implementation Checklist (v2.3)
 
-A pragmatic, step‑by‑step list to stand up the data pipeline with our latest decisions (SPEC v2.2), nflverse Python shim, R runners, projections config, and sample generator. Use this to coordinate work across the team.
+A pragmatic, step‑by‑step list to stand up the data pipeline with our latest decisions (SPEC v2.3), nflverse Python shim, R runners, projections config, and sample generator. Use this to coordinate work across the team.
 
 Legend: ☐ todo · ☑ done/verified · (owner) · (notes)
 
-Updated: 2025-10-01 — **MAJOR UPDATE**: Phase 1 Seeds COMPLETE (not blocking!), Phase 2A Track A at 85% (player_key solution implemented, all tests passing). All Phase 2 tracks now unblocked and ready to proceed.
+Updated: 2025-10-24 — Phase 1 Seeds COMPLETE; Phase 2A Track A at 95%. Track B commissioner samples now packaged; Track C/D outstanding bullets unchanged. Test suite green with bundled sample fixtures.
 
 ______________________________________________________________________
 
@@ -16,10 +16,10 @@ ______________________________________________________________________
   - `config/projections/ffanalytics_projections_config.yaml`, `config/projections/ffanalytics_projection_weights_mapped.csv` ☑
   - `config/scoring/sleeper_scoring_rules.yaml` ☑
   - `tools/make_samples.py` ☑
-  - `docs/spec/SPEC-1_Consolidated_v2.2.md` (+ patch & change log) ☑ (named SPEC-1_v_2.2.md)
+  - `docs/spec/SPEC-1_Consolidated_v2.3.md` (+ patch & change log) ☑ (named SPEC-1_v_2.2.md)
 - ☑ Add `uv.lock` pinning: `polars (>=0.20)`, `pyarrow (>=15)`, `pandas`, `nflreadpy`. (polars 1.33.1, pyarrow 21.0.0, pandas 2.3.2, nflreadpy 0.1.3)
 - ☑ Add `renv.lock` pinning: `nflreadr (>=1.5.0)`, `arrow`, `jsonlite`, `yaml`, `optparse`, `lubridate`, `remotes`, `ffanalytics` (GitHub), plus `digest`.
-- ☑ Commit files and open PR "SPEC v2.2 integration". (Committed directly to main)
+- ☑ Commit files and open PR "SPEC v2.3 integration". (Committed directly to main)
 
 ### Recommended Sequencing (High‑Level)
 
@@ -416,7 +416,7 @@ ops schema details:
 
 ## 11) Documentation
 
-- ☑ **SPEC v2.2** consolidated doc is present in `docs/spec/`.
+- ☑ **SPEC v2.3** consolidated doc is present in `docs/spec/`.
 - ☑ Link SPEC in README for quick discovery and add badges (Spec, Conventions, CI).
 - ☑ **How to Use the Sample Generator** guide present in `docs/dev/`; keep in sync with code.
 - ☐ Record **Orchestration & Language Strategy** (Python‑first with R escape hatch) in contributor docs.
@@ -442,7 +442,7 @@ ______________________________________________________________________
 
 ## Current Status Snapshot (updated)
 
-- ☑ SPEC v2.2 patch + consolidated doc
+- ☑ SPEC v2.3 patch + consolidated doc
 - ☑ nflverse shim (Python‑first) + R fallback runner; robust repo root detection
 - ☑ ffanalytics raw scrape runner + projections config + site weights mapped
 - ☑ Sleeper scoring YAML exported from league
