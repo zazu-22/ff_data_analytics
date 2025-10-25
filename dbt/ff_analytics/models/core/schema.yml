@@ -724,11 +724,12 @@ models:
         description: |
           Contract classification:
           - rookie: From rookie draft
-          - faad: Free agent auction draft
-          - fasa: In-season free agent signing
+          - faad: Free agent auction draft (UFA/RFA)
+          - fasa: Free agent signing (in-season/offseason)
           - trade_acquired: Inherited via trade
           - extension: Contract extension
-          - restructure: Contract restructure
+          - franchise_tag: Franchise tag
+          - waiver_claim: Claimed off waivers
         tests:
           - not_null
           - accepted_values:
@@ -740,7 +741,8 @@ models:
                 - fasa
                 - trade_acquired
                 - extension
-                - restructure
+                - franchise_tag
+                - waiver_claim
                 - other
 
       - name: is_rookie_contract

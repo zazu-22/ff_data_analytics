@@ -72,11 +72,12 @@ with contract_events as (
     -- Contract classification
     case
       when transaction_type = 'rookie_draft_selection' then 'rookie'
-      when transaction_type = 'faad' then 'faad'
-      when transaction_type = 'fasa' then 'fasa'
-      when transaction_type in ('trade', 'trade_player') then 'trade_acquired'
-      when transaction_type = 'extension' then 'extension'
-      when transaction_type = 'restructure' then 'restructure'
+      when transaction_type in ('faad_ufa_signing', 'faad_rfa_matched') then 'faad'
+      when transaction_type in ('fasa_signing', 'offseason_ufa_signing') then 'fasa'
+      when transaction_type = 'trade' then 'trade_acquired'
+      when transaction_type = 'contract_extension' then 'extension'
+      when transaction_type = 'franchise_tag' then 'franchise_tag'
+      when transaction_type = 'waiver_claim' then 'waiver_claim'
       else 'other'
     end as contract_type,
 
@@ -97,12 +98,14 @@ with contract_events as (
     and to_franchise_id is not null  -- Must have destination franchise (excludes waiver wire)
     and transaction_type in (
       'rookie_draft_selection',
-      'faad',
-      'fasa',
+      'faad_ufa_signing',
+      'faad_rfa_matched',
+      'fasa_signing',
+      'offseason_ufa_signing',
       'trade',
-      'trade_player',
-      'extension',
-      'restructure'
+      'contract_extension',
+      'franchise_tag',
+      'waiver_claim'
     )
     and contract_total is not null  -- Must have contract terms
 ),
