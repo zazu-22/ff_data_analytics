@@ -1,0 +1,25 @@
+{
+  "dataset": "ffanalytics_projections",
+  "asof_datetime": "2025-10-25T04:33:13Z",
+  "sources_requested": "FantasyPros",
+  "sources_successful": "FantasyPros",
+  "sources_failed": {},
+  "positions": "QB",
+  "season": 2024,
+  "week": 1,
+  "horizon": "weekly",
+  "raw_rows": 60,
+  "consensus_rows": 61,
+  "player_mapping": {
+    "total_players": 61,
+    "mapped_players": 58,
+    "unmapped_players": 3,
+    "mapping_coverage": 0.9508
+  },
+  "weights_file": "config/projections/ffanalytics_projection_weights_mapped.csv",
+  "player_xref_file": "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+  "output_files": {
+    "raw": "samples/ffanalytics/projections/dt=2025-10-25/projections_raw_2025-10-25.parquet",
+    "consensus": "samples/ffanalytics/projections/dt=2025-10-25/projections_consensus_2025-10-25.parquet"
+  }
+}

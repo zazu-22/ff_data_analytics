@@ -327,65 +327,127 @@ def sample_ffanalytics(
     weeks: list[int] | None = None,
     positions: list[str] | None = None,
     sites: list[str] | None = None,
-    max_rows: int = 1000,
+    max_rows: int = 500,
+    season: int = 2024,
 ):
-    """Run ffanalytics R scraper, filter results, and write sampled outputs."""
-    import subprocess
+    """Generate FFanalytics projection samples with weighted consensus.
 
-    # Build arg list for the new simplified runner
-    runner = "scripts/R/ffanalytics_run.R"
-    out_dir_arg = (out / "ffanalytics").as_posix()
+    Uses Python loader (src/ingest/ffanalytics) to invoke R runner.
+    Generates samples for multiple horizons (weekly and full_season).
+
+    Args:
+        out: Output directory for samples
+        config_yaml: Unused (kept for API compatibility)
+        scoring_yaml: Unused (kept for API compatibility)
+        weeks: List of weeks to sample (e.g., [1, 2, 0] where 0=full_season)
+        positions: Positions to include (default: QB, RB, WR, TE)
+        sites: Sources to use (default: FantasyPros, NumberFire for speed)
+        max_rows: Max rows per sample file
+        season: NFL season year
+
+    Returns:
+        dict: Manifest with paths to sample files (raw and consensus)
+    """
+    import sys
+    from pathlib import Path as PathLib
+
+    # Add src to path for imports
+    repo_root = PathLib(__file__).parent.parent
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
+    from src.ingest.ffanalytics import load_projections
 
     # Default values
     if positions is None:
-        positions = ["QB", "RB", "WR", "TE", "K", "DST"]
+        positions = ["QB", "RB", "WR", "TE"]  # Skip K, DST for samples
     if sites is None:
-        sites = ["CBS", "ESPN", "FantasyPros"]
+        sites = ["FantasyPros", "NumberFire"]  # Fast sources for samples
     if weeks is None:
-        weeks = [0]  # 0 for season-long projections
+        weeks = [1, 0]  # Week 1 (weekly) + week 0 (full_season)
 
-    cmd = [
-        "Rscript",
-        runner,
-        "--sources",
-        ",".join(sites),
-        "--positions",
-        ",".join(positions),
-        "--season",
-        "2024",
-        "--week",
-        str(weeks[0] if weeks else 0),
-        "--out_dir",
-        out_dir_arg,
-    ]
-    # Note: config_yaml and scoring_yaml are no longer used by the simplified runner
-    # The runner just gets raw projections without scoring calculations
+    manifest = {}
+    out_dir_arg = out / "ffanalytics"
 
-    # Run the R runner
-    subprocess.run(cmd, check=True, capture_output=True, text=True)  # noqa: S603
+    for week in weeks:
+        print(f"Generating sample for week {week} ({'full_season' if week == 0 else 'weekly'})...")
 
-    # Locate parquet (the runner writes it with different name pattern now)
-    dt = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
-    df_path = out / "ffanalytics" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
-    if df_path.exists():
-        proj_df = pd.read_parquet(df_path)
-        # Filter based on the actual column names in the raw projections
-        if positions is not None and "pos" in proj_df.columns:
-            proj_df = proj_df[proj_df["pos"].isin(positions)]
-        if weeks is not None and "week" in proj_df.columns:
-            proj_df = proj_df[proj_df["week"].isin(weeks)]
-        if sites is not None and "data_src" in proj_df.columns:
-            proj_df = proj_df[proj_df["data_src"].isin(sites)]
-        out_dir = _ensure_out(out, "ffanalytics", "projections")
-        return _write_outputs(
-            proj_df,
-            out_dir,
-            "ffanalytics",
-            "projections",
-            {"positions": positions, "weeks": weeks, "sites": sites},
-            max_rows=max_rows,
+        # Use Python loader
+        result = load_projections(
+            sources=sites,
+            positions=positions,
+            season=season,
+            week=week,
+            out_dir=str(out_dir_arg),
         )
-    return {"note": "Runner wrote no parquet (stub mode?)"}
+
+        # Get output paths from manifest
+        if "output_files" not in result:
+            print(f"Warning: No output files for week {week}")
+            continue
+
+        dt = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
+
+        # Process CONSENSUS projections (primary output)
+        consensus_path = result["output_files"].get("consensus")
+        if consensus_path and PathLib(consensus_path).exists():
+            df_consensus = pd.read_parquet(consensus_path)
+
+            # Sample data
+            if len(df_consensus) > max_rows:
+                df_consensus = df_consensus.sample(n=max_rows, random_state=SEED)
+
+            # Write sample
+            dataset_name = f"projections_consensus_week_{week}"
+            sample_dir = _ensure_out(out, "ffanalytics", dataset_name)
+            paths = _write_outputs(
+                df_consensus,
+                sample_dir,
+                "ffanalytics",
+                dataset_name,
+                {
+                    "season": season,
+                    "week": week,
+                    "horizon": "full_season" if week == 0 else "weekly",
+                    "positions": positions,
+                    "sites": sites,
+                    "player_mapping_coverage": result.get("player_mapping", {}).get(
+                        "mapping_coverage", 0
+                    ),
+                },
+                max_rows=max_rows,
+            )
+            manifest[f"consensus_week_{week}"] = paths
+
+        # Process RAW projections (for reference)
+        raw_path = result["output_files"].get("raw")
+        if raw_path and PathLib(raw_path).exists():
+            df_raw = pd.read_parquet(raw_path)
+
+            # Sample data
+            if len(df_raw) > max_rows:
+                df_raw = df_raw.sample(n=max_rows, random_state=SEED)
+
+            # Write sample
+            dataset_name = f"projections_raw_week_{week}"
+            sample_dir = _ensure_out(out, "ffanalytics", dataset_name)
+            paths = _write_outputs(
+                df_raw,
+                sample_dir,
+                "ffanalytics",
+                dataset_name,
+                {
+                    "season": season,
+                    "week": week,
+                    "horizon": "full_season" if week == 0 else "weekly",
+                    "positions": positions,
+                    "sites": sites,
+                },
+                max_rows=max_rows,
+            )
+            manifest[f"raw_week_{week}"] = paths
+
+    return manifest
 
 
 # ---------- SDIO FantasyData (local files) ----------

@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: ffanalytics
+    description: "FFanalytics projections with weighted consensus; Python wrapper around R scraper."
+    schema: raw
+    meta:
+      comment: "Source reads directly from Parquet files via read_parquet() in staging models"
+    tables:
+      - name: projections_consensus
+        description: "Weighted consensus projections from multiple sources (FantasyPros, NumberFire, ESPN, etc.)"

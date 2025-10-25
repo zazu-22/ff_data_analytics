@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_ffanalytics__projections
+    description: "Staged FFanalytics consensus projections with player ID mapping"
+    columns:
+      - name: player_id
+        description: "Canonical player ID (mfl_id) mapped by R runner"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: mfl_id
+      - name: season
+        description: "NFL season year"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [2020, 2021, 2022, 2023, 2024, 2025]
+      - name: horizon
+        description: "Projection timeframe"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['weekly', 'full_season', 'rest_of_season', 'unknown']
+      - name: asof_date
+        description: "When projection was made (UTC)"
+        tests:
+          - not_null
+      - name: provider
+        description: "Projection provider"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['ffanalytics_consensus']

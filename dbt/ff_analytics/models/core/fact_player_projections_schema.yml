@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: fact_player_projections
+    description: "Projections fact table in long form (real-world stats only)"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_id
+            - season
+            - week
+            - horizon
+            - stat_name
+            - provider
+            - measure_domain
+            - stat_kind
+            - asof_date
+          config:
+            severity: warn  # Warn for now since we have limited test data
+    columns:
+      - name: player_id
+        description: "Canonical player ID (mfl_id)"
+        tests:
+          - not_null
+      - name: stat_name
+        description: "Name of statistical measure"
+        tests:
+          - not_null
+      - name: stat_value
+        description: "Projected value for the stat"
+        tests:
+          - not_null
+      - name: measure_domain
+        description: "Always 'real_world' for projections base"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['real_world']
+      - name: stat_kind
+        description: "Always 'projection'"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['projection']
+      - name: horizon
+        description: "Projection timeframe"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['weekly', 'full_season', 'rest_of_season']
+      - name: asof_date
+        description: "When projection was made"
+        tests:
+          - not_null

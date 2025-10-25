@@ -1,0 +1,16 @@
+{
+  "season": 2024,
+  "week": 1,
+  "horizon": "weekly",
+  "positions": [
+    "QB"
+  ],
+  "sites": [
+    "FantasyPros"
+  ],
+  "player_mapping_coverage": 0.9508,
+  "provider": "ffanalytics",
+  "dataset": "projections_consensus_week_1",
+  "rows": 61,
+  "seed": 42
+}

@@ -1,0 +1,15 @@
+{
+  "season": 2024,
+  "week": 1,
+  "horizon": "weekly",
+  "positions": [
+    "QB"
+  ],
+  "sites": [
+    "FantasyPros"
+  ],
+  "provider": "ffanalytics",
+  "dataset": "projections_raw_week_1",
+  "rows": 60,
+  "seed": 42
+}

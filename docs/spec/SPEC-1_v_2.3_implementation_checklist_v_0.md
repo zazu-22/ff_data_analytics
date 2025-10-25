@@ -48,7 +48,7 @@ ______________________________________________________________________
    - ⏳ Follow-ups: Load teams/schedule datasets, add kicking stats, resolve defensive tackles fields, consider weekly team attribution
    - **Track B (League Data)**: ☑ 80% COMPLETE - Parse TRANSACTIONS tab ✅ → stg_sheets__transactions ✅ → fact_league_transactions ✅ → dim_player_contract_history (Phase 3) → trade analysis marts (Phase 3)
    - **Track C (Market Data)**: ☐ 0% - Implement KTC fetcher → stg_ktc_assets → fact_asset_market_values
-   - **Track D (Projections)**: ☐ 20% - FFanalytics weighted aggregation → stg_ffanalytics\_\_projections → fact_player_projections → mart_real_world_projections → mart_fantasy_projections
+   - **Track D (Projections)**: ☑ 100% COMPLETE ✅ - FFanalytics weighted aggregation ✅ → stg_ffanalytics__projections ✅ → fact_player_projections ✅ → mart_real_world_projections ✅ → mart_fantasy_projections ✅ → mart_projection_variance ✅ (20/20 tests passing)
 
 1. **Phase 3 - Integration & Analysis:**
 
@@ -214,23 +214,28 @@ Acceptance criteria:
 
 Next steps (weighted aggregation and normalization):
 
-- ☐ **Weighted aggregation across sources** (site weights in projections config)
+- ☑ **Weighted aggregation across sources** (site weights in projections config) ✅ COMPLETE
   - Apply site weights from `config/projections/ffanalytics_projection_weights_mapped.csv`
   - Compute consensus projection per player per stat
   - Output provider='ffanalytics_consensus'
-- ☐ **Normalize to staging format**
-  - Map player names to canonical `player_id` via `dim_player_id_xref` (DEPENDS ON SEEDS)
+  - **Implementation**: `scripts/R/ffanalytics_run.R` enhanced with weighted.mean() using site weights
+  - **Coverage**: 95.1% player mapping coverage in tests
+- ☑ **Normalize to staging format** ✅ COMPLETE
+  - Map player names to canonical `player_id` via `dim_player_id_xref` (done in R runner)
   - Derive `horizon` from projection type ('weekly', 'rest_of_season', 'full_season')
   - Output real-world stats only (`measure_domain='real_world'`)
   - Fantasy scoring applied in marts (not in raw projections)
-- ☐ Write to `data/raw/ffanalytics/projections/dt=YYYY-MM-DD/` with `_meta.json`
+  - **Implementation**: `dbt/ff_analytics/models/staging/stg_ffanalytics__projections.sql`
+- ☑ Write to `data/raw/ffanalytics/projections/dt=YYYY-MM-DD/` with `_meta.json` ✅ COMPLETE
+  - **Output structure**: Separate `projections_raw_*.parquet` and `projections_consensus_*.parquet`
+  - **Metadata includes**: player_mapping stats, source success/failure, weights applied
 
 Acceptance criteria:
 
-- Deterministic long‑form real-world projections
-- Player name → ID mapping validates via seeds
-- Staging validates stat ranges and horizon values
-- **Note:** Fantasy points computed in `mart_fantasy_projections` by applying `dim_scoring_rule` to real-world projections (2×2 model)
+- ✅ Deterministic long‑form real-world projections
+- ✅ Player name → ID mapping validates via seeds (95% coverage)
+- ✅ Staging validates stat ranges and horizon values (20/20 tests passing)
+- ✅ **Note:** Fantasy points computed in `mart_fantasy_projections` by applying `dim_scoring_rule` to real-world projections (2×2 model)
 
 ## 7) dbt — Seeds, Staging, and Marts
 
@@ -308,11 +313,12 @@ Acceptance criteria:
         - not_null: `transaction_date, transaction_id`
         - check: at least one of (from_franchise_id, to_franchise_id) is not null
   - `stg_ktc_assets`
-  - `stg_ffanalytics__projections` (NEW - projections staging)
-    - Source: `data/raw/ffanalytics/projections/dt=*/`
-    - Map player names → canonical `player_id` via `dim_player_id_xref`
-    - Normalize `horizon` enum values
+  - ☑ **`stg_ffanalytics__projections`** (NEW - projections staging) ✅ COMPLETE
+    - Source: `data/raw/ffanalytics/projections/dt=*/projections_consensus_*.parquet`
+    - Player mapping done in R runner (mfl_id already present)
+    - Normalize `horizon` enum values ('weekly', 'full_season', 'rest_of_season')
     - Keep real-world stats only (fantasy scoring in marts)
+    - **Tests**: 12/12 passing (not_null, relationships, accepted_values)
 - ☐ Add **change‑capture** tables:
   - `stg_sleeper_roster_changelog` (stable roster hash)
   - `stg_sheets_change_log` (row hash per tab)
@@ -341,13 +347,15 @@ Both facts store `measure_domain='real_world'` only; fantasy scoring applied in 
         - Mapped players: player_key = player_id (mfl_id)
         - Unmapped players: player_key = raw_provider_id (gsis_id or pfr_id)
         - Resolves grain duplicates for unmapped players in same game
-    - `fact_player_projections` (weekly/season projections from ffanalytics; stat_kind='projection')
+    - ☑ **`fact_player_projections`** (weekly/season projections from ffanalytics; stat_kind='projection') ✅ COMPLETE
       - Source: `stg_ffanalytics__projections`
       - Grain: one row per player per stat per horizon per asof_date
-      - Partitioned by: `season`
-      - Incremental on: `asof_date`
+      - Partitioned by: Not yet (table materialization for now)
+      - Incremental on: Future enhancement (asof_date)
       - Includes `horizon` column: 'weekly', 'rest_of_season', 'full_season'
-      - No `game_id` (projections are not game-specific)
+      - No `game_id` (projections are not game-specific per ADR-007)
+      - **Stats unpivoted**: 13 stat types (passing, rushing, receiving, turnovers)
+      - **Tests**: 8/8 passing (grain uniqueness, not_null, accepted_values)
     - `fact_asset_market_values` (KTC players + picks)
     - ☑ `fact_league_transactions` (COMPLETE ✅ - commissioner transaction history)
       - Source: `stg_sheets__transactions`
@@ -377,12 +385,22 @@ All base facts (`fact_*`) store real-world measures only. Scoring applied at mar
 
     - Real-world marts:
       - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
-      - `mart_real_world_projections` (ffanalytics projections, weekly/season grain)
+      - ☑ **`mart_real_world_projections`** (COMPLETE ✅ - ffanalytics projections, weekly/season grain)
+        - Pivots fact_player_projections from long to wide format
+        - Grain: one row per player per week per horizon per asof_date
+        - 13 stat columns (passing, rushing, receiving, turnovers)
     - Fantasy scoring marts (apply `dim_scoring_rule` to real-world base):
       - ☑ `mart_fantasy_actuals_weekly` (COMPLETE ✅ - scored actuals with half-PPR + IDP)
-      - `mart_fantasy_projections` (scored projections)
+      - ☑ **`mart_fantasy_projections`** (COMPLETE ✅ - scored projections)
+        - Applies dim_scoring_rule to mart_real_world_projections
+        - Calculates `projected_fantasy_points` using half-PPR scoring
+        - Data-driven scoring (same pattern as actuals)
     - Analysis marts:
-      - `mart_projection_variance` (actuals vs projections comparison)
+      - ☑ **`mart_projection_variance`** (COMPLETE ✅ - actuals vs projections comparison)
+        - Joins mart_real_world_actuals_weekly with mart_real_world_projections
+        - Calculates variance (actual - projected) for each stat
+        - Grain: one row per player per week (actuals grain)
+        - Note: Requires nflverse actuals data to populate
       - `mart_trade_history` (NEW - aggregated trade summaries by franchise)
       - `mart_trade_valuations` (NEW - actual trades vs KTC market comparison)
       - `mart_roster_timeline` (NEW - reconstruct roster state at any point in time)

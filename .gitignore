@@ -36,6 +36,9 @@ dbt/**/logs/
 dbt/**/profiles.yml
 dbt/**/dbt_packages/
 
+# Prevent accidental database files in repo root (safety net)
+/target/
+
 # Jupyter notebook artifacts
 .ipynb_checkpoints/
 notebooks/*.csv

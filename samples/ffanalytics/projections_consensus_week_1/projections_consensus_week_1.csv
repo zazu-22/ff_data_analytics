@@ -1,0 +1,62 @@
+player,pos,team,season,week,pass_att,pass_comp,pass_yds,pass_tds,pass_int,rush_att,rush_yds,rush_tds,fumbles_lost,site_pts,source_count,total_weight,provider,asof_date,player_id,position_final,horizon
+Aaron Rodgers,QB,PIT,2024,1,33.0,21.0,222.8,1.4,0.6,1.6,5.8,0.0,0.2,14.1,1,0.1305,ffanalytics_consensus,2025-10-25,7836.0,QB,weekly
+Andy Dalton,QB,CAR,2024,1,0.8,0.6,5.8,0.1,0.0,0.1,0.5,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,10313.0,QB,weekly
+Baker Mayfield,QB,TB,2024,1,33.4,23.6,254.2,2.0,0.9,4.1,18.2,0.1,0.2,19.5,1,0.1305,ffanalytics_consensus,2025-10-25,13590.0,QB,weekly
+Bo Nix,QB,DEN,2024,1,33.5,22.3,227.8,1.7,0.5,5.5,26.4,0.2,0.1,19.1,1,0.1305,ffanalytics_consensus,2025-10-25,16582.0,QB,weekly
+Brandon Allen,QB,TEN,2024,1,0.7,0.5,4.8,0.1,0.0,0.1,0.3,0.0,0.0,0.4,1,0.1305,ffanalytics_consensus,2025-10-25,12621.0,QB,weekly
+Bryce Young,QB,CAR,2024,1,31.5,20.2,216.8,1.3,0.7,3.4,18.4,0.2,0.2,15.6,1,0.1305,ffanalytics_consensus,2025-10-25,16148.0,QB,weekly
+C.J. Stroud,QB,HOU,2024,1,34.0,21.7,250.1,1.3,0.7,3.2,14.3,0.1,0.2,16.0,1,0.1305,ffanalytics_consensus,2025-10-25,16150.0,QB,weekly
+Caleb Williams,QB,CHI,2024,1,31.800000000000004,20.5,217.8,1.3,0.7,5.0,25.9,0.1,0.3,15.8,1,0.1305,ffanalytics_consensus,2025-10-25,16579.0,QB,weekly
+Cam Ward,QB,TEN,2024,1,31.000000000000004,19.7,211.9,1.1,0.8,4.1,17.1,0.1,0.2,14.1,1,0.1305,ffanalytics_consensus,2025-10-25,17030.0,QB,weekly
+Carson Wentz,QB,MIN,2024,1,0.9,0.6,6.7,0.1,0.1,0.2,0.7,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,12610.0,QB,weekly
+Cooper Rush,QB,BAL,2024,1,0.7,0.5,6.2,0.1,0.0,0.2,1.0,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,13124.0,QB,weekly
+Dak Prescott,QB,DAL,2024,1,36.7,23.6,250.99999999999997,1.6,0.9,2.5,10.2,0.1,0.2,16.7,1,0.1305,ffanalytics_consensus,2025-10-25,12620.0,QB,weekly
+Daniel Jones,QB,IND,2024,1,30.1,18.7,204.0,1.2,0.7,5.8,27.2,0.2,0.3,15.8,1,0.1305,ffanalytics_consensus,2025-10-25,14059.0,QB,weekly
+Davis Mills,QB,HOU,2024,1,0.8,0.5,5.5,0.1,0.0,0.2,0.6,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,15252.0,QB,weekly
+Dillon Gabriel,QB,CLE,2024,1,0.6,0.4,3.7,0.1,0.0,0.1,0.3,0.0,0.0,0.4,1,0.1305,ffanalytics_consensus,2025-10-25,17037.0,QB,weekly
+Drake Maye,QB,NE,2024,1,31.000000000000004,20.6,215.8,1.5,0.8,4.4,30.2,0.2,0.3,17.2,1,0.1305,ffanalytics_consensus,2025-10-25,16580.0,QB,weekly
+Drew Lock,QB,SEA,2024,1,0.7,0.5,4.6,0.1,0.1,0.1,0.5,0.0,0.0,0.4,1,0.1305,ffanalytics_consensus,2025-10-25,14057.0,QB,weekly
+Gardner Minshew II,QB,KC,2024,1,0.9,0.6,6.3,0.1,0.0,0.2,0.6,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,-1.0,QB,weekly
+Geno Smith,QB,LV,2024,1,34.0,22.8,247.0,1.3,0.8,3.0,12.7,0.1,0.1,15.8,1,0.1305,ffanalytics_consensus,2025-10-25,11150.0,QB,weekly
+Jacoby Brissett,QB,ARI,2024,1,0.8,0.6,6.0,0.1,0.0,0.2,0.8,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,12616.0,QB,weekly
+Jake Browning,QB,CIN,2024,1,0.9,0.6,7.2,0.1,0.0,0.1,0.5,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,14358.0,QB,weekly
+Jalen Hurts,QB,PHI,2024,1,27.6,19.0,218.4,1.6,0.5,8.9,40.9,0.8,0.3,23.1,1,0.1305,ffanalytics_consensus,2025-10-25,14783.0,QB,weekly
+Jalen Milroe,QB,SEA,2024,1,0.7,0.5,4.5,0.1,0.0,1.8,8.7,0.1,0.0,1.9,1,0.1305,ffanalytics_consensus,2025-10-25,17033.0,QB,weekly
+Jared Goff,QB,DET,2024,1,32.9,22.6,253.39999999999998,1.6,0.8,1.7,4.0,0.0,0.2,16.0,1,0.1305,ffanalytics_consensus,2025-10-25,12611.0,QB,weekly
+Jarrett Stidham,QB,DEN,2024,1,0.9,0.5,5.6,0.1,0.0,0.2,0.6,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,14063.0,QB,weekly
+Jaxson Dart,QB,NYG,2024,1,0.9,0.5,5.1,0.0,0.0,0.1,1.7,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,17032.0,QB,weekly
+Jimmy Garoppolo,QB,LAR,2024,1,0.8,0.5,6.3,0.1,0.0,0.1,0.2,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,11760.0,QB,weekly
+Joe Flacco,QB,CIN,2024,1,35.0,22.4,250.0,1.5,1.0,1.3,4.1,0.0,0.3,14.8,1,0.1305,ffanalytics_consensus,2025-10-25,9064.0,QB,weekly
+Joe Milton III,QB,DAL,2024,1,0.9,0.6,6.0,0.1,0.0,0.1,0.5,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,-1.0,QB,weekly
+Jordan Love,QB,GB,2024,1,31.299999999999997,19.8,235.5,1.6,0.8,2.5,10.7,0.1,0.1,16.5,1,0.1305,ffanalytics_consensus,2025-10-25,14782.0,QB,weekly
+Josh Allen,QB,BUF,2024,1,32.5,20.7,240.7,1.6,0.5,7.3,33.8,0.5,0.2,21.6,1,0.1305,ffanalytics_consensus,2025-10-25,13589.0,QB,weekly
+Joshua Dobbs,QB,NE,2024,1,0.8,0.6,5.3,0.1,0.0,0.2,0.8,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,13119.0,QB,weekly
+Justin Fields,QB,NYJ,2024,1,28.9,17.8,194.8,1.0,0.8,7.4,39.9,0.4,0.3,16.5,1,0.1305,ffanalytics_consensus,2025-10-25,15238.0,QB,weekly
+Justin Herbert,QB,LAC,2024,1,31.800000000000004,20.7,231.8,1.4,0.4,3.9,16.8,0.1,0.2,16.5,1,0.1305,ffanalytics_consensus,2025-10-25,14779.0,QB,weekly
+Kenny Pickett,QB,LV,2024,1,0.9,0.6,5.7,0.1,0.0,0.1,0.5,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,15692.0,QB,weekly
+Kirk Cousins,QB,ATL,2024,1,0.8,0.6,6.2,0.1,0.0,0.2,0.3,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,10700.0,QB,weekly
+Kyle Allen,QB,DET,2024,1,0.5,0.4,4.8,0.0,0.0,0.1,0.1,0.0,0.0,0.2,1,0.1305,ffanalytics_consensus,2025-10-25,13879.0,QB,weekly
+Kyler Murray,QB,ARI,2024,1,32.4,21.5,234.4,1.4,0.8,5.5,35.7,0.3,0.2,18.9,1,0.1305,ffanalytics_consensus,2025-10-25,14056.0,QB,weekly
+Lamar Jackson,QB,BAL,2024,1,29.2,20.0,235.9,1.8,0.4,7.9,51.3,0.2,0.3,22.4,1,0.1305,ffanalytics_consensus,2025-10-25,15125.0,CB,weekly
+Lamar Jackson,QB,BAL,2024,1,29.2,20.0,235.9,1.8,0.4,7.9,51.3,0.2,0.3,22.4,1,0.1305,ffanalytics_consensus,2025-10-25,13593.0,QB,weekly
+Mac Jones,QB,SF,2024,1,0.8,0.5,5.9,0.1,0.0,0.2,0.6,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,15241.0,QB,weekly
+Malik Willis,QB,GB,2024,1,0.8,0.4,5.5,0.1,0.0,0.2,0.8,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,15694.0,QB,weekly
+Marcus Mariota,QB,WAS,2024,1,0.8,0.6,5.9,0.1,0.0,0.2,0.9,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,12141.0,QB,weekly
+Mason Rudolph,QB,PIT,2024,1,0.7,0.5,5.1,0.0,0.0,1.4,6.3,0.1,0.0,1.3,1,0.1305,ffanalytics_consensus,2025-10-25,13595.0,QB,weekly
+Matthew Stafford,QB,LAR,2024,1,32.4,20.5,238.5,1.5,0.6,1.8,4.2,0.0,0.1,15.4,1,0.1305,ffanalytics_consensus,2025-10-25,9431.0,QB,weekly
+Michael Penix Jr.,QB,ATL,2024,1,32.1,20.8,234.7,1.3,0.8,3.2,11.1,0.2,0.2,15.500000000000002,1,0.1305,ffanalytics_consensus,2025-10-25,16583.0,QB,weekly
+Mitchell Trubisky,QB,BUF,2024,1,0.8,0.5,5.5,0.1,0.0,0.2,0.6,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,13115.0,QB,weekly
+Nick Mullens,QB,JAC,2024,1,0.8,0.6,6.4,0.1,0.0,0.2,0.6,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,13968.0,QB,weekly
+Patrick Mahomes II,QB,KC,2024,1,35.7,24.2,253.99999999999997,1.7,0.6,4.5,22.6,0.1,0.1,19.4,1,0.1305,ffanalytics_consensus,2025-10-25,-1.0,QB,weekly
+Russell Wilson,QB,NYG,2024,1,31.900000000000002,20.3,226.1,1.3,0.7,3.6,14.9,0.1,0.2,15.4,1,0.1305,ffanalytics_consensus,2025-10-25,10703.0,QB,weekly
+Sam Darnold,QB,SEA,2024,1,32.6,21.2,229.5,1.3,1.0,3.6,12.5,0.1,0.2,14.9,1,0.1305,ffanalytics_consensus,2025-10-25,13592.0,QB,weekly
+Sam Howell,QB,PHI,2024,1,0.6,0.4,5.1,0.1,0.0,0.2,0.9,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,15693.0,QB,weekly
+Spencer Rattler,QB,NO,2024,1,31.5,19.3,209.9,1.1,0.8,3.7,19.4,0.1,0.3,13.6,1,0.1305,ffanalytics_consensus,2025-10-25,16586.0,QB,weekly
+Teddy Bridgewater,QB,TB,2024,1,0.6,0.5,4.7,0.1,0.0,0.1,0.3,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,11640.0,QB,weekly
+Trevor Lawrence,QB,JAC,2024,1,30.8,20.0,237.0,1.5,0.8,3.5,17.5,0.2,0.2,17.5,1,0.1305,ffanalytics_consensus,2025-10-25,15237.0,QB,weekly
+Trey Lance,QB,LAC,2024,1,0.8,0.5,5.0,0.0,0.0,0.2,0.6,0.0,0.0,0.3,1,0.1305,ffanalytics_consensus,2025-10-25,15240.0,QB,weekly
+Tua Tagovailoa,QB,MIA,2024,1,34.5,24.3,255.8,1.6,0.8,1.8,5.8,0.0,0.2,16.1,1,0.1305,ffanalytics_consensus,2025-10-25,14778.0,QB,weekly
+Tyler Shough,QB,NO,2024,1,0.8,0.5,4.9,0.1,0.0,0.1,0.5,0.0,0.0,0.4,1,0.1305,ffanalytics_consensus,2025-10-25,17039.0,QB,weekly
+Tyrod Taylor,QB,NYJ,2024,1,0.8,0.5,5.0,0.1,0.0,0.1,0.5,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,10413.0,QB,weekly
+Tyson Bagent,QB,CHI,2024,1,0.8,0.5,4.8,0.1,0.0,0.1,0.5,0.0,0.0,0.5,1,0.1305,ffanalytics_consensus,2025-10-25,16384.0,QB,weekly
+Zach Wilson,QB,MIA,2024,1,0.9,0.7,6.5,0.1,0.0,0.2,0.8,0.0,0.0,0.6,1,0.1305,ffanalytics_consensus,2025-10-25,15239.0,QB,weekly

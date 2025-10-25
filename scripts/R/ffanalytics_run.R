@@ -1,6 +1,7 @@
 # scripts/R/ffanalytics_run.R
-# Simple runner to get raw projections from FFanalytics sources
-# Just saves the raw projection data - no calculations or aggregations
+# FFanalytics projections scraper with weighted consensus aggregation
+# Outputs both raw source projections AND weighted consensus
+# Maps player names to canonical mfl_id via dim_player_id_xref seed
 
 suppressPackageStartupMessages({
   library(optparse)
@@ -8,6 +9,8 @@ suppressPackageStartupMessages({
   library(arrow)
   library(jsonlite)
   library(dplyr)
+  library(tidyr)
+  library(stringr)
 })
 
 option_list <- list(
@@ -21,7 +24,13 @@ option_list <- list(
   make_option(c("--week"), type="integer", default=0,
               help="Week number (0 for season-long)"),
   make_option(c("--out_dir"), type="character", default="data/raw/ffanalytics",
-              help="Output directory")
+              help="Output directory"),
+  make_option(c("--weights_csv"), type="character",
+              default="config/projections/ffanalytics_projection_weights_mapped.csv",
+              help="Path to site weights CSV"),
+  make_option(c("--player_xref"), type="character",
+              default="dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+              help="Path to player ID crosswalk seed")
 )
 opt <- parse_args(OptionParser(option_list=option_list))
 
@@ -142,34 +151,200 @@ if(is.null(my_scrape)) {
   cat(sprintf("\nTotal: %d projection records\n", nrow(df)))
 }
 
-# Save to parquet with date partitioning
-dt <- format(Sys.time(), "%Y-%m-%d")
-out_path <- file.path(opt$out_dir, paste0("dt=", dt))
-dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
+# ============================================================
+# WEIGHTED CONSENSUS AGGREGATION
+# ============================================================
+
+consensus_df <- data.frame()
+mapping_stats <- list()
 
 if(nrow(df) > 0) {
-  # Save the raw projections
-  out_parquet <- file.path(out_path, paste0("projections_raw_", dt, ".parquet"))
-  arrow::write_parquet(df, out_parquet)
+  cat("\n--- Weighted Consensus Aggregation ---\n")
 
-  # Create metadata
-  meta <- list(
-    dataset = "ffanalytics_projections_raw",
-    asof_datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"),
-    sources = sources,
-    positions = positions,
-    season = opt$season,
-    week = opt$week,
-    rows = nrow(df),
-    players = n_distinct(df$player),
-    output_parquet = out_parquet
-  )
+  # Load site weights
+  weights <- tryCatch({
+    read.csv(opt$weights_csv, stringsAsFactors = FALSE)
+  }, error = function(e) {
+    cat(sprintf("Warning: Could not load weights from %s\n", opt$weights_csv))
+    cat("Using equal weights for all sources.\n")
+    data.frame(
+      site_id = successful_sources,
+      weight = rep(1.0 / length(successful_sources), length(successful_sources))
+    )
+  })
 
-  writeLines(jsonlite::toJSON(meta, auto_unbox = TRUE, pretty = TRUE),
-             file.path(out_path, "_meta.json"))
+  # Normalize site names: lowercase for matching
+  weights$site_id_lower <- tolower(weights$site_id)
+  df$data_src_lower <- tolower(df$data_src)
 
-  # Output JSON for pipeline
-  cat(jsonlite::toJSON(meta, auto_unbox = TRUE), "\n")
-} else {
-  cat("No data to save.\n")
+  # Join weights to projections
+  df_weighted <- df %>%
+    left_join(weights %>% select(site_id_lower, weight),
+              by = c("data_src_lower" = "site_id_lower")) %>%
+    mutate(weight = ifelse(is.na(weight), 0, weight))
+
+  # Identify stat columns (numeric columns excluding metadata)
+  metadata_cols <- c("player", "pos", "team", "data_src", "season", "week",
+                     "data_src_lower", "weight")
+  stat_cols <- setdiff(names(df_weighted)[sapply(df_weighted, is.numeric)],
+                       c("season", "week", "weight"))
+
+  cat(sprintf("Found %d stat columns to aggregate\n", length(stat_cols)))
+
+  # Calculate weighted consensus per player per stat
+  consensus_df <- df_weighted %>%
+    filter(weight > 0) %>%  # Only use sources with weights
+    group_by(player, pos, team, season, week) %>%
+    summarise(
+      across(all_of(stat_cols),
+             ~ if(all(is.na(.))) NA_real_ else weighted.mean(., w = weight, na.rm = TRUE)),
+      source_count = n(),
+      total_weight = sum(weight),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      provider = "ffanalytics_consensus",
+      asof_date = as.character(Sys.Date())
+    )
+
+  cat(sprintf("Consensus projections: %d players\n", nrow(consensus_df)))
+
+  # ============================================================
+  # PLAYER NAME MAPPING TO CANONICAL MFL_ID
+  # ============================================================
+
+  cat("\n--- Player Name Mapping ---\n")
+
+  # Load player ID crosswalk
+  player_xref <- tryCatch({
+    read.csv(opt$player_xref, stringsAsFactors = FALSE)
+  }, error = function(e) {
+    cat(sprintf("Warning: Could not load player xref from %s\n", opt$player_xref))
+    cat("Proceeding without player ID mapping.\n")
+    NULL
+  })
+
+  if(!is.null(player_xref)) {
+    # Create normalized name for matching
+    consensus_df <- consensus_df %>%
+      mutate(player_normalized = tolower(trimws(player)))
+
+    player_xref <- player_xref %>%
+      mutate(
+        name_normalized = tolower(trimws(name)),
+        merge_name_normalized = tolower(trimws(merge_name))
+      )
+
+    # Try exact match on name first
+    xref_name_match <- player_xref %>%
+      select(name_normalized, mfl_id, position) %>%
+      rename(mfl_id_name = mfl_id, position_name = position)
+
+    # Try merge_name as fallback
+    xref_merge_match <- player_xref %>%
+      filter(!duplicated(merge_name_normalized)) %>%
+      select(merge_name_normalized, mfl_id, position) %>%
+      rename(mfl_id_merge = mfl_id, position_merge = position)
+
+    # Join both and coalesce
+    consensus_df <- consensus_df %>%
+      left_join(xref_name_match,
+                by = c("player_normalized" = "name_normalized")) %>%
+      left_join(xref_merge_match,
+                by = c("player_normalized" = "merge_name_normalized")) %>%
+      mutate(
+        player_id = coalesce(mfl_id_name, mfl_id_merge),
+        # Use xref position if available, otherwise keep original
+        position_final = coalesce(position_name, position_merge, pos)
+      ) %>%
+      select(-c(mfl_id_name, mfl_id_merge, position_name, position_merge, player_normalized))
+
+    # Mapping statistics
+    mapped_count <- sum(!is.na(consensus_df$player_id))
+    total_count <- nrow(consensus_df)
+    mapping_coverage <- mapped_count / total_count
+
+    mapping_stats <- list(
+      total_players = total_count,
+      mapped_players = mapped_count,
+      unmapped_players = total_count - mapped_count,
+      mapping_coverage = round(mapping_coverage, 4)
+    )
+
+    cat(sprintf("Mapped %d / %d players (%.1f%% coverage)\n",
+                mapped_count, total_count, mapping_coverage * 100))
+
+    # For unmapped players, use -1 as sentinel
+    consensus_df <- consensus_df %>%
+      mutate(player_id = ifelse(is.na(player_id), -1, player_id))
+  } else {
+    consensus_df$player_id <- -1
+    mapping_stats <- list(total_players = nrow(consensus_df),
+                          mapped_players = 0,
+                          mapping_coverage = 0)
+  }
+
+  # ============================================================
+  # HORIZON DETECTION
+  # ============================================================
+
+  consensus_df <- consensus_df %>%
+    mutate(horizon = case_when(
+      week == 0 ~ "full_season",
+      week > 0 ~ "weekly",
+      TRUE ~ "unknown"
+    ))
 }
+
+# ============================================================
+# SAVE OUTPUTS
+# ============================================================
+
+dt <- format(Sys.time(), "%Y-%m-%d")
+out_path <- file.path(opt$out_dir, "projections", paste0("dt=", dt))
+dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
+
+output_files <- list()
+
+if(nrow(df) > 0) {
+  # Save RAW projections (all sources separately)
+  cat("\n--- Saving Outputs ---\n")
+  raw_parquet <- file.path(out_path, paste0("projections_raw_", dt, ".parquet"))
+  arrow::write_parquet(df, raw_parquet)
+  cat(sprintf("Raw projections: %s (%d rows)\n", raw_parquet, nrow(df)))
+  output_files$raw <- raw_parquet
+}
+
+if(nrow(consensus_df) > 0) {
+  # Save CONSENSUS projections (weighted)
+  consensus_parquet <- file.path(out_path, paste0("projections_consensus_", dt, ".parquet"))
+  arrow::write_parquet(consensus_df, consensus_parquet)
+  cat(sprintf("Consensus projections: %s (%d rows)\n", consensus_parquet, nrow(consensus_df)))
+  output_files$consensus <- consensus_parquet
+}
+
+# Create metadata
+meta <- list(
+  dataset = "ffanalytics_projections",
+  asof_datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"),
+  sources_requested = sources,
+  sources_successful = successful_sources,
+  sources_failed = failed_sources,
+  positions = positions,
+  season = opt$season,
+  week = opt$week,
+  horizon = if(opt$week == 0) "full_season" else "weekly",
+  raw_rows = nrow(df),
+  consensus_rows = nrow(consensus_df),
+  player_mapping = mapping_stats,
+  weights_file = opt$weights_csv,
+  player_xref_file = opt$player_xref,
+  output_files = output_files
+)
+
+writeLines(jsonlite::toJSON(meta, auto_unbox = TRUE, pretty = TRUE),
+           file.path(out_path, "_meta.json"))
+
+# Output JSON for pipeline
+cat("\n--- Pipeline Manifest ---\n")
+cat(jsonlite::toJSON(meta, auto_unbox = TRUE), "\n")
