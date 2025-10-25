@@ -26,10 +26,10 @@ def get_dataset_info(dataset_name: str) -> dict:
 
     Raises:
         ValueError: If dataset not found
+
     """
     if dataset_name not in DATASETS:
         raise ValueError(
-            f"Unknown dataset: {dataset_name}. "
-            f"Available: {', '.join(DATASETS.keys())}"
+            f"Unknown dataset: {dataset_name}. " f"Available: {', '.join(DATASETS.keys())}"
         )
     return DATASETS[dataset_name]

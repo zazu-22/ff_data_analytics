@@ -298,47 +298,39 @@ def _derive_transaction_type(period_type: str, txn_type: str, rfa_matched: str) 
 
     Returns:
         Refined transaction type string
+
     """
-    # Rookie draft selections
+    # Simple mappings
+    simple_map = {
+        "Trade": "trade",
+        "Cut": "cut",
+        "Waivers": "waiver_claim",
+        "Extension": "contract_extension",
+        "Amnesty": "amnesty_cut",
+    }
+    if txn_type in simple_map:
+        return simple_map[txn_type]
+
+    # Period-specific logic
     if period_type == "rookie_draft":
         return "rookie_draft_selection"
 
-    # Franchise tags (offseason only)
     if txn_type == "Franchise":
         return "franchise_tag"
 
-    # FAAD signings (period_type='faad')
     if period_type == "faad":
-        if txn_type == "Signing" and rfa_matched == "yes":
-            return "faad_rfa_matched"
-        elif txn_type in ["Signing", "FA"]:
-            return "faad_ufa_signing"
+        return "faad_rfa_matched" if rfa_matched == "yes" else "faad_ufa_signing"
 
-    # FASA signings (in-season, preseason, offseason, deadline)
     if period_type in ["regular", "deadline", "preseason", "offseason"]:
         if txn_type == "Signing":
             return "fasa_signing"
-
-    # Offseason free agency (FA type outside FAAD)
-    if period_type == "offseason" and txn_type == "FA":
-        return "offseason_ufa_signing"
-
-    # Straightforward mappings
-    if txn_type == "Trade":
-        return "trade"
-    if txn_type == "Cut":
-        return "cut"
-    if txn_type == "Waivers":
-        return "waiver_claim"
-    if txn_type == "Extension":
-        return "contract_extension"
-    if txn_type == "Amnesty":
-        return "amnesty_cut"
+        if period_type == "offseason" and txn_type == "FA":
+            return "offseason_ufa_signing"
 
     return "unknown"
 
 
-def _infer_asset_type(player_str: str, position_str: str) -> str:
+def _infer_asset_type(player_str: str | None, position_str: str) -> str:
     """Infer asset type from player name and position.
 
     Args:
@@ -347,6 +339,7 @@ def _infer_asset_type(player_str: str, position_str: str) -> str:
 
     Returns:
         Asset type: player, pick, cap_space, defense, or unknown
+
     """
     if not player_str or player_str == "-":
         return "unknown"
@@ -362,7 +355,7 @@ def _infer_asset_type(player_str: str, position_str: str) -> str:
         return "unknown"
 
 
-def _normalize_player_name(name: str) -> str:
+def _normalize_player_name(name: str | None) -> str:
     """Normalize player name for fuzzy matching.
 
     Removes periods from initials, removes suffixes, lowercase, strip.
@@ -372,6 +365,7 @@ def _normalize_player_name(name: str) -> str:
 
     Returns:
         Normalized name for matching
+
     """
     if not name:
         return ""
@@ -384,7 +378,7 @@ def _normalize_player_name(name: str) -> str:
     return normalized.lower().strip()
 
 
-def _parse_pick_id(player_str: str, pick_col: str) -> str | None:
+def _parse_pick_id(player_str: str | None, pick_col: str) -> str | None:
     """Parse pick reference to standardized pick_id.
 
     Args:
@@ -393,6 +387,7 @@ def _parse_pick_id(player_str: str, pick_col: str) -> str | None:
 
     Returns:
         pick_id in format YYYY_R#_P## or YYYY_R#_TBD, or None if not a pick
+
     """
     import re
 
@@ -420,6 +415,7 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
 
     Returns:
         DataFrame with added columns: total, years, split_array
+
     """
 
     def parse_contract(contract_str, split_str):
@@ -449,7 +445,9 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
 
     contract_parsed = df.select(
         pl.struct(["Contract", "Split"])
-        .map_elements(lambda x: parse_contract(x["Contract"], x["Split"]), return_dtype=contract_struct_type)
+        .map_elements(
+            lambda x: parse_contract(x["Contract"], x["Split"]), return_dtype=contract_struct_type
+        )
         .alias("contract_parsed")
     ).unnest("contract_parsed")
 
@@ -464,6 +462,7 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
 
     Returns:
         DataFrame with added player_id column (-1 for unmapped)
+
     """
     xref_path = Path("dbt/ff_analytics/seeds/dim_player_id_xref.csv")
     if not xref_path.exists():
@@ -476,13 +475,15 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     if alias_path.exists():
         alias_seed = pl.read_csv(alias_path)
         # Apply aliases first (replace Player with canonical_name where alias exists)
-        df = df.join(
-            alias_seed.select(["alias_name", "canonical_name"]),
-            left_on="Player",
-            right_on="alias_name",
-            how="left",
-        ).with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player")).drop(
-            "canonical_name"
+        df = (
+            df.join(
+                alias_seed.select(["alias_name", "canonical_name"]),
+                left_on="Player",
+                right_on="alias_name",
+                how="left",
+            )
+            .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
+            .drop("canonical_name")
         )
 
     # Exact match
@@ -525,6 +526,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             'transactions': Main transaction table (one row per asset)
             'unmapped_players': QA table for manual review
             'unmapped_picks': QA table for TBD picks
+
     """
     from datetime import UTC, datetime
 

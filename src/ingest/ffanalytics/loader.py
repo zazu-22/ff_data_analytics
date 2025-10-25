@@ -47,6 +47,7 @@ def load_projections(
     Raises:
         RuntimeError: If R script fails
         FileNotFoundError: If R script not found
+
     """
     # Convert lists to comma-separated strings if needed
     if isinstance(sources, list):
@@ -83,7 +84,7 @@ def load_projections(
 
     # Run R script
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
             cmd,
             cwd=str(repo_root),
             capture_output=True,
@@ -101,7 +102,17 @@ def load_projections(
                 break
 
         if manifest_line:
-            manifest = json.loads(manifest_line)
+            try:
+                manifest = json.loads(manifest_line)
+            except json.JSONDecodeError as e:
+                # R script ran but didn't output valid JSON
+                manifest = {
+                    "dataset": "ffanalytics_projections",
+                    "season": season,
+                    "week": week,
+                    "status": "partial_success",
+                    "error": f"Could not parse manifest: {e}",
+                }
         else:
             # Fallback: construct minimal manifest
             manifest = {
@@ -127,18 +138,4 @@ def load_projections(
         ) from e
 
     except subprocess.TimeoutExpired as e:
-        raise RuntimeError(
-            f"FFanalytics R script timed out after {e.timeout} seconds"
-        ) from e
-
-    except json.JSONDecodeError as e:
-        # R script ran but didn't output valid JSON
-        return {
-            "dataset": "ffanalytics_projections",
-            "season": season,
-            "week": week,
-            "status": "partial_success",
-            "error": f"Could not parse manifest: {e}",
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-        }
+        raise RuntimeError(f"FFanalytics R script timed out after {e.timeout} seconds") from e
