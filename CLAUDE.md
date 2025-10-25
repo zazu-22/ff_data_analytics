@@ -19,7 +19,6 @@ For detailed context on specific areas, see:
 
 - `src/ingest/` - Packaged ingestion modules (importable)
 - `src/ff_analytics_utils/` - Shared utility functions
-- Top-level `ingest/` - Legacy location (deprecated, use `src/ingest/`)
 
 ## Development Commands
 
@@ -27,6 +26,7 @@ For detailed context on specific areas, see:
 
 - **Package Manager**: UV (v0.8.8)
 - **Python Version**: 3.13.6 (managed via .python-version)
+- **dbt Version**: dbt-fusion 2.0.0-preview.32 (DuckDB adapter)
 - **Setup**: `uv sync`
 - **Add dependency**: `uv add <package>`
 - **Run with uv**: `uv run python <script.py>`
@@ -48,6 +48,22 @@ make dbt-test
 ```
 
 See `Makefile` for all targets: `make help`
+
+## Current Implementation Status
+
+Per SPEC-1 v2.3 (updated 2025-10-24):
+
+- **Phase 1 Seeds**: ✅ Complete (6/8 seeds, 2 optional) - All tracks unblocked
+  - dim_player_id_xref (12,133 players, 19 provider IDs)
+  - dim_franchise, dim_pick, dim_scoring_rule, dim_timeframe, dim_name_alias
+- **Track A (NFL Actuals)**: 95% Complete - nflverse → fact_player_stats → weekly marts ✅
+- **Track B (League Data)**: 100% Complete - TRANSACTIONS → fact_league_transactions ✅
+- **Track C (Market Data)**: 0% - KTC integration stub only
+- **Track D (Projections)**: 100% Complete - FFanalytics → fact_player_projections → projection marts ✅
+
+**Test Coverage**: 147/149 dbt tests passing (98.7%)
+
+See implementation checklist for detailed status by component.
 
 ## Key Components
 
@@ -94,7 +110,7 @@ See `Makefile` for all targets: `make help`
 | `docs/spec/SPEC-1_v_2.2.md`                                      | Complete data architecture (2×2 stat model, trade valuation, lineage) |
 | `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` | Dimensional modeling patterns for dbt                                 |
 | `docs/dev/repo_conventions_and_structure.md`                     | Repo layout, naming, data paths                                       |
-| `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md`         | Implementation status and sequencing                                  |
+| `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md`         | Implementation status and sequencing (updated 2025-10-24)             |
 
 ## Coding Conventions
 

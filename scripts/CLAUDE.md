@@ -52,16 +52,26 @@ ______________________________________________________________________
 
 ### R/ffanalytics_run.R
 
-**Purpose**: Scrape weekly fantasy projections from multiple sources
+**Purpose**: Scrape weekly fantasy projections from multiple sources with weighted consensus
+
+**Status**: ✅ Production-ready (Track D: 100% complete)
 
 **Config**: `config/projections/ffanalytics_projections_config.yaml`
 
-**Invoked by**: Python via `subprocess` (not part of nflverse shim)
+**Invoked by**: Python via `subprocess` from `src/ingest/ffanalytics/loader.py`
+
+**Features**:
+
+- Weighted consensus from 8+ sources (CBS, ESPN, FantasyPros, etc.)
+- Site weights from `config/projections/ffanalytics_projection_weights_mapped.csv`
+- Player name → ID mapping via `dim_player_id_xref` seed
+- Both raw projections and consensus output
 
 **Outputs**:
 
-- Long-form `fact_player_projections`
-- Scrape logs and site coverage stats
+- `projections_raw_*.parquet` - Individual source projections
+- `projections_consensus_*.parquet` - Weighted aggregation
+- Metadata with player mapping stats, source success/failure
 
 **Usage**:
 
@@ -70,6 +80,8 @@ Rscript scripts/R/ffanalytics_run.R \
   --config config/projections/ffanalytics_projections_config.yaml \
   --scoring config/scoring/sleeper_scoring_rules.yaml
 ```
+
+**Integration**: Parquet output → `stg_ffanalytics__projections` → `fact_player_projections` → projection marts
 
 ______________________________________________________________________
 

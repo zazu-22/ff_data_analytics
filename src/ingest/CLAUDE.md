@@ -3,8 +3,6 @@
 **Location**: `src/ingest/`
 **Purpose**: Packaged provider integrations (importable Python modules)
 
-Difference from top-level `ingest/`: This is the packaged, importable version. Top-level `ingest/` is legacy.
-
 ## Structure
 
 ```text
@@ -13,7 +11,8 @@ src/ingest/
 ├── common/          # Storage helpers, metadata patterns
 ├── nflverse/        # NFL data (Python-first with R fallback)
 ├── sheets/          # Google Sheets parsers
-└── ktc/             # Keep/Trade/Cut (stub, needs implementation)
+├── ffanalytics/     # Fantasy projections (R-based via subprocess)
+└── ktc/             # Keep/Trade/Cut (stub, minimal client only)
 ```
 
 Each provider package is self-contained with:
@@ -174,10 +173,21 @@ Add entry to this file and update root CLAUDE.md if needed.
 - **Normalization**: Transforms wide GM tabs → long-form tables
 - **Auth**: Requires `GOOGLE_APPLICATION_CREDENTIALS`
 
+### ffanalytics
+
+- **Implementation**: R-based projections via subprocess
+- **Registry**: `src/ingest/ffanalytics/registry.py`
+- **Loader**: `src/ingest/ffanalytics/loader.py` (calls R runner)
+- **R script**: `scripts/R/ffanalytics_run.R`
+- **Features**: Weighted consensus from 8+ sources, player ID mapping
+- **Status**: ✅ Production-ready (Track D: 100% complete)
+- **Output**: Parquet with consensus projections and metadata
+
 ### ktc
 
-- **Status**: Stub implementation
-- **TODO**: Implement real fetcher with rate limiting
+- **Status**: Stub implementation (Track C: 0%)
+- **Current**: Minimal client.py only, no registry.py
+- **TODO**: Implement real fetcher with rate limiting and ToS compliance
 
 ## Testing Ingestion
 

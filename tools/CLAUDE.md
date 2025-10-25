@@ -26,6 +26,12 @@ uv run python tools/make_samples.py sheets --tabs Andy Gordon Joe --sheet-url <u
 
 # TRANSACTIONS tab
 uv run python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <url> --out ./samples
+
+# FFanalytics projections (requires R + ffanalytics package)
+PYTHONPATH=. uv run python tools/make_samples.py ffanalytics \
+  --config config/projections/ffanalytics_projections_config.yaml \
+  --scoring config/scoring/sleeper_scoring_rules.yaml \
+  --out ./samples
 ```
 
 **Makefile shortcut**: `make samples-nflverse`
@@ -35,6 +41,7 @@ uv run python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <url>
 - Preserves raw provider schemas
 - Small datasets for fast testing
 - Used before dbt development
+- **FFanalytics**: Calls R subprocess for weighted consensus projections (Track D: ✅ complete)
 
 ______________________________________________________________________
 
@@ -71,9 +78,9 @@ ______________________________________________________________________
 
 **Purpose**: Apply scoring rules to FFAnalytics projections
 
-**Usage**: See implementation checklist (tool under development)
+**Status**: Experimental/superseded by R runner approach
 
-**Future**: Will integrate with `scripts/R/ffanalytics_run.R` output
+**Note**: Fantasy scoring is now applied in dbt marts (`mart_fantasy_projections`) using `dim_scoring_rule`, following the 2×2 model pattern. This tool remains for potential standalone use cases.
 
 ______________________________________________________________________
 

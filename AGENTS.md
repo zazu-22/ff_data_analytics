@@ -1,80 +1,73 @@
-# Repository Guidelines
+# AGENTS Guide
 
-## Project Structure & Module Organization
+This guide summarizes how we expect LLM "agents" (and any contributor using autonomous tooling) to work inside the project. It reflects the **current implementation state** captured in the spec pack under `docs/spec/` (see `SPEC-1_v_2.3_implementation_checklist_v_0.md`, updated 2025-10-24) and will evolve as new tracks land. The project is still in development -- treat anything marked "[ ]" in the checklist as in-flight or future work.
 
-- `ingest/`: dataset registry (`registry.py`) and loader shim (`shim.py`) that write Parquet to `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/`.
-- `tools/`: developer utilities (e.g., `make_samples.py`).
-- `scripts/R/`: R runners (`nflverse_load.R`, `ffanalytics_run.R`).
-- `notebooks/`: exploration and ETL prototypes.
-- `config/`: YAML/CSV configs (projections, scoring).
-- `docs/`: architecture, analytics, and dev docs.
-- `.github/workflows/`: CI pipelines.
+## Current Implementation Snapshot
 
-## Build, Test, and Development Commands
+- **Phase 1 Seeds** - [x] Complete. Identity tables (`dim_player_id_xref`, `dim_franchise`, `dim_scoring_rule`, `dim_pick`, `dim_timeframe`, `dim_name_alias`) are materialized and tested (spec section 0, checklist section 1).
+- **Phase 2 Track A (NFL Actuals)** - [x] ~95% implemented. nflverse shim + dbt models deliver `fact_player_stats`, `dim_player`, `dim_team`, `dim_schedule`, `mart_real_world_actuals_weekly`, `mart_fantasy_actuals_weekly`; follow-ups cover kicking stats and defensive tackle clean-up (checklist section 2).
+- **Phase 2 Track B (Commissioner Sheets)** - [x] Complete. `src/ingest/sheets/commissioner_parser.py` normalizes roster/transactions into long-form tables with sample-backed tests (checklist section 2 Track B, ADR-008).
+- **Phase 2 Track C (Market Data / KTC)** - [ ] Not started. Stub loader exists under `src/ingest/ktc/`; fetching, staging, and marts remain open (checklist section 5).
+- **Phase 2 Track D (Projections)** - [x] Complete. R runner + dbt projections marts (`mart_real_world_projections`, `mart_fantasy_projections`, `mart_projection_variance`) are wired per checklist section 2 Track D.
+- **Phase 3 / Ops** - [ ] Pending. Ops schema, change capture, notebooks, CI hardening, and compaction playbook remain to be implemented (checklist section 3 onward).
 
-- Setup (Python 3.13.6 via `.python-version`): `pip install uv && uv sync`.
-- Run nflverse loader: `python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
-- Run projections (R): `Rscript scripts/R/ffanalytics_run.R --config config/projections/ffanalytics_projections_config.yaml --scoring config/scoring/sleeper_scoring_rules.yaml`.
-- Notebooks: `jupyter lab` (install via project deps) for local analysis.
+Consult `docs/spec/SPEC-1_v_2.2.md` for architecture intent and the v2.3 checklist for authoritative implementation status before making changes.
 
-## Dependency Management (uv)
+## Codebase Map
 
-- Add runtime deps: `uv add pandas polars pyarrow`.
-- Add dev deps: `uv add --dev pre-commit ruff mdformat mdformat-gfm yamllint nbqa sqlfluff sqlfluff-templater-dbt dbt-duckdb`.
-- Sync and run: `uv sync`; execute tools via `uv run <cmd>` (e.g., `uv run ruff format .`).
-- Install Git hook: `uv run pre-commit install` (then `uv run pre-commit run --all-files`).
+- `src/ingest/` - Provider loaders (Python-first) with registries and shared storage helpers. R fallbacks live under `scripts/R/`.
+- `src/ff_analytics_utils/` - Reusable helpers (e.g., storage, validation).
+- `tools/` - Developer utilities (`make_samples.py`, smoke tests).
+- `dbt/ff_analytics/` - DuckDB project with staging/core/mart layers plus seeds.
+- `config/` - Projection configs, scoring rules, environment toggles.
+- `docs/` - Spec, ADRs, analysis, architecture guidance.
+- `notebooks/` - Prototypes and exploratory analysis (named `topic_action.ipynb`).
+- `.github/workflows/` - `data-pipeline.yml` (batch orchestration) and `ingest_google_sheets.yml`.
 
-### Makefile shortcuts
+Keep `PYTHONPATH=.` when running Python modules so `src/` packages resolve correctly.
 
-- `make samples-nflverse` — generate minimal nflverse samples
-- `make dbt-run` / `make dbt-test` — run/test dbt locally (DuckDB)
-- `make quickstart-local` — samples → dbt run → dbt test
-- `make sqlfix` — manual sqlfluff auto-fix for dbt models
+## Daily Workflows
 
-## Coding Style & Naming Conventions
+- **Environment setup**: `uv sync` (Python 3.13.6 via `.python-version`). Add packages with `uv add` / `uv add --dev`.
+- **Sample generation**: `uv run python tools/make_samples.py nflverse --datasets players weekly --seasons 2024 --out ./samples`.
+- **Run nflverse loader**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
+- **dbt**: `make dbt-run` / `make dbt-test` (DuckDB profile under `dbt/ff_analytics/`).
+- **Python tests**: `pytest -q` (fixtures in `samples/`). Ensure Sheets parsers and storage helpers stay covered.
+- **Formatting & lint**: `uv run pre-commit run --all-files` (ruff, mdformat, sqlfluff, yamllint, etc.).
 
-- Python: PEP 8, 4‑space indent, type hints where practical; snake_case for modules/functions, PascalCase for classes.
-- DataFrames: prefer Polars and PyArrow; write columnar Parquet; avoid implicit type casts.
-- Notebooks: name `topic_action.ipynb` (e.g., `notebooks/load_nflverse_data.ipynb`).
+Prefer `uv run <cmd>` to ensure the pinned environment and hooks (e.g., specifying `UV_CACHE_DIR` when needed).
 
-## Testing Guidelines
+## Data Output & Storage Conventions
 
-- Use `pytest` with `tests/` and `test_*.py` naming.
-- For loaders, validate schema/keys (see `ingest/registry.py: primary_keys`) and non‑null key coverage.
-- Run locally: `pytest -q` (add fixtures for small CSV/Parquet samples where feasible).
+- **Layout**: `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/` (local mirror of `gs://ff-analytics/{raw,stage,mart,ops}` per spec architecture section).
+- **Artifacts**: Each load writes Parquet plus `_meta.json` manifest with lineage fields (`dataset`, `loader_path`, `source_version`, `row_count`, `asof_datetime`).
+- **Engines**: Polars/PyArrow for DataFrames; DuckDB external tables for marts (see spec dbt-duckdb strategy section).
+- **Identity**: Use `dim_player_id_xref` (mfl_id canonical) + `dim_name_alias` for resolving provider IDs; reject loads that break PK coverage.
+- **Security**: Never commit credentials. Set `GOOGLE_APPLICATION_CREDENTIALS` or `GCS_SERVICE_ACCOUNT_JSON` for GCS/Sheets auth; keep `.env` local.
 
-## Commit & Pull Request Guidelines
+## Development Standards
 
-- Conventional commits (seen in history): `feat:`, `docs:`, `chore:`, `init:`.
-- Example: `feat: add nflverse weekly loader with Parquet output`.
-- PRs: clear description, linked issues, sample output path(s), config diffs, and screenshots/plots when touching analytics.
+- **Coding style**: PEP 8, 4-space indent, typed where practical; snake_case/PascalCase per convention.
+- **Data modeling**: Follow Kimball guidance (`docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`), especially for SCDs and fact grains.
+- **Testing**: Validate PKs/non-null keys for loaders; dbt models require grain and referential tests. Keep sample fixtures small and representative.
+- **Commits**: Conventional prefixes (`feat:`, `chore:`, `docs:`). Reference affected datasets and include sample output paths in PR descriptions.
+- **CI**: `data-pipeline.yml` orchestrates scheduled runs; extend with new loaders/tests when Track C/Phase 3 components ship.
 
-## Security & Configuration Tips
+## High-Priority Follow-Ups (Open Items)
 
-- Store secrets in `.env`; never commit keys/tokens. Use repo secrets for CI.
-- Make `out_dir` explicit for local runs; avoid writing to cloud buckets during tests.
+- Build full KTC ingestion pipeline (fetcher, storage, dbt staging & marts) and wire `tools/make_samples.py` to real data.
+- Extend nflverse scoring coverage (kicking, defensive stats) and ensure `dim_scoring_rule` alignment.
+- Implement ops schema + run ledger, freshness checks, and compaction guidance (spec data quality and ops section).
+- Harden CI (Sheets copy, dbt run/test, LKG fallbacks) and add user-facing notebooks once Track C lands.
 
-## Architecture & CI
+Re-check the v2.3 checklist before starting work -- statuses change frequently, and new ADRs may supersede older guidance.
 
-- Data layout: immutable, partitioned Parquet under `data/raw/<source>/<dataset>/dt=YYYY-MM-DD/` (+ `_meta.json` sidecar from the loader). See spec: `docs/spec/SPEC-1_v_2.2.md`.
-- Dimensional modeling: Apply Kimball techniques per `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` when designing facts, dimensions, and marts in dbt.
-- CI: `.github/workflows/data-pipeline.yml` runs nflverse Mondays 08:00 UTC and projections Tuesdays 08:00 UTC; supports manual dispatch.
+## Reference Documents
 
-## dbt Project
+- `docs/spec/SPEC-1_v_2.2.md` - Architectural blueprint (2x2 stat model, storage layout, security).
+- `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md` - Source of truth for implementation progress and open items.
+- `docs/dev/repo_conventions_and_structure.md` - Naming, layout, data path conventions.
+- `docs/dev/how_to_use_the_sample_generator_tools_make_samples.md` - Sample generator usage notes.
+- `CLAUDE.md` (root + package-specific variants) - Additional assistant-centric guidance.
 
-- Location: `dbt/ff_analytics/` (DuckDB + external Parquet)
-- Profiles: see `dbt/ff_analytics/profiles.example.yml` (env toggles `DBT_TARGET`, `DBT_THREADS`)
-- SQL linting: SQLFluff with dbt templater; staging models allow raw-aligned names; manual fix via `make sqlfix`.
-
-Note: dbt build artifacts are ignored (`dbt/**/target`, `dbt/**/logs`).
-
-## Contributing & Conventions
-
-- Conventions: See `docs/dev/repo_conventions_and_structure.md` for repo layout, naming, data paths, and dbt organization.
-- Pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files` before pushing.
-- SQL style: SQLFluff (dbt templater, DuckDB dialect). Staging allows raw-aligned names (ignores `RF04`, `CV06`); core can be stricter.
-- Make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`.
-
-## Sample Data
-
-- Generate samples: `uv run python tools/make_samples.py`. Reference: `docs/dev/how_to_use_the_sample_generator_tools_make_samples.md`.
+Update this file whenever spec status or workflows change so autonomous agents stay in sync with reality.
