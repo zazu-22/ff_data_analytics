@@ -16,6 +16,7 @@ This directory contains Architecture Decision Records (ADRs) for the Fantasy Foo
 | [ADR-008](ADR-008-league-transaction-history-integration.md)      | League transaction history integration          | Accepted   | 2025-09 |
 | [ADR-009](ADR-009-single-consolidated-fact-table-nfl-stats.md)    | Single consolidated fact table for NFL stats    | Accepted   | 2025-09 |
 | [ADR-010](ADR-010-mfl-id-canonical-player-identity.md)            | mfl_id as canonical player identity             | Accepted   | 2025-09 |
+| [ADR-011](ADR-011-league-rules-dimensional-framework.md)          | League rules dimensional framework              | Accepted   | 2025-10 |
 
 \*Note: ADRs 001-003 are documented in the main specification as examples and will be formalized as separate documents when implementation decisions are finalized.
 

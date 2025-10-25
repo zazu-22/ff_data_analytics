@@ -1,0 +1,6 @@
+contract_year,dead_cap_pct,rounding_rule,notes
+1,0.50,ceil,"50% of year 1 amount owed as dead cap"
+2,0.50,ceil,"50% of year 2 amount owed as dead cap"
+3,0.25,ceil,"25% of year 3 amount owed as dead cap"
+4,0.25,ceil,"25% of year 4 amount owed as dead cap"
+5,0.25,ceil,"25% of year 5 amount owed as dead cap"

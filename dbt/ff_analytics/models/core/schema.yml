@@ -602,3 +602,81 @@ models:
           config:
             severity: error
             error_if: ">0"
+
+  - name: dim_asset
+    description: |
+      Unified asset dimension combining players and draft picks.
+
+      Provides a single interface for trade analysis and market value queries,
+      eliminating the need to UNION players + picks in every downstream mart.
+
+      Source: UNION of dim_player + dim_pick (future: defense, cap_space)
+      Grain: One row per asset (player or pick)
+    columns:
+      - name: asset_id
+        description: |
+          Surrogate key: 'player_<player_id>' or 'pick_<pick_id>'
+        tests:
+          - not_null
+          - unique
+
+      - name: asset_type
+        description: Asset classification (player | pick | defense | cap_space)
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              values:
+                - player
+                - pick
+
+      - name: player_id
+        description: |
+          FK to dim_player (populated for players, null for picks)
+        tests:
+          - relationships:
+              to: ref('dim_player')
+              field: player_id
+              config:
+                where: "asset_type = 'player'"
+
+      - name: pick_id
+        description: |
+          FK to dim_pick (populated for picks, null for players)
+        tests:
+          - relationships:
+              to: ref('dim_pick')
+              field: pick_id
+              config:
+                where: "asset_type = 'pick'"
+
+      - name: asset_name
+        description: Display name (player name or pick description)
+        tests:
+          - not_null
+
+      - name: position
+        description: Player position (populated for players only)
+
+      - name: team
+        description: Current team (populated for players only)
+
+      - name: season
+        description: Draft season (populated for picks only)
+
+      - name: round
+        description: Draft round (populated for picks only)
+
+      - name: round_slot
+        description: Pick number within round (populated for picks only)
+
+      - name: asset_category
+        description: |
+          Asset categorization for filtering:
+          - 'Active NFL player'
+          - 'Standard draft pick'
+          - 'Compensatory pick'
+          - 'RFA compensation pick'
+        tests:
+          - not_null

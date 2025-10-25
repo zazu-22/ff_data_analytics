@@ -1,0 +1,4 @@
+schedule_id,valid_from_season,valid_to_season,avg_annual_min,avg_annual_max,compensation_pick_round,awarded_timing,rounding_rule,notes
+RFC001,2012,2026,10,14,3,"end_of_round",ceil,"Active through 2026 offseason; 3rd round pick compensation"
+RFC002,2012,2026,15,24,2,"end_of_round",ceil,"Active through 2026 offseason; 2nd round pick compensation"
+RFC003,2012,2026,25,999,1,"end_of_round",ceil,"Active through 2026 offseason; 1st round pick compensation; 999 = no upper limit"

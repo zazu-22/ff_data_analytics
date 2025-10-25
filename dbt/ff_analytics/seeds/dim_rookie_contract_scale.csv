@@ -1,0 +1,8 @@
+draft_position_start,draft_position_end,round,position_bucket_label,year1_amount,year2_amount,year3_amount,year4_option_amount,year4_option_guaranteed,year4_option_deadline,rfa_match_ineligible_after_option,notes
+1,2,1,"R1.P1-2",6,6,6,24,true,"August 1",true,"First two picks of round 1"
+3,4,1,"R1.P3-4",5,5,5,20,true,"August 1",true,"Picks 3-4 of round 1"
+5,6,1,"R1.P5-6",4,4,4,16,true,"August 1",true,"Picks 5-6 of round 1"
+7,8,1,"R1.P7-8",3,3,3,12,true,"August 1",true,"Picks 7-8 of round 1"
+9,12,1,"R1.P9-12",2,2,2,8,true,"August 1",true,"Rest of round 1"
+13,24,2,"R2.P1-12",2,2,2,8,true,"August 1",true,"All of round 2"
+25,60,3,"R3+",1,1,1,4,true,"August 1",true,"Round 3 through round 5"

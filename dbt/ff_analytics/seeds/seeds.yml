@@ -130,3 +130,161 @@ seeds:
         description: "Is this the current rule?"
         tests:
           - not_null
+
+  - name: dim_name_alias
+    description: "Player name aliases for fuzzy matching from TRANSACTIONS"
+    columns:
+      - name: canonical_name
+        description: "Canonical name from dim_player_id_xref"
+        tests:
+          - not_null
+      - name: alias_name
+        description: "Alternate spelling/format"
+        tests:
+          - not_null
+
+  - name: dim_team_conference_division
+    description: "NFL conference and division mappings"
+    columns:
+      - name: team_abbr
+        description: "Team abbreviation"
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_league_rules
+    description: "Core league configuration rules (SCD Type 2)"
+    columns:
+      - name: rule_id
+        description: "Rule version identifier"
+        tests:
+          - not_null
+          - unique
+      - name: valid_from_season
+        description: "First season this rule set is valid"
+        tests:
+          - not_null
+      - name: valid_to_season
+        description: "Last season this rule set is valid (9999 = ongoing)"
+        tests:
+          - not_null
+      - name: is_current
+        description: "Is this the current rule set?"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              values: [true, false]
+      - name: annual_salary_cap
+        description: "Base salary cap per season ($)"
+        tests:
+          - not_null
+      - name: roster_active_limit
+        description: "Maximum active roster size"
+        tests:
+          - not_null
+      - name: roster_total_defined_slots
+        description: "Total defined roster slots (active + taxi + IR)"
+        tests:
+          - not_null
+
+  - name: dim_rookie_contract_scale
+    description: "Rookie contract amounts by draft position"
+    columns:
+      - name: draft_position_start
+        description: "Starting draft position for this bucket"
+        tests:
+          - not_null
+      - name: draft_position_end
+        description: "Ending draft position for this bucket"
+        tests:
+          - not_null
+      - name: position_bucket_label
+        description: "Label for this position bucket (e.g., R1.P1-2)"
+        tests:
+          - not_null
+          - unique
+      - name: year1_amount
+        description: "Year 1 contract amount ($)"
+        tests:
+          - not_null
+      - name: year4_option_amount
+        description: "Year 4 option amount ($)"
+        tests:
+          - not_null
+
+  - name: dim_cut_liability_schedule
+    description: "Dead cap percentage schedule by contract year"
+    columns:
+      - name: contract_year
+        description: "Year of contract (1-5)"
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              config:
+                severity: error
+              values: [1, 2, 3, 4, 5]
+      - name: dead_cap_pct
+        description: "Percentage of contract amount owed as dead cap"
+        tests:
+          - not_null
+      - name: rounding_rule
+        description: "Rounding method for dead cap calculation"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              values: ['ceil']
+
+  - name: dim_rfa_compensation_schedule
+    description: "RFA compensation pick schedule by contract value"
+    columns:
+      - name: schedule_id
+        description: "Schedule entry identifier"
+        tests:
+          - not_null
+          - unique
+      - name: valid_from_season
+        description: "First season this schedule is valid"
+        tests:
+          - not_null
+      - name: valid_to_season
+        description: "Last season this schedule is valid"
+        tests:
+          - not_null
+      - name: avg_annual_min
+        description: "Minimum average annual value ($)"
+        tests:
+          - not_null
+      - name: compensation_pick_round
+        description: "Compensation pick round (1, 2, or 3)"
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              values: [1, 2, 3]
+
+  - name: dim_position_slot_eligibility
+    description: "Position eligibility for roster slots"
+    columns:
+      - name: position
+        description: "Player position"
+        tests:
+          - not_null
+          - unique
+      - name: eligible_starter_slots
+        description: "Pipe-delimited starter slots (e.g., RB|FLEX)"
+        tests:
+          - not_null
+      - name: eligible_bench_standard
+        description: "Can use standard bench slots"
+        tests:
+          - not_null
+      - name: eligible_bench_idp_only
+        description: "Can use IDP-only bench slots"
+        tests:
+          - not_null

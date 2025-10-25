@@ -13,7 +13,7 @@ A pragmatic, step‑by‑step list to stand up the data pipeline with our latest
 
 Legend: ☐ todo · ☑ done/verified · (owner) · (notes)
 
-Updated: 2025-10-24 — Phase 1 Seeds COMPLETE; Phase 2A Track A at 95%. Track B commissioner samples now packaged; Track C/D outstanding bullets unchanged. Test suite green with bundled sample fixtures.
+Updated: 2025-10-25 — **League Rules Dimensions Added** (ADR-011): 5 new seeds (dim_league_rules, dim_rookie_contract_scale, dim_cut_liability_schedule, dim_rfa_compensation_schedule, dim_position_slot_eligibility) + dim_asset UNION dimension. Enables Phase 3A contract/roster analysis. Phase 1 Seeds expanded to 11/13 complete. All 49 new tests passing (100%).
 
 ______________________________________________________________________
 
@@ -32,12 +32,17 @@ ______________________________________________________________________
 
 ### Recommended Sequencing (High‑Level)
 
-1. **Phase 1 - Seeds**: ☑ **COMPLETE** (6/8 done, 2 optional) - ALL TRACKS UNBLOCKED!
+1. **Phase 1 - Seeds**: ☑ **COMPLETE** (11/13 done, 2 optional) - ALL TRACKS UNBLOCKED!
 
    - ☑ dim_player_id_xref (12,133 players, 19 provider IDs)
    - ☑ dim_franchise, dim_pick, dim_scoring_rule, dim_timeframe
    - ☑ dim_name_alias (78 alias mappings for 100% player coverage)
-   - ☐ dim_asset, stat_dictionary (optional)
+   - ☑ **dim_league_rules** (salary cap, roster limits - Type 2 SCD) ✅ **NEW**
+   - ☑ **dim_rookie_contract_scale** (rookie contract amounts by draft position) ✅ **NEW**
+   - ☑ **dim_cut_liability_schedule** (dead cap percentages) ✅ **NEW**
+   - ☑ **dim_rfa_compensation_schedule** (RFA compensation picks) ✅ **NEW**
+   - ☑ **dim_position_slot_eligibility** (roster slot rules by position) ✅ **NEW**
+   - ☐ stat_dictionary (optional - single provider, not yet needed)
 
 1. **Phase 2 - Parallel Tracks** (ALL UNBLOCKED):
 
@@ -386,6 +391,7 @@ Both facts store `measure_domain='real_world'` only; fantasy scoring applied in 
   - ☑ `dim_team` (COMPLETE ✅ - NFL teams from nflverse)
   - ☑ `dim_schedule` (COMPLETE ✅ - game schedule from nflverse)
   - ☑ `dim_franchise` (COMPLETE ✅ - league team/owner dimension from seed)
+  - ☑ **`dim_asset`** (COMPLETE ✅ - UNION of players + picks for trade analysis) **NEW**
 - **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
 
 **2×2 Model Implementation:**
@@ -581,8 +587,16 @@ ______________________________________________________________________
 - ☑ `dim_scoring_rule` (Half-PPR + IDP, SCD2) ✅ **COMPLETE**
 - ☑ `dim_timeframe` (maps TRANSACTIONS strings to season/week/period) ✅ **COMPLETE**
 - ☑ `dim_name_alias` (78 alias mappings, 100% coverage) ✅ **COMPLETE**
-- ☐ `dim_asset` (OPTIONAL - derived from dim_player_id_xref + dim_pick on-demand)
+- ☑ **`dim_league_rules`** (salary cap, roster limits - Type 2 SCD) ✅ **COMPLETE (2025-10-25)**
+- ☑ **`dim_rookie_contract_scale`** (rookie contract amounts by draft position) ✅ **COMPLETE (2025-10-25)**
+- ☑ **`dim_cut_liability_schedule`** (dead cap percentages by contract year) ✅ **COMPLETE (2025-10-25)**
+- ☑ **`dim_rfa_compensation_schedule`** (RFA compensation pick schedule - Type 2 SCD) ✅ **COMPLETE (2025-10-25)**
+- ☑ **`dim_position_slot_eligibility`** (roster slot rules by position) ✅ **COMPLETE (2025-10-25)**
 - ☐ `stat_dictionary.csv` (OPTIONAL - single provider, not yet needed for multi-provider normalization)
+
+**Derived Dimensions:**
+
+- ☑ **`dim_asset`** (UNION of dim_player + dim_pick; 12,193 rows) ✅ **COMPLETE (2025-10-25)**
 
 **All tracks unblocked:** Phase 1 complete enables TRANSACTIONS parsing (Track B), projections integration (Track D), and KTC fetcher (Track C).
 

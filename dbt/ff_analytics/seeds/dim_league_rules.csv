@@ -1,0 +1,2 @@
+rule_id,valid_from_season,valid_to_season,is_current,annual_salary_cap,cap_tradeable,cap_tradeable_years_ahead,roster_active_limit,roster_taxi_limit,roster_ir_limit,roster_total_defined_slots,starter_qb,starter_rb,starter_wr,starter_te,starter_flex,starter_dl,starter_lb,starter_db,starter_idp_flex,starter_dst,starter_k,bench_standard,bench_idp_only,taxi_standard,taxi_idp_only,notes
+R001,2012,9999,true,250,true,5,25,5,3,33,1,2,2,1,1,2,2,2,1,1,1,7,2,4,1,"Base league rules established 2012; TEAM D/ST and K eligible for IDP-only bench slots"

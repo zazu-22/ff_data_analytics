@@ -1,0 +1,10 @@
+position,eligible_starter_slots,eligible_bench_standard,eligible_bench_idp_only,eligible_taxi_standard,eligible_taxi_idp_only,notes
+QB,"QB",true,false,true,false,"Standard offensive player"
+RB,"RB|FLEX",true,false,true,false,"Can fill RB or FLEX starter slot"
+WR,"WR|FLEX",true,false,true,false,"Can fill WR or FLEX starter slot"
+TE,"TE|FLEX",true,false,true,false,"Can fill TE or FLEX starter slot"
+DL,"DL|IDP_FLEX",true,true,true,true,"IDP player; eligible for IDP-only bench and taxi"
+LB,"LB|IDP_FLEX",true,true,true,true,"IDP player; eligible for IDP-only bench and taxi"
+DB,"DB|IDP_FLEX",true,true,true,true,"IDP player; eligible for IDP-only bench and taxi"
+K,"K",true,true,true,true,"Special: considered IDP for bench/taxi purposes per constitution II.F"
+DST,"TEAM_D_ST",true,true,false,false,"Special: considered IDP for bench purposes; NOT eligible for taxi per constitution II.G path_b"
