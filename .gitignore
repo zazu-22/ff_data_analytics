@@ -57,7 +57,7 @@ notebooks/*.csv
 *~
 
 # Temporary files
-*.tmp
+*.tmp*
 *.log
 .cache/
 samples/**/*cache*
