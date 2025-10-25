@@ -284,6 +284,7 @@ ______________________________________________________________________
 **Implementation Progress (as of 2025-10-24):**
 
 See `SPEC-1_v_2.3_implementation_checklist_v_0.md` for detailed status. Summary:
+
 - ✅ Phase 1 (Seeds) complete
 - ✅ Phase 2A (NFL Actuals) 95% complete
 - ⚠️ Phase 2B (League Data) 80% complete
@@ -473,6 +474,7 @@ ______________________________________________________________________
 ## Addendum — v2.2 vs. v2.3 Implementation Reconciliation
 
 This section documents design decisions that evolved during implementation (2025-09-29 through 2025-10-24), captured in:
+
 - SPEC-1 v2.3 Implementation Checklist (execution status)
 - Refined Data Model Plan v4.x addenda (v4.1, v4.2, v4.3) (technical specifications)
 - Formal ADRs (decision rationale and alternatives)
@@ -483,14 +485,14 @@ The refined_data_model_plan_v4.md is the **technical blueprint** for implementin
 
 v2.2 was the **initial blueprint**. During implementation, we discovered and documented refinements:
 
-| Original Design (v2.2) | Technical Plan (v4.x) | Implemented in v2.3 | Rationale |
-|---|---|---|---|
-| **Single `fact_player_stats` table** with `stat_kind` enum (actuals + projections) | **Separate tables** (v4.1): `fact_player_stats` (actuals) + `fact_player_projections` (projections) | ✅ Implemented | Per-game actuals (`game_id` required) vs. weekly/season projections (no `game_id`) have incompatible grains. Separate tables eliminate nullable keys and conditional logic. See ADR-007 and refined_data_model_plan_v4.md § "Addendum: Projections Integration (v4.1)" for full rationale and alternatives. |
-| **Fact tables store both `measure_domain='real_world'` AND `measure_domain='fantasy'`** | **Fact tables store `measure_domain='real_world'` only** (v4.1); fantasy scoring applied in marts via `dim_scoring_rule` | ✅ Implemented | Cleaner separation of concerns (Kimball alignment): facts = immutable raw data, marts = scored/transformed layer. Improves change management (scoring rule updates don't touch facts). Enables 2×2 model: both actuals and projections start in real-world layer, scored in marts. |
-| **Canonical `fact_player_stats` includes `horizon` column for both actuals and projections** | **`horizon` field only in `fact_player_projections`** (v4.1); removed from actuals (v4.0 Blocker 2) | ✅ Implemented | Actuals are game-specific (no horizon semantics). Projections have `horizon ∈ {'weekly', 'rest_of_season', 'full_season'}`. Separating eliminates grain confusion and nullable columns. |
-| **Projections use weekly partitioning** (`['season', 'week']`) | **Projections use daily asof_date partitioning** (v4.1): `['season']` + incremental on `asof_date` | ✅ Implemented | Projections are recalculated multiple times per week (as we approach game time). Daily partitioning enables time-travel queries ("what were projections as of week 3?"). Weekly bucketing would lose granularity. |
-| **`gsis_id` as canonical `player_id`** | **`mfl_id` as canonical `player_id`** (v4.3); platform-agnostic crosswalk with 19 provider IDs | ✅ Implemented (ADR-010) | Platform agnostic: `gsis_id` is NFL-specific; `mfl_id` maps to 19 fantasy platforms. Separates concerns: canonical ID distinct from provider IDs. Stable and future-proof. See refined_data_model_plan_v4.md § "Addendum: Expanded NFL Stats + mfl_id Identity (v4.3)". |
-| **Base NFL stats only** | **Consolidated fact** (v4.3): base stats + snap counts + ff_opportunity (96 stat types total) | ✅ 88/96 implemented | Same grain (player-game-stat); manageable scale (12-15M rows). Avoids fact-to-fact joins (Kimball anti-pattern). Single table scan vs. complex joins. See ADR-009 and refined_data_model_plan_v4.md § v4.3. |
+| Original Design (v2.2)                                                                       | Technical Plan (v4.x)                                                                                                    | Implemented in v2.3      | Rationale                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single `fact_player_stats` table** with `stat_kind` enum (actuals + projections)           | **Separate tables** (v4.1): `fact_player_stats` (actuals) + `fact_player_projections` (projections)                      | ✅ Implemented           | Per-game actuals (`game_id` required) vs. weekly/season projections (no `game_id`) have incompatible grains. Separate tables eliminate nullable keys and conditional logic. See ADR-007 and refined_data_model_plan_v4.md § "Addendum: Projections Integration (v4.1)" for full rationale and alternatives. |
+| **Fact tables store both `measure_domain='real_world'` AND `measure_domain='fantasy'`**      | **Fact tables store `measure_domain='real_world'` only** (v4.1); fantasy scoring applied in marts via `dim_scoring_rule` | ✅ Implemented           | Cleaner separation of concerns (Kimball alignment): facts = immutable raw data, marts = scored/transformed layer. Improves change management (scoring rule updates don't touch facts). Enables 2×2 model: both actuals and projections start in real-world layer, scored in marts.                          |
+| **Canonical `fact_player_stats` includes `horizon` column for both actuals and projections** | **`horizon` field only in `fact_player_projections`** (v4.1); removed from actuals (v4.0 Blocker 2)                      | ✅ Implemented           | Actuals are game-specific (no horizon semantics). Projections have `horizon ∈ {'weekly', 'rest_of_season', 'full_season'}`. Separating eliminates grain confusion and nullable columns.                                                                                                                     |
+| **Projections use weekly partitioning** (`['season', 'week']`)                               | **Projections use daily asof_date partitioning** (v4.1): `['season']` + incremental on `asof_date`                       | ✅ Implemented           | Projections are recalculated multiple times per week (as we approach game time). Daily partitioning enables time-travel queries ("what were projections as of week 3?"). Weekly bucketing would lose granularity.                                                                                           |
+| **`gsis_id` as canonical `player_id`**                                                       | **`mfl_id` as canonical `player_id`** (v4.3); platform-agnostic crosswalk with 19 provider IDs                           | ✅ Implemented (ADR-010) | Platform agnostic: `gsis_id` is NFL-specific; `mfl_id` maps to 19 fantasy platforms. Separates concerns: canonical ID distinct from provider IDs. Stable and future-proof. See refined_data_model_plan_v4.md § "Addendum: Expanded NFL Stats + mfl_id Identity (v4.3)".                                     |
+| **Base NFL stats only**                                                                      | **Consolidated fact** (v4.3): base stats + snap counts + ff_opportunity (96 stat types total)                            | ✅ 88/96 implemented     | Same grain (player-game-stat); manageable scale (12-15M rows). Avoids fact-to-fact joins (Kimball anti-pattern). Single table scan vs. complex joins. See ADR-009 and refined_data_model_plan_v4.md § v4.3.                                                                                                 |
 
 ### Key ADRs Documenting Implementation Decisions
 
@@ -506,19 +508,23 @@ Read these ADRs for detailed decision rationale, constraints, and alternatives c
 See `SPEC-1_v_2.3_implementation_checklist_v_0.md` for detailed Phase 1/2/3 tracking.
 
 **Phase 1 (Seeds):** ✅ Complete (6/8 done, 2 optional)
+
 - All player identity, franchise, scoring, and pick dimensions built and tested
 
 **Phase 2A (Track A - NFL Actuals):** ✅ 95% Complete
+
 - `fact_player_stats` implemented with 88 stats (50 base + 6 snap + 32 opportunity)
 - 6.3M rows (6 seasons), 19/19 DQ tests passing
 - `dim_player`, `dim_team`, `dim_schedule` complete
 - `mart_real_world_actuals_weekly`, `mart_fantasy_actuals_weekly` complete
 
 **Phase 2B (Track B - League Data):** ⚠️ 80% Complete
+
 - TRANSACTIONS tab parsing implemented
 - `fact_league_transactions` complete
 
 **Phase 2C/D (Tracks C/D):** ⏳ In progress
+
 - Track C (KTC market data): 0% (fetcher pending)
 - Track D (Projections): 20% (weighted aggregation pending)
 
@@ -537,12 +543,14 @@ These are tracked in v2.3 checklist and will be addressed in Phase 3.
 ### How to Read These Documents
 
 **For new contributors:**
+
 1. Start with **v2.3 Implementation Checklist** for current status and next steps
-2. Refer to **refined_data_model_plan_v4.md** for technical specifications (v4.1, v4.2, v4.3 addenda)
-3. Refer to **v2.2** for architectural rationale and holistic design context
-4. Check **ADRs** for deep-dive decision rationale and alternatives
+1. Refer to **refined_data_model_plan_v4.md** for technical specifications (v4.1, v4.2, v4.3 addenda)
+1. Refer to **v2.2** for architectural rationale and holistic design context
+1. Check **ADRs** for deep-dive decision rationale and alternatives
 
 **For operational clarity:**
+
 - v2.3 = "what we're building and why, in execution order"
 - v4.x = "technical specifications for how to build it"
 - v2.2 = "the original design thinking and requirements baseline"
@@ -551,6 +559,7 @@ These are tracked in v2.3 checklist and will be addressed in Phase 3.
 ### Reconciliation Complete?
 
 This reconciliation documents the state as of 2025-10-24. Future changes should:
+
 - Update v2.3 checklist immediately (tactical, day-to-day)
 - Update v4.x for technical specification changes
 - Update v2.2 only if architectural rationale changes (rare)

@@ -39,6 +39,7 @@ left join {{ ref('dim_player_id_xref') }} xref
 ```
 
 **Key principles**:
+
 - `player_id`: Canonical business key (mfl_id), use for FK relationships
 - `player_key`: Composite technical key for grain enforcement
 - Unmapped players: `player_id = -1`, `player_key = raw_provider_id`
@@ -47,11 +48,13 @@ left join {{ ref('dim_player_id_xref') }} xref
 ## Data Quality Documentation
 
 Every staging model documents:
+
 - **NULL filtering**: Percentage and row count filtered
 - **Crosswalk coverage**: Mapping success rate
 - **Data characteristics**: Known issues, patterns
 
 Example:
+
 ```sql
 -- Data quality filters: Exclude records missing required identifiers
 -- player_id (gsis_id): ~0.12% of raw data has NULL (113/97,415 rows)

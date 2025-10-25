@@ -299,7 +299,7 @@ This decision was made during data model v4 review on 2025-09-29 when evaluating
 
 **Sample Data Available:** Raw TRANSACTIONS tab copied; ~1,000 rows at `samples/sheets/TRANSACTIONS/TRANSACTIONS.csv` (not yet parsed).
 
----
+______________________________________________________________________
 
 ## Resolution - Implementation Complete (2025-10-02)
 
@@ -312,17 +312,20 @@ Successfully implemented full TRANSACTIONS data pipeline with 100% player mappin
 **Deliverables**:
 
 1. **Parser** (`src/ingest/sheets/commissioner_parser.py::parse_transactions()`)
+
    - 41 unit tests, all passing
    - 100% player name mapping via `dim_name_alias` seed (78 alias mappings)
    - Outputs: `transactions.parquet` (4,474 rows), `unmapped_players.parquet` (0 rows)
 
-2. **dbt Models**:
+1. **dbt Models**:
+
    - `dbt/ff_analytics/models/sources/src_sheets.yml` - Source definition
    - `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql` - Staging with validation
    - `dbt/ff_analytics/models/core/fact_league_transactions.sql` - Core fact table
    - Full schema tests with grain enforcement and FK relationships
 
-3. **Documentation**:
+1. **Documentation**:
+
    - `docs/analysis/TRANSACTIONS_contract_validation_analysis.md` - Data quality findings
    - Updated `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` - Track B → 80% complete
 
@@ -380,13 +383,13 @@ Following Kimball transaction fact table pattern:
 
 ### Data Quality Achievements
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Player mapping coverage | ≥95% | 100% | ✅ Exceeded |
-| Transaction type classification | 100% | 100% | ✅ Met |
-| Asset type inference | ≥98% | 98.3% | ✅ Met |
-| Grain uniqueness | 100% | 100% | ✅ Met |
-| FK relationships | 100% valid | 100% | ✅ Met |
+| Metric                          | Target     | Actual | Status      |
+| ------------------------------- | ---------- | ------ | ----------- |
+| Player mapping coverage         | ≥95%       | 100%   | ✅ Exceeded |
+| Transaction type classification | 100%       | 100%   | ✅ Met      |
+| Asset type inference            | ≥98%       | 98.3%  | ✅ Met      |
+| Grain uniqueness                | 100%       | 100%   | ✅ Met      |
+| FK relationships                | 100% valid | 100%   | ✅ Met      |
 
 ### Files Modified/Created
 
@@ -409,8 +412,8 @@ Following Kimball transaction fact table pattern:
 ### Next Steps (Phase 3)
 
 1. **Create `dim_player_contract_history`** - Derived clean contract state
-2. **Trade analysis marts** - `mart_trade_history`, `mart_trade_valuations`
-3. **Integration with KTC market values** - Actual trade values vs market pricing
+1. **Trade analysis marts** - `mart_trade_history`, `mart_trade_valuations`
+1. **Integration with KTC market values** - Actual trade values vs market pricing
 
 ### References
 

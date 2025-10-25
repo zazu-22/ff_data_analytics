@@ -3,11 +3,12 @@
 **Date**: 2025-10-01
 **Process**: League Transaction History (Commissioner Sheet TRANSACTIONS tab)
 **Related Documents**:
+
 - Profiling: `TRANSACTIONS_profiling_20251001.md`
 - ADR-008: `docs/adr/ADR-008-league-transaction-history-integration.md`
 - Kimball Guide: `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md`
 
----
+______________________________________________________________________
 
 ## Four-Step Kimball Design Process
 
@@ -20,30 +21,35 @@
 **Source**: Commissioner Google Sheet TRANSACTIONS tab (authoritative source of truth for dynasty league)
 
 **Business Value**:
+
 - Historical audit trail for all league transactions
 - Trade analysis (who won/lost based on market values)
 - Roster reconstruction at any point in time
 - Contract management and cap space tracking
 - Multi-asset trade analysis
 
----
+______________________________________________________________________
 
 ### Step 2: Declare the Grain
 
 **Grain Statement**:
+
 > **One row per asset per transaction per direction**
 
 **Example**: A trade where Chip sends 2 players + 1 pick to James in exchange for 1 player + 2 picks creates **6 rows**:
+
 - 3 rows: Chip → James (2 players, 1 pick)
 - 3 rows: James → Chip (1 player, 2 picks)
 
 **Grain Components**:
+
 1. `transaction_id` — Unique identifier for each asset movement (from Sort column, cleaned)
-2. `asset_type` — Player, pick, or cap_space
-3. `player_id` — Nullable, populated only when asset_type='player'
-4. `pick_id` — Nullable, populated only when asset_type='pick'
+1. `asset_type` — Player, pick, or cap_space
+1. `player_id` — Nullable, populated only when asset_type='player'
+1. `pick_id` — Nullable, populated only when asset_type='pick'
 
 **Grain Validation**:
+
 ```sql
 -- dbt test: unique combination
 SELECT transaction_id, asset_type, player_id, pick_id
@@ -54,32 +60,35 @@ HAVING COUNT(*) > 1;
 ```
 
 **Grain Type**: **Transaction Fact Table** (per Kimball guide p. 243-248)
+
 - Event-driven (not periodic)
 - Sparse (transactions happen irregularly)
 - Immutable once recorded
 
----
+______________________________________________________________________
 
 ### Step 3: Identify the Dimensions
 
 #### Conformed Dimensions (Existing)
 
-| Dimension | Surrogate Key | Type | Cardinality | Source |
-|-----------|---------------|------|-------------|--------|
-| `dim_player` | player_id (mfl_id) | SCD Type 1 | ~12,000 | nflverse ff_playerids |
-| `dim_pick` | pick_id | Static | ~1,140 | Seed (2012-2030) |
-| `dim_franchise` | franchise_id | SCD Type 2 | 12 franchises | Seed (ownership history) |
-| `dim_asset` | asset_id | Static | ~13,000 | UNION of players + picks |
-| `dim_date` | date_key | Static | ~10,950 | Generated (2009-2039) |
-| `dim_timeframe` | timeframe | Static | ~138 | Seed (season/week mapping) |
+| Dimension       | Surrogate Key      | Type       | Cardinality   | Source                     |
+| --------------- | ------------------ | ---------- | ------------- | -------------------------- |
+| `dim_player`    | player_id (mfl_id) | SCD Type 1 | ~12,000       | nflverse ff_playerids      |
+| `dim_pick`      | pick_id            | Static     | ~1,140        | Seed (2012-2030)           |
+| `dim_franchise` | franchise_id       | SCD Type 2 | 12 franchises | Seed (ownership history)   |
+| `dim_asset`     | asset_id           | Static     | ~13,000       | UNION of players + picks   |
+| `dim_date`      | date_key           | Static     | ~10,950       | Generated (2009-2039)      |
+| `dim_timeframe` | timeframe          | Static     | ~138          | Seed (season/week mapping) |
 
 #### Role-Playing Dimensions
 
 **dim_franchise** plays 2 roles:
+
 - `from_franchise_id` → Franchise sending the asset
 - `to_franchise_id` → Franchise receiving the asset
 
 **Special handling**:
+
 - "Waiver Wire" is represented as NULL franchise_id (not a dimension member)
 - Cuts: from_franchise_id IS NOT NULL, to_franchise_id IS NULL
 - Signings: from_franchise_id IS NULL, to_franchise_id IS NOT NULL
@@ -90,6 +99,7 @@ HAVING COUNT(*) > 1;
 Per Kimball guide (p. 408-422), transaction identifiers with no other attributes should be stored directly in fact table:
 
 **Degenerate Dimensions**:
+
 - `transaction_id` — No separate dim_transaction table
 - `transaction_type` — Low-cardinality enum (9 values)
 - `asset_type` — Low-cardinality enum (3 values: player, pick, cap_space)
@@ -99,6 +109,7 @@ Per Kimball guide (p. 408-422), transaction identifiers with no other attributes
 #### Junk Dimension (Optional)
 
 **Option A: Junk Dimension** `dim_transaction_profile`
+
 ```sql
 CREATE TABLE dim_transaction_profile (
     transaction_profile_key INTEGER PRIMARY KEY,
@@ -112,41 +123,45 @@ CREATE TABLE dim_transaction_profile (
 Store `transaction_type` and `asset_type` directly in fact table as VARCHAR columns.
 
 **Recommendation**: **Option B** (degenerate)
+
 - Only 27 combinations (9 transaction types × 3 asset types)
 - No history tracking needed
 - Simpler queries (no extra join)
 - More intuitive for analysts
 
----
+______________________________________________________________________
 
 ### Step 4: Identify the Facts
 
 #### Measure Classification
 
-| Measure | Type | Additive Across Transactions? | Additive Across Time? | Storage |
-|---------|------|-------------------------------|----------------------|---------|
-| contract_total | Semi-additive | ✅ Yes (trade value sums) | ❌ No (restate) | INTEGER |
-| contract_years | Semi-additive | ✅ Yes (total years) | ❌ No | INTEGER |
-| faad_compensation | Additive | ✅ Yes | ✅ Yes | INTEGER |
-| cap_space_amount | Semi-additive | ✅ Yes (net cap transfer) | ❌ No | INTEGER |
+| Measure           | Type          | Additive Across Transactions? | Additive Across Time? | Storage |
+| ----------------- | ------------- | ----------------------------- | --------------------- | ------- |
+| contract_total    | Semi-additive | ✅ Yes (trade value sums)     | ❌ No (restate)       | INTEGER |
+| contract_years    | Semi-additive | ✅ Yes (total years)          | ❌ No                 | INTEGER |
+| faad_compensation | Additive      | ✅ Yes                        | ✅ Yes                | INTEGER |
+| cap_space_amount  | Semi-additive | ✅ Yes (net cap transfer)     | ❌ No                 | INTEGER |
 
 **No Fully Additive Measures**: All measures are semi-additive because they represent point-in-time values, not accumulating totals.
 
 #### Complex Attributes
 
 **contract_split** (yearly cap hits):
+
 - Format: JSON array `[4, 4, 4]` or `[40, 40, 37, 24, 24]`
 - Length must equal `contract_years`
 - Sum must equal `contract_total`
 - Storage: TEXT as JSON (DuckDB supports JSON functions)
 
 **Rationale for JSON**:
+
 - Variable-length arrays (1-7 years observed)
 - Schema flexibility (league rules may change)
 - DuckDB native JSON support for aggregation
 - Avoids bridge table complexity
 
 **Data Quality Validation**:
+
 ```sql
 -- dbt test: contract split integrity
 SELECT transaction_id
@@ -167,13 +182,13 @@ WHERE contract_total IS NOT NULL
 
 #### Flags and Indicators
 
-| Flag | Type | Values | Nullability |
-|------|------|--------|-------------|
+| Flag        | Type    | Values     | Nullability            |
+| ----------- | ------- | ---------- | ---------------------- |
 | rfa_matched | BOOLEAN | TRUE/FALSE | Nullable (mostly NULL) |
 
 **Note**: `franchise_tag` and `faad_compensation` are derived from `transaction_type`, not separate flags.
 
----
+______________________________________________________________________
 
 ## Fact Table Schema
 
@@ -238,12 +253,14 @@ CREATE TABLE fact_league_transactions (
 **Partition Key**: `transaction_year`
 
 **Analysis**:
+
 - ~600 transactions/year × 13 seasons = ~7,800 total rows
 - Partitions: 2012-2025 → 14 partitions
 - Avg partition size: ~560 rows
 - Max partition size: ~650 rows (2024)
 
 **Query Patterns**:
+
 ```sql
 -- Efficient: Single partition scan
 SELECT * FROM fact_league_transactions
@@ -257,7 +274,7 @@ WHERE transaction_year BETWEEN 2022 AND 2024;
 SELECT * FROM fact_league_transactions;
 ```
 
----
+______________________________________________________________________
 
 ## Dimension Conformance
 
@@ -266,16 +283,19 @@ SELECT * FROM fact_league_transactions;
 **Challenge**: Map 1,249 unique player names → `dim_player_id_xref.player_id`
 
 **Mapping Sequence**:
+
 1. **Exact match** on `name` column: `"Travis Kelce"` → match
-2. **Fuzzy match** on `merge_name` column: `"travis kelce"` → match
-3. **Unmapped**: player_id = -1, track in QA table
+1. **Fuzzy match** on `merge_name` column: `"travis kelce"` → match
+1. **Unmapped**: player_id = -1, track in QA table
 
 **Expected Coverage**:
+
 - Exact match: ~85-90%
 - Fuzzy match: ~5-8%
 - Unmapped: ~2-5%
 
 **QA View**:
+
 ```sql
 -- stg_sheets__transactions_unmapped_players
 SELECT DISTINCT
@@ -299,6 +319,7 @@ ORDER BY 2 DESC;
 **Pick ID Format**: `YYYY_R#_P##` (e.g., `2025_R1_P04`)
 
 **Mapping Logic**:
+
 ```sql
 CASE
     WHEN pick_slot IS NOT NULL AND pick_slot != 'TBD'
@@ -309,6 +330,7 @@ END AS pick_id
 ```
 
 **TBD Picks**:
+
 - Cannot map to specific dim_pick row
 - Create synthetic `pick_id` like `2025_R1_TBD`
 - Update via backfill when pick is determined post-draft
@@ -318,10 +340,12 @@ END AS pick_id
 **Simple**: GM name → franchise_id lookup
 
 **Special Cases**:
+
 - `"Waiver Wire"` → NULL (not a franchise)
 - Historical ownership changes handled by dim_franchise SCD Type 2
 
 **Validation**:
+
 ```sql
 -- dbt test: all non-waiver transactions map to valid franchises
 SELECT transaction_id
@@ -330,7 +354,7 @@ WHERE from_franchise_id IS NOT NULL
   AND from_franchise_id NOT IN (SELECT franchise_id FROM dim_franchise WHERE is_current_owner = TRUE);
 ```
 
----
+______________________________________________________________________
 
 ## Multi-Asset Trade Reconstruction
 
@@ -339,6 +363,7 @@ WHERE from_franchise_id IS NOT NULL
 Reconstruct complete trades showing all assets exchanged between parties.
 
 **Example Query**:
+
 ```sql
 -- "Show me the complete Chip vs James trade from 2024 Offseason"
 WITH trade_window AS (
@@ -376,6 +401,7 @@ ORDER BY t.transaction_id DESC;
 ### Trade Summary Mart
 
 **mart_trade_history** (aggregate by trade event):
+
 ```sql
 -- One row per trade event (time_frame + party_set)
 SELECT
@@ -391,7 +417,7 @@ WHERE transaction_type = 'Trade'
 GROUP BY 1, 2;
 ```
 
----
+______________________________________________________________________
 
 ## Data Quality Framework
 
@@ -467,11 +493,12 @@ tests:
       severity: error
 ```
 
----
+______________________________________________________________________
 
 ## Implementation Checklist
 
 ### Prerequisites (✅ COMPLETE)
+
 - ✅ dim_player_id_xref seed (12,133 players)
 - ✅ dim_franchise seed (21 rows, SCD2)
 - ✅ dim_pick seed (1,141 picks)
@@ -479,6 +506,7 @@ tests:
 - ⏭️ dim_asset seed/view (UNION of players + picks)
 
 ### Phase 2: Parser
+
 - [ ] Implement `parse_transactions()` in `commissioner_parser.py`
 - [ ] Timeframe parsing (regex patterns)
 - [ ] Contract disaggregation (total/years → JSON split)
@@ -489,6 +517,7 @@ tests:
 - [ ] Unit tests with diverse fixtures
 
 ### Phase 3: Staging
+
 - [ ] Create `stg_sheets__transactions.sql`
 - [ ] Validate FK relationships
 - [ ] Enum value validation
@@ -497,6 +526,7 @@ tests:
 - [ ] Document mapping coverage metrics
 
 ### Phase 4: Fact
+
 - [ ] Build `fact_league_transactions`
 - [ ] Grain uniqueness test
 - [ ] All FK relationship tests
@@ -504,54 +534,57 @@ tests:
 - [ ] Materialization strategy (table, full refresh)
 
 ### Phase 5: Marts
+
 - [ ] `mart_trade_history` (trade event summaries)
 - [ ] `mart_trade_valuations` (join to KTC market values)
 - [ ] `mart_roster_timeline` (reconstruct rosters via transaction replay)
 
----
+______________________________________________________________________
 
 ## Alignment with ADR-008
 
 ### What Changed
 
-| ADR-008 Assumption | Reality (from Profiling) | Resolution |
-|--------------------|-------------------------|------------|
+| ADR-008 Assumption                    | Reality (from Profiling)          | Resolution                                |
+| ------------------------------------- | --------------------------------- | ----------------------------------------- |
 | Sort column groups multi-asset trades | Each asset gets unique Sort value | Group by (time_frame, party_set) in marts |
-| ~1,000 rows | 3,912 rows (13 seasons) | Confirmed scale is manageable |
-| dim_asset required | Optional convenience view | Create as simple UNION view |
-| dim_name_alias required | Only if fuzzy matching fails | Add iteratively based on QA |
+| ~1,000 rows                           | 3,912 rows (13 seasons)           | Confirmed scale is manageable             |
+| dim_asset required                    | Optional convenience view         | Create as simple UNION view               |
+| dim_name_alias required               | Only if fuzzy matching fails      | Add iteratively based on QA               |
 
 ### ADR-008 Addendum (to be written)
 
 **Title**: Resolved - TRANSACTIONS Prerequisites
 
 **Changes**:
+
 1. ✅ dim_player_id_xref created from nflverse ff_playerids
-2. ✅ dim_pick created (2012-2030 base picks)
-3. ✅ dim_franchise created (SCD2 ownership history)
-4. ✅ dim_timeframe created (season/week/period mapping)
-5. ⏭️ dim_asset to be created as UNION view (5 min task)
-6. ⏭️ dim_name_alias deferred pending mapping QA results
+1. ✅ dim_pick created (2012-2030 base picks)
+1. ✅ dim_franchise created (SCD2 ownership history)
+1. ✅ dim_timeframe created (season/week/period mapping)
+1. ⏭️ dim_asset to be created as UNION view (5 min task)
+1. ⏭️ dim_name_alias deferred pending mapping QA results
 
 **Trade Grouping**:
+
 - Sort column does NOT group multi-asset trades
 - Use `(time_frame, party_set)` tuple for trade reconstruction
 - Preserve asset-level grain in fact table
 - Aggregate in marts for trade-level analysis
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 1. ✅ Phase 0: Data profiling complete
-2. ✅ Phase 1: Kimball modeling strategy complete
-3. ⏭️ Create dim_asset view
-4. ⏭️ Implement parse_transactions()
-5. ⏭️ Build staging model
-6. ⏭️ Build fact table
-7. ⏭️ Build trade analysis marts
+1. ✅ Phase 1: Kimball modeling strategy complete
+1. ⏭️ Create dim_asset view
+1. ⏭️ Implement parse_transactions()
+1. ⏭️ Build staging model
+1. ⏭️ Build fact table
+1. ⏭️ Build trade analysis marts
 
----
+______________________________________________________________________
 
 ## References
 

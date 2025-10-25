@@ -55,6 +55,7 @@ tests:
 ```
 
 **Why player_key instead of player_id?**
+
 - Multiple unmapped players in same game would all have `player_id = -1`
 - `player_key` uses raw provider IDs as fallback to preserve identity
 - See `models/staging/README.md` for player identity resolution pattern
@@ -80,15 +81,18 @@ Projections      fact_player_projections  →    mart_fantasy_projections
 ```
 
 **Key Decision (ADR-007)**: Actuals and projections use **separate fact tables** because:
+
 - Actuals have per-game grain with `game_id` (required for NFL analysis)
 - Projections have weekly/season grain with `horizon` (no meaningful game_id)
 - Unified table would require nullable keys (anti-pattern)
 
 **Fact Tables**:
+
 - `fact_player_stats` - Per-game actuals (nflverse): 88 stat types, 6.3M rows
 - `fact_player_projections` - Weekly/season projections (ffanalytics): 13 stat types
 
 **Analytics Marts**:
+
 - Real-world: `mart_real_world_actuals_weekly`, `mart_real_world_projections`
 - Fantasy: `mart_fantasy_actuals_weekly`, `mart_fantasy_projections`
 - Variance: `mart_projection_variance` (actuals vs projections)

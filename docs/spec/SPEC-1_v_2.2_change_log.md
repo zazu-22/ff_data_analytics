@@ -20,4 +20,3 @@
 - Updated `tools/make_samples.py` to load .env defaults, bound Sheets range (faster, no hanging).
 - Documented sheets sampler defaults in developer guide; implementation status now reflects green pytest run with bundled fixtures.
 - Promoted implementation checklist to v2.3 and captured Track A/B status plus packaged samples.
-

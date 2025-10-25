@@ -25,7 +25,7 @@ Successfully resolved all grain test failures by implementing a composite `playe
 
 **Key Achievement**: Eliminated 18 grain duplicate violations while maintaining data integrity and traceability for unmapped players.
 
----
+______________________________________________________________________
 
 ## Problem Statement
 
@@ -37,7 +37,7 @@ Successfully resolved all grain test failures by implementing a composite `playe
 
 **Root Cause**: When crosswalk mapping fails for multiple players in the same game, all become indistinguishable `player_id = -1` records, causing grain violations on composite key: `(player_id, game_id, stat_name, provider, measure_domain, stat_kind)`.
 
----
+______________________________________________________________________
 
 ## Solution: Composite player_key Column
 
@@ -57,25 +57,29 @@ end as player_key
 - **Unmapped players**: `player_key = raw_provider_id` (gsis_id or pfr_id)
 - **Unknown edge case**: `player_key = 'UNKNOWN_' || game_id` (defensive fail-safe)
 
----
+______________________________________________________________________
 
 ## Implementation Details
 
 ### Files Modified
 
-1. **stg_nflverse__player_stats.sql** (50 unpivot statements)
+1. **stg_nflverse\_\_player_stats.sql** (50 unpivot statements)
+
    - Added player_key using `gsis_id_raw` fallback
    - Updated all UNION ALL statements to include player_key
 
-2. **stg_nflverse__snap_counts.sql** (6 unpivot statements)
+1. **stg_nflverse\_\_snap_counts.sql** (6 unpivot statements)
+
    - Added player_key using `pfr_player_id` fallback
    - Updated all UNION ALL statements to include player_key
 
-3. **stg_nflverse__ff_opportunity.sql** (32 unpivot statements)
+1. **stg_nflverse\_\_ff_opportunity.sql** (32 unpivot statements)
+
    - Added player_key using `gsis_id_raw` fallback
    - Updated all UNION ALL statements to include player_key
 
-4. **schema.yml**
+1. **schema.yml**
+
    - Updated grain test to use `player_key` instead of `player_id`
    - Added player_key column documentation
    - Added not_null test for player_key
@@ -104,7 +108,7 @@ All staging models now include comprehensive comments documenting:
 - Uses raw provider IDs to preserve identity
 - Defensive fail-safe for edge cases
 
----
+______________________________________________________________________
 
 ## Data Quality Analysis
 
@@ -128,11 +132,11 @@ NULL records characteristics:
 
 ### Mapping Coverage by Source
 
-| Source          | Raw Rows | NULL Filtered | Identifiable | Mapped  | Unmapped |
-|-----------------|----------|---------------|--------------|---------|----------|
-| weekly          | 97,415   | 0.12%         | 99.88%       | ~99.9%  | ~0.1%    |
-| snap_counts     | 136,974  | 0.00%         | 100.00%      | 81.8%   | 18.2%    |
-| ff_opportunity  | 31,339   | 6.75%         | 93.25%       | 99.86%  | 0.14%    |
+| Source         | Raw Rows | NULL Filtered | Identifiable | Mapped | Unmapped |
+| -------------- | -------- | ------------- | ------------ | ------ | -------- |
+| weekly         | 97,415   | 0.12%         | 99.88%       | ~99.9% | ~0.1%    |
+| snap_counts    | 136,974  | 0.00%         | 100.00%      | 81.8%  | 18.2%    |
+| ff_opportunity | 31,339   | 6.75%         | 93.25%       | 99.86% | 0.14%    |
 
 **Key insights**:
 
@@ -140,7 +144,7 @@ NULL records characteristics:
 - ff_opportunity has high NULL rate but excellent mapping coverage for identifiable players
 - weekly data has nearly perfect coverage
 
----
+______________________________________________________________________
 
 ## Test Results
 
@@ -176,7 +180,7 @@ where: "position IN ('QB', 'RB', 'WR', 'TE', 'K', 'FB')"
 - ✅ Enum tests (season, season_type, measure_domain, stat_kind, provider)
 - ✅ FK test (player_id → dim_player_id_xref, filtered for mapped players)
 
----
+______________________________________________________________________
 
 ## Current Database State
 
@@ -193,13 +197,13 @@ Database size: ~220MB
 
 ### Source Breakdown
 
-| Source              | Rows      | Stat Types | Coverage              |
-|---------------------|-----------|------------|-----------------------|
-| player_stats (base) | 4,302,543 | 50         | All 6 seasons         |
-| snap_counts         | 1,224,282 | 6          | All 6 seasons         |
-| ff_opportunity      | 818,496   | 32         | All 6 seasons         |
+| Source              | Rows      | Stat Types | Coverage      |
+| ------------------- | --------- | ---------- | ------------- |
+| player_stats (base) | 4,302,543 | 50         | All 6 seasons |
+| snap_counts         | 1,224,282 | 6          | All 6 seasons |
+| ff_opportunity      | 818,496   | 32         | All 6 seasons |
 
----
+______________________________________________________________________
 
 ## Architecture Decisions
 
@@ -216,11 +220,11 @@ Database size: ~220MB
 ### Design Principles
 
 1. **Defensive data quality**: Filter NULL provider IDs before staging
-2. **Preserve traceability**: Use raw IDs when crosswalk fails
-3. **Fail-safe**: UNKNOWN fallback for edge cases (never reached in practice)
-4. **Documentation**: Comprehensive comments explaining filtering and coverage
+1. **Preserve traceability**: Use raw IDs when crosswalk fails
+1. **Fail-safe**: UNKNOWN fallback for edge cases (never reached in practice)
+1. **Documentation**: Comprehensive comments explaining filtering and coverage
 
----
+______________________________________________________________________
 
 ## Seeds Status - CORRECTED
 
@@ -244,16 +248,16 @@ Database size: ~220MB
 
 **Impact**: All Phase 2 tracks are UNBLOCKED! TRANSACTIONS parsing, FFanalytics projections, and KTC integration can all proceed.
 
----
+______________________________________________________________________
 
 ## Phase 2 Track Status - UPDATED
 
-| Track                 | Progress | Status       | Next Task                            |
-|-----------------------|----------|--------------|--------------------------------------|
-| **A (NFL Actuals)**   | 85%      | Active       | Create dims (player/team/schedule)   |
-| **B (League Data)**   | 30%      | **UNBLOCKED**| Parse TRANSACTIONS tab               |
-| **C (Market Data)**   | 0%       | **UNBLOCKED**| Implement KTC fetcher                |
-| **D (Projections)**   | 20%      | **UNBLOCKED**| Weighted aggregation + player mapping|
+| Track               | Progress | Status        | Next Task                             |
+| ------------------- | -------- | ------------- | ------------------------------------- |
+| **A (NFL Actuals)** | 85%      | Active        | Create dims (player/team/schedule)    |
+| **B (League Data)** | 30%      | **UNBLOCKED** | Parse TRANSACTIONS tab                |
+| **C (Market Data)** | 0%       | **UNBLOCKED** | Implement KTC fetcher                 |
+| **D (Projections)** | 20%      | **UNBLOCKED** | Weighted aggregation + player mapping |
 
 **Track A Remaining Work**:
 
@@ -261,11 +265,11 @@ Database size: ~220MB
    - `dim_player` (from dim_player_id_xref + player attributes)
    - `dim_team` (from nflverse teams)
    - `dim_schedule` (from nflverse schedule)
-2. Build marts:
+1. Build marts:
    - `mart_real_world_actuals_weekly` (aggregate to player-week grain)
    - `mart_fantasy_actuals_weekly` (apply dim_scoring_rule)
 
----
+______________________________________________________________________
 
 ## Next Steps - Decision Point
 
@@ -290,7 +294,7 @@ Database size: ~220MB
 - Update commissioner_parser.py to parse TRANSACTIONS tab
 - Map player names → player_id via dim_player_id_xref (fuzzy matching)
 - Map pick strings → pick_id via dim_pick
-- Create stg_sheets__transactions.sql
+- Create stg_sheets\_\_transactions.sql
 - Build fact_league_transactions
 - Create trade analysis mart
 
@@ -313,7 +317,7 @@ Database size: ~220MB
 
 **Outcome**: Progress on multiple fronts simultaneously
 
----
+______________________________________________________________________
 
 ## Technical Notes for Next Developer
 
@@ -363,20 +367,20 @@ Missing players identified (good candidates for ff_playerids PR):
 - John Samuel Shenker (TE, LV) - gsis_id in snap_counts, not in ff_playerids
 - Rodney Williams (TE, PIT) - gsis_id in snap_counts, not in ff_playerids
 
----
+______________________________________________________________________
 
 ## Performance Metrics
 
-| Metric              | Value            | Assessment                     |
-|---------------------|------------------|--------------------------------|
-| Total rows          | 6.3M             | ✅ 47% of 5-year target (13M)  |
-| Build time          | ~11s             | ✅ Fast, scales linearly       |
-| Database size       | ~220MB           | ✅ Reasonable                  |
-| Stat consistency    | 88/88 all seasons| ✅ Perfect                     |
-| Test success rate   | 19/19 (100%)     | ✅ All passing                 |
-| Unmapped rate       | ~6%              | ✅ Acceptable (mostly linemen) |
+| Metric            | Value             | Assessment                     |
+| ----------------- | ----------------- | ------------------------------ |
+| Total rows        | 6.3M              | ✅ 47% of 5-year target (13M)  |
+| Build time        | ~11s              | ✅ Fast, scales linearly       |
+| Database size     | ~220MB            | ✅ Reasonable                  |
+| Stat consistency  | 88/88 all seasons | ✅ Perfect                     |
+| Test success rate | 19/19 (100%)      | ✅ All passing                 |
+| Unmapped rate     | ~6%               | ✅ Acceptable (mostly linemen) |
 
----
+______________________________________________________________________
 
 ## Commit Reference
 
@@ -384,7 +388,7 @@ Missing players identified (good candidates for ff_playerids PR):
 **Message**: "fix: add player_key composite identifier to resolve grain test duplicates"
 **Files Changed**: 4 files, 157 insertions(+), 93 deletions(-)
 
----
+______________________________________________________________________
 
 ## Success Criteria - ALL MET ✅
 
@@ -396,17 +400,17 @@ Missing players identified (good candidates for ff_playerids PR):
 ✅ **Traceability preserved**: Raw IDs available for unmapped players
 ✅ **Performance**: Build times excellent (\<15 seconds for 6.3M rows)
 
----
+______________________________________________________________________
 
 ## Key Takeaways
 
 1. **player_key solves grain violations**: Composite identifier preserves identity for unmapped players
-2. **Documentation is critical**: Future maintainers need context on NULL filtering and mapping coverage
-3. **Seeds are NOT blocking**: Implementation checklist was outdated, all tracks unblocked
-4. **Data quality transparency**: 6.75% ff_opportunity NULL filtering is acceptable (unidentifiable records)
-5. **Next phase ready**: TRANSACTIONS parsing or Track A completion, both viable paths
+1. **Documentation is critical**: Future maintainers need context on NULL filtering and mapping coverage
+1. **Seeds are NOT blocking**: Implementation checklist was outdated, all tracks unblocked
+1. **Data quality transparency**: 6.75% ff_opportunity NULL filtering is acceptable (unidentifiable records)
+1. **Next phase ready**: TRANSACTIONS parsing or Track A completion, both viable paths
 
----
+______________________________________________________________________
 
 **Handoff Status**: Phase 2A Track A at 85%. All tests passing. Ready for next phase decision (Track A completion vs Track B TRANSACTIONS vs parallel development).
 

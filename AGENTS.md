@@ -1,15 +1,15 @@
 # AGENTS Guide
 
-This guide summarizes how we expect LLM "agents" (and any contributor using autonomous tooling) to work inside the project. It reflects the **current implementation state** captured in the spec pack under `docs/spec/` (see `SPEC-1_v_2.3_implementation_checklist_v_0.md`, updated 2025-10-24) and will evolve as new tracks land. The project is still in development -- treat anything marked "[ ]" in the checklist as in-flight or future work.
+This guide summarizes how we expect LLM "agents" (and any contributor using autonomous tooling) to work inside the project. It reflects the **current implementation state** captured in the spec pack under `docs/spec/` (see `SPEC-1_v_2.3_implementation_checklist_v_0.md`, updated 2025-10-24) and will evolve as new tracks land. The project is still in development -- treat anything marked "\[ \]" in the checklist as in-flight or future work.
 
 ## Current Implementation Snapshot
 
-- **Phase 1 Seeds** - [x] Complete. Identity tables (`dim_player_id_xref`, `dim_franchise`, `dim_scoring_rule`, `dim_pick`, `dim_timeframe`, `dim_name_alias`) are materialized and tested (spec section 0, checklist section 1).
-- **Phase 2 Track A (NFL Actuals)** - [x] ~95% implemented. nflverse shim + dbt models deliver `fact_player_stats`, `dim_player`, `dim_team`, `dim_schedule`, `mart_real_world_actuals_weekly`, `mart_fantasy_actuals_weekly`; follow-ups cover kicking stats and defensive tackle clean-up (checklist section 2).
-- **Phase 2 Track B (Commissioner Sheets)** - [x] Complete. `src/ingest/sheets/commissioner_parser.py` normalizes roster/transactions into long-form tables with sample-backed tests (checklist section 2 Track B, ADR-008).
-- **Phase 2 Track C (Market Data / KTC)** - [ ] Not started. Stub loader exists under `src/ingest/ktc/`; fetching, staging, and marts remain open (checklist section 5).
-- **Phase 2 Track D (Projections)** - [x] Complete. R runner + dbt projections marts (`mart_real_world_projections`, `mart_fantasy_projections`, `mart_projection_variance`) are wired per checklist section 2 Track D.
-- **Phase 3 / Ops** - [ ] Pending. Ops schema, change capture, notebooks, CI hardening, and compaction playbook remain to be implemented (checklist section 3 onward).
+- **Phase 1 Seeds** - \[x\] Complete. Identity tables (`dim_player_id_xref`, `dim_franchise`, `dim_scoring_rule`, `dim_pick`, `dim_timeframe`, `dim_name_alias`) are materialized and tested (spec section 0, checklist section 1).
+- **Phase 2 Track A (NFL Actuals)** - \[x\] ~95% implemented. nflverse shim + dbt models deliver `fact_player_stats`, `dim_player`, `dim_team`, `dim_schedule`, `mart_real_world_actuals_weekly`, `mart_fantasy_actuals_weekly`; follow-ups cover kicking stats and defensive tackle clean-up (checklist section 2).
+- **Phase 2 Track B (Commissioner Sheets)** - \[x\] Complete. `src/ingest/sheets/commissioner_parser.py` normalizes roster/transactions into long-form tables with sample-backed tests (checklist section 2 Track B, ADR-008).
+- **Phase 2 Track C (Market Data / KTC)** - \[ \] Not started. Stub loader exists under `src/ingest/ktc/`; fetching, staging, and marts remain open (checklist section 5).
+- **Phase 2 Track D (Projections)** - \[x\] Complete. R runner + dbt projections marts (`mart_real_world_projections`, `mart_fantasy_projections`, `mart_projection_variance`) are wired per checklist section 2 Track D.
+- **Phase 3 / Ops** - \[ \] Pending. Ops schema, change capture, notebooks, CI hardening, and compaction playbook remain to be implemented (checklist section 3 onward).
 
 Consult `docs/spec/SPEC-1_v_2.2.md` for architecture intent and the v2.3 checklist for authoritative implementation status before making changes.
 

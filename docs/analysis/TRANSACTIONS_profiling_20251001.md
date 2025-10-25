@@ -8,56 +8,58 @@
 
 Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered **critical deviation from ADR-008 assumptions**: multi-asset trades are NOT grouped by Sort column—instead, they must be identified by `(Time Frame, Party Set)` tuples. Largest trade contained 18 assets.
 
----
+______________________________________________________________________
 
 ## Transaction Type Distribution
 
-| Type | Count | % | Description |
-|------|-------|---|-------------|
-| Signing | 1,101 | 28.1% | Free agent signings from waiver wire |
-| Cut | 853 | 21.8% | Player releases to waiver wire |
-| Draft | 826 | 21.1% | Rookie draft selections |
-| Trade | 732 | 18.7% | Multi-asset trades between franchises |
-| FA | 246 | 6.3% | Free agent acquisitions |
-| Waivers | 80 | 2.0% | Waiver wire claims |
-| Extension | 40 | 1.0% | Contract extensions |
-| Franchise | 24 | 0.6% | Franchise tag designations |
-| Amnesty | 10 | 0.3% | Amnesty cuts |
+| Type      | Count | %     | Description                           |
+| --------- | ----- | ----- | ------------------------------------- |
+| Signing   | 1,101 | 28.1% | Free agent signings from waiver wire  |
+| Cut       | 853   | 21.8% | Player releases to waiver wire        |
+| Draft     | 826   | 21.1% | Rookie draft selections               |
+| Trade     | 732   | 18.7% | Multi-asset trades between franchises |
+| FA        | 246   | 6.3%  | Free agent acquisitions               |
+| Waivers   | 80    | 2.0%  | Waiver wire claims                    |
+| Extension | 40    | 1.0%  | Contract extensions                   |
+| Franchise | 24    | 0.6%  | Franchise tag designations            |
+| Amnesty   | 10    | 0.3%  | Amnesty cuts                          |
 
----
+______________________________________________________________________
 
 ## Asset Type Breakdown
 
-| Asset Type | Count | % | Identification Logic |
-|-----------|-------|---|----------------------|
-| Player | 3,528 | 90.2% | `Player` column filled, not containing "Round" or "Cap Space" |
-| Pick | 214 | 5.5% | `Player` column contains "Round" (e.g., "2025 1st Round") |
-| Cap Space | 170 | 4.3% | `Player` column contains "Cap Space" (e.g., "2025 Cap Space") |
+| Asset Type | Count | %     | Identification Logic                                          |
+| ---------- | ----- | ----- | ------------------------------------------------------------- |
+| Player     | 3,528 | 90.2% | `Player` column filled, not containing "Round" or "Cap Space" |
+| Pick       | 214   | 5.5%  | `Player` column contains "Round" (e.g., "2025 1st Round")     |
+| Cap Space  | 170   | 4.3%  | `Player` column contains "Cap Space" (e.g., "2025 Cap Space") |
 
----
+______________________________________________________________________
 
 ## Multi-Asset Trade Analysis
 
 ### Key Finding: **Sort Column Does NOT Group Multi-Asset Trades**
 
 **ADR-008 Assumption (INCORRECT)**:
+
 > "transaction_id from Sort column groups multi-asset trades"
 
 **Reality**:
+
 - Each asset in a trade gets a **unique Sort value** (consecutive descending integers)
 - Multi-asset trades must be grouped by `(Time Frame, Party Set)` where Party Set = sorted({From, To})
 
 ### Trade Event Distribution
 
-| Assets Per Trade | Number of Trade Events | Example |
-|------------------|----------------------|---------|
-| 1 asset | 4 | Simple 1-for-1 swaps (rare) |
-| 2 assets | 27 | Player for pick |
-| 3 assets | 24 | 2 players + pick |
-| 4 assets | 27 | Multi-player deals |
-| 5-10 assets | ~80 | Complex trades |
-| 11-15 assets | ~40 | Blockbuster trades |
-| 16+ assets | 3 | Mega-trades |
+| Assets Per Trade | Number of Trade Events | Example                     |
+| ---------------- | ---------------------- | --------------------------- |
+| 1 asset          | 4                      | Simple 1-for-1 swaps (rare) |
+| 2 assets         | 27                     | Player for pick             |
+| 3 assets         | 24                     | 2 players + pick            |
+| 4 assets         | 27                     | Multi-player deals          |
+| 5-10 assets      | ~80                    | Complex trades              |
+| 11-15 assets     | ~40                    | Blockbuster trades          |
+| 16+ assets       | 3                      | Mega-trades                 |
 
 **Total Trade Events**: ~210 (from 732 individual asset rows)
 **Largest Trade**: 18 assets (Chip ↔ James, 2024 Offseason)
@@ -69,6 +71,7 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 **Transaction IDs**: 3622-3837 (consecutive descending)
 
 **Chip → James**:
+
 - DB Antoine Winfield Jr. (12/3, 4-4-4)
 - DL Nick Bosa (34/2, 17-17)
 - 2025 Cap Space (10)
@@ -76,6 +79,7 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 - 7 more assets...
 
 **James → Chip**:
+
 - RB Isaac Guernedo (6/3, 1-1-4)
 - RB Nick Chubb (no contract)
 - 2025 1st Round (Chip's original pick)
@@ -83,37 +87,37 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 - 2026 1st, 2nd Round
 - 3 more assets...
 
----
+______________________________________________________________________
 
 ## Data Structure Details
 
 ### Columns
 
-| Column | Type | Format | Examples | Nullability |
-|--------|------|--------|----------|-------------|
-| Time Frame | String | Various | "2025 Week 4", "2024 Offseason", "2025 FAAD", "2025 Rookie Draft" | Not Null |
-| From | String | GM name or "Waiver Wire" | "Jason", "Waiver Wire" | Nullable (Draft) |
-| To | String | GM name or "Waiver Wire" | "Chip", "Waiver Wire" | Nullable (Draft) |
-| Original Order | String | GM name | "Chip" | Picks only |
-| Round | String | "1"-"5" | "1", "2" | Picks only |
-| Pick | String | Slot number or "TBD" | "4", "TBD" | Picks only |
-| Position | String | Position code or "-" | "QB", "RB", "WR", "TE", "K", "DB", "DL", "LB", "D/ST", "-" | Players only |
-| Player | String | Player name or asset description | "Travis Kelce", "2025 1st Round", "2025 Cap Space" | Not Null |
-| Contract | String | "total/years" or "-" | "12/3", "152/4", "-" | Mixed |
-| Split | String | Hyphen-delimited yearly amounts | "4-4-4", "40-40-37-24-24", "10" | Mixed |
-| RFA Matched | String | "yes" or "-" | "yes", "-" | Sparse |
-| FAAD Comp | String | Compensation amount or "-" | "5", "-" | FAAD only |
-| Type | String | Transaction type | "Trade", "Cut", "Signing", "Draft" | Not Null |
-| Sort | String | Transaction ID with commas | "3,910", "1,234" | Not Null |
+| Column         | Type   | Format                           | Examples                                                          | Nullability      |
+| -------------- | ------ | -------------------------------- | ----------------------------------------------------------------- | ---------------- |
+| Time Frame     | String | Various                          | "2025 Week 4", "2024 Offseason", "2025 FAAD", "2025 Rookie Draft" | Not Null         |
+| From           | String | GM name or "Waiver Wire"         | "Jason", "Waiver Wire"                                            | Nullable (Draft) |
+| To             | String | GM name or "Waiver Wire"         | "Chip", "Waiver Wire"                                             | Nullable (Draft) |
+| Original Order | String | GM name                          | "Chip"                                                            | Picks only       |
+| Round          | String | "1"-"5"                          | "1", "2"                                                          | Picks only       |
+| Pick           | String | Slot number or "TBD"             | "4", "TBD"                                                        | Picks only       |
+| Position       | String | Position code or "-"             | "QB", "RB", "WR", "TE", "K", "DB", "DL", "LB", "D/ST", "-"        | Players only     |
+| Player         | String | Player name or asset description | "Travis Kelce", "2025 1st Round", "2025 Cap Space"                | Not Null         |
+| Contract       | String | "total/years" or "-"             | "12/3", "152/4", "-"                                              | Mixed            |
+| Split          | String | Hyphen-delimited yearly amounts  | "4-4-4", "40-40-37-24-24", "10"                                   | Mixed            |
+| RFA Matched    | String | "yes" or "-"                     | "yes", "-"                                                        | Sparse           |
+| FAAD Comp      | String | Compensation amount or "-"       | "5", "-"                                                          | FAAD only        |
+| Type           | String | Transaction type                 | "Trade", "Cut", "Signing", "Draft"                                | Not Null         |
+| Sort           | String | Transaction ID with commas       | "3,910", "1,234"                                                  | Not Null         |
 
 ### Time Frame Patterns
 
-| Pattern | Count | Examples |
-|---------|-------|----------|
-| Week | 1,875 | "2025 Week 4", "2023 Week 12 Deadline" |
-| Offseason | 696 | "2024 Offseason", "2019 Offseason" |
-| FAAD | 515 | "2025 FAAD", "2020 FAAD" |
-| Rookie Draft | 826 | "2025 Rookie Draft", "2015 Rookie Draft" |
+| Pattern      | Count | Examples                                 |
+| ------------ | ----- | ---------------------------------------- |
+| Week         | 1,875 | "2025 Week 4", "2023 Week 12 Deadline"   |
+| Offseason    | 696   | "2024 Offseason", "2019 Offseason"       |
+| FAAD         | 515   | "2025 FAAD", "2020 FAAD"                 |
+| Rookie Draft | 826   | "2025 Rookie Draft", "2015 Rookie Draft" |
 
 **Total Unique Timeframes**: 138
 
@@ -122,11 +126,13 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 **Format**: `"total/years"` where total is sum of all yearly amounts
 
 **Examples**:
+
 - `"12/3"` = $12M over 3 years
 - `"152/4"` = $152M over 4 years
 - `"-"` = no contract (cut players, picks, cap space)
 
 **Distribution**:
+
 - Rows with contracts: 3,426 (87.6%)
 - Rows without contracts: 486 (12.4%)
 
@@ -135,17 +141,20 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 **Format**: Hyphen-delimited yearly cap hits (must sum to contract total, span contract years)
 
 **Patterns**:
+
 - Equal split: `"4-4-4"` for 12/3 contract
 - Front-loaded: `"40-40-37-24-24"` for 165/5 contract
 - Back-loaded: `"1-1-4"` for 6/3 contract
 - Single year: `"50"` for 50/1 contract
 
 **Edge Cases**:
+
 - Cap space rows use Split for amount: Split="10" means $10M
 - Pick rows typically have Split="-"
 - Some players have Contract but Split="-" (legacy data?)
 
 **Distribution**:
+
 - Rows with splits: 3,596 (91.9%)
 - Rows without splits: 316 (8.1%)
 
@@ -156,6 +165,7 @@ Successfully profiled 3,912 transaction records spanning 13 seasons. Discovered 
 - **Mapping challenge**: Must map to `dim_player_id_xref.player_id` (mfl_id)
 
 **Sample Names**:
+
 ```
 Travis Kelce
 Antoine Winfield Jr.
@@ -165,23 +175,26 @@ T.J. Hockenson
 ```
 
 **Mapping Strategy**:
-1. Exact match on `dim_player_id_xref.name`
-2. Fuzzy match on `dim_player_id_xref.merge_name` (normalized)
-3. Unmapped → track for manual review, populate `dim_name_alias` if needed
 
----
+1. Exact match on `dim_player_id_xref.name`
+1. Fuzzy match on `dim_player_id_xref.merge_name` (normalized)
+1. Unmapped → track for manual review, populate `dim_name_alias` if needed
+
+______________________________________________________________________
 
 ## Critical Implementation Findings
 
 ### 1. Trade Grouping Logic (CORRECTED)
 
 **WRONG (per ADR-008)**:
+
 ```sql
 -- DON'T USE THIS
 GROUP BY transaction_id  -- Sort column
 ```
 
 **CORRECT**:
+
 ```sql
 -- Use this pattern
 WITH party_normalized AS (
@@ -322,18 +335,20 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
     return pick_id
 ```
 
----
+______________________________________________________________________
 
 ## Kimball Modeling Considerations
 
 ### Grain Validation
 
 **Proposed Grain** (from ADR-008):
+
 > "One row per asset per transaction"
 
 **Validation**: ✅ **CORRECT**
 
 **Unique Key**:
+
 - ✅ `transaction_id` (Sort column, cleaned)
 - ✅ `asset_type`
 - ✅ `player_id` (nullable, for player assets)
@@ -344,6 +359,7 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
 ### Fact vs Dimension Attributes
 
 **Fact Attributes** (measures, FKs):
+
 - `transaction_id` (degenerate dimension)
 - `transaction_date` (derived from time_frame)
 - `from_franchise_id` (FK to dim_franchise)
@@ -356,15 +372,18 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
 - `faad_compensation` (measure)
 
 **Dimension Attributes** (should be in dimensions, not fact):
+
 - Player name → dim_player
 - Pick description → dim_pick
 - Franchise/GM name → dim_franchise
 
 **Degenerate Dimensions** (low-cardinality, stored in fact):
+
 - `transaction_type`
 - `asset_type`
 
 **Complex Attributes** (requires disaggregation):
+
 - `contract_split` → Store as JSON array in fact for flexibility
 
 ### Partitioning Strategy
@@ -372,21 +391,22 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
 **Partition Key**: `transaction_year` (extracted from transaction_date)
 
 **Rationale**:
+
 - ~600 transactions/year → ~600 rows/partition
 - Enables efficient temporal queries
 - Matches natural data collection boundary
 
 ### Additive vs Semi-Additive Measures
 
-| Measure | Type | Reason |
-|---------|------|--------|
-| contract_total | Semi-additive | Can sum across assets in a trade, NOT across time |
-| contract_years | Semi-additive | Can sum across assets in a trade, NOT across time |
-| faad_compensation | Semi-additive | Meaningful only in FAAD context |
+| Measure           | Type          | Reason                                            |
+| ----------------- | ------------- | ------------------------------------------------- |
+| contract_total    | Semi-additive | Can sum across assets in a trade, NOT across time |
+| contract_years    | Semi-additive | Can sum across assets in a trade, NOT across time |
+| faad_compensation | Semi-additive | Meaningful only in FAAD context                   |
 
 **Note**: No truly additive measures (transaction counts are derived, not stored).
 
----
+______________________________________________________________________
 
 ## Data Quality Issues
 
@@ -408,9 +428,9 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
 - **Expected unmapped rate**: ~5-10% (based on nflverse crosswalk coverage)
 - **Resolution**:
   1. Exact match on name
-  2. Fuzzy match on merge_name
-  3. Track unmapped for manual review
-  4. Populate dim_name_alias if patterns emerge
+  1. Fuzzy match on merge_name
+  1. Track unmapped for manual review
+  1. Populate dim_name_alias if patterns emerge
 
 ### 4. Cut Transactions with Same Sort ID
 
@@ -418,46 +438,46 @@ def parse_pick_reference(player_str, original_order, round_col, pick_col):
 - Violates assumption that Sort is unique per row
 - **Resolution**: Use Sort + row number as composite transaction_id
 
----
+______________________________________________________________________
 
 ## Implementation Recommendations
 
 ### Phase 2: Parser Implementation
 
 1. **Timeframe normalization**: Use dim_timeframe seed for structured mapping
-2. **Contract disaggregation**: Parse Contract and Split into separate columns, validate sum
-3. **Asset type inference**: Use Player/Position/Round columns to determine asset_type
-4. **Pick mapping**: Map pick descriptions to dim_pick.pick_id (handle TBD)
-5. **Player mapping**: Map player names to dim_player_id_xref.player_id (exact → fuzzy → unmapped)
-6. **Transaction ID**: Clean Sort column (remove commas, handle duplicates with row_number)
-7. **Trade grouping**: Group by (Time Frame, Party Set) for analytics, but preserve row-level grain
+1. **Contract disaggregation**: Parse Contract and Split into separate columns, validate sum
+1. **Asset type inference**: Use Player/Position/Round columns to determine asset_type
+1. **Pick mapping**: Map pick descriptions to dim_pick.pick_id (handle TBD)
+1. **Player mapping**: Map player names to dim_player_id_xref.player_id (exact → fuzzy → unmapped)
+1. **Transaction ID**: Clean Sort column (remove commas, handle duplicates with row_number)
+1. **Trade grouping**: Group by (Time Frame, Party Set) for analytics, but preserve row-level grain
 
 ### Phase 3: Staging Model
 
 1. **Source validation**: Test all column types match expectations
-2. **FK validation**: Ensure all player_id/pick_id/franchise_id map to dimensions
-3. **Enum validation**: transaction_type, asset_type use controlled vocabularies
-4. **Contract validation**: contract_total = sum(contract_split), len(contract_split) = contract_years
-5. **QA view**: Create stg_sheets__transactions_unmapped for review
+1. **FK validation**: Ensure all player_id/pick_id/franchise_id map to dimensions
+1. **Enum validation**: transaction_type, asset_type use controlled vocabularies
+1. **Contract validation**: contract_total = sum(contract_split), len(contract_split) = contract_years
+1. **QA view**: Create stg_sheets\_\_transactions_unmapped for review
 
 ### Phase 4: Fact Table
 
 1. **Grain test**: `dbt_utils.unique_combination_of_columns` on (transaction_id, asset_type, player_id, pick_id)
-2. **FK tests**: Relationships to all dimension tables
-3. **Partition by**: transaction_year (extracted from transaction_date)
-4. **Materialization**: Table (not incremental—full refresh on each run)
+1. **FK tests**: Relationships to all dimension tables
+1. **Partition by**: transaction_year (extracted from transaction_date)
+1. **Materialization**: Table (not incremental—full refresh on each run)
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 1. ✅ **Phase 0 Complete**: Data profiling complete
-2. ⏭️ **Phase 1**: Apply Kimball modeling lens, document disaggregation strategy
-3. ⏭️ **Phase 2**: Implement parse_transactions() with all complexity
-4. ⏭️ **Phase 3**: Build staging model with QA
-5. ⏭️ **Phase 4**: Build fact table and marts
+1. ⏭️ **Phase 1**: Apply Kimball modeling lens, document disaggregation strategy
+1. ⏭️ **Phase 2**: Implement parse_transactions() with all complexity
+1. ⏭️ **Phase 3**: Build staging model with QA
+1. ⏭️ **Phase 4**: Build fact table and marts
 
----
+______________________________________________________________________
 
 ## Appendix: Sample Data
 

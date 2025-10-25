@@ -4,7 +4,7 @@
 **Status**: ✅ COMPLETE - Parser Bug Fixed, dbt Models Passing
 **Previous Session**: [Phase 1 Complete](TRANSACTIONS_handoff_20251001_phase1.md)
 
----
+______________________________________________________________________
 
 ## Executive Summary
 
@@ -21,13 +21,13 @@
 ### Key Achievements
 
 1. ✅ **parse_transactions()** implemented with all helper functions
-2. ✅ **100% player name mapping** (0 unmapped out of 3,455 player assets)
-3. ✅ **dim_name_alias seed** created with 78 typo/variation mappings
-4. ✅ **Code refactored** - 6 helper functions extracted, complexity reduced
-5. ✅ **Unit tests written** - 41 tests covering all helper functions and integration
-6. ⚠️ **Data quality issues discovered** - contract validation failures need investigation
+1. ✅ **100% player name mapping** (0 unmapped out of 3,455 player assets)
+1. ✅ **dim_name_alias seed** created with 78 typo/variation mappings
+1. ✅ **Code refactored** - 6 helper functions extracted, complexity reduced
+1. ✅ **Unit tests written** - 41 tests covering all helper functions and integration
+1. ⚠️ **Data quality issues discovered** - contract validation failures need investigation
 
----
+______________________________________________________________________
 
 ## Phase 2 Deliverables
 
@@ -69,7 +69,7 @@
 **Refactoring**:
 
 - Reduced `parse_transactions()` complexity from 36 → manageable
-- Extracted helper functions all < 10 complexity
+- Extracted helper functions all \< 10 complexity
 - Fixed deprecated Polars API usage (`.melt()` → `.unpivot()`)
 - Fixed `.str.strip()` → `.str.strip_chars()` with proper casting
 - All Ruff/Pyrefly warnings resolved
@@ -88,7 +88,7 @@
 
 **Test Results**: 38 passed, 2 skipped, 1 failing
 
----
+______________________________________________________________________
 
 ## Outstanding Issues
 
@@ -107,15 +107,15 @@ AssertionError: Split length mismatch: 2 != 3
 **Possible Causes**:
 
 1. **Source data quality issue** - Commissioner sheet has bad data
-2. **Parser bug** - `_parse_contract_fields()` has logic error
-3. **Edge case** - Special contract types not handled (amendments, restructures?)
+1. **Parser bug** - `_parse_contract_fields()` has logic error
+1. **Edge case** - Special contract types not handled (amendments, restructures?)
 
 **Investigation Needed**:
 
 1. Query actual failing rows to see pattern
-2. Check if specific transaction types have this issue
-3. Verify parser logic for edge cases (missing splits, malformed Contract field)
-4. Determine if this is acceptable data quality (document as known issue) or parser bug
+1. Check if specific transaction types have this issue
+1. Verify parser logic for edge cases (missing splits, malformed Contract field)
+1. Determine if this is acceptable data quality (document as known issue) or parser bug
 
 **Impact**:
 
@@ -135,9 +135,9 @@ AssertionError: Split length mismatch: 2 != 3
 **Investigation Needed**:
 
 1. Check if GM tab samples were generated previously
-2. Run sample generation: `uv run python tools/make_samples.py sheets --tabs <GM_NAME>`
-3. Determine if these tests are still relevant (may be for older V1/V2 parser)
-4. Either un-skip tests OR remove if obsolete
+1. Run sample generation: `uv run python tools/make_samples.py sheets --tabs <GM_NAME>`
+1. Determine if these tests are still relevant (may be for older V1/V2 parser)
+1. Either un-skip tests OR remove if obsolete
 
 **Impact**: Low - TRANSACTIONS parser tests all pass, GM tab tests are for different functionality
 
@@ -156,12 +156,12 @@ AssertionError: Split length mismatch: 2 != 3
 **Resolution Options**:
 
 1. **Accept as-is** - Still enables fuzzy matching (very minor issue)
-2. **Fix normalization** - Add better regex-based suffix removal
-3. **Use alias seed** - Add specific mappings for these cases
+1. **Fix normalization** - Add better regex-based suffix removal
+1. **Use alias seed** - Add specific mappings for these cases
 
 **Current Status**: Test updated to accept this behavior (doesn't affect matching)
 
----
+______________________________________________________________________
 
 ## Data Quality Observations
 
@@ -177,8 +177,8 @@ Based on initial analysis, some contracts in the source data have inconsistencie
 **Questions**:
 
 1. Are these data entry errors in the commissioner sheet?
-2. Do they represent special contract types (restructures, amendments)?
-3. Should parser attempt to "fix" these OR preserve as-is with warnings?
+1. Do they represent special contract types (restructures, amendments)?
+1. Should parser attempt to "fix" these OR preserve as-is with warnings?
 
 **Recommendation**:
 
@@ -186,7 +186,7 @@ Based on initial analysis, some contracts in the source data have inconsistencie
 - Add data quality checks in dbt staging layer
 - Document known issues in data quality metadata
 
----
+______________________________________________________________________
 
 ## Files Modified/Created
 
@@ -221,19 +221,21 @@ Based on initial analysis, some contracts in the source data have inconsistencie
 - ⏳ `docs/adr/ADR-008-league-transaction-history-integration.md` (resolution)
 - ⏳ `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` (update)
 
----
+______________________________________________________________________
 
 ## Next Steps (Priority Order)
 
 ### IMMEDIATE (Before dbt models)
 
 1. **Investigate Contract Validation Failures** 🚨
+
    - Run diagnostic query to identify failing contracts
    - Determine if parser bug or source data issue
    - Document decision on handling approach
    - Update parser OR add data quality docs OR both
 
-2. **Resolve GM Tab Test Status** ⚠️
+1. **Resolve GM Tab Test Status** ⚠️
+
    - Generate GM tab samples OR
    - Remove obsolete tests OR
    - Document why skipped permanently
@@ -241,100 +243,109 @@ Based on initial analysis, some contracts in the source data have inconsistencie
 ### THEN (dbt Implementation)
 
 3. **Create dbt source definition** (`src_sheets.yml`)
+
    - Define `sheets_raw.transactions` source
    - Point to `data/raw/commissioner/transactions/dt=*/*.parquet`
 
-4. **Create dim_asset view** (`dim_asset.sql`)
+1. **Create dim_asset view** (`dim_asset.sql`)
+
    - UNION of players + picks
    - Simple view as planned in Phase 1
 
-5. **Create staging model** (`stg_sheets__transactions.sql`)
+1. **Create staging model** (`stg_sheets__transactions.sql`)
+
    - Apply transaction_type classification
    - Join to all dimension seeds
    - Add grain uniqueness tests
    - Add FK relationship tests
 
-6. **Create fact table** (`fact_league_transactions.sql`)
+1. **Create fact table** (`fact_league_transactions.sql`)
+
    - Grain: one row per asset per transaction
    - Partition by transaction_year
    - Include all measures and degenerate dimensions
 
-7. **Add dbt tests** (schema.yml files)
+1. **Add dbt tests** (schema.yml files)
+
    - Staging layer tests
    - Fact layer tests
    - Data quality tests for contract integrity
 
-8. **Update documentation**
+1. **Update documentation**
+
    - ADR-008 resolution addendum
    - SPEC-1 checklist updates
 
----
+______________________________________________________________________
 
 ## Test Coverage Summary
 
 ### Helper Functions (100% covered)
 
-| Function | Tests | Status |
-|----------|-------|--------|
-| `_derive_transaction_type()` | 12 | ✅ All pass |
-| `_infer_asset_type()` | 5 | ✅ All pass |
-| `_normalize_player_name()` | 5 | ✅ All pass (with edge case noted) |
-| `_parse_pick_id()` | 4 | ✅ All pass |
-| `_parse_contract_fields()` | 4 | ✅ All pass (isolated tests) |
+| Function                     | Tests | Status                             |
+| ---------------------------- | ----- | ---------------------------------- |
+| `_derive_transaction_type()` | 12    | ✅ All pass                        |
+| `_infer_asset_type()`        | 5     | ✅ All pass                        |
+| `_normalize_player_name()`   | 5     | ✅ All pass (with edge case noted) |
+| `_parse_pick_id()`           | 4     | ✅ All pass                        |
+| `_parse_contract_fields()`   | 4     | ✅ All pass (isolated tests)       |
 
 ### Integration Tests
 
-| Test | Status | Notes |
-|------|--------|-------|
-| Returns expected keys | ✅ Pass | transactions, unmapped_players, unmapped_picks |
-| 100% player coverage | ✅ Pass | 0 unmapped out of 3,455 |
-| Asset types | ✅ Pass | player, defense, pick, cap_space, unknown |
-| Transaction types | ✅ Pass | All 11 types present |
-| Required columns | ✅ Pass | All schema fields present |
-| Player ID mapping | ✅ Pass | All players mapped |
-| Defense classification | ✅ Pass | 558 defense units |
-| Picks have pick_id | ✅ Pass | 214 picks all have IDs |
-| **Contract validation** | ❌ **FAIL** | **Length mismatches found** |
+| Test                    | Status      | Notes                                          |
+| ----------------------- | ----------- | ---------------------------------------------- |
+| Returns expected keys   | ✅ Pass     | transactions, unmapped_players, unmapped_picks |
+| 100% player coverage    | ✅ Pass     | 0 unmapped out of 3,455                        |
+| Asset types             | ✅ Pass     | player, defense, pick, cap_space, unknown      |
+| Transaction types       | ✅ Pass     | All 11 types present                           |
+| Required columns        | ✅ Pass     | All schema fields present                      |
+| Player ID mapping       | ✅ Pass     | All players mapped                             |
+| Defense classification  | ✅ Pass     | 558 defense units                              |
+| Picks have pick_id      | ✅ Pass     | 214 picks all have IDs                         |
+| **Contract validation** | ❌ **FAIL** | **Length mismatches found**                    |
 
 ### Skipped Tests
 
-| Test | Reason | Action Needed |
-|------|--------|---------------|
+| Test                               | Reason                | Action Needed                   |
+| ---------------------------------- | --------------------- | ------------------------------- |
 | `test_parse_single_gm_tab_samples` | Samples not available | Generate samples OR remove test |
-| `test_parse_all_samples_dir` | Samples not available | Generate samples OR remove test |
+| `test_parse_all_samples_dir`       | Samples not available | Generate samples OR remove test |
 
----
+______________________________________________________________________
 
 ## Success Metrics (Phase 2)
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Player mapping coverage | ≥95% | 100% | ✅ Exceeded |
-| Transaction type classification | 100% | 100% | ✅ Met |
-| Asset type inference | ≥98% | 98.3% | ✅ Met |
-| Code complexity | <10 per function | <10 | ✅ Met |
-| Unit test coverage | Helper functions | 100% | ✅ Met |
-| Integration tests passing | >90% | 89% | ⚠️ 1 failure |
+| Metric                          | Target            | Actual | Status       |
+| ------------------------------- | ----------------- | ------ | ------------ |
+| Player mapping coverage         | ≥95%              | 100%   | ✅ Exceeded  |
+| Transaction type classification | 100%              | 100%   | ✅ Met       |
+| Asset type inference            | ≥98%              | 98.3%  | ✅ Met       |
+| Code complexity                 | \<10 per function | \<10   | ✅ Met       |
+| Unit test coverage              | Helper functions  | 100%   | ✅ Met       |
+| Integration tests passing       | >90%              | 89%    | ⚠️ 1 failure |
 
----
+______________________________________________________________________
 
 ## Known Limitations
 
 1. **Contract Split Validation**: ~5% of contracts have split arrays that don't match years field
+
    - May be source data issue
    - Parser preserves data as-is (doesn't attempt to fix)
    - Needs investigation before dbt implementation
 
-2. **Suffix Normalization**: Roman numerals III can leave trailing "I"
+1. **Suffix Normalization**: Roman numerals III can leave trailing "I"
+
    - Doesn't affect matching (still fuzzy matches)
    - Could improve with better regex
 
-3. **Unknown Assets**: 77 transactions classified as "unknown"
+1. **Unknown Assets**: 77 transactions classified as "unknown"
+
    - These have empty/missing Player and Position fields
    - May represent deleted/invalid transactions in source
    - Currently preserved in output
 
----
+______________________________________________________________________
 
 ## Quick Start for Next Session
 
@@ -370,7 +381,7 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 # 4. Decide on contract validation approach, then proceed to dbt models
 ```
 
----
+______________________________________________________________________
 
 ## References
 
@@ -382,7 +393,7 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 - **Tests**: `tests/test_sheets_commissioner_parser.py`
 - **Alias Seed**: `dbt/ff_analytics/seeds/dim_name_alias.csv`
 
----
+______________________________________________________________________
 
 ## Resolution - Phase 2 Complete (2025-10-02 Evening)
 
@@ -391,28 +402,33 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 ### What Was Completed
 
 1. **Contract Validation Investigation**
+
    - Root cause identified: Extension accounting convention (Contract=extension only, Split=full remaining)
    - Decision: Load raw events as-is, defer clean contract state to Phase 3
    - See: `docs/analysis/TRANSACTIONS_contract_validation_analysis.md`
 
-2. **Ingestion Script** (`scripts/ingest/run_commissioner_transactions.py`)
+1. **Ingestion Script** (`scripts/ingest/run_commissioner_transactions.py`)
+
    - Follows proper pattern: reads from `LEAGUE_SHEET_COPY_ID` (already copied by `copy_league_sheet.py`)
    - Downloads TRANSACTIONS tab → parses via `parse_transactions()` → writes to `data/raw/commissioner/`
    - Consistent with nflverse ingestion pattern
 
-3. **dbt Models Implemented**
+1. **dbt Models Implemented**
+
    - `models/sources/src_sheets.yml` - Source definition
    - `models/staging/stg_sheets__transactions.sql` - Staging with validation flags
    - `models/staging/schema.yml` - Staging tests
    - `models/core/fact_league_transactions.sql` - Transaction fact table
    - `models/core/schema.yml` - Fact table tests
 
-4. **Data Quality Fixes**
+1. **Data Quality Fixes**
+
    - Fixed FAAD compensation casting: handles both `$5` (integer) and `"2nd to Piper"` (pick text)
    - Added `faad_compensation_text` column for non-numeric compensation
    - Player key composite identifier prevents grain violations
 
-5. **Test Results**
+1. **Test Results**
+
    - ✅ 30 tests PASS
    - ⚠️ 2 warnings: compensatory pick FK relationships (expected - see below)
    - 0 errors
@@ -444,7 +460,7 @@ PYTHONPATH=. uv run pytest tests/test_sheets_commissioner_parser.py -v
 
 This has been documented in specs/handoffs - we don't want to lose sight of this for later implementation.
 
----
+______________________________________________________________________
 
 ## Next Steps - Phase 3
 
@@ -474,7 +490,7 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 - KTC market values (Track C)
 - Variance marts (actuals vs projections vs market)
 
----
+______________________________________________________________________
 
 ## Files Created/Modified
 
@@ -493,15 +509,15 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 - `docs/adr/ADR-008-league-transaction-history-integration.md` (resolution)
 - `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` (Track B → 80%)
 
----
+______________________________________________________________________
 
 **Recommended Next Owner Action**:
 
 1. Review contract validation analysis document
-2. Decide on Phase 3 priority (contract history vs trade marts vs pick order)
-3. Begin implementation of selected Phase 3 component
+1. Decide on Phase 3 priority (contract history vs trade marts vs pick order)
+1. Begin implementation of selected Phase 3 component
 
----
+______________________________________________________________________
 
 ## CRITICAL BUG FIX (2025-10-02 Evening Session)
 
@@ -510,7 +526,7 @@ Create `dim_player_contract_history` to resolve Extension double-counting:
 During final validation, discovered **suspicious row count mismatch**:
 
 - **Source CSV**: 3,912 rows
-- **Parsed output**: 4,474 rows  
+- **Parsed output**: 4,474 rows
 - **Difference**: 562 extra rows (14.4% inflation)
 
 Investigation revealed parser was creating **duplicate rows** for 313 transactions (~8% of all transactions).
@@ -613,18 +629,18 @@ uv run dbt test --select stg_sheets__transactions fact_league_transactions
 The current seed-based approach is **architecturally inconsistent** with other nflverse data. Other datasets use the pattern:
 
 1. Define source in `src_nflverse.yml`
-2. Create staging model `stg_nflverse__*` that reads from raw parquet
-3. Reference staging model in downstream models
+1. Create staging model `stg_nflverse__*` that reads from raw parquet
+1. Reference staging model in downstream models
 
 **Recommended refactor** (separate PR):
 
 1. Add `ff_playerids` to `dbt/ff_analytics/models/sources/src_nflverse.yml`
-2. Create `stg_nflverse__ff_playerids.sql` that:
+1. Create `stg_nflverse__ff_playerids.sql` that:
    - Reads from raw parquet with `read_parquet()`
    - Applies team placeholder filter
    - Adds sequential player_id
-3. Update all references from `{{ ref('dim_player_id_xref') }}` → `{{ ref('stg_nflverse__ff_playerids') }}`
-4. Remove seed file
+1. Update all references from `{{ ref('dim_player_id_xref') }}` → `{{ ref('stg_nflverse__ff_playerids') }}`
+1. Remove seed file
 
 Benefits:
 
@@ -684,7 +700,7 @@ for team in team_names:
 ### Resolution Status
 
 ✅ **BUG FIXED** - Parser duplicate issue resolved
-✅ **PIPELINE COMPLETE** - All dbt models running and tests passing  
+✅ **PIPELINE COMPLETE** - All dbt models running and tests passing\
 ✅ **DATA QUALITY VALIDATED** - 3.7% inflation is expected from legitimate name ambiguities
 
 The TRANSACTIONS integration is now **production ready** for Phase 3 downstream modeling.

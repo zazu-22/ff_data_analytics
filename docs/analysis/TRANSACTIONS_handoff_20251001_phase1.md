@@ -4,7 +4,7 @@
 **Status**: Phase 0-1 Complete (Profiling + Kimball Design), Ready for Phase 2 (Parser Implementation)
 **Next Session Start**: Phase 2 - Implement `parse_transactions()`
 
----
+______________________________________________________________________
 
 ## Executive Summary
 
@@ -13,30 +13,32 @@ Successfully profiled 3,912 TRANSACTIONS records (2012-2025, 13 seasons) and des
 ### Key Discoveries
 
 1. **Multi-asset trades**: Sort column does NOT group trades - use `(Time Frame, Party Set)` tuple instead
-2. **Transaction types**: Raw `Type` column is ambiguous - requires `dim_timeframe.period_type` for accurate classification
-3. **Weekly contracts**: NOT in TRANSACTIONS tab (auto-expire, only in Sleeper API) - all TRANSACTIONS are yearly contracts
-4. **Contract format**: 1/1 means "1 year for $1", NOT weekly
-5. **Seeds ready**: All dependencies exist (dim_player_id_xref, dim_franchise, dim_pick, dim_timeframe)
+1. **Transaction types**: Raw `Type` column is ambiguous - requires `dim_timeframe.period_type` for accurate classification
+1. **Weekly contracts**: NOT in TRANSACTIONS tab (auto-expire, only in Sleeper API) - all TRANSACTIONS are yearly contracts
+1. **Contract format**: 1/1 means "1 year for $1", NOT weekly
+1. **Seeds ready**: All dependencies exist (dim_player_id_xref, dim_franchise, dim_pick, dim_timeframe)
 
----
+______________________________________________________________________
 
 ## Phase 0-1 Deliverables ✅
 
 ### Documents Created
 
 1. **`TRANSACTIONS_profiling_20251001.md`** - Complete data profiling
+
    - 3,912 rows, 14 columns, 138 unique timeframes
    - Transaction type distribution, contract complexity analysis
    - Multi-asset trade structure (up to 18 assets in single trade)
    - Player name mapping challenge (1,249 unique names)
 
-2. **`TRANSACTIONS_kimball_strategy_20251001.md`** - Dimensional modeling design
+1. **`TRANSACTIONS_kimball_strategy_20251001.md`** - Dimensional modeling design
+
    - Grain: One row per asset per transaction per direction
    - Fact schema with degenerate dimensions
    - Semi-additive measures, JSON contract splits
    - Partition strategy (transaction_year)
 
-3. **`TRANSACTIONS_handoff_20251001_phase1.md`** (this document)
+1. **`TRANSACTIONS_handoff_20251001_phase1.md`** (this document)
 
 ### Sample Data
 
@@ -44,7 +46,7 @@ Successfully profiled 3,912 TRANSACTIONS records (2012-2025, 13 seasons) and des
 - **Coverage**: 2012-2025 (13 complete seasons)
 - **Quality**: 100% join to dim_timeframe
 
----
+______________________________________________________________________
 
 ## Critical Transaction Type Classification
 
@@ -105,22 +107,22 @@ def derive_transaction_type_refined(row):
 
 ### Distribution of Refined Types
 
-| Refined Type | Count | Source Logic |
-|--------------|-------|--------------|
-| cut | 853 | Type='Cut' |
-| rookie_draft_selection | 826 | period_type='rookie_draft' |
-| trade | 732 | Type='Trade' |
-| fasa_signing | 718 | Signing in regular/deadline/preseason/offseason |
-| faad_ufa_signing | 453 | Signing/FA in FAAD period (not RFA matched) |
-| offseason_ufa_signing | 114 | FA in offseason (outside FAAD) |
-| waiver_claim | 80 | Type='Waivers' |
-| faad_rfa_matched | 62 | Signing in FAAD with RFA Matched='yes' |
-| contract_extension | 40 | Type='Extension' (usually 4th year options) |
-| franchise_tag | 24 | Type='Franchise' |
-| amnesty_cut | 10 | Type='Amnesty' |
-| **TOTAL** | **3,912** | **100% coverage** |
+| Refined Type           | Count     | Source Logic                                    |
+| ---------------------- | --------- | ----------------------------------------------- |
+| cut                    | 853       | Type='Cut'                                      |
+| rookie_draft_selection | 826       | period_type='rookie_draft'                      |
+| trade                  | 732       | Type='Trade'                                    |
+| fasa_signing           | 718       | Signing in regular/deadline/preseason/offseason |
+| faad_ufa_signing       | 453       | Signing/FA in FAAD period (not RFA matched)     |
+| offseason_ufa_signing  | 114       | FA in offseason (outside FAAD)                  |
+| waiver_claim           | 80        | Type='Waivers'                                  |
+| faad_rfa_matched       | 62        | Signing in FAAD with RFA Matched='yes'          |
+| contract_extension     | 40        | Type='Extension' (usually 4th year options)     |
+| franchise_tag          | 24        | Type='Franchise'                                |
+| amnesty_cut            | 10        | Type='Amnesty'                                  |
+| **TOTAL**              | **3,912** | **100% coverage**                               |
 
----
+______________________________________________________________________
 
 ## dim_timeframe Integration (CRITICAL)
 
@@ -152,7 +154,7 @@ LEFT JOIN dim_timeframe tf
 - `preseason` - NFL preseason weeks (Weeks 3-4)
 - `offseason` - Post-Super Bowl to FAAD (~187 cuts, 114 FA signings)
 
----
+______________________________________________________________________
 
 ## Weekly vs Yearly Contracts (CRITICAL CORRECTION)
 
@@ -175,7 +177,7 @@ LEFT JOIN dim_timeframe tf
 - 1/1 = 1 year for $1 (minimum yearly contract)
 - Persist in commissioner sheet for cap tracking
 
----
+______________________________________________________________________
 
 ## Data Structure Insights
 
@@ -216,11 +218,11 @@ GROUP BY 1, 2;
 
 **Inferred from columns**:
 
-| Asset Type | Count | Identification Logic | FK Target |
-|-----------|-------|----------------------|-----------|
-| player | 3,528 | Player filled, Position != '-', not "Round/Cap Space" | dim_player_id_xref.player_id |
-| pick | 214 | Player contains "Round" (e.g., "2025 1st Round") | dim_pick.pick_id |
-| cap_space | 170 | Player contains "Cap Space" (e.g., "2025 Cap Space") | None (stored as amount in Split) |
+| Asset Type | Count | Identification Logic                                  | FK Target                        |
+| ---------- | ----- | ----------------------------------------------------- | -------------------------------- |
+| player     | 3,528 | Player filled, Position != '-', not "Round/Cap Space" | dim_player_id_xref.player_id     |
+| pick       | 214   | Player contains "Round" (e.g., "2025 1st Round")      | dim_pick.pick_id                 |
+| cap_space  | 170   | Player contains "Cap Space" (e.g., "2025 Cap Space")  | None (stored as amount in Split) |
 
 ### Contract Format Complexity
 
@@ -258,29 +260,33 @@ assert sum(split_array) == contract_total
 - RFA compensation given to losing team
 - Only for FAAD signings
 
----
+______________________________________________________________________
 
 ## Seed Dependencies (ALL READY ✅)
 
 ### Required Seeds (Complete)
 
 1. **dim_player_id_xref** ✅
+
    - 12,133 players with 19 provider IDs
    - `player_id` = mfl_id (canonical)
    - `name` for exact match, `merge_name` for fuzzy match
    - Coverage expected: ~95% exact/fuzzy, ~5% unmapped
 
-2. **dim_franchise** ✅
+1. **dim_franchise** ✅
+
    - 21 rows (F001-F012, SCD Type 2 ownership history)
    - Maps GM names → franchise_id
    - "Waiver Wire" → NULL (not a franchise)
 
-3. **dim_pick** ✅
+1. **dim_pick** ✅
+
    - 1,141 picks (2012-2030, 5 rounds × 12 teams)
    - `pick_id` format: `YYYY_R#_P##` (e.g., `2025_R1_P04`)
    - Handles "TBD" picks with synthetic ID: `YYYY_R#_TBD`
 
-4. **dim_timeframe** ✅
+1. **dim_timeframe** ✅
+
    - 139 timeframes (2012-2025)
    - **CRITICAL**: Enables transaction type classification
    - 100% join coverage to TRANSACTIONS
@@ -295,11 +301,12 @@ assert sum(split_array) == contract_total
    SELECT pick_id, 'pick' FROM dim_pick
    ```
 
-6. **dim_name_alias** (add iteratively if fuzzy matching fails)
+1. **dim_name_alias** (add iteratively if fuzzy matching fails)
+
    - Only needed if unmapped rate > 5%
    - Populate based on parser QA results
 
----
+______________________________________________________________________
 
 ## Phase 2 Implementation Plan
 
@@ -331,9 +338,9 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
    df = df.join(timeframe_seed, left_on='Time Frame', right_on='timeframe_string')
    ```
 
-2. **Derive transaction_type_refined** (use logic from this document)
+1. **Derive transaction_type_refined** (use logic from this document)
 
-3. **Parse contract fields**
+1. **Parse contract fields**
 
    ```python
    def parse_contract(contract_str, split_str):
@@ -353,7 +360,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
            return total, years, [total // years] * years
    ```
 
-4. **Infer asset_type**
+1. **Infer asset_type**
 
    ```python
    def infer_asset_type(player_str, position_str):
@@ -369,7 +376,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
            return 'unknown'
    ```
 
-5. **Map player names → player_id**
+1. **Map player names → player_id**
 
    ```python
    # Load crosswalk
@@ -392,7 +399,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
    still_unmapped = fuzzy_matches.filter(pl.col('player_id').is_null())
    ```
 
-6. **Map pick references → pick_id**
+1. **Map pick references → pick_id**
 
    ```python
    def parse_pick_id(player_str, original_order, round_col, pick_col):
@@ -409,7 +416,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
            return f"{season}_R{round_num}_TBD"  # Synthetic ID
    ```
 
-7. **Clean transaction_id** (Sort column)
+1. **Clean transaction_id** (Sort column)
 
    ```python
    df = df.with_columns([
@@ -423,7 +430,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
    ])
    ```
 
-8. **Write output**
+1. **Write output**
 
    ```python
    from ingest.common.storage import write_parquet_any
@@ -476,7 +483,7 @@ SELECT
 FROM {{ ref('dim_pick') }}
 ```
 
-### Task 3: Build stg_sheets__transactions
+### Task 3: Build stg_sheets\_\_transactions
 
 **Location**: `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql`
 
@@ -605,7 +612,7 @@ SELECT
 FROM {{ ref('stg_sheets__transactions') }}
 ```
 
----
+______________________________________________________________________
 
 ## Known Issues & Edge Cases
 
@@ -640,7 +647,7 @@ FROM {{ ref('stg_sheets__transactions') }}
 - Example: Player="2025 Cap Space", Contract="-", Split="10"
 - **Parse logic**: When asset_type='cap_space', contract_total = int(Split)
 
----
+______________________________________________________________________
 
 ## Success Criteria for Phase 2
 
@@ -667,7 +674,7 @@ FROM {{ ref('stg_sheets__transactions') }}
 - ✅ All FK tests pass
 - ✅ Enables trade reconstruction queries
 
----
+______________________________________________________________________
 
 ## Files to Update in Phase 2
 
@@ -682,12 +689,12 @@ FROM {{ ref('stg_sheets__transactions') }}
 ### Update Existing
 
 - [ ] `tools/make_samples.py` - Add TRANSACTIONS tab to sheets sampler
-- [ ] `dbt/ff_analytics/models/staging/schema.yml` - Add stg_sheets__transactions tests
+- [ ] `dbt/ff_analytics/models/staging/schema.yml` - Add stg_sheets\_\_transactions tests
 - [ ] `dbt/ff_analytics/models/core/schema.yml` - Add fact_league_transactions tests
 - [ ] `docs/adr/ADR-008-league-transaction-history-integration.md` - Add resolution addendum
 - [ ] `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` - Update checkboxes
 
----
+______________________________________________________________________
 
 ## Key References
 
@@ -699,7 +706,7 @@ FROM {{ ref('stg_sheets__transactions') }}
 - **Sample Data**: `samples/sheets/TRANSACTIONS/TRANSACTIONS.csv`
 - **Seeds**: `dbt/ff_analytics/seeds/`
 
----
+______________________________________________________________________
 
 ## Quick Start for Next Session
 
@@ -717,7 +724,7 @@ ls -la dbt/ff_analytics/seeds/dim_*.csv
 # Begin with: src/ingest/sheets/commissioner_parser.py::parse_transactions()
 ```
 
----
+______________________________________________________________________
 
 **Handoff Complete** ✅
 **Next Task**: Implement `parse_transactions()` with full transaction type classification logic

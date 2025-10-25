@@ -4,30 +4,31 @@
 **Author**: Data Pipeline Analysis
 **Status**: Source Data Quality Assessment
 
----
+______________________________________________________________________
 
 ## Executive Summary
 
 Contract validation reveals **intentional accounting conventions** in the Commissioner's TRANSACTIONS sheet, not parser errors. The primary "validation failure" pattern is the **Extension accounting method**, where Extensions record the full remaining contract schedule in the Split field while the Contract field shows only the extension amount.
 
 **Key Findings**:
+
 - 35 length mismatches (0.9%) - **EXPECTED** for Extensions
 - 55 sum mismatches (1.4%) - mostly ±$1 rounding, acceptable
 - 2 outliers flagged for commissioner review
 
----
+______________________________________________________________________
 
 ## Contract Field Semantics by Transaction Type
 
-| Transaction Type | Contract Field | Split Field | Interpretation |
-|-----------------|----------------|-------------|----------------|
-| Draft | Initial contract total/years | Year-by-year base schedule | Base rookie contract |
-| Extension | **Extension only** (e.g., 8/1) | **Full remaining schedule** (e.g., 2-2-8) | ⚠️ Includes remaining base years |
-| Signing (FAAD/FASA) | New contract total/years | Year-by-year schedule | New contract |
-| Cut | Remaining guaranteed/years | Dead cap schedule | What's owed after cut |
-| Trade | Existing contract total/years | Existing schedule | Contract being traded |
+| Transaction Type    | Contract Field                 | Split Field                               | Interpretation                   |
+| ------------------- | ------------------------------ | ----------------------------------------- | -------------------------------- |
+| Draft               | Initial contract total/years   | Year-by-year base schedule                | Base rookie contract             |
+| Extension           | **Extension only** (e.g., 8/1) | **Full remaining schedule** (e.g., 2-2-8) | ⚠️ Includes remaining base years |
+| Signing (FAAD/FASA) | New contract total/years       | Year-by-year schedule                     | New contract                     |
+| Cut                 | Remaining guaranteed/years     | Dead cap schedule                         | What's owed after cut            |
+| Trade               | Existing contract total/years  | Existing schedule                         | Contract being traded            |
 
----
+______________________________________________________________________
 
 ## Finding 1: Extension Accounting Convention (Expected Behavior)
 
@@ -39,6 +40,7 @@ When a 4th year option is exercised, the Commissioner records:
 - **Split field**: Shows the FULL remaining contract schedule (`6-6-24` = base year 2, base year 3, option year 4)
 
 This creates an **intentional length mismatch** because:
+
 - `contract_years = 1` (extension only)
 - `len(split_array) = 3` (full remaining schedule)
 
@@ -47,6 +49,7 @@ This creates an **intentional length mismatch** because:
 From `docs/spec/league_constitution.csv`, Section XI.G:
 
 > "All drafted players who are still under their first contract at the end of their first fantasy season are eligible for 4th year team option at the following rates:
+>
 > - R1.P1 through R1.P2 = 1 year fourth season contract at $24
 > - R1.P9 through the end of the second round = 1 year fourth season contract at $8"
 
@@ -93,7 +96,7 @@ The Commissioner is tracking **event (extension amount)** in Contract and **stat
 
 **Action**: Load data as-is, add validation flags for analysis, defer clean contract state to Phase 3 `dim_player_contract_history`.
 
----
+______________________________________________________________________
 
 ## Finding 2: Sum Mismatches (Mostly Acceptable Rounding)
 
@@ -102,6 +105,7 @@ The Commissioner is tracking **event (extension amount)** in Contract and **stat
 55 contracts (1.4%) where `sum(split_array) != contract_total`
 
 **Distribution**:
+
 - 48 contracts: ±$1 difference (87% of mismatches) → **rounding acceptable**
 - 5 contracts: ±$2 difference → minor variance
 - 2 contracts: >$5 difference → **flagged for review**
@@ -109,6 +113,7 @@ The Commissioner is tracking **event (extension amount)** in Contract and **stat
 ### Examples - Acceptable Rounding
 
 **Cooper Kupp (2025 FAAD Signing)**
+
 ```
 Contract: 49/5
 Split: 6-6-10-13-13
@@ -118,6 +123,7 @@ Difference: -$1 (rounding)
 ```
 
 **Jordan Hicks (2023 Offseason FA)**
+
 ```
 Contract: 2/1
 Split: 1
@@ -129,6 +135,7 @@ Difference: -$1 (rounding)
 ### Outliers Flagged for Review
 
 **⚠️ Jordan Mason (2024 Week 2 Signing)**
+
 ```
 Contract: 52/5
 Split: 12-8-8-8-8
@@ -138,6 +145,7 @@ Difference: -$8 (suspicious - possible data entry error)
 ```
 
 **⚠️ Isaiah Likely (appears twice)**
+
 ```
 2024 Week 2 Signing:
   Contract: 52/5
@@ -160,7 +168,7 @@ Difference: -$8 (suspicious - possible data entry error)
 ⚠️ Flag Jordan Mason and Isaiah Likely for commissioner review
 📊 Store validation flags in fact table for ongoing monitoring
 
----
+______________________________________________________________________
 
 ## Finding 3: Trade and Cut Consistency
 
@@ -176,6 +184,7 @@ Cut Liability Formula:
 ```
 
 **Kenny Pickett Cut Example (2023 Offseason)**:
+
 ```
 Extension contract: 8/1, split: 2-2-8 (full remaining at time of extension)
 After 1 year elapsed: 2 years remain
@@ -186,25 +195,26 @@ Cut liability: 50% of year 2 ($2) + 50% of year 3 ($8) = 2 + 8 = 10 ✅
 
 Cuts are **correctly calculated** per league constitution.
 
----
+______________________________________________________________________
 
 ## Data Quality Summary
 
-| Validation Check | Count | Rate | Status | Action |
-|-----------------|-------|------|--------|--------|
-| Total contracts | 3,986 | 100% | - | - |
-| Length mismatches | 35 | 0.9% | ✅ Expected | Document as Extension pattern |
-| Sum mismatches (±$1) | 48 | 1.2% | ✅ Acceptable | Accept as rounding variance |
-| Sum mismatches (±$2) | 5 | 0.1% | ⚠️ Minor | Monitor |
-| Sum mismatches (>$5) | 2 | 0.05% | 🚨 Review | Flag for commissioner |
+| Validation Check     | Count | Rate  | Status        | Action                        |
+| -------------------- | ----- | ----- | ------------- | ----------------------------- |
+| Total contracts      | 3,986 | 100%  | -             | -                             |
+| Length mismatches    | 35    | 0.9%  | ✅ Expected   | Document as Extension pattern |
+| Sum mismatches (±$1) | 48    | 1.2%  | ✅ Acceptable | Accept as rounding variance   |
+| Sum mismatches (±$2) | 5     | 0.1%  | ⚠️ Minor      | Monitor                       |
+| Sum mismatches (>$5) | 2     | 0.05% | 🚨 Review     | Flag for commissioner         |
 
----
+______________________________________________________________________
 
 ## Implementation Recommendations
 
 ### 1. Load Raw Events Faithfully (Phase 2)
 
 **Create `fact_league_transactions` as transaction fact table**:
+
 - Store Contract and Split exactly as commissioner entered
 - Add validation flag columns:
   - `has_contract_length_mismatch BOOLEAN`
@@ -251,12 +261,13 @@ tests:
 ### 3. Defer Clean Contract State (Phase 3)
 
 **Create `dim_player_contract_history` in Phase 3**:
+
 - Process fact_league_transactions event log
 - Apply Extension logic: extension split REPLACES base contract tail
 - Handle Cuts with dead cap calculation
 - Build clean contract timeline without double-counting
 
----
+______________________________________________________________________
 
 ## References
 
@@ -266,7 +277,7 @@ tests:
 - **Kimball Guidance**: `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` (Transaction vs Accumulating Snapshot)
 - **Parser Code**: `src/ingest/sheets/commissioner_parser.py:291-620`
 
----
+______________________________________________________________________
 
 **Status**: ✅ Contract validation issues explained and addressed through documentation + validation flags
 
