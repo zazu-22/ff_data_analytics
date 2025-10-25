@@ -1,9 +1,13 @@
 {
-  "seasons": null,
-  "weeks": null,
+  "seasons": [
+    2024
+  ],
+  "weeks": [
+    1
+  ],
   "loader_path": null,
   "provider": "nflverse",
   "dataset": "players",
-  "rows": 200,
+  "rows": 1000,
   "seed": 42
 }

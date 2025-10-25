@@ -11,7 +11,7 @@ models:
 
       **Grain**: One row per player per game per stat per provider
       **Sources**: nflverse (player_stats, snap_counts, ff_opportunity)
-      **Seasons**: 2023-2025 (2.7M rows, 88 stat types)
+      **Seasons**: 2023-2025 (2.7M rows, 109 stat types)
       **Architecture**: ADR-009 (single consolidated fact table), ADR-010 (mfl_id canonical identity)
 
     columns:
@@ -78,9 +78,9 @@ models:
 
       - name: stat_name
         description: |
-          Name of the statistic (e.g., passing_yards, receptions, offense_snaps).
-          88 unique stat types across all sources:
-          - 50 base stats (passing, rushing, receiving, defense)
+          Name of the statistic (e.g., passing_yards, receptions, offense_snaps, fg_made).
+          109 unique stat types across all sources:
+          - 71 base stats (passing, rushing, receiving, defense, kicking)
           - 6 snap stats (offense_snaps, offense_pct, defense_snaps, defense_pct, st_snaps, st_pct)
           - 32 opportunity stats (*_exp, *_diff, air_yards, attempt metrics)
         tests:

@@ -27,7 +27,7 @@ with base as (
     w.opponent_team,
     w.position,
 
-    -- Passing stats (9 columns)
+    -- Passing stats (11 columns)
     w.completions,
     w.attempts,
     w.passing_yards,
@@ -40,7 +40,7 @@ with base as (
     w.passing_2pt_conversions,
     w.passing_cpoe,
 
-    -- Rushing stats (7 columns)
+    -- Rushing stats (8 columns)
     w.carries,
     w.rushing_yards,
     w.rushing_tds,
@@ -50,7 +50,7 @@ with base as (
     w.rushing_epa,
     w.rushing_2pt_conversions,
 
-    -- Receiving stats (9 columns)
+    -- Receiving stats (11 columns)
     w.targets,
     w.receptions,
     w.receiving_yards,
@@ -89,12 +89,35 @@ with base as (
     -- Special teams
     w.special_teams_tds,
 
+    -- Kicking stats (21 columns)
+    w.fg_att,
+    w.fg_made,
+    w.fg_missed,
+    w.fg_made_0_19,
+    w.fg_made_20_29,
+    w.fg_made_30_39,
+    w.fg_made_40_49,
+    w.fg_made_50_59,
+    w.fg_made_60_,
+    w.fg_missed_0_19,
+    w.fg_missed_20_29,
+    w.fg_missed_30_39,
+    w.fg_missed_40_49,
+    w.fg_missed_50_59,
+    w.fg_missed_60_,
+    w.pat_att,
+    w.pat_made,
+    w.pat_missed,
+    w.gwfg_att,
+    w.gwfg_made,
+    w.gwfg_missed,
+
     -- Fantasy points (pre-calculated, not used in fact table but useful for validation)
     w.fantasy_points,
     w.fantasy_points_ppr
 
   from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_WEEKLY_GLOB", "data/raw/nflverse/weekly/dt=*/*.parquet") }}'
+    '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet'
   ) w
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~0.12% of raw data has NULL (113/97,415 rows)
@@ -198,6 +221,29 @@ unpivoted as (
 
   -- Special teams
   union all select player_id, player_key, game_id, season, week, season_type, position, 'special_teams_tds', cast(special_teams_tds as double), 'real_world', 'actual', 'nflverse' from crosswalk where special_teams_tds is not null
+
+  -- Kicking
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_att', cast(fg_att as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_att is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made', cast(fg_made as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed', cast(fg_missed as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_0_19', cast(fg_made_0_19 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_0_19 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_20_29', cast(fg_made_20_29 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_20_29 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_30_39', cast(fg_made_30_39 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_30_39 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_40_49', cast(fg_made_40_49 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_40_49 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_50_59', cast(fg_made_50_59 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_50_59 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_made_60_', cast(fg_made_60_ as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_made_60_ is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_0_19', cast(fg_missed_0_19 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_0_19 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_20_29', cast(fg_missed_20_29 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_20_29 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_30_39', cast(fg_missed_30_39 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_30_39 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_40_49', cast(fg_missed_40_49 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_40_49 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_50_59', cast(fg_missed_50_59 as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_50_59 is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'fg_missed_60_', cast(fg_missed_60_ as double), 'real_world', 'actual', 'nflverse' from crosswalk where fg_missed_60_ is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'pat_att', cast(pat_att as double), 'real_world', 'actual', 'nflverse' from crosswalk where pat_att is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'pat_made', cast(pat_made as double), 'real_world', 'actual', 'nflverse' from crosswalk where pat_made is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'pat_missed', cast(pat_missed as double), 'real_world', 'actual', 'nflverse' from crosswalk where pat_missed is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'gwfg_att', cast(gwfg_att as double), 'real_world', 'actual', 'nflverse' from crosswalk where gwfg_att is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'gwfg_made', cast(gwfg_made as double), 'real_world', 'actual', 'nflverse' from crosswalk where gwfg_made is not null
+  union all select player_id, player_key, game_id, season, week, season_type, position, 'gwfg_missed', cast(gwfg_missed as double), 'real_world', 'actual', 'nflverse' from crosswalk where gwfg_missed is not null
 )
 
 select * from unpivoted
