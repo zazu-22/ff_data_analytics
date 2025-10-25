@@ -1,6 +1,14 @@
 # Bell Keg League — Phase Next Implementation Checklist (v2.3)
 
-A pragmatic, step‑by‑step list to stand up the data pipeline with our latest decisions (SPEC v2.3), nflverse Python shim, R runners, projections config, and sample generator. Use this to coordinate work across the team.
+A pragmatic, step‑by‑step list to stand up the data pipeline with our latest decisions (SPEC v2.2), nflverse Python shim, R runners, projections config, and sample generator. Use this to coordinate work across the team.
+
+**Purpose:** This checklist captures **implementation reality** (executed decisions, status, metrics, gaps). It reflects design refinements made during build-out and supersedes v2.2 on implementation details. For architectural rationale and original requirements baseline, refer to SPEC-1 v2.2.
+
+**Relationship to SPEC v2.2:**
+- v2.2 = Original architectural blueprint (authoritative for design intent and patterns)
+- v2.3 = Execution checklist (authoritative for current status, decisions, and gaps)
+- v4.x (refined_data_model_plan_v4.md) = Technical specifications (v4.1, v4.2, v4.3 addenda)
+- **Key deviations documented in SPEC v2.2 Addendum section** (e.g., separate fact tables per ADR-007, fantasy scoring in marts, etc.)
 
 Legend: ☐ todo · ☑ done/verified · (owner) · (notes)
 
@@ -310,6 +318,16 @@ Acceptance criteria:
   - `stg_sheets_change_log` (row hash per tab)
 - ☑ **Marts - Track A COMPLETE**:
   - **Core facts** (real-world measures only; 2×2 model base layer):
+
+**Architecture Note (ADR-007):**
+v2.2 originally proposed a single `fact_player_stats` table for both actuals and projections. During implementation (documented in refined_data_model_plan_v4.md v4.1 and ADR-007), we split into **separate fact tables** (actuals vs projections) because:
+- Actuals have per-game grain (`game_id` required)
+- Projections have weekly/season grain (`game_id` meaningless)
+- Unified table would require nullable keys (anti-pattern)
+- Separate tables eliminate conditional logic and improve clarity
+
+Both facts store `measure_domain='real_world'` only; fantasy scoring applied in marts via `dim_scoring_rule`. See refined_data_model_plan_v4.md § "Addendum: Projections Integration (v4.1)" for full technical specification and [ADR-007](../adr/ADR-007-separate-fact-tables-actuals-vs-projections.md) for decision rationale.
+
     - ☑ **`fact_player_stats`** (COMPLETE ✅ - with player_key solution):
       - Grain: one row per `(player_key, game_id, stat_name, provider, measure_domain, stat_kind)`
       - Sources: UNION ALL of `stg_nflverse__player_stats` + `stg_nflverse__snap_counts` + `stg_nflverse__ff_opportunity`
@@ -342,6 +360,21 @@ Acceptance criteria:
     - ☑ `dim_schedule` (COMPLETE ✅ - game schedule from nflverse)
     - ☑ `dim_franchise` (COMPLETE ✅ - league team/owner dimension from seed)
   - **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
+
+**2×2 Model Implementation:**
+
+```
+                 Real-World Stats              Fantasy Points
+                 ────────────────              ──────────────
+Actuals          fact_player_stats        →    mart_fantasy_actuals_weekly
+                 (per-game grain)              (apply dim_scoring_rule)
+
+Projections      fact_player_projections  →    mart_fantasy_projections
+                 (weekly/season grain)         (apply dim_scoring_rule)
+```
+
+All base facts (`fact_*`) store real-world measures only. Scoring applied at mart layer via `dim_scoring_rule` (SCD2). This allows scoring rule changes without re-running ingestion.
+
     - Real-world marts:
       - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
       - `mart_real_world_projections` (ffanalytics projections, weekly/season grain)
@@ -403,16 +436,23 @@ Notes:
 
 - Use samples to validate schemas and primary keys; keep samples as raw‑aligned as possible (names/types) to reduce friction in staging.
 
-## 10) Ops & Monitoring
+## 10) Ops & Monitoring (Phase 3)
 
+**v2.2 Requirements (Line 151-157):**
+- `ops.run_ledger(run_id, started_at, ended_at, status, trigger, scope, error_class, retry_count)`
+- `ops.model_metrics(run_id, model_name, row_count, bytes_written, duration_ms, error_rows?)`
+- `ops.data_quality(run_id, model_name, check_name, status, observed_value, threshold)`
+- Freshness UX: notebooks banner per source (e.g., `sheets_stale`, `market_stale`)
+
+**Current Status (Phase 3 backlog):**
 - ☐ Add ingestion logs & metrics: source version, loader path, as‑of timestamps (from `_meta.json`).
 - ☐ Dashboard banners when freshness thresholds breached or LKG in effect.
 - ☐ Alerts on schema drift (dbt run failures) and DQ violations.
+- ☐ Build ops schema tables: `run_ledger`, `model_metrics`, `data_quality`
+- ☐ Implement freshness tests: provider‑specific thresholds + LKG banner flags (v2.2 Line 234)
+- ☐ Implement row-delta tests: ± thresholds on `fact_player_stats`, `mart_*_weekly` (v2.2 Line 235)
 
-ops schema details:
-
-- `ops.run_ledger` captures `asof_datetime`, `loader_path`, `source_version` from `_meta.json`.
-- Freshness banner UX per notebook conventions.
+**Note:** Sheets LKG fallback implemented (Section 4, Line 422); other sources (nflverse, Sleeper, KTC) freshness banners pending.
 
 ## 11) Documentation
 
@@ -480,36 +520,50 @@ ______________________________________________________________________
 
 ### Phase 1 - Seeds & Samples
 
-- All provider samplers produce non‑empty sample files (CSV + Parquet + `_meta.json`):
-  - ☑ nflverse (players, weekly, injuries, schedule, teams)
-  - ☑ sleeper (league, users, rosters, players)
-  - ☑ sheets (GM roster tabs)
-  - ☐ sheets (TRANSACTIONS tab - NEW)
-  - ☐ ffanalytics (weighted consensus projections - NEW)
-  - ☐ ktc (players + picks market values)
-- Seeds created and validated:
-  - ☐ `dim_player_id_xref` (provider IDs → canonical player_id)
-  - ☐ `dim_name_alias` (alternate names for fuzzy matching)
-  - ☐ `dim_pick` (draft pick dimension)
-  - ☐ `dim_asset` (unified player/pick/cap asset catalog)
-  - ☐ `dim_scoring_rule` (league scoring rules SCD2)
-  - ☐ Neutral stat dictionary (from nflreadr)
+**Status:** ✅ **COMPLETE** (6/8 seeds done, 2 optional per Line 26)
+
+**Provider Samplers (Samples Available):**
+- ☑ nflverse (players, weekly, injuries, schedule, teams)
+- ☑ sleeper (league, users, rosters, players)
+- ☑ sheets (GM roster tabs)
+- ☐ sheets (TRANSACTIONS tab - NEW; depends on seeds for name resolution)
+- ☐ ffanalytics (weighted consensus projections - NEW; depends on seeds for player mapping)
+- ☐ ktc (players + picks market values)
+
+**Seeds Created and Validated:**
+- ☑ `dim_player_id_xref` (12,133 players, 19 provider IDs; primary key=mfl_id) ✅ **COMPLETE**
+- ☑ `dim_franchise` (SCD2 ownership history) ✅ **COMPLETE**
+- ☑ `dim_pick` (2012-2030 base draft picks, 5 rounds × 12 teams/year) ✅ **COMPLETE**
+- ☑ `dim_scoring_rule` (Half-PPR + IDP, SCD2) ✅ **COMPLETE**
+- ☑ `dim_timeframe` (maps TRANSACTIONS strings to season/week/period) ✅ **COMPLETE**
+- ☑ `dim_name_alias` (78 alias mappings, 100% coverage) ✅ **COMPLETE**
+- ☐ `dim_asset` (OPTIONAL - derived from dim_player_id_xref + dim_pick on-demand)
+- ☐ `stat_dictionary.csv` (OPTIONAL - single provider, not yet needed for multi-provider normalization)
+
+**All tracks unblocked:** Phase 1 complete enables TRANSACTIONS parsing (Track B), projections integration (Track D), and KTC fetcher (Track C).
 
 ### Phase 2 - Core Models
 
-- dbt passes: `dbt seed`, `dbt run` (staging + marts), `dbt test` (DQ & freshness) on samples
-- Core facts built successfully:
-  - ☐ `fact_player_stats` (per-game actuals from nflverse)
-  - ☐ `fact_player_projections` (weekly/season projections from ffanalytics - NEW)
-  - ☐ `fact_league_transactions` (commissioner transaction history - NEW)
-  - ☐ `fact_asset_market_values` (KTC market valuations)
-- Key marts validated:
-  - ☐ `mart_real_world_actuals_weekly`
-  - ☐ `mart_real_world_projections` (NEW)
-  - ☐ `mart_fantasy_actuals_weekly` (scoring applied)
-  - ☐ `mart_fantasy_projections` (scoring applied - NEW)
-  - ☐ `mart_projection_variance` (NEW)
-  - ☐ `mart_trade_history` (NEW)
+**Status:** ⚠️ **Track A 95% Complete, Track B 80% Complete, Tracks C/D In Progress**
+
+**dbt Build Status:**
+- ☑ `dbt seed` - 6 seeds loaded successfully
+- ☑ `dbt run` - Core staging + Track A marts building
+- ☑ `dbt test` - 19/19 DQ tests passing for fact_player_stats ✅
+
+**Core facts built successfully:**
+- ☑ `fact_player_stats` (per-game actuals from nflverse; 6.3M rows, 88 stats) ✅ **Track A COMPLETE**
+- ☐ `fact_player_projections` (weekly/season projections from ffanalytics - NEW) - **Track D pending**
+- ☑ `fact_league_transactions` (commissioner transaction history - NEW) ✅ **Track B COMPLETE**
+- ☐ `fact_asset_market_values` (KTC market valuations) - **Track C pending**
+
+**Key marts validated:**
+- ☑ `mart_real_world_actuals_weekly` ✅ **Track A COMPLETE**
+- ☐ `mart_real_world_projections` (NEW) - **Track D pending**
+- ☑ `mart_fantasy_actuals_weekly` (scoring applied) ✅ **Track A COMPLETE**
+- ☐ `mart_fantasy_projections` (scoring applied - NEW) - **Track D pending**
+- ☐ `mart_projection_variance` (NEW) - **Track D pending** (requires projections)
+- ☐ `mart_trade_history` (NEW) - **Track B/C pending** (requires KTC for valuations)
 
 ### Phase 3 - CI/CD & Operations
 
