@@ -1,11 +1,24 @@
 ---
 name: data-architecture-spec1
-description: Design and validate data pipelines following SPEC-1 v2.2 patterns including batch ingestion, Kimball dimensional modeling, 2×2 stat model, identity resolution, and data quality frameworks. Use for schema design, pipeline architecture, new data source integration, SPEC-1 compliance validation, or architectural decision questions.
+description: Design and validate data pipelines following SPEC-1 patterns including batch ingestion, Kimball dimensional modeling, 2×2 stat model, identity resolution, and data quality frameworks. Use for schema design, pipeline architecture, new data source integration, SPEC-1 compliance validation, or architectural decision questions.
 ---
 
 # SPEC-1 Data Architecture for FF Analytics
 
 ## When to Use This Skill
+
+**Invoke this skill proactively when users request:**
+
+- "How should I integrate a new data source (KTC, FFanalytics, etc.)?"
+- "What's the correct grain for weekly/game-level player stats?"
+- "Should fantasy scoring go in facts or marts?"
+- "Help me implement batch ingestion following SPEC-1 patterns"
+- "How do I handle players that don't map to the crosswalk?"
+- "Validate my staging model follows SPEC-1 compliance"
+- "What's the architecture decision for [X]?" (check ADR_INDEX.md)
+- "How do I set up identity resolution for a new provider?"
+
+**Use for these tasks:**
 
 - **Designing new data source integrations** (nflverse, KTC, FFanalytics, commissioner sheets)
 - **Implementing batch processing workflows** (twice-daily ingestion patterns)
@@ -175,13 +188,15 @@ tests:
       - stat_kind
 ```
 
-**Grain Analysis Tool:**
+**Grain Analysis Helper (generates SQL for manual validation):**
 
 ```bash
 uv run .claude/skills/data-architecture-spec1/scripts/analyze_grain.py \
   --model fact_player_stats \
   --expected-grain "player_key,game_id,stat_name,provider,measure_domain,stat_kind"
 ```
+
+This script generates SQL to check for duplicate grain keys. Run the generated SQL manually or create a dbt singular test for automated validation (recommended approach).
 
 ### 5. Data Quality Framework
 
@@ -201,16 +216,42 @@ uv run .claude/skills/data-architecture-spec1/scripts/analyze_grain.py \
 4. **Not-null** on all grain columns
 5. **Range checks** (season 2020-2025, week 1-18)
 
-**Test generation helper:**
+**Standard test template for staging models:**
 
-```bash
-# Generate standard test suite for a model
-uv run .claude/skills/data-architecture-spec1/scripts/generate_tests.py \
-  --model stg_nflverse__player_stats \
-  --grain "season,week,gsis_id,stat_name" \
-  --fk "player_id:dim_player_id_xref" \
-  --enums "season_type:REG,POST,PRE"
+```yaml
+# dbt/ff_analytics/models/staging/<provider>/schema.yml
+models:
+  - name: stg_<provider>__<dataset>
+    columns:
+      # Grain uniqueness test (composite key)
+      - name: grain_key
+        tests:
+          - unique
+        # Create grain_key column: concat(col1, '-', col2, '-', col3)
+
+      # FK integrity tests
+      - name: player_id
+        tests:
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: player_id
+
+      # Enum validation tests
+      - name: season_type
+        tests:
+          - accepted_values:
+              values: ['REG', 'POST', 'PRE']
+
+      # Not-null tests on grain columns
+      - name: season
+        tests:
+          - not_null
+      - name: week
+        tests:
+          - not_null
 ```
+
+For complex grain tests, create a singular test in `dbt/ff_analytics/tests/singular/`.
 
 ### 6. Kimball Dimensional Modeling
 
@@ -283,7 +324,7 @@ When adding a new data source (KTC, FFanalytics, etc.), follow this sequence:
   - Document NULL filtering and mapping coverage in header
 - [ ] **Generate dbt tests**
   - Grain uniqueness, FK integrity, enums, not-null
-  - Use test generation helper script
+  - Use standard test template (see section 5 above)
 - [ ] **Integrate into fact/mart tables**
   - UNION into existing facts (if same grain) or create new fact table
   - Apply 2×2 model (real-world in facts, fantasy scoring in marts)
@@ -292,9 +333,9 @@ When adding a new data source (KTC, FFanalytics, etc.), follow this sequence:
   - Verify metadata lineage
   - Check test coverage (100% on grain, FK, enums)
 - [ ] **Update SPEC checklist**
-  - Mark tasks complete in `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md`
+  - Mark tasks complete in [`reference/SPEC-1_v_2.3_implementation_checklist_v_0.md`](reference/SPEC-1_v_2.3_implementation_checklist_v_0.md)
 
-See VALIDATION.md for complete compliance checklist with acceptance criteria.
+See [VALIDATION.md](VALIDATION.md) for complete compliance checklist with acceptance criteria.
 
 ## Common Architectural Questions
 
@@ -306,7 +347,7 @@ See VALIDATION.md for complete compliance checklist with acceptance criteria.
 2. **Different grain?** If yes → Create separate fact table (e.g., projections have weekly grain vs actuals have game grain)
 3. **Same measure domain?** Ensure both are `measure_domain='real_world'` before UNION
 
-See ADR-007 for actuals vs projections decision.
+See [ADR_INDEX.md](ADR_INDEX.md) → ADR-007 for actuals vs projections decision.
 
 ### Q: Where should fantasy scoring be calculated?
 
@@ -391,32 +432,37 @@ See `reference/data_sources/` for detailed source decision docs.
 
 ## File References
 
-- **Complete specification:** `reference/SPEC-1_v_2.2.md`
-- **Technical specifications:** `reference/refined_data_model_plan_v4.md`
-- **Architecture decisions:** `ADR_INDEX.md` (all ADRs cataloged)
-- **Validation checklists:** `VALIDATION.md` (step-by-step compliance)
-- **Kimball modeling guide:** `reference/kimball_modeling.md`
-- **Data source patterns:** `reference/data_sources/`
+All reference files are symlinked to authoritative project documentation:
+
+- **Complete specification:** [`reference/SPEC-1_v_2.2.md`](reference/SPEC-1_v_2.2.md)
+- **Implementation checklist:** [`reference/SPEC-1_v_2.3_implementation_checklist_v_0.md`](reference/SPEC-1_v_2.3_implementation_checklist_v_0.md)
+- **Technical specifications:** [`reference/refined_data_model_plan_v4.md`](reference/refined_data_model_plan_v4.md)
+- **Architecture decisions:** [`ADR_INDEX.md`](ADR_INDEX.md) (all ADRs cataloged)
+- **Validation checklists:** [`VALIDATION.md`](VALIDATION.md) (step-by-step compliance)
+- **Kimball modeling guide:** [`reference/kimball_modeling.md`](reference/kimball_modeling.md)
+- **Data source patterns:** [`reference/data_sources/`](reference/data_sources/)
 
 ## Validation Scripts
 
 All scripts in `.claude/skills/data-architecture-spec1/scripts/`:
 
 ```bash
-# Check metadata lineage
-check_lineage.py --path data/raw/<provider>/<dataset>/dt=YYYY-MM-DD
+# Check metadata lineage (validates _meta.json format)
+uv run .claude/skills/data-architecture-spec1/scripts/check_lineage.py \
+  --path data/raw/<provider>/<dataset>/dt=YYYY-MM-DD
 
-# Validate schema compliance
-validate_schema.py --model <model_name> --check <check_type>
+# Validate schema compliance (metadata, consistency, ID mapping)
+uv run .claude/skills/data-architecture-spec1/scripts/validate_schema.py \
+  --path data/raw/<provider>/<dataset> \
+  --check <metadata|schema_consistency|player_id_mapping>
 
-# Analyze grain uniqueness
-analyze_grain.py --model <model_name> --expected-grain "col1,col2,..."
-
-# Generate test suite
-generate_tests.py --model <model_name> --grain "cols" --fk "col:ref" --enums "col:vals"
+# Generate grain validation SQL (manual execution required)
+uv run .claude/skills/data-architecture-spec1/scripts/analyze_grain.py \
+  --model <model_name> \
+  --expected-grain "col1,col2,..."
 ```
 
-See VALIDATION.md for complete usage and acceptance criteria.
+See [VALIDATION.md](VALIDATION.md) for complete usage and acceptance criteria.
 
 ## Common Pitfalls to Avoid
 
@@ -430,13 +476,13 @@ See VALIDATION.md for complete usage and acceptance criteria.
 
 ## Implementation Status
 
-See `reference/SPEC-1_v_2.3_implementation_checklist_v_0.md` for current status:
+**Current status tracked in:** [`reference/SPEC-1_v_2.3_implementation_checklist_v_0.md`](reference/SPEC-1_v_2.3_implementation_checklist_v_0.md)
 
-- ✅ **Phase 1 (Seeds):** COMPLETE - All tracks unblocked
-- ✅ **Phase 2A (NFL Actuals):** 95% COMPLETE - fact_player_stats, marts operational
-- ⚠️ **Phase 2B (League Data):** 80% COMPLETE - TRANSACTIONS parsing pending
-- ⏳ **Phase 2C (Market Data):** 0% - KTC fetcher pending
-- ⏳ **Phase 2D (Projections):** 20% - FFanalytics integration pending
-- ⏳ **Phase 3 (Ops & Monitoring):** Pending
+Refer to the implementation checklist for:
 
-Next priority: Complete Phase 2B (TRANSACTIONS tab parsing) to reach 100%.
+- Real-time status updates by phase and track
+- Detailed task completion tracking
+- Test coverage metrics
+- Next priority recommendations
+
+The checklist is the authoritative source for implementation status and is updated regularly as work progresses.

@@ -129,14 +129,23 @@ Use this checklist when adding a new data provider (KTC, FFanalytics, etc.).
   - Document coverage % in staging model header
   - Identify unmapped players for alias table updates
 
-- [ ] **Generate alias candidates (if coverage < 98%)**
+- [ ] **Identify unmapped players (if coverage < 98%)**
 
-  ```bash
-  uv run .claude/skills/data-architecture-spec1/scripts/analyze_player_names.py \
-    --source data/raw/<provider>/<dataset> \
-    --name-column <name_field> \
-    --suggest-aliases alias_candidates.csv
+  Use SQL to find players without mapping:
+
+  ```sql
+  -- Query unmapped players
+  select distinct
+    source.<name_field> as player_name,
+    source.<provider_id_field> as provider_id
+  from read_parquet('data/raw/<provider>/<dataset>/dt=*/*.parquet') source
+  left join read_csv('dbt/ff_analytics/seeds/dim_player_id_xref.csv') xref
+    on source.<provider_id_field> = xref.<provider_id_field>
+  where xref.player_id is null
+  order by player_name;
   ```
+
+  Manually review unmapped players and add aliases to `dim_name_alias.csv` seed if valid matches exist.
 
 ### Phase 5: Staging Model
 
@@ -175,15 +184,37 @@ Use this checklist when adding a new data provider (KTC, FFanalytics, etc.).
 
 ### Phase 6: Tests
 
-- [ ] **Generate test suite**
+- [ ] **Create test suite using standard template**
 
-  ```bash
-  uv run .claude/skills/data-architecture-spec1/scripts/generate_tests.py \
-    --model stg_<provider>__<dataset> \
-    --grain "col1,col2,col3" \
-    --fk "player_id:dim_player_id_xref" \
-    --enums "season_type:REG,POST,PRE"
+  Add to `dbt/ff_analytics/models/staging/<provider>/schema.yml`:
+
+  ```yaml
+  models:
+    - name: stg_<provider>__<dataset>
+      columns:
+        # Grain uniqueness (composite key)
+        - name: player_id
+          tests:
+            - not_null
+        - name: season
+          tests:
+            - not_null
+
+        # FK integrity
+        - name: player_id
+          tests:
+            - relationships:
+                to: ref('dim_player_id_xref')
+                field: player_id
+
+        # Enum validation
+        - name: season_type
+          tests:
+            - accepted_values:
+                values: ['REG', 'POST', 'PRE']
   ```
+
+  For complex grain tests, create singular test in `tests/singular/`.
 
 - [ ] **Required tests (100% coverage)**
   - Grain uniqueness (composite key)
@@ -639,25 +670,35 @@ Use this checklist to validate player ID mapping.
 
 - [ ] **Identify unmapped players**
 
-  ```bash
-  uv run .claude/skills/data-architecture-spec1/scripts/analyze_player_names.py \
-    --source data/raw/<provider>/<dataset> \
-    --where "player_id IS NULL"
+  Use SQL query against staging model or raw data:
+
+  ```sql
+  -- Find players without mapping
+  select distinct
+    stg.player_name,
+    stg.raw_provider_id,
+    count(*) as record_count
+  from {{ ref('stg_<provider>__<dataset>') }} stg
+  where stg.player_id is null
+  group by 1, 2
+  order by record_count desc;
   ```
 
-- [ ] **Generate alias candidates**
+- [ ] **Review and create alias candidates**
 
-  ```bash
-  # Suggests fuzzy matches for unmapped players
-  uv run .claude/skills/data-architecture-spec1/scripts/analyze_player_names.py \
-    --source data/raw/<provider>/<dataset> \
-    --suggest-aliases alias_candidates.csv
-  ```
+  For unmapped players, check for:
+  - Name variations (T.J. vs TJ)
+  - Nicknames vs full names (Chris vs Christopher)
+  - Punctuation differences (St. vs St)
+  - Spelling errors or typos
+
+  Search `dim_player_id_xref` for potential matches using fuzzy matching.
 
 - [ ] **Update alias table (if valid matches found)**
 
+  Add entries to `dbt/ff_analytics/seeds/dim_name_alias.csv`:
+
   ```csv
-  # dbt/ff_analytics/seeds/dim_name_alias.csv
   alias_name,canonical_name,alias_type,notes
   T.J. Hockenson,TJ Hockenson,punctuation,Missing period
   Chris Godwin,Christopher Godwin,nickname,Shortened first name
@@ -817,25 +858,25 @@ Use this checklist to ensure comprehensive dbt test coverage.
 
 ## Validation Scripts Reference
 
-All validation scripts located in `.claude/skills/data-architecture-spec1/scripts/`:
+Available validation scripts in `.claude/skills/data-architecture-spec1/scripts/`:
 
 ```bash
-# Metadata lineage validation
-check_lineage.py --path data/raw/<provider>/<dataset>/dt=YYYY-MM-DD
+# Check metadata lineage (validates _meta.json format)
+uv run .claude/skills/data-architecture-spec1/scripts/check_lineage.py \
+  --path data/raw/<provider>/<dataset>/dt=YYYY-MM-DD
 
-# Schema compliance validation
-validate_schema.py --model <model_name> --check <check_type>
-# Check types: metadata, schema_consistency, player_id_mapping
+# Validate schema compliance
+uv run .claude/skills/data-architecture-spec1/scripts/validate_schema.py \
+  --path data/raw/<provider>/<dataset> \
+  --check <metadata|schema_consistency|player_id_mapping>
 
-# Grain uniqueness analysis
-analyze_grain.py --model <model_name> --expected-grain "col1,col2,..."
-
-# Player name analysis (for identity resolution)
-analyze_player_names.py --source <path> --suggest-aliases <output_csv>
-
-# Test generation helper
-generate_tests.py --model <model_name> --grain "cols" --fk "col:ref" --enums "col:vals"
+# Generate grain validation SQL (manual execution required)
+uv run .claude/skills/data-architecture-spec1/scripts/analyze_grain.py \
+  --model <model_name> \
+  --expected-grain "col1,col2,..."
 ```
+
+**Note:** For identity resolution and test generation, use the SQL templates and dbt test patterns provided in the checklists above rather than automated scripts.
 
 ---
 
