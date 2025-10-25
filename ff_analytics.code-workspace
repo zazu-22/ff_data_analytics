@@ -5,6 +5,7 @@
     }
   ],
   "settings": {
-    "claude-code.useTerminal": true
+    "claude-code.useTerminal": true,
+    "claudeCode.useTerminal": true
   }
 }
