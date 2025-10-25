@@ -79,7 +79,6 @@ repos:
           "dbt-duckdb>=1.8.0",
           "sqlfluff-templater-dbt>=3.1.1",
         ]
-        args: [--config, pyproject.toml]
       - id: sqlfluff-fix
         name: sqlfluff-fix (manual)
         stages: [manual]

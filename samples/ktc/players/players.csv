@@ -1,0 +1,51 @@
+player_name,position,team,asset_type,rank,value,positional_rank,market_scope,asof_date
+Ja'Marr Chase,WR,CIN,player,1,9999,1,dynasty_1qb,2025-10-25
+Bijan Robinson,RB,ATL,player,2,9999,1,dynasty_1qb,2025-10-25
+Puka Nacua,WR,LAR,player,3,9757,2,dynasty_1qb,2025-10-25
+Jahmyr Gibbs,RB,DET,player,4,9523,2,dynasty_1qb,2025-10-25
+Justin Jefferson,WR,MIN,player,5,9115,3,dynasty_1qb,2025-10-25
+Jaxon Smith-Njigba,WR,SEA,player,6,8684,4,dynasty_1qb,2025-10-25
+Amon-Ra St. Brown,WR,DET,player,7,8546,5,dynasty_1qb,2025-10-25
+CeeDee Lamb,WR,DAL,player,8,8383,6,dynasty_1qb,2025-10-25
+Malik Nabers,WR,NYG,player,9,8328,7,dynasty_1qb,2025-10-25
+Josh Allen,QB,BUF,player,10,8143,1,dynasty_1qb,2025-10-25
+Brock Bowers,TE,LVR,player,11,7806,1,dynasty_1qb,2025-10-25
+Emeka Egbuka,WR,TBB,player,12,7707,8,dynasty_1qb,2025-10-25
+Ashton Jeanty,RB,LVR,player,13,7576,3,dynasty_1qb,2025-10-25
+Jonathan Taylor,RB,IND,player,14,7471,4,dynasty_1qb,2025-10-25
+Lamar Jackson,QB,BAL,player,15,7465,2,dynasty_1qb,2025-10-25
+Drake London,WR,ATL,player,16,7213,9,dynasty_1qb,2025-10-25
+Trey McBride,TE,ARI,player,17,7125,2,dynasty_1qb,2025-10-25
+De'Von Achane,RB,MIA,player,18,7014,5,dynasty_1qb,2025-10-25
+Jayden Daniels,QB,WAS,player,19,6931,3,dynasty_1qb,2025-10-25
+Omarion Hampton,RB,LAC,player,20,6888,6,dynasty_1qb,2025-10-25
+Rome Odunze,WR,CHI,player,21,6882,10,dynasty_1qb,2025-10-25
+Quinshon Judkins,RB,CLE,player,22,6820,7,dynasty_1qb,2025-10-25
+Tetairoa McMillan,WR,CAR,player,23,6808,11,dynasty_1qb,2025-10-25
+Bucky Irving,RB,TBB,player,24,6804,8,dynasty_1qb,2025-10-25
+Tyler Warren,TE,IND,player,25,6780,3,dynasty_1qb,2025-10-25
+James Cook,RB,BUF,player,26,6696,9,dynasty_1qb,2025-10-25
+Brian Thomas Jr.,WR,JAC,player,27,6646,12,dynasty_1qb,2025-10-25
+Nico Collins,WR,HOU,player,28,6598,13,dynasty_1qb,2025-10-25
+Garrett Wilson,WR,NYJ,player,29,6572,14,dynasty_1qb,2025-10-25
+Rashee Rice,WR,KCC,player,30,6538,15,dynasty_1qb,2025-10-25
+Saquon Barkley,RB,PHI,player,32,6441,10,dynasty_1qb,2025-10-25
+Christian McCaffrey,RB,SFO,player,34,6261,11,dynasty_1qb,2025-10-25
+Ladd McConkey,WR,LAC,player,35,6249,16,dynasty_1qb,2025-10-25
+Jalen Hurts,QB,PHI,player,36,6126,4,dynasty_1qb,2025-10-25
+George Pickens,WR,DAL,player,37,6049,17,dynasty_1qb,2025-10-25
+Josh Jacobs,RB,GBP,player,38,6033,12,dynasty_1qb,2025-10-25
+Kyren Williams,RB,LAR,player,39,6004,13,dynasty_1qb,2025-10-25
+Marvin Harrison Jr.,WR,ARI,player,40,5994,18,dynasty_1qb,2025-10-25
+Cam Skattebo,RB,NYG,player,41,5843,14,dynasty_1qb,2025-10-25
+Breece Hall,RB,NYJ,player,42,5834,15,dynasty_1qb,2025-10-25
+Drake Maye,QB,NEP,player,44,5778,5,dynasty_1qb,2025-10-25
+Joe Burrow,QB,CIN,player,46,5714,6,dynasty_1qb,2025-10-25
+A.J. Brown,WR,PHI,player,47,5689,19,dynasty_1qb,2025-10-25
+Justin Herbert,QB,LAC,player,48,5672,7,dynasty_1qb,2025-10-25
+TreVeyon Henderson,RB,NEP,player,50,5628,16,dynasty_1qb,2025-10-25
+Xavier Worthy,WR,KCC,player,51,5587,20,dynasty_1qb,2025-10-25
+Tee Higgins,WR,CIN,player,52,5583,21,dynasty_1qb,2025-10-25
+Tucker Kraft,TE,GBP,player,53,5548,4,dynasty_1qb,2025-10-25
+Sam LaPorta,TE,DET,player,54,5543,5,dynasty_1qb,2025-10-25
+Travis Hunter,WR,JAC,player,55,5514,22,dynasty_1qb,2025-10-25

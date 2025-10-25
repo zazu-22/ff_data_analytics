@@ -16,11 +16,11 @@ samples-nflverse:
 
 dbt-run:
 	@echo "Running dbt (ensure dbt-duckdb is installed)"
-	dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+	cd dbt/ff_analytics && EXTERNAL_ROOT="../../data/raw" dbt run --profiles-dir .
 
 dbt-test:
 	@echo "Testing dbt models"
-	dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+	cd dbt/ff_analytics && EXTERNAL_ROOT="../../data/raw" dbt test --profiles-dir .
 
 quickstart-local: samples-nflverse dbt-run dbt-test
 	@echo "Done."

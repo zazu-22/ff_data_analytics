@@ -214,13 +214,11 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
 
 
 # ---------- Google Sheets (export sample rows using Sheets API) ----------
-def sample_sheets(
-    tabs: list[str], out: Path, sheet_url: str | None = None, max_rows: int = 1000
-):
+def sample_sheets(tabs: list[str], out: Path, sheet_url: str | None = None, max_rows: int = 1000):
     """Pull only the first N rows per tab from a Google Sheet (creds required)."""
     import gspread  # pip install gspread google-auth
-    from gspread.utils import rowcol_to_a1
     from google.oauth2.service_account import Credentials
+    from gspread.utils import rowcol_to_a1
 
     # Try GOOGLE_APPLICATION_CREDENTIALS_JSON first (JSON content)
     creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
@@ -294,32 +292,54 @@ def sample_sheets(
 
 # ---------- KeepTradeCut (players + picks; top-N) ----------
 def sample_ktc(out: Path, assets: list[str], top_n: int = 100, max_rows: int = 1000):
-    """Respectful scraping: small, top-N only; use cached endpoints if you have them.
+    """Fetch real KTC data with respectful rate limiting and caching.
 
-    This function is a placeholder — wire it to your existing KTC fetcher.
+    Args:
+        out: Output directory for samples
+        assets: List of asset types to fetch ("players", "picks")
+        top_n: Number of top-ranked assets to include per type
+        max_rows: Maximum rows to write (applied after top_n filtering)
+
     """
-    rows = []
+    from ingest.ktc.client import KTCClient
+
+    # Use cache to avoid repeated requests during development
+    cache_dir = out / ".ktc_cache"
+    client = KTCClient(cache_dir=cache_dir)
+
+    manifest = {}
     for asset_type in assets:
-        for i in range(min(top_n, 50)):
-            rows.append(
-                {
-                    "asset_type": asset_type,
-                    "asset_id": f"{asset_type}_{i}",
-                    "rank": i + 1,
-                    "ktc_value": 1000 - i * 3,
-                    "asof_date": "2025-08-01",
-                }
-            )
-    ktc_df = pd.DataFrame(rows)
-    out_dir = _ensure_out(out, "ktc", "assets")
-    return _write_outputs(
-        ktc_df,
-        out_dir,
-        "ktc",
-        "assets",
-        {"assets": assets, "top_n": top_n},
-        max_rows=max_rows,
-    )
+        if asset_type == "players":
+            asset_df = client.fetch_players()
+        elif asset_type == "picks":
+            asset_df = client.fetch_picks()
+        else:
+            raise ValueError(f"Unknown KTC asset type: {asset_type}")
+
+        # Filter to top N by rank
+        df_sorted = asset_df.sort("rank")
+        df_top = df_sorted.head(top_n)
+
+        # Convert to pandas for _write_outputs compatibility
+        df_pandas = df_top.to_pandas()
+
+        out_dir = _ensure_out(out, "ktc", asset_type)
+        paths = _write_outputs(
+            df_pandas,
+            out_dir,
+            "ktc",
+            asset_type,
+            {
+                "asset_type": asset_type,
+                "top_n": top_n,
+                "market_scope": client.market_scope,
+                "source": "keeptradecut.com/dynasty-rankings",
+            },
+            max_rows=max_rows,
+        )
+        manifest[asset_type] = paths
+
+    return manifest
 
 
 # ---------- FFanalytics (subset of sites/weeks/positions) ----------
@@ -350,6 +370,7 @@ def sample_ffanalytics(
 
     Returns:
         dict: Manifest with paths to sample files (raw and consensus)
+
     """
     import sys
     from pathlib import Path as PathLib
@@ -389,7 +410,7 @@ def sample_ffanalytics(
             print(f"Warning: No output files for week {week}")
             continue
 
-        dt = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
+        pd.Timestamp.utcnow().strftime("%Y-%m-%d")
 
         # Process CONSENSUS projections (primary output)
         consensus_path = result["output_files"].get("consensus")

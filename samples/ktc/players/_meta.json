@@ -1,0 +1,10 @@
+{
+  "asset_type": "players",
+  "top_n": 50,
+  "market_scope": "dynasty_1qb",
+  "source": "keeptradecut.com/dynasty-rankings",
+  "provider": "ktc",
+  "dataset": "players",
+  "rows": 50,
+  "seed": 42
+}

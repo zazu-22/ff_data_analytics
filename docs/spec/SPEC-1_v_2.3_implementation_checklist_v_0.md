@@ -5,6 +5,7 @@ A pragmatic, step‑by‑step list to stand up the data pipeline with our latest
 **Purpose:** This checklist captures **implementation reality** (executed decisions, status, metrics, gaps). It reflects design refinements made during build-out and supersedes v2.2 on implementation details. For architectural rationale and original requirements baseline, refer to SPEC-1 v2.2.
 
 **Relationship to SPEC v2.2:**
+
 - v2.2 = Original architectural blueprint (authoritative for design intent and patterns)
 - v2.3 = Execution checklist (authoritative for current status, decisions, and gaps)
 - v4.x (refined_data_model_plan_v4.md) = Technical specifications (v4.1, v4.2, v4.3 addenda)
@@ -32,6 +33,7 @@ ______________________________________________________________________
 ### Recommended Sequencing (High‑Level)
 
 1. **Phase 1 - Seeds**: ☑ **COMPLETE** (6/8 done, 2 optional) - ALL TRACKS UNBLOCKED!
+
    - ☑ dim_player_id_xref (12,133 players, 19 provider IDs)
    - ☑ dim_franchise, dim_pick, dim_scoring_rule, dim_timeframe
    - ☑ dim_name_alias (78 alias mappings for 100% player coverage)
@@ -42,15 +44,16 @@ ______________________________________________________________________
    - **Track A (NFL Actuals)**: ☑ 95% COMPLETE - nflverse staging ✅ → fact_player_stats ✅ → player_key solution ✅ → dim_player ✅ → dim_team ✅ (dedupe added) → dim_schedule ✅ (requires teams data availability) → mart_real_world_actuals_weekly ✅ → mart_fantasy_actuals_weekly ✅ (data-driven scoring)
 
    **Critical Fixes Applied (Oct 2)**:
+
    - ✅ Player ID architecture corrected: Using mfl_id as canonical player_id (ADR-010 compliance restored)
    - ✅ Fantasy scoring refactored: Data-driven from dim_scoring_rule (2×2 model compliance restored)
    - ✅ Team dimension: Deduplication added for multi-season dataset support
    - ✅ Infrastructure fixes (2025-10-25): DuckDB path resolution, GCS→local config, schedule/teams datasets loaded, conference/division seed added
    - ✅ Test coverage: 147/149 tests passing (98.7%), all models building successfully
    - ⏳ Follow-ups: Add kicking stats, resolve defensive tackles fields, consider weekly team attribution
-   - **Track B (League Data)**: ☑ 100% COMPLETE ✅ - Parse TRANSACTIONS tab ✅ → stg_sheets__transactions ✅ → fact_league_transactions ✅ → make_samples.py support ✅ → All tests passing ✅ (25/25) → dim_player_contract_history (Phase 3) → trade analysis marts (Phase 3)
-   - **Track C (Market Data)**: ☐ 0% - Implement KTC fetcher → stg_ktc_assets → fact_asset_market_values
-   - **Track D (Projections)**: ☑ 100% COMPLETE ✅ - FFanalytics weighted aggregation ✅ → stg_ffanalytics__projections ✅ → fact_player_projections ✅ → mart_real_world_projections ✅ → mart_fantasy_projections ✅ → mart_projection_variance ✅ (20/20 tests passing)
+   - **Track B (League Data)**: ☑ 100% COMPLETE ✅ - Parse TRANSACTIONS tab ✅ → stg_sheets\_\_transactions ✅ → fact_league_transactions ✅ → make_samples.py support ✅ → All tests passing ✅ (25/25) → dim_player_contract_history (Phase 3) → trade analysis marts (Phase 3)
+   - **Track C (Market Data)**: ☑ 100% COMPLETE ✅ - KTC fetcher ✅ → stg_ktc_assets ✅ → fact_asset_market_values ✅ (all tests passing)
+   - **Track D (Projections)**: ☑ 100% COMPLETE ✅ - FFanalytics weighted aggregation ✅ → stg_ffanalytics\_\_projections ✅ → fact_player_projections ✅ → mart_real_world_projections ✅ → mart_fantasy_projections ✅ → mart_projection_variance ✅ (20/20 tests passing)
 
 1. **Phase 3 - Integration & Analysis:**
 
@@ -188,17 +191,23 @@ Normalization policy and dbt expectations:
 
 ## 5) KeepTradeCut — Replace Sampler Stub
 
-- ☐ Implement real KTC fetcher (players + picks) respecting ToS and polite rate limits (randomized sleeps, caching).
-- ☐ Update `tools/make_samples.py::sample_ktc` to call actual fetcher; keep `--top-n` sampling to limit size.
-- ☐ Normalize to long‑form `asset_type ∈ {player,pick}` with `asof_date`, `rank`, `value`.
-- ☐ Write Parquet to `data/raw/ktc/{players,picks}/dt=YYYY-MM-DD/` with `_meta.json`
-- ☐ Export small samples from the KTC fetcher
+- ☑ Implement real KTC fetcher (players + picks) respecting ToS and polite rate limits (randomized sleeps, caching).
+- ☑ Update `tools/make_samples.py::sample_ktc` to call actual fetcher; keep `--top-n` sampling to limit size.
+- ☑ Normalize to long‑form `asset_type ∈ {player,pick}` with `asof_date`, `rank`, `value`.
+- ☑ Write Parquet to `data/raw/ktc/{players,picks}/dt=YYYY-MM-DD/` with `_meta.json`
+- ☑ Export small samples from the KTC fetcher
+- ☑ Create `stg_ktc_assets` staging model with player ID mapping via dim_player_id_xref
+- ☑ Create `fact_asset_market_values` fact table
+- ☑ Add comprehensive dbt tests (grain uniqueness, FK integrity, enums, not-null)
 
-Acceptance criteria:
+Acceptance criteria: ✅ ALL MET
 
-- Contract test: `asset_type ∈ {player,pick}`, `market_scope='dynasty_1qb'`, values ≥ 0, `asof_date` present.
-- Cache + throttle with randomized sleeps; backoff on errors.
-- Samples updated to use real client.
+- ✅ Contract test: `asset_type ∈ {player,pick}`, `market_scope='dynasty_1qb'`, values ≥ 0, `asof_date` present.
+- ✅ Cache + throttle with randomized sleeps (2-5 second delays); 1-hour cache TTL.
+- ✅ Samples updated to use real client (50 players, 36 picks from live KTC data).
+- ✅ Staging model: Player name → mfl_id crosswalk with player_key pattern for unmapped players
+- ✅ Fact table: Grain (player_key, market_scope, asof_date) with 12/12 tests passing
+- ✅ Data Attribution: Proper KTC attribution in docstrings and metadata
 
 ## 6) FFanalytics — Wire Runner (R) to Real Projections
 
@@ -288,8 +297,8 @@ Acceptance criteria:
       - Unpivots 32 opportunity metrics to long form
       - Includes player_key for grain uniqueness (32 unpivot statements)
       - Documents NULL filtering (6.75% unidentifiable records) and mapping coverage (99.86%)
-      - Expected stats: *_exp (12 types)
-      - Variance stats: *_diff (12 types)
+      - Expected stats: \*\_exp (12 types)
+      - Variance stats: \*\_diff (12 types)
       - Team shares: air_yards, attempts (8 types)
   - `stg_sleeper_*` (league, users, rosters, roster_players)
   - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions, transactions)
@@ -331,6 +340,7 @@ Acceptance criteria:
 
 **Architecture Note (ADR-007):**
 v2.2 originally proposed a single `fact_player_stats` table for both actuals and projections. During implementation (documented in refined_data_model_plan_v4.md v4.1 and ADR-007), we split into **separate fact tables** (actuals vs projections) because:
+
 - Actuals have per-game grain (`game_id` required)
 - Projections have weekly/season grain (`game_id` meaningless)
 - Unified table would require nullable keys (anti-pattern)
@@ -338,40 +348,43 @@ v2.2 originally proposed a single `fact_player_stats` table for both actuals and
 
 Both facts store `measure_domain='real_world'` only; fantasy scoring applied in marts via `dim_scoring_rule`. See refined_data_model_plan_v4.md § "Addendum: Projections Integration (v4.1)" for full technical specification and [ADR-007](../adr/ADR-007-separate-fact-tables-actuals-vs-projections.md) for decision rationale.
 
-    - ☑ **`fact_player_stats`** (COMPLETE ✅ - with player_key solution):
-      - Grain: one row per `(player_key, game_id, stat_name, provider, measure_domain, stat_kind)`
-      - Sources: UNION ALL of `stg_nflverse__player_stats` + `stg_nflverse__snap_counts` + `stg_nflverse__ff_opportunity`
-      - Stat types: 88 total (50 base + 6 snap + 32 opportunity)
-      - Current scale: 6.3M rows (6 seasons: 2020-2025), ~220MB
-      - Target scale: 12-15M rows (5 years historical + current)
-      - Player ID: `mfl_id` (canonical via ADR-010), `player_key` for grain uniqueness
-      - stat_kind='actual', measure_domain='real_world'
-      - Tests: 19/19 passing (100%) ✅
-      - **player_key innovation**: Composite identifier using raw provider IDs as fallback
-        - Mapped players: player_key = player_id (mfl_id)
-        - Unmapped players: player_key = raw_provider_id (gsis_id or pfr_id)
-        - Resolves grain duplicates for unmapped players in same game
-    - ☑ **`fact_player_projections`** (weekly/season projections from ffanalytics; stat_kind='projection') ✅ COMPLETE
-      - Source: `stg_ffanalytics__projections`
-      - Grain: one row per player per stat per horizon per asof_date
-      - Partitioned by: Not yet (table materialization for now)
-      - Incremental on: Future enhancement (asof_date)
-      - Includes `horizon` column: 'weekly', 'rest_of_season', 'full_season'
-      - No `game_id` (projections are not game-specific per ADR-007)
-      - **Stats unpivoted**: 13 stat types (passing, rushing, receiving, turnovers)
-      - **Tests**: 8/8 passing (grain uniqueness, not_null, accepted_values)
-    - `fact_asset_market_values` (KTC players + picks)
-    - ☑ `fact_league_transactions` (COMPLETE ✅ - commissioner transaction history)
-      - Source: `stg_sheets__transactions`
-      - Grain: one row per asset per transaction
-      - Partitioned by: `transaction_year`
-      - Links to: `dim_player`, `dim_pick`, `dim_asset`, `dim_franchise`
-  - **Dimensions**:
-    - ☑ `dim_player` (COMPLETE ✅ - from dim_player_id_xref seed)
-    - ☑ `dim_team` (COMPLETE ✅ - NFL teams from nflverse)
-    - ☑ `dim_schedule` (COMPLETE ✅ - game schedule from nflverse)
-    - ☑ `dim_franchise` (COMPLETE ✅ - league team/owner dimension from seed)
-  - **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
+```
+- ☑ **`fact_player_stats`** (COMPLETE ✅ - with player_key solution):
+  - Grain: one row per `(player_key, game_id, stat_name, provider, measure_domain, stat_kind)`
+  - Sources: UNION ALL of `stg_nflverse__player_stats` + `stg_nflverse__snap_counts` + `stg_nflverse__ff_opportunity`
+  - Stat types: 88 total (50 base + 6 snap + 32 opportunity)
+  - Current scale: 6.3M rows (6 seasons: 2020-2025), ~220MB
+  - Target scale: 12-15M rows (5 years historical + current)
+  - Player ID: `mfl_id` (canonical via ADR-010), `player_key` for grain uniqueness
+  - stat_kind='actual', measure_domain='real_world'
+  - Tests: 19/19 passing (100%) ✅
+  - **player_key innovation**: Composite identifier using raw provider IDs as fallback
+    - Mapped players: player_key = player_id (mfl_id)
+    - Unmapped players: player_key = raw_provider_id (gsis_id or pfr_id)
+    - Resolves grain duplicates for unmapped players in same game
+- ☑ **`fact_player_projections`** (weekly/season projections from ffanalytics; stat_kind='projection') ✅ COMPLETE
+  - Source: `stg_ffanalytics__projections`
+  - Grain: one row per player per stat per horizon per asof_date
+  - Partitioned by: Not yet (table materialization for now)
+  - Incremental on: Future enhancement (asof_date)
+  - Includes `horizon` column: 'weekly', 'rest_of_season', 'full_season'
+  - No `game_id` (projections are not game-specific per ADR-007)
+  - **Stats unpivoted**: 13 stat types (passing, rushing, receiving, turnovers)
+  - **Tests**: 8/8 passing (grain uniqueness, not_null, accepted_values)
+- `fact_asset_market_values` (KTC players + picks)
+- ☑ `fact_league_transactions` (COMPLETE ✅ - commissioner transaction history)
+  - Source: `stg_sheets__transactions`
+  - Grain: one row per asset per transaction
+  - Partitioned by: `transaction_year`
+  - Links to: `dim_player`, `dim_pick`, `dim_asset`, `dim_franchise`
+```
+
+- **Dimensions**:
+  - ☑ `dim_player` (COMPLETE ✅ - from dim_player_id_xref seed)
+  - ☑ `dim_team` (COMPLETE ✅ - NFL teams from nflverse)
+  - ☑ `dim_schedule` (COMPLETE ✅ - game schedule from nflverse)
+  - ☑ `dim_franchise` (COMPLETE ✅ - league team/owner dimension from seed)
+- **Analytics marts** (2×2 model - apply fantasy scoring in this layer):
 
 **2×2 Model Implementation:**
 
@@ -387,27 +400,30 @@ Projections      fact_player_projections  →    mart_fantasy_projections
 
 All base facts (`fact_*`) store real-world measures only. Scoring applied at mart layer via `dim_scoring_rule` (SCD2). This allows scoring rule changes without re-running ingestion.
 
-    - Real-world marts:
-      - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
-      - ☑ **`mart_real_world_projections`** (COMPLETE ✅ - ffanalytics projections, weekly/season grain)
-        - Pivots fact_player_projections from long to wide format
-        - Grain: one row per player per week per horizon per asof_date
-        - 13 stat columns (passing, rushing, receiving, turnovers)
-    - Fantasy scoring marts (apply `dim_scoring_rule` to real-world base):
-      - ☑ `mart_fantasy_actuals_weekly` (COMPLETE ✅ - scored actuals with half-PPR + IDP)
-      - ☑ **`mart_fantasy_projections`** (COMPLETE ✅ - scored projections)
-        - Applies dim_scoring_rule to mart_real_world_projections
-        - Calculates `projected_fantasy_points` using half-PPR scoring
-        - Data-driven scoring (same pattern as actuals)
-    - Analysis marts:
-      - ☑ **`mart_projection_variance`** (COMPLETE ✅ - actuals vs projections comparison)
-        - Joins mart_real_world_actuals_weekly with mart_real_world_projections
-        - Calculates variance (actual - projected) for each stat
-        - Grain: one row per player per week (actuals grain)
-        - Note: Requires nflverse actuals data to populate
-      - `mart_trade_history` (NEW - aggregated trade summaries by franchise)
-      - `mart_trade_valuations` (NEW - actual trades vs KTC market comparison)
-      - `mart_roster_timeline` (NEW - reconstruct roster state at any point in time)
+```
+- Real-world marts:
+  - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
+  - ☑ **`mart_real_world_projections`** (COMPLETE ✅ - ffanalytics projections, weekly/season grain)
+    - Pivots fact_player_projections from long to wide format
+    - Grain: one row per player per week per horizon per asof_date
+    - 13 stat columns (passing, rushing, receiving, turnovers)
+- Fantasy scoring marts (apply `dim_scoring_rule` to real-world base):
+  - ☑ `mart_fantasy_actuals_weekly` (COMPLETE ✅ - scored actuals with half-PPR + IDP)
+  - ☑ **`mart_fantasy_projections`** (COMPLETE ✅ - scored projections)
+    - Applies dim_scoring_rule to mart_real_world_projections
+    - Calculates `projected_fantasy_points` using half-PPR scoring
+    - Data-driven scoring (same pattern as actuals)
+- Analysis marts:
+  - ☑ **`mart_projection_variance`** (COMPLETE ✅ - actuals vs projections comparison)
+    - Joins mart_real_world_actuals_weekly with mart_real_world_projections
+    - Calculates variance (actual - projected) for each stat
+    - Grain: one row per player per week (actuals grain)
+    - Note: Requires nflverse actuals data to populate
+  - `mart_trade_history` (NEW - aggregated trade summaries by franchise)
+  - `mart_trade_valuations` (NEW - actual trades vs KTC market comparison)
+  - `mart_roster_timeline` (NEW - reconstruct roster state at any point in time)
+```
+
 - ☑ **DQ tests - fact_player_stats COMPLETE**: 19/19 passing (100%) ✅
   - ☑ Grain uniqueness: `player_key` + game_id + stat_name + provider + measure_domain + stat_kind (with fantasy position filter)
   - ☑ Referential integrity: player_id → dim_player_id_xref (filtered for mapped players)
@@ -461,12 +477,14 @@ Notes:
 ## 10) Ops & Monitoring (Phase 3)
 
 **v2.2 Requirements (Line 151-157):**
+
 - `ops.run_ledger(run_id, started_at, ended_at, status, trigger, scope, error_class, retry_count)`
 - `ops.model_metrics(run_id, model_name, row_count, bytes_written, duration_ms, error_rows?)`
 - `ops.data_quality(run_id, model_name, check_name, status, observed_value, threshold)`
 - Freshness UX: notebooks banner per source (e.g., `sheets_stale`, `market_stale`)
 
 **Current Status (Phase 3 backlog):**
+
 - ☐ Add ingestion logs & metrics: source version, loader path, as‑of timestamps (from `_meta.json`).
 - ☐ Dashboard banners when freshness thresholds breached or LKG in effect.
 - ☐ Alerts on schema drift (dbt run failures) and DQ violations.
@@ -545,6 +563,7 @@ ______________________________________________________________________
 **Status:** ✅ **COMPLETE** (6/8 seeds done, 2 optional per Line 26)
 
 **Provider Samplers (Samples Available):**
+
 - ☑ nflverse (players, weekly, injuries, schedule, teams)
 - ☑ sleeper (league, users, rosters, players)
 - ☑ sheets (GM roster tabs)
@@ -553,6 +572,7 @@ ______________________________________________________________________
 - ☐ ktc (players + picks market values)
 
 **Seeds Created and Validated:**
+
 - ☑ `dim_player_id_xref` (12,133 players, 19 provider IDs; primary key=mfl_id) ✅ **COMPLETE**
 - ☑ `dim_franchise` (SCD2 ownership history) ✅ **COMPLETE**
 - ☑ `dim_pick` (2012-2030 base draft picks, 5 rounds × 12 teams/year) ✅ **COMPLETE**
@@ -569,17 +589,20 @@ ______________________________________________________________________
 **Status:** ⚠️ **Track A 95% Complete, Track B 80% Complete, Tracks C/D In Progress**
 
 **dbt Build Status:**
+
 - ☑ `dbt seed` - 6 seeds loaded successfully
 - ☑ `dbt run` - Core staging + Track A marts building
 - ☑ `dbt test` - 19/19 DQ tests passing for fact_player_stats ✅
 
 **Core facts built successfully:**
+
 - ☑ `fact_player_stats` (per-game actuals from nflverse; 6.3M rows, 88 stats) ✅ **Track A COMPLETE**
 - ☐ `fact_player_projections` (weekly/season projections from ffanalytics - NEW) - **Track D pending**
 - ☑ `fact_league_transactions` (commissioner transaction history - NEW) ✅ **Track B COMPLETE**
 - ☐ `fact_asset_market_values` (KTC market valuations) - **Track C pending**
 
 **Key marts validated:**
+
 - ☑ `mart_real_world_actuals_weekly` ✅ **Track A COMPLETE**
 - ☐ `mart_real_world_projections` (NEW) - **Track D pending**
 - ☑ `mart_fantasy_actuals_weekly` (scoring applied) ✅ **Track A COMPLETE**

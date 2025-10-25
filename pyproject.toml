@@ -154,8 +154,8 @@ capitalisation_policy = "lower"
 capitalisation_policy = "lower"
 
 [tool.sqlfluff.templater.dbt]
-project_dir = "./dbt/ff_analytics"
-profiles_dir = "./dbt/ff_analytics"
+project_dir = "dbt/ff_analytics"
+profiles_dir = "dbt/ff_analytics"
 profile = "ff_duckdb"
 target = "local"
 

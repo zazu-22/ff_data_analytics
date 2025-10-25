@@ -1,6 +1,85 @@
 version: 2
 
 models:
+  - name: stg_ktc_assets
+    description: |
+      Staged KeepTradeCut dynasty market values for players and picks.
+
+      **Grain**: One row per asset per market_scope per asof_date
+      **Source**: data/raw/ktc/{players,picks}/ (KTC dynasty rankings scraper)
+      **Key Transformations**:
+      - Player name → mfl_id crosswalk (fuzzy matching via merge_name)
+      - UNION players and picks into unified asset table
+      - Player_key composite identifier for grain uniqueness
+
+      **Player Mapping**:
+      Mapping coverage to be documented after testing.
+      Unmapped players preserved with player_id = -1 and player_key = player_name.
+
+      **Data Attribution**:
+      Market values sourced from KeepTradeCut (https://keeptradecut.com/dynasty-rankings)
+      per their content usage guidelines.
+
+    columns:
+      - name: player_key
+        description: |
+          Composite identifier to prevent grain violations.
+          - Mapped players: mfl_id (as varchar)
+          - Unmapped players: player_name
+          - Picks: pick_name
+        tests:
+          - not_null
+
+      - name: asset_type
+        description: "Asset classification (player or pick)"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - player
+                - pick
+
+      - name: market_scope
+        description: "League format (dynasty_1qb or dynasty_superflex)"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - dynasty_1qb
+                - dynasty_superflex
+
+      - name: asof_date
+        description: "Snapshot date of market values"
+        tests:
+          - not_null
+
+      - name: overall_rank
+        description: "Overall rank across all assets in this market_scope"
+        tests:
+          - not_null
+
+      - name: ktc_value
+        description: "KTC value score (0-10000 scale)"
+        tests:
+          - not_null
+
+      - name: player_id
+        description: "FK to dim_player_id_xref (null for picks and unmapped players)"
+        tests:
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: mfl_id
+              config:
+                where: "asset_type = 'player' and player_id != -1"
+
+      - name: provider
+        description: "Data source identifier"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - keeptradecut
+
   - name: stg_sheets__transactions
     description: |
       Staged Commissioner TRANSACTIONS sheet with dimension joins and validation flags.
