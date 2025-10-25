@@ -4,7 +4,7 @@ config-version: 2
 profile: ff_duckdb
 
 vars:
-  external_root: "{{ env_var('EXTERNAL_ROOT', 'gs://ff-analytics/mart') }}"
+  external_root: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}"
 
 model-paths: ["models"]
 macro-paths: ["macros"]

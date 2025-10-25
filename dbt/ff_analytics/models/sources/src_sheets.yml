@@ -6,7 +6,7 @@ sources:
     schema: raw
     tables:
       - name: transactions
-        external_location: "../../data/raw/commissioner/transactions/dt=*/transactions.parquet"
+        external_location: "data/raw/commissioner/transactions/dt=*/transactions.parquet"
         description: |
           League transaction history from TRANSACTIONS tab.
 
@@ -60,6 +60,7 @@ sources:
             description: |
               Original timeframe string from sheet (e.g., "2024 Offseason", "2024 Week 10").
               Maps to dim_timeframe for transaction_date derivation.
+            quote: true
             tests:
               - not_null
 

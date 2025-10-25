@@ -67,7 +67,7 @@ with base as (
     o.rush_attempt_team
 
   from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "../../data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}'
+    '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}'
   ) o
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~6.75% of raw data has NULL (2,115/31,339 rows)

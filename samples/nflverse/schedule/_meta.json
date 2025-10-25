@@ -1,0 +1,11 @@
+{
+  "seasons": [
+    2024
+  ],
+  "weeks": null,
+  "loader_path": null,
+  "provider": "nflverse",
+  "dataset": "schedule",
+  "rows": 285,
+  "seed": 42
+}

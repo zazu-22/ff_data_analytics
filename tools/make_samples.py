@@ -17,8 +17,11 @@ Usage examples:
     --league-id 1230330435511275520 \
     --out ./samples
 
-  # Sample Google Sheets tabs
-  python tools/make_samples.py sheets --tabs contracts rosters cap --sheet-url <URL> --out ./samples
+  # Sample Google Sheets tabs (GM rosters)
+  python tools/make_samples.py sheets --tabs Andy Gordon Joe --sheet-url <URL> --out ./samples
+
+  # Sample Google Sheets TRANSACTIONS tab
+  python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <URL> --out ./samples
 
   # Sample KeepTradeCut (players + picks)
   python tools/make_samples.py ktc --assets players picks --top-n 50 --out ./samples

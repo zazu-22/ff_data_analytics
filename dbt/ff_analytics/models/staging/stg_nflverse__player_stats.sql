@@ -94,7 +94,7 @@ with base as (
     w.fantasy_points_ppr
 
   from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_WEEKLY_GLOB", "../../data/raw/nflverse/weekly/dt=*/*.parquet") }}'
+    '{{ env_var("RAW_NFLVERSE_WEEKLY_GLOB", "data/raw/nflverse/weekly/dt=*/*.parquet") }}'
   ) w
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~0.12% of raw data has NULL (113/97,415 rows)

@@ -21,7 +21,11 @@ uv run python tools/make_samples.py nflverse --datasets players weekly --seasons
 uv run python tools/make_samples.py sleeper --datasets league users rosters --league-id <id> --out ./samples
 
 # Sheets samples (requires auth)
-uv run python tools/make_samples.py sheets --tabs <list> --sheet-url <url> --out ./samples
+# GM roster tabs
+uv run python tools/make_samples.py sheets --tabs Andy Gordon Joe --sheet-url <url> --out ./samples
+
+# TRANSACTIONS tab
+uv run python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <url> --out ./samples
 ```
 
 **Makefile shortcut**: `make samples-nflverse`
@@ -116,7 +120,11 @@ make dbt-test
 
 ```bash
 # 1. Sample from sheets (or use copy_league_sheet.py)
-uv run python tools/make_samples.py sheets --tabs <all-gm-tabs> --sheet-url <url> --out ./samples
+# GM roster tabs
+uv run python tools/make_samples.py sheets --tabs Andy Gordon Joe JP --sheet-url <url> --out ./samples
+
+# TRANSACTIONS tab (separate sample for transaction history)
+uv run python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <url> --out ./samples
 
 # 2. Parse to Parquet
 uv run python tools/commissioner_parse.py --local-dir ./samples/sheets --out-raw data/raw/commissioner

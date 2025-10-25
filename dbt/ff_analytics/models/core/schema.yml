@@ -432,14 +432,18 @@ models:
           - not_null
 
       - name: conference
-        description: Conference (AFC or NFC)
+        description: |
+          Conference (AFC or NFC).
+          Sourced from dim_team_conference_division seed.
         tests:
           - not_null
           - accepted_values:
               values: ['AFC', 'NFC']
 
       - name: division
-        description: Division (North, South, East, West)
+        description: |
+          Division (North, South, East, West).
+          Sourced from dim_team_conference_division seed.
         tests:
           - not_null
           - accepted_values:

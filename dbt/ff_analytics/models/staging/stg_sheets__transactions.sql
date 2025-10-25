@@ -65,7 +65,7 @@ with base as (
     "Type" as transaction_type_raw
 
   from read_parquet(
-    '{{ env_var("RAW_COMMISSIONER_TRANSACTIONS_GLOB", "../../data/raw/commissioner/transactions/dt=*/*.parquet") }}'
+    '{{ env_var("RAW_COMMISSIONER_TRANSACTIONS_GLOB", "data/raw/commissioner/transactions/dt=*/*.parquet") }}'
   )
 ),
 

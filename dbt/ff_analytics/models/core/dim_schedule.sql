@@ -49,5 +49,5 @@ select
   stadium_id
 
 from read_parquet(
-  '{{ env_var("RAW_NFLVERSE_SCHEDULE_GLOB", "../../data/raw/nflverse/schedule/dt=*/*.parquet") }}'
+  '{{ env_var("RAW_NFLVERSE_SCHEDULE_GLOB", "data/raw/nflverse/schedule/dt=*/*.parquet") }}'
 )
