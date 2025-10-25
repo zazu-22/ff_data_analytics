@@ -348,7 +348,7 @@ v2.2 originally proposed a single `fact_player_stats` table for both actuals and
 
 Both facts store `measure_domain='real_world'` only; fantasy scoring applied in marts via `dim_scoring_rule`. See refined_data_model_plan_v4.md § "Addendum: Projections Integration (v4.1)" for full technical specification and [ADR-007](../adr/ADR-007-separate-fact-tables-actuals-vs-projections.md) for decision rationale.
 
-```
+```text
 - ☑ **`fact_player_stats`** (COMPLETE ✅ - with player_key solution):
   - Grain: one row per `(player_key, game_id, stat_name, provider, measure_domain, stat_kind)`
   - Sources: UNION ALL of `stg_nflverse__player_stats` + `stg_nflverse__snap_counts` + `stg_nflverse__ff_opportunity`
@@ -388,7 +388,7 @@ Both facts store `measure_domain='real_world'` only; fantasy scoring applied in 
 
 **2×2 Model Implementation:**
 
-```
+```text
                  Real-World Stats              Fantasy Points
                  ────────────────              ──────────────
 Actuals          fact_player_stats        →    mart_fantasy_actuals_weekly
@@ -400,7 +400,7 @@ Projections      fact_player_projections  →    mart_fantasy_projections
 
 All base facts (`fact_*`) store real-world measures only. Scoring applied at mart layer via `dim_scoring_rule` (SCD2). This allows scoring rule changes without re-running ingestion.
 
-```
+```text
 - Real-world marts:
   - ☑ `mart_real_world_actuals_weekly` (COMPLETE ✅ - nflverse actuals, weekly grain)
   - ☑ **`mart_real_world_projections`** (COMPLETE ✅ - ffanalytics projections, weekly/season grain)

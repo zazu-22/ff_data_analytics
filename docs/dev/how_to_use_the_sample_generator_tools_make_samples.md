@@ -102,7 +102,7 @@ python tools/make_samples.py nflverse \
 
 **Outputs:**
 
-```
+```text
 ./samples/nflverse/players/{players.csv, players.parquet, _meta.json}
 ./samples/nflverse/weekly/{weekly.csv, weekly.parquet, _meta.json}
 ```
@@ -118,7 +118,7 @@ python tools/make_samples.py sleeper \
 
 **Outputs:**
 
-```
+```text
 ./samples/sleeper/league/{league.csv, league.parquet, _meta.json}
 ./samples/sleeper/users/{users.csv, users.parquet, _meta.json}
 ./samples/sleeper/rosters/{rosters.csv, rosters.parquet, _meta.json}
@@ -135,7 +135,7 @@ python tools/make_samples.py sheets \
 
 **Output per tab:**
 
-```
+```text
 ./samples/sheets/<tab>/{<tab>.csv, <tab>.parquet, _meta.json}
 ```
 
@@ -155,7 +155,7 @@ python tools/make_samples.py ktc \
 
 **Output:**
 
-```
+```text
 ./samples/ktc/assets/{assets.csv, assets.parquet, _meta.json}
 ```
 
@@ -173,7 +173,7 @@ python tools/make_samples.py ffanalytics \
 
 **Output:**
 
-```
+```text
 ./samples/ffanalytics/projections/{projections.csv, projections.parquet, _meta.json}
 ```
 
@@ -189,7 +189,7 @@ python tools/make_samples.py sdio \
 
 **Output per file:**
 
-```
+```text
 ./samples/sdio/<dataset>/{<dataset>.csv, <dataset>.parquet, _meta.json}
 ```
 
