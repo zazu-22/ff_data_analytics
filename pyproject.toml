@@ -65,7 +65,7 @@ exclude = [
     ".venv",  # Added for uv virtual environment
     "**/*script_snippets/**",
     "data/**",  # Exclude data files from linting
-    "notebooks/**/*.py",  # Exclude Jupyter notebook exports
+    "notebooks/**",  # Exclude Jupyter notebook exports
     "scripts/_debug/**/*.py",
 ]
 
