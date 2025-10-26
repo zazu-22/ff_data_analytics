@@ -597,6 +597,9 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
         if not contract_str or contract_str == "-":
             return {"total": None, "years": None, "split_array": None}
 
+        # Handle typo: "4.4" should be "4/4" (period instead of slash)
+        contract_str = contract_str.replace(".", "/")
+
         parts = contract_str.split("/")
         if len(parts) != 2:
             return {"total": None, "years": None, "split_array": None}

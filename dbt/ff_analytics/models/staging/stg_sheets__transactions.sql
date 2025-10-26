@@ -81,21 +81,56 @@ base as (
   where dt = latest_partition.latest_dt
 ),
 
+draft_boundaries as (
+  -- Identify rookie draft transaction ID ranges for each season
+  -- Needed to distinguish early vs late offseason periods
+  select
+    season,
+    min(transaction_id) as draft_start_id,
+    max(transaction_id) as draft_end_id
+  from read_parquet(
+    '{{ var("external_root", "data/raw") }}/commissioner/transactions/dt=*/*.parquet',
+    hive_partitioning = true
+  )
+  cross join lateral (
+    select max(dt) as latest_dt
+    from read_parquet(
+      '{{ var("external_root", "data/raw") }}/commissioner/transactions/dt=*/*.parquet',
+      hive_partitioning = true
+    )
+  ) lp
+  where dt = lp.latest_dt
+    and period_type = 'rookie_draft'
+  group by season
+),
+
 with_timeframe as (
   -- Join to dim_timeframe to get transaction_date
   select
     base.*,
     tf.timeframe_string as timeframe_canonical,
+    next_draft.draft_start_id as next_draft_start_id,
+    next_draft.draft_end_id as next_draft_end_id,
 
     -- Derive transaction_date from timeframe
-    -- BUG FIX: Removed date_trunc('year', ...) which was truncating all dates to Jan 1
+    -- Offseason has TWO phases that share the same label (e.g., "2022 Offseason"):
+    --   1. Early Offseason: After season ends, BEFORE next year's draft → March (season+1)
+    --   2. Late Offseason: AFTER next year's draft, BEFORE FAAD → August (season+1)
+    -- We distinguish them by transaction_id relative to next season's draft boundaries
+    --
+    -- Chronological order for August events:
+    --   Aug 1:  Rookie Draft
+    --   Aug 10: Late Offseason (post-draft signings/cuts)
+    --   Aug 15: FAAD (Free Agent Auction Draft)
     case
       when base.period_type = 'rookie_draft'
-        then make_date(base.season, 8, 1)  -- Aug 1 (typical draft date)
+        then make_date(base.season, 8, 1)  -- Aug 1 (rookie draft)
+      when base.period_type = 'offseason' and base.transaction_id < coalesce(next_draft.draft_start_id, 999999)
+        then make_date(base.season + 1, 3, 1)  -- Early offseason: Mar 1 (free agency)
+      when base.period_type = 'offseason' and base.transaction_id > coalesce(next_draft.draft_end_id, 0)
+        then make_date(base.season + 1, 8, 10)  -- Late offseason: Aug 10 (post-draft, pre-FAAD)
       when base.period_type = 'faad'
-        then make_date(base.season, 8, 15)  -- Aug 15 (typical FAAD date)
-      when base.period_type = 'offseason'
-        then make_date(base.season, 3, 1)  -- Mar 1 (offseason)
+        then make_date(base.season, 8, 15)  -- Aug 15 (FAAD)
       when base.period_type = 'preseason'
         then date_trunc('week', make_date(base.season, 9, 1))  -- Sep 1 (preseason)
       when base.period_type in ('regular', 'deadline') and base.week is not null
@@ -108,10 +143,14 @@ with_timeframe as (
   from base
   left join {{ ref('dim_timeframe') }} tf
     on base.timeframe_string = tf.timeframe_string
+  left join draft_boundaries next_draft
+    on base.season + 1 = next_draft.season  -- Join to NEXT season's draft
 ),
 
 with_franchises as (
   -- Join to dim_franchise (SCD Type 2 temporal join on season)
+  -- Offseason transactions occur in calendar year season+1, so we need to adjust
+  -- the season lookup for franchise ownership (e.g., "2024 Offseason" → season 2025)
   select
     wtf.*,
 
@@ -128,12 +167,18 @@ with_franchises as (
   -- Left join for "From" owner (handles Waiver Wire as null)
   left join {{ ref('dim_franchise') }} from_fran
     on wtf.from_owner_name = from_fran.owner_name
-    and wtf.season between from_fran.season_start and from_fran.season_end
+    and case
+      when wtf.period_type = 'offseason' then wtf.season + 1
+      else wtf.season
+    end between from_fran.season_start and from_fran.season_end
 
   -- Left join for "To" owner (handles Waiver Wire as null)
   left join {{ ref('dim_franchise') }} to_fran
     on wtf.to_owner_name = to_fran.owner_name
-    and wtf.season between to_fran.season_start and to_fran.season_end
+    and case
+      when wtf.period_type = 'offseason' then wtf.season + 1
+      else wtf.season
+    end between to_fran.season_start and to_fran.season_end
 ),
 
 with_player_key as (

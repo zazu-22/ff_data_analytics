@@ -93,9 +93,19 @@ with all_contract_events as (
     faad_compensation,
 
     -- Check if there's an extension on the same date for this player
-    max(case when transaction_type = 'contract_extension' then transaction_id end) over (
-      partition by player_id, transaction_date
-    ) as extension_id_on_same_date
+    -- AND there's also a base contract on the same date (otherwise it's standalone)
+    case
+      when max(case when transaction_type = 'contract_extension' then 1 else 0 end) over (
+             partition by player_id, transaction_date
+           ) = 1
+       and max(case when transaction_type != 'contract_extension' then 1 else 0 end) over (
+             partition by player_id, transaction_date
+           ) = 1
+      then max(case when transaction_type = 'contract_extension' then transaction_id end) over (
+             partition by player_id, transaction_date
+           )
+      else null
+    end as extension_id_on_same_date
 
   from {{ ref('fact_league_transactions') }}
   where asset_type = 'player'
