@@ -35,10 +35,10 @@ Your data architecture is **exceptionally well-designed** and properly supports 
 ### **Minor Gaps to Address**
 
 1. **Kicking Stats Coverage** - Recently added (21 stats) but verify completeness for your IDP+ league
-2. **Defensive Tackle Semantics** - Clarify solo vs assisted counting to avoid double-counting in IDP scoring
-3. **Team Attribution** - Consider adding `team_id_week` alongside `current_team` for historical accuracy on mid-season trades
+1. **Defensive Tackle Semantics** - Clarify solo vs assisted counting to avoid double-counting in IDP scoring
+1. **Team Attribution** - Consider adding `team_id_week` alongside `current_team` for historical accuracy on mid-season trades
 
----
+______________________________________________________________________
 
 ## **Part 2: Remaining Spec-1 Tasks - Feedback & Prioritization**
 
@@ -74,7 +74,7 @@ Based on the checklist, here's what's left and my recommendations:
 
 **Defer Until:** You're doing frequent updates and need to detect changes. For initial builds, full refreshes are simpler.
 
----
+______________________________________________________________________
 
 ## **Part 3: Post-Spec-1 Recommendations - Analytics-Driven Priorities**
 
@@ -87,9 +87,11 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
 **Tasks:**
 
 1. **Backfill nflverse data to 2012** (or earlier if available)
+
    - Run `load_nflverse('weekly', seasons=range(2012, 2025))` for complete history
    - Focus on seasons 2012+ to align with your transaction history
-2. **Create feature mart: `mart_player_features_historical`**
+
+1. **Create feature mart: `mart_player_features_historical`**
 
    ```sql
    -- Grain: One row per player per season
@@ -103,7 +105,8 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
    - Efficiency metrics (YPC, YPR, TD%, etc.)
    ```
 
-3. **Add aging curve dimensions**
+1. **Add aging curve dimensions**
+
    - Create `dim_aging_curve_parameters` (position-specific decline rates)
    - Enables projection adjustments: "RBs decline 15% per year after age 28"
 
@@ -132,7 +135,7 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
    - Value surplus/deficit vs replacement
    ```
 
-2. **`mart_trade_analysis`**
+1. **`mart_trade_analysis`**
 
    ```sql
    -- Grain: One row per trade (aggregated from fact_league_transactions)
@@ -143,7 +146,8 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
    - Outcome tracking (did traded players produce as expected?)
    ```
 
-3. **`mart_roster_composition_history`**
+1. **`mart_roster_composition_history`**
+
    ```sql
    -- Grain: One row per franchise per season-week
    -- Enables roster reconstruction at any point:
@@ -180,13 +184,15 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
    - pareto_frontier_win_now_vs_future(roster, trade_candidates)
    ```
 
-2. **Create analysis notebook templates** (`notebooks/analysis/`)
+1. **Create analysis notebook templates** (`notebooks/analysis/`)
+
    - `01_player_valuation_model.ipynb` - Regression-based player value
    - `02_clustering_player_profiles.ipynb` - K-means tiering (aging vets, rising stars, etc.)
    - `03_trade_scenario_analysis.ipynb` - Monte Carlo trade impact
    - `04_roster_optimization.ipynb` - Cap allocation, lineup optimization
 
-3. **Projection accuracy tracking**
+1. **Projection accuracy tracking**
+
    ```sql
    -- mart_projection_accuracy_history
    -- Compare ffanalytics projections to actuals
@@ -208,21 +214,25 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
 **Priority Models:**
 
 1. **Linear Regression Baseline** (Week 7)
+
    - Model: `projected_points ~ age + usage_rate + efficiency + contract_year + ...`
    - Output: Player value scores, residual analysis for buy-low/sell-high
    - Tool: Python sklearn or statsmodels (interpretable coefficients)
 
-2. **Regularized Regression** (Week 8)
+1. **Regularized Regression** (Week 8)
+
    - Lasso: Automatic feature selection from your 109 stats
    - Ridge: Handle multicollinearity in correlated metrics
    - Output: Refined projections, feature importance rankings
 
-3. **Player Clustering** (Week 9)
+1. **Player Clustering** (Week 9)
+
    - K-means on features: age, projected 3-year points, cap cost, positional value
    - Output: Player tiers (e.g., "win-now studs", "young upside", "value plays")
    - Use for portfolio diversification analysis
 
-4. **GAMs for Aging Curves** (Week 10)
+1. **GAMs for Aging Curves** (Week 10)
+
    - Model position-specific nonlinear age effects
    - Output: Smooth curves showing expected decline rates
    - Tool: Python pygam or R mgcv
@@ -232,11 +242,12 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
 **Components to Add:**
 
 1. **Feature Store** (use existing marts but document patterns)
+
    - Standardize feature naming conventions
    - Version feature definitions
    - Enable reproducibility for model training
 
-2. **Model Registry** (simple JSON/YAML initially)
+1. **Model Registry** (simple JSON/YAML initially)
 
    ```yaml
    models:
@@ -248,11 +259,12 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
        r2: 0.67
    ```
 
-3. **Experiment Tracking**
+1. **Experiment Tracking**
+
    - Use simple CSV logs initially: model name, parameters, metrics, date
    - Graduate to MLflow if complexity warrants
 
----
+______________________________________________________________________
 
 ## **Prioritized Roadmap (Next 10 Weeks)**
 
@@ -287,13 +299,13 @@ Given your analytical goals from the PDF (player valuation modeling, trade optim
 - Iterative model refinement
 - Notebook-driven analysis
 
----
+______________________________________________________________________
 
 ## **Key Success Factors**
 
 1. **Your architecture is ready** - The dimensional model you've built perfectly supports these advanced analytics
-2. **Incremental value** - Each mart/model delivers standalone insights while building toward the full toolkit
-3. **Interpretability first** - Start with linear models (your PDF emphasizes this), add complexity only where needed
-4. **Leverage existing tools** - Your dbt infrastructure makes mart creation fast; your Python/R skills enable rapid model iteration
+1. **Incremental value** - Each mart/model delivers standalone insights while building toward the full toolkit
+1. **Interpretability first** - Start with linear models (your PDF emphasizes this), add complexity only where needed
+1. **Leverage existing tools** - Your dbt infrastructure makes mart creation fast; your Python/R skills enable rapid model iteration
 
 You've done excellent work on the foundation. The path forward is clear: historical depth → value tracking → simulation → statistical models. This aligns perfectly with your goals of regression-based valuation, trade optimization, and data-driven dynasty management.

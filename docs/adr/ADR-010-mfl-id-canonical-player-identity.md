@@ -10,15 +10,15 @@
 
 The Fantasy Football Analytics platform integrates data from multiple providers, each using different player identifiers:
 
-| Provider     | ID Field         | Example      | Coverage               |
+| Provider | ID Field | Example | Coverage |
 | ------------ | ---------------- | ------------ | ---------------------- |
-| NFLverse     | `gsis_id`        | `00-0036550` | NFL players            |
-| Sleeper      | `sleeper_id`     | `8136`       | Fantasy platforms      |
-| KeepTradeCut | `ktc_id`         | `123`        | Dynasty trade markets  |
-| ESPN         | `espn_id`        | `4360939`    | Fantasy platforms      |
-| Yahoo        | `yahoo_id`       | `31854`      | Fantasy platforms      |
-| FantasyPros  | `fantasypros_id` | `23456`      | Projection aggregators |
-| ...          | ...              | ...          | 19 total providers     |
+| NFLverse | `gsis_id` | `00-0036550` | NFL players |
+| Sleeper | `sleeper_id` | `8136` | Fantasy platforms |
+| KeepTradeCut | `ktc_id` | `123` | Dynasty trade markets |
+| ESPN | `espn_id` | `4360939` | Fantasy platforms |
+| Yahoo | `yahoo_id` | `31854` | Fantasy platforms |
+| FantasyPros | `fantasypros_id` | `23456` | Projection aggregators |
+| ... | ... | ... | 19 total providers |
 
 ### Problem Statement
 

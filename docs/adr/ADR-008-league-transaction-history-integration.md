@@ -383,13 +383,13 @@ Following Kimball transaction fact table pattern:
 
 ### Data Quality Achievements
 
-| Metric                          | Target     | Actual | Status      |
+| Metric | Target | Actual | Status |
 | ------------------------------- | ---------- | ------ | ----------- |
-| Player mapping coverage         | ≥95%       | 100%   | ✅ Exceeded |
-| Transaction type classification | 100%       | 100%   | ✅ Met      |
-| Asset type inference            | ≥98%       | 98.3%  | ✅ Met      |
-| Grain uniqueness                | 100%       | 100%   | ✅ Met      |
-| FK relationships                | 100% valid | 100%   | ✅ Met      |
+| Player mapping coverage | ≥95% | 100% | ✅ Exceeded |
+| Transaction type classification | 100% | 100% | ✅ Met |
+| Asset type inference | ≥98% | 98.3% | ✅ Met |
+| Grain uniqueness | 100% | 100% | ✅ Met |
+| FK relationships | 100% valid | 100% | ✅ Met |
 
 ### Files Modified/Created
 

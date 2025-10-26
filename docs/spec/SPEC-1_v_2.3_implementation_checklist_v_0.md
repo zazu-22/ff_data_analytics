@@ -277,7 +277,7 @@ Acceptance criteria:
     - Columns: pick_id, season, round, round_slot, pick_type, notes
   - ☑ **`dim_timeframe`** (COMPLETE ✅):
     - Maps TRANSACTIONS timeframe strings to structured season/week/period
-  - ☑  **`dim_asset`** (COMPLETE ✅):
+  - ☑ **`dim_asset`** (COMPLETE ✅):
     - Unified player/pick/cap asset catalog
     - UNION of dim_player_id_xref + dim_pick
   - ☐ **`stat_dictionary.csv`** (OPTIONAL - only needed for multi-provider normalization):

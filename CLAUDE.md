@@ -67,14 +67,14 @@ See implementation checklist for detailed status by component.
 
 ## Key Components
 
-| Component       | Location            | Purpose                                               |
+| Component | Location | Purpose |
 | --------------- | ------------------- | ----------------------------------------------------- |
-| **Ingest**      | `src/ingest/`       | Provider data loaders (see `src/ingest/CLAUDE.md`)    |
-| **Tools**       | `tools/`            | CLI utilities (see `tools/CLAUDE.md`)                 |
-| **Scripts**     | `scripts/`          | Operational runners (see `scripts/CLAUDE.md`)         |
+| **Ingest** | `src/ingest/` | Provider data loaders (see `src/ingest/CLAUDE.md`) |
+| **Tools** | `tools/` | CLI utilities (see `tools/CLAUDE.md`) |
+| **Scripts** | `scripts/` | Operational runners (see `scripts/CLAUDE.md`) |
 | **dbt Project** | `dbt/ff_analytics/` | Dimensional models (see `dbt/ff_analytics/CLAUDE.md`) |
-| **Config**      | `config/`           | Projections, scoring rules                            |
-| **Docs**        | `docs/`             | Specifications, architecture, guides                  |
+| **Config** | `config/` | Projections, scoring rules |
+| **Docs** | `docs/` | Specifications, architecture, guides |
 
 ## Data Layer Structure
 
@@ -86,12 +86,12 @@ See implementation checklist for detailed status by component.
 
 ## Data Sources & Identity Resolution
 
-| Source                    | Purpose                          | Authority            |
+| Source | Purpose | Authority |
 | ------------------------- | -------------------------------- | -------------------- |
-| Commissioner Google Sheet | League roster/contracts/picks    | Authoritative        |
-| NFLverse/nflreadpy        | NFL statistics                   | Primary stats source |
-| Sleeper                   | League platform data             | Integration          |
-| KTC                       | Dynasty valuations (1QB default) | Market signals       |
+| Commissioner Google Sheet | League roster/contracts/picks | Authoritative |
+| NFLverse/nflreadpy | NFL statistics | Primary stats source |
+| Sleeper | League platform data | Integration |
+| KTC | Dynasty valuations (1QB default) | Market signals |
 
 **Entity Resolution**: Canonical player/team/franchise IDs via `dim_player_id_xref` crosswalk. See Kimball guide for patterns.
 
@@ -105,12 +105,12 @@ See implementation checklist for detailed status by component.
 
 ## Critical Specifications
 
-| Document                                                         | Purpose                                                               |
+| Document | Purpose |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `docs/spec/SPEC-1_v_2.2.md`                                      | Complete data architecture (2×2 stat model, trade valuation, lineage) |
-| `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` | Dimensional modeling patterns for dbt                                 |
-| `docs/dev/repo_conventions_and_structure.md`                     | Repo layout, naming, data paths                                       |
-| `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md`         | Implementation status and sequencing (updated 2025-10-24)             |
+| `docs/spec/SPEC-1_v_2.2.md` | Complete data architecture (2×2 stat model, trade valuation, lineage) |
+| `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` | Dimensional modeling patterns for dbt |
+| `docs/dev/repo_conventions_and_structure.md` | Repo layout, naming, data paths |
+| `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md` | Implementation status and sequencing (updated 2025-10-24) |
 
 ## Coding Conventions
 

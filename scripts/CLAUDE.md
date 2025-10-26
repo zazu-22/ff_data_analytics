@@ -7,13 +7,13 @@ Difference from `tools/`: Scripts are typically invoked by CI/CD or for one-off 
 
 ## Directory Structure
 
-| Directory          | Purpose                   | When to Use                          |
+| Directory | Purpose | When to Use |
 | ------------------ | ------------------------- | ------------------------------------ |
-| `ingest/`          | Production data ingestion | CI workflows, scheduled runs         |
-| `R/`               | R-based loaders           | When Python alternatives unavailable |
-| `setup/`           | One-time initialization   | Environment setup, bucket creation   |
-| `troubleshooting/` | Debugging utilities       | Investigating issues                 |
-| `debug/`           | Development helpers       | Local debugging only                 |
+| `ingest/` | Production data ingestion | CI workflows, scheduled runs |
+| `R/` | R-based loaders | When Python alternatives unavailable |
+| `setup/` | One-time initialization | Environment setup, bucket creation |
+| `troubleshooting/` | Debugging utilities | Investigating issues |
+| `debug/` | Development helpers | Local debugging only |
 
 ## Key Scripts
 

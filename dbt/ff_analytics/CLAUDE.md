@@ -8,6 +8,7 @@
 **IMPORTANT**: `profiles.yml` is in `.gitignore` - you cannot see it with `ls` or `find`, but it exists at `dbt/ff_analytics/profiles.yml`.
 
 **Profile Configuration** (`profiles.yml`):
+
 - **Profile name**: `ff_duckdb`
 - **Target**: `local` (default) or `ci`
 - **Database path**: `$PWD/dbt/ff_analytics/target/dev.duckdb` (via `DBT_DUCKDB_PATH` env var)
@@ -16,6 +17,7 @@
 - **Extensions**: `[httpfs]`
 
 **Environment Variables** (set by Makefile or manually):
+
 - `EXTERNAL_ROOT` - Path to raw data (e.g., `$PWD/data/raw`)
 - `DBT_DUCKDB_PATH` - Path to DuckDB database file (e.g., `$PWD/dbt/ff_analytics/target/dev.duckdb`)
 - `DBT_TARGET` - Target name (default: `local`)
@@ -52,16 +54,16 @@ duckdb dbt/ff_analytics/target/dev.duckdb < dbt/ff_analytics/target/compiled/ff_
 
 Each subdirectory has a README.md with specific guidance:
 
-| Directory  | Purpose                     | Naming Pattern                  |
+| Directory | Purpose | Naming Pattern |
 | ---------- | --------------------------- | ------------------------------- |
-| `sources/` | Provider source definitions | `src_<provider>.yml`            |
-| `staging/` | Normalized from raw         | `stg_<provider>__<dataset>.sql` |
-| `core/`    | Facts/dimensions (Kimball)  | `fact_*`, `dim_*`               |
-| `marts/`   | Analytics-ready marts       | `mart_*` (2×2 model)            |
-| `markets/` | KTC trade values (stub)     | Market-specific marts           |
-| `ops/`     | Data quality/lineage        | `ops.*` tables                  |
-| `seeds/`   | Reference data              | `dim_*` crosswalks, rules       |
-| `macros/`  | Reusable SQL functions      | Freshness gates, helpers        |
+| `sources/` | Provider source definitions | `src_<provider>.yml` |
+| `staging/` | Normalized from raw | `stg_<provider>__<dataset>.sql` |
+| `core/` | Facts/dimensions (Kimball) | `fact_*`, `dim_*` |
+| `marts/` | Analytics-ready marts | `mart_*` (2×2 model) |
+| `markets/` | KTC trade values (stub) | Market-specific marts |
+| `ops/` | Data quality/lineage | `ops.*` tables |
+| `seeds/` | Reference data | `dim_*` crosswalks, rules |
+| `macros/` | Reusable SQL functions | Freshness gates, helpers |
 
 ## Key Patterns
 
@@ -180,14 +182,14 @@ All large models use external Parquet. DuckDB catalog is in-memory only.
 
 ## Testing Strategy
 
-| Test Type                                 | Purpose                 | Location      |
+| Test Type | Purpose | Location |
 | ----------------------------------------- | ----------------------- | ------------- |
-| `not_null`                                | Key fields populated    | Column level  |
-| `unique`                                  | Surrogate keys unique   | Dimension PKs |
-| `relationships`                           | Foreign keys valid      | Fact FKs      |
-| `dbt_utils.unique_combination_of_columns` | Grain enforcement       | Fact grain    |
-| `accepted_values`                         | Controlled vocabularies | Enums, flags  |
-| `freshness`                               | Data recency            | Source level  |
+| `not_null` | Key fields populated | Column level |
+| `unique` | Surrogate keys unique | Dimension PKs |
+| `relationships` | Foreign keys valid | Fact FKs |
+| `dbt_utils.unique_combination_of_columns` | Grain enforcement | Fact grain |
+| `accepted_values` | Controlled vocabularies | Enums, flags |
+| `freshness` | Data recency | Source level |
 
 ## References
 

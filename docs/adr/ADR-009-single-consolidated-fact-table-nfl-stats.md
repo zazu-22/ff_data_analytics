@@ -69,11 +69,11 @@ CREATE TABLE fact_player_stats (
 
 **Total:** ~96 stat types per player-game
 
-| Source         | Stat Count | Examples                                                      |
+| Source | Stat Count | Examples |
 | -------------- | ---------- | ------------------------------------------------------------- |
-| Base stats     | ~50        | `passing_yards`, `rushing_tds`, `receptions`, `def_sacks`     |
-| Snap counts    | 6          | `offense_snaps`, `offense_pct`, `defense_snaps`, `st_snaps`   |
-| FF opportunity | ~40        | `pass_yards_gained_exp`, `receptions_diff`, `air_yards_share` |
+| Base stats | ~50 | `passing_yards`, `rushing_tds`, `receptions`, `def_sacks` |
+| Snap counts | 6 | `offense_snaps`, `offense_pct`, `defense_snaps`, `st_snaps` |
+| FF opportunity | ~40 | `pass_yards_gained_exp`, `receptions_diff`, `air_yards_share` |
 
 ## Rationale
 

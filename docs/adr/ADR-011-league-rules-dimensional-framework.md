@@ -16,9 +16,9 @@ The Fantasy Football Analytics platform needs to support dynasty valuation analy
 Without formalized league rules dimensions, downstream analysis would require:
 
 1. **Hardcoded business logic** scattered across marts (maintenance nightmare)
-2. **No historical tracking** of rule changes (breaks time-travel queries)
-3. **Contract calculations** repeated in every mart
-4. **Roster validation** without authoritative rule source
+1. **No historical tracking** of rule changes (breaks time-travel queries)
+1. **Contract calculations** repeated in every mart
+1. **Roster validation** without authoritative rule source
 
 ### Problem Statement
 
@@ -27,9 +27,9 @@ Without formalized league rules dimensions, downstream analysis would require:
 **Issues:**
 
 1. **No SCD support** - Can't track rule changes over time (e.g., cap increases)
-2. **Calculation duplication** - Rookie contracts, dead cap, RFA compensation calculated ad-hoc
-3. **Roster validation impossible** - Can't programmatically validate roster legality
-4. **Contract valuation incomplete** - No way to calculate "true cost" accounting for cut liability
+1. **Calculation duplication** - Rookie contracts, dead cap, RFA compensation calculated ad-hoc
+1. **Roster validation impossible** - Can't programmatically validate roster legality
+1. **Contract valuation incomplete** - No way to calculate "true cost" accounting for cut liability
 
 ### Requirements
 
@@ -357,7 +357,7 @@ Total: 49/49 tests passing (100%)
 ## Future Considerations
 
 1. **Rule change workflow**: When salary cap increases, add new row to dim_league_rules with new validity range
-2. **Defense/cap_space assets**: Extend dim_asset UNION to include TEAM D/ST and cap space trades
-3. **Multi-league support**: Add league_id to all rules dimensions if expanding beyond Bell Keg League
-4. **Franchise tag rules**: Consider separate dim_franchise_tag_rules if complexity grows
-5. **Proration constraints**: May need dim_proration_rules for complex contract structure validation
+1. **Defense/cap_space assets**: Extend dim_asset UNION to include TEAM D/ST and cap space trades
+1. **Multi-league support**: Add league_id to all rules dimensions if expanding beyond Bell Keg League
+1. **Franchise tag rules**: Consider separate dim_franchise_tag_rules if complexity grows
+1. **Proration constraints**: May need dim_proration_rules for complex contract structure validation
