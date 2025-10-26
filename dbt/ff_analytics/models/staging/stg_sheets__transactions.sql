@@ -88,20 +88,21 @@ with_timeframe as (
     tf.timeframe_string as timeframe_canonical,
 
     -- Derive transaction_date from timeframe
+    -- BUG FIX: Removed date_trunc('year', ...) which was truncating all dates to Jan 1
     case
       when base.period_type = 'rookie_draft'
-        then date_trunc('year', make_date(base.season, 8, 1))  -- Aug 1 (typical draft date)
+        then make_date(base.season, 8, 1)  -- Aug 1 (typical draft date)
       when base.period_type = 'faad'
-        then date_trunc('year', make_date(base.season, 8, 15))  -- Aug 15 (typical FAAD date)
+        then make_date(base.season, 8, 15)  -- Aug 15 (typical FAAD date)
       when base.period_type = 'offseason'
-        then date_trunc('year', make_date(base.season, 3, 1))  -- Mar 1 (offseason)
+        then make_date(base.season, 3, 1)  -- Mar 1 (offseason)
       when base.period_type = 'preseason'
         then date_trunc('week', make_date(base.season, 9, 1))  -- Sep 1 (preseason)
       when base.period_type in ('regular', 'deadline') and base.week is not null
         -- Regular season: week-based calculation
         -- NFL regular season typically starts first Thursday after Labor Day (early Sep)
         then date_trunc('week', make_date(base.season, 9, 7)) + interval (base.week - 1) week
-      else date_trunc('year', make_date(base.season, 1, 1))  -- Fallback: Jan 1
+      else make_date(base.season, 1, 1)  -- Fallback: Jan 1
     end as transaction_date
 
   from base

@@ -116,21 +116,103 @@ with_defense as (
     on wa.player_name = team.team_name
 ),
 
-with_player_id as (
-  -- Map player name to player_id via dim_player_id_xref
-  select
-    wd.*,
+transaction_player_ids as (
+  -- Get authoritative player_id from transaction history (position-aware matching already done)
+  select distinct
+    lower(trim(player_name)) as player_name_lower,
+    player_id
+  from {{ ref('fact_league_transactions') }}
+  where asset_type = 'player'
+    and player_id is not null
+),
 
-    -- Join to player crosswalk using canonical name (skip defenses)
-    case when wd.is_defense then null else xref.player_id end as player_id,
+crosswalk_candidates as (
+  -- Get all potential matches from crosswalk with position filtering
+  select
+    wd.player_name_canonical,
+    wd.roster_slot,
+    xref.player_id,
     xref.mfl_id,
-    xref.name as canonical_name
+    xref.name,
+    xref.position,
+
+    -- Cascading tiebreaker logic
+    case
+      -- Active player check (exclude retired players)
+      when xref.draft_year < extract(year from current_date) - 15 then 0
+
+      -- Position match based on roster slot
+      when wd.roster_slot = 'QB' and xref.position = 'QB' then 100
+      when wd.roster_slot = 'RB' and xref.position = 'RB' then 100
+      when wd.roster_slot = 'WR' and xref.position = 'WR' then 100
+      when wd.roster_slot = 'TE' and xref.position = 'TE' then 100
+      when wd.roster_slot = 'K' and xref.position = 'K' then 100
+
+      -- FLEX must be RB/WR/TE
+      when wd.roster_slot = 'FLEX' and xref.position in ('RB', 'WR', 'TE') then 90
+
+      -- IDP slots must be defensive
+      when wd.roster_slot = 'IDP BN' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S') then 80
+      when wd.roster_slot = 'IDP TAXI' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S') then 80
+      when wd.roster_slot = 'DB' and xref.position in ('DB', 'CB', 'S') then 100
+      when wd.roster_slot = 'DL' and xref.position in ('DL', 'DE', 'DT') then 100
+      when wd.roster_slot = 'LB' and xref.position = 'LB' then 100
+
+      -- BN, TAXI, IR can be any position - prefer offensive
+      when wd.roster_slot in ('BN', 'TAXI', 'IR') and xref.position in ('QB', 'RB', 'WR', 'TE', 'K') then 50
+      when wd.roster_slot in ('BN', 'TAXI', 'IR') then 25
+
+      else 0
+    end as match_score
 
   from with_defense wd
   left join {{ ref('dim_player_id_xref') }} xref
     on (not wd.is_defense)
     and (lower(trim(wd.player_name_canonical)) = lower(trim(xref.name))
          or lower(trim(wd.player_name_canonical)) = lower(trim(xref.merge_name)))
+  where wd.is_defense = false
+),
+
+best_crosswalk_match as (
+  -- Select best match per player using cascading tiebreakers
+  select
+    player_name_canonical,
+    roster_slot,
+    -- Use MAX(player_id) as final tiebreaker (newer/younger/active player)
+    max(player_id) as player_id,
+    max(mfl_id) as mfl_id,
+    max(name) as canonical_name
+  from crosswalk_candidates
+  where match_score > 0
+  group by player_name_canonical, roster_slot
+  qualify row_number() over (
+    partition by player_name_canonical, roster_slot
+    order by max(match_score) desc
+  ) = 1
+),
+
+with_player_id as (
+  -- Combine transaction-based and crosswalk-based player_id resolution
+  select
+    wd.*,
+
+    -- Cascading player_id resolution:
+    -- 1. Transaction history (authoritative, position-aware)
+    -- 2. Crosswalk with position filtering
+    case
+      when wd.is_defense then null
+      else coalesce(txn.player_id, xwalk.player_id)
+    end as player_id,
+
+    xwalk.mfl_id,
+    xwalk.canonical_name
+
+  from with_defense wd
+  left join transaction_player_ids txn
+    on lower(trim(wd.player_name_canonical)) = txn.player_name_lower
+  left join best_crosswalk_match xwalk
+    on wd.player_name_canonical = xwalk.player_name_canonical
+    and wd.roster_slot = xwalk.roster_slot
 ),
 
 final as (

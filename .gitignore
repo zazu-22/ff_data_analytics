@@ -30,10 +30,7 @@ data/raw/
 
 # dbt build artifacts
 dbt/**/target/
-dbt/**/target/*.duckdb
-dbt/**/target/*.duckdb.wal
 dbt/**/logs/
-dbt/**/profiles.yml
 dbt/**/dbt_packages/
 
 # Prevent accidental database files in repo root (safety net)

@@ -270,28 +270,34 @@ contract_periods as (
     ce.*,
 
     -- Contract period identification
+    -- Order by transaction_id as well for deterministic ordering of same-date contracts
     row_number() over (
       partition by ce.player_id
-      order by ce.transaction_date
+      order by ce.transaction_date, ce.transaction_id
     ) as contract_period,
 
     -- Validity dates (Type 2 SCD)
     ce.transaction_date as effective_date,
 
     -- Find next contract date for this player
+    -- Order by transaction_id as well to handle same-date contracts deterministically
     lead(ce.transaction_date) over (
       partition by ce.player_id
-      order by ce.transaction_date
+      order by ce.transaction_date, ce.transaction_id
     ) as next_contract_date,
 
     -- Find termination date for this player+franchise (CUT or TRADE-AWAY)
-    -- Get the minimum termination date that is >= contract start and on same franchise
+    -- Get the minimum termination date that is AFTER contract start (chronologically)
+    -- For same-date transactions (crude date mapping), use transaction_id for proper sequencing
     (
       select min(term.transaction_date)
       from contract_terminating_events term
       where term.player_id = ce.player_id
         and term.franchise_id = ce.franchise_id
-        and term.transaction_date >= ce.transaction_date
+        and (
+          term.transaction_date > ce.transaction_date
+          or (term.transaction_date = ce.transaction_date and term.transaction_id > ce.transaction_id)
+        )
     ) as termination_date,
 
     -- Contract timeline
@@ -337,16 +343,32 @@ contract_periods_with_expiry as (
   select
     cp.*,
 
-    -- Expiration date: earliest of (termination_date, next_contract_date - 1 day, or 9999-12-31)
-    coalesce(
-      least(
-        cp.termination_date - interval '1 day',
-        cp.next_contract_date - interval '1 day'
-      ),
-      cp.termination_date - interval '1 day',
-      cp.next_contract_date - interval '1 day',
-      make_date(9999, 12, 31)
-    ) as expiration_date,
+    -- Expiration date: handle same-date contracts, terminations, and natural end dates
+    -- Fix for Bug #2: Same-date sign-and-trade contracts were creating inverted dates
+    -- (e.g., effective_date = 2024-01-01, next_contract = 2024-01-01,
+    --  old logic: expiration = 2024-01-01 - 1 day = 2023-12-31, BEFORE effective!)
+    case
+      -- Same-date next contract: expire at END of effective_date (not before)
+      when cp.next_contract_date = cp.effective_date
+        then cp.effective_date
+      -- Same-date termination: expire at END of effective_date (not before)
+      when cp.termination_date = cp.effective_date
+        then cp.effective_date
+      -- Termination exists: use earlier of termination or natural end
+      when cp.termination_date is not null
+        then least(
+          cp.termination_date - interval '1 day',
+          make_date(cp.contract_end_season, 12, 31)
+        )
+      -- Next contract exists: use earlier of next_contract or natural end
+      when cp.next_contract_date is not null
+        then least(
+          cp.next_contract_date - interval '1 day',
+          make_date(cp.contract_end_season, 12, 31)
+        )
+      -- No next contract or termination: expire at natural end date
+      else make_date(cp.contract_end_season, 12, 31)
+    end as expiration_date,
 
     -- Is this the current contract?
     -- Current if: no next contract AND no termination, OR termination/next contract is in the future
