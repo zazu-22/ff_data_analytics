@@ -64,7 +64,7 @@ ______________________________________________________________________
 
 1. **Phase 3 - Integration & Analysis:**
 
-   - Variance marts: mart_projection_variance (actuals vs projections)
+   - ✅ Variance marts: mart_projection_variance (actuals vs projections)
    - Trade valuations: mart_trade_valuations (TRANSACTIONS vs KTC market)
    - CI (Sheets): copy_league_sheet → commissioner_parse → dbt run/test, with CSV previews + dbt summary and LKG fallback
    - Ops: run ledger, model metrics, data quality, freshness banners
@@ -277,7 +277,7 @@ Acceptance criteria:
     - Columns: pick_id, season, round, round_slot, pick_type, notes
   - ☑ **`dim_timeframe`** (COMPLETE ✅):
     - Maps TRANSACTIONS timeframe strings to structured season/week/period
-  - ☐ **`dim_asset`** (OPTIONAL - can generate on-demand):
+  - ☑  **`dim_asset`** (COMPLETE ✅):
     - Unified player/pick/cap asset catalog
     - UNION of dim_player_id_xref + dim_pick
   - ☐ **`stat_dictionary.csv`** (OPTIONAL - only needed for multi-provider normalization):
@@ -285,7 +285,7 @@ Acceptance criteria:
   - ☐ **`dim_name_alias`** (OPTIONAL - add iteratively if fuzzy matching fails):
     - Alternate spellings for TRANSACTIONS player name resolution
 - ☑ **Stage models - Track A COMPLETE** (3/3 nflverse staging models):
-  - `stg_nflverse_*` (players, weekly, season, injuries, depth_charts, schedule, teams, **snap_counts**, **ff_opportunity**)
+  - ☑ `stg_nflverse_*` (players, weekly, season, injuries, depth_charts, schedule, teams, **snap_counts**, **ff_opportunity**)
     - ☑ `stg_nflverse__players.sql` reading local `data/raw` Parquet (tests: not_null + unique `gsis_id`)
     - ☑ `stg_nflverse__weekly.sql` with PK tests: not_null (`season`,`week`,`gsis_id`) + singular uniqueness test on key
     - ☑ **`stg_nflverse__player_stats.sql`** (COMPLETE ✅):
@@ -307,7 +307,7 @@ Acceptance criteria:
       - Expected stats: \*\_exp (12 types)
       - Variance stats: \*\_diff (12 types)
       - Team shares: air_yards, attempts (8 types)
-  - `stg_sleeper_*` (league, users, rosters, roster_players)
+  - ☐ `stg_sleeper_*` (league, users, rosters, roster_players)
   - `stg_sheets_*` (contracts_active, contracts_cut, draft_picks, draft_pick_conditions, transactions)
     - ☐ Add `stg_sheets__roster_changelog` (hash-based SCD tracking)
     - ☐ Add `stg_sheets__change_log` (row hash per tab/dt)
@@ -537,12 +537,12 @@ ______________________________________________________________________
 - ☑ `tools/make_samples.py` implemented (nflverse, sleeper, sheets, ffanalytics raw, sdio; ktc stub)
 - ☑ Python shim GCS writes via PyArrow FS (+ smoke script)
 - ☑ Commissioner Sheet parsing to normalized tables + tests (roster, contracts, picks)
-- ☐ **TRANSACTIONS tab parsing** (NEW - blocked by seeds; adds fact_league_transactions)
-- ☐ **Projections integration** (NEW - separate fact table; 2×2 model alignment)
+- ☑ **TRANSACTIONS tab parsing** (NEW - blocked by seeds; adds fact_league_transactions)
+- ☑ **Projections integration** (NEW - separate fact table; 2×2 model alignment)
   - FFanalytics: weighted aggregation (blocked by seeds for player mapping)
   - fact_player_projections with horizon column
   - Real-world projections → fantasy projections (scoring in marts)
-- ☐ KTC: real fetcher integration (replace stub)
+- ☑ KTC: real fetcher integration (replace stub)
 - ☑ dbt project (staging + tests; env-path globs; seeds skeleton)
 - ☑ CI: starter pipeline (ingest + dbt); lint fixes for workflow shell quoting
 
@@ -575,9 +575,9 @@ ______________________________________________________________________
 - ☑ nflverse (players, weekly, injuries, schedule, teams)
 - ☑ sleeper (league, users, rosters, players)
 - ☑ sheets (GM roster tabs)
-- ☐ sheets (TRANSACTIONS tab - NEW; depends on seeds for name resolution)
-- ☐ ffanalytics (weighted consensus projections - NEW; depends on seeds for player mapping)
-- ☐ ktc (players + picks market values)
+- ☑ sheets (TRANSACTIONS tab - NEW; depends on seeds for name resolution)
+- ☑ ffanalytics (weighted consensus projections - NEW; depends on seeds for player mapping)
+- ☑ ktc (players + picks market values)
 
 **Seeds Created and Validated:**
 
@@ -613,17 +613,17 @@ ______________________________________________________________________
 **Core facts built successfully:**
 
 - ☑ `fact_player_stats` (per-game actuals from nflverse; 6.3M rows, 88 stats) ✅ **Track A COMPLETE**
-- ☐ `fact_player_projections` (weekly/season projections from ffanalytics - NEW) - **Track D pending**
+- ☑ `fact_player_projections` (weekly/season projections from ffanalytics - NEW) - **Track D pending**
 - ☑ `fact_league_transactions` (commissioner transaction history - NEW) ✅ **Track B COMPLETE**
-- ☐ `fact_asset_market_values` (KTC market valuations) - **Track C pending**
+- ☑ `fact_asset_market_values` (KTC market valuations) - **Track C Complete**
 
 **Key marts validated:**
 
 - ☑ `mart_real_world_actuals_weekly` ✅ **Track A COMPLETE**
 - ☐ `mart_real_world_projections` (NEW) - **Track D pending**
 - ☑ `mart_fantasy_actuals_weekly` (scoring applied) ✅ **Track A COMPLETE**
-- ☐ `mart_fantasy_projections` (scoring applied - NEW) - **Track D pending**
-- ☐ `mart_projection_variance` (NEW) - **Track D pending** (requires projections)
+- ☑ `mart_fantasy_projections` (scoring applied - NEW) - **Track D pending**
+- ☑ `mart_projection_variance` (NEW) - **Track D pending** (requires projections)
 - ☐ `mart_trade_history` (NEW) - **Track B/C pending** (requires KTC for valuations)
 
 ### Phase 3 - CI/CD & Operations
@@ -638,8 +638,8 @@ ______________________________________________________________________
 
 ## Follow-ups — Track A (NFL Actuals)
 
-- Load nflverse `teams` and `schedule` datasets in all environments so `dim_team`/`dim_schedule` build consistently
-- Extend staging and marts with kicking stats (FGM/FGA, XPM/XPA) if in scope; wire to existing `kicking` rules in `dim_scoring_rule`
-- Clarify defensive tackles semantics to avoid double-counting (e.g., use either `def_tackles_with_assist` or a single assists metric); align scoring rule if needed
-- Optionally expose weekly team attribution (e.g., `team_id_week`) alongside `current_team` in marts for historical accuracy on trades
-- Add an explicit `special_teams_td` rule in `dim_scoring_rule` (instead of reusing receiving TD) for clarity
+☑ Load nflverse `teams` and `schedule` datasets in all environments so `dim_team`/`dim_schedule` build consistently
+☐ Extend staging and marts with kicking stats (FGM/FGA, XPM/XPA) if in scope; wire to existing `kicking` rules in `dim_scoring_rule`
+☐ Clarify defensive tackles semantics to avoid double-counting (e.g., use either `def_tackles_with_assist` or a single assists metric); align scoring rule if needed
+☐ Optionally expose weekly team attribution (e.g., `team_id_week`) alongside `current_team` in marts for historical accuracy on trades
+☐ Add an explicit `special_teams_td` rule in `dim_scoring_rule` (instead of reusing receiving TD) for clarity
