@@ -60,3 +60,11 @@ notebooks/*.csv
 .cache/
 samples/**/*cache*
 .tmp_analysis/
+
+# Archived and deprecated files
+**/_archive/**
+**/_deprecated/**
+**/.archive/**
+**/.deprecated/**
+**/.old/**
+**/.old/**
