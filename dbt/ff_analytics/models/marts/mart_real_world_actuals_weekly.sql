@@ -24,7 +24,8 @@ with fact_stats as (
     stat_name,
     stat_value
   from {{ ref('fact_player_stats') }}
-  where measure_domain = 'real_world'
+  where
+    measure_domain = 'real_world'
     and stat_kind = 'actual'
     and provider = 'nflverse'
 ),
@@ -89,6 +90,6 @@ select
   -- Computed games played (always 1 for weekly grain)
   1 as games_played
 
-from pivoted p
-left join {{ ref('dim_player') }} d
+from pivoted as p
+left join {{ ref('dim_player') }} as d
   on p.player_id = d.player_id

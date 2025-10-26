@@ -64,110 +64,279 @@ with base as (
 -- Unpivot to long form (one row per stat)
 unpivoted as (
   -- Passing stats
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'completions' as stat_name, completions as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where completions is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'completions' as stat_name,
+    completions as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where completions is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'attempts' as stat_name, attempts as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where attempts is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'attempts' as stat_name,
+    attempts as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where attempts is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'passing_yards' as stat_name, passing_yards as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where passing_yards is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'passing_yards' as stat_name,
+    passing_yards as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where passing_yards is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'passing_tds' as stat_name, passing_tds as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where passing_tds is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'passing_tds' as stat_name,
+    passing_tds as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where passing_tds is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'interceptions' as stat_name, interceptions as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where interceptions is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'interceptions' as stat_name,
+    interceptions as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where interceptions is not null
 
   -- Rushing stats
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'rushing_attempts' as stat_name, rushing_attempts as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where rushing_attempts is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'rushing_attempts' as stat_name,
+    rushing_attempts as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where rushing_attempts is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'rushing_yards' as stat_name, rushing_yards as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where rushing_yards is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'rushing_yards' as stat_name,
+    rushing_yards as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where rushing_yards is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'rushing_tds' as stat_name, rushing_tds as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where rushing_tds is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'rushing_tds' as stat_name,
+    rushing_tds as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where rushing_tds is not null
 
   -- Receiving stats
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'targets' as stat_name, targets as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where targets is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'targets' as stat_name,
+    targets as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where targets is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'receptions' as stat_name, receptions as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where receptions is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'receptions' as stat_name,
+    receptions as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where receptions is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'receiving_yards' as stat_name, receiving_yards as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where receiving_yards is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'receiving_yards' as stat_name,
+    receiving_yards as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where receiving_yards is not null
 
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'receiving_tds' as stat_name, receiving_tds as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where receiving_tds is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'receiving_tds' as stat_name,
+    receiving_tds as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where receiving_tds is not null
 
   -- Turnovers
   union all
 
-  select player_id, player_name, position, current_team, season, week, horizon, asof_date,
-         provider, source_count, total_weight,
-         'fumbles_lost' as stat_name, fumbles_lost as stat_value,
-         'real_world' as measure_domain, 'projection' as stat_kind
-  from base where fumbles_lost is not null
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'fumbles_lost' as stat_name,
+    fumbles_lost as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where fumbles_lost is not null
 )
 
 select * from unpivoted

@@ -16,9 +16,10 @@ with base_teams as (
     "full" as team_name,
     location as team_city,
     season
-  from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_TEAMS_GLOB", "data/raw/nflverse/teams/dt=*/*.parquet") }}'
-  )
+  from
+    read_parquet(
+      '{{ env_var("RAW_NFLVERSE_TEAMS_GLOB", "data/raw/nflverse/teams/dt=*/*.parquet") }}'
+    )
   -- Deduplicate to ensure one row per team (take latest season if dataset partitioned by season)
   qualify row_number() over (partition by team order by season desc) = 1
 )
@@ -43,6 +44,6 @@ select
   null as team_logo_espn,
   null as team_wordmark
 
-from base_teams t
-left join {{ ref('dim_team_conference_division') }} cd
+from base_teams as t
+left join {{ ref('dim_team_conference_division') }} as cd
   on t.team = cd.team_abbr

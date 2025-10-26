@@ -41,8 +41,10 @@ with base as (
       replace(
         replace(
           replace(player, ' (RS)', ''),  -- Remove "(RS)" suffix
-          ' Jr.', ''),  -- Remove " Jr." suffix
-        ' Jr', ''),  -- Remove " Jr" suffix
+          ' Jr.', ''
+        ),  -- Remove " Jr." suffix
+        ' Jr', ''
+      ),  -- Remove " Jr" suffix
       '.', ''  -- Remove periods from initials (R.J. → RJ)
     ) as player_name_normalized,
 
@@ -85,12 +87,12 @@ with_franchise as (
     fran.owner_name
 
   from base
-  left join {{ ref('dim_franchise') }} fran
+  left join {{ ref('dim_franchise') }} as fran
     on case
-         when base.gm_full_name like 'Nick McCreary' then 'McCreary'
-         when base.gm_full_name like 'Nick Piper' then 'Piper'
-         else split_part(base.gm_full_name, ' ', 1)
-       end = fran.owner_name
+      when base.gm_full_name like 'Nick McCreary' then 'McCreary'
+      when base.gm_full_name like 'Nick Piper' then 'Piper'
+      else split_part(base.gm_full_name, ' ', 1)
+    end = fran.owner_name
     -- Temporal join: obligation year should fall within franchise owner tenure
     and base.obligation_year between fran.season_start and fran.season_end
 ),
@@ -101,8 +103,8 @@ with_alias as (
     wf.*,
     coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
-  from with_franchise wf
-  left join {{ ref('dim_name_alias') }} alias
+  from with_franchise as wf
+  left join {{ ref('dim_name_alias') }} as alias
     on wf.player_name_normalized = alias.alias_name
 ),
 
@@ -114,7 +116,8 @@ transaction_player_ids as (
     lower(trim(player_name)) as player_name_lower,
     player_id
   from {{ ref('fact_league_transactions') }}
-  where asset_type = 'player'
+  where
+    asset_type = 'player'
     and player_id is not null
 ),
 
@@ -134,7 +137,8 @@ crosswalk_candidates as (
       when wa.position = xref.position then 100
 
       -- Generic defensive positions map to specific ones
-      when wa.position in ('DB', 'DL', 'LB')
+      when
+        wa.position in ('DB', 'DL', 'LB')
         and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S') then 80
 
       -- Active player check (exclude retired players)
@@ -143,10 +147,12 @@ crosswalk_candidates as (
       else 0
     end as match_score
 
-  from with_alias wa
-  left join {{ ref('dim_player_id_xref') }} xref
-    on (lower(trim(wa.player_name_canonical)) = lower(trim(xref.name))
-         or lower(trim(wa.player_name_canonical)) = lower(trim(xref.merge_name)))
+  from with_alias as wa
+  left join {{ ref('dim_player_id_xref') }} as xref
+    on (
+      lower(trim(wa.player_name_canonical)) = lower(trim(xref.name))
+      or lower(trim(wa.player_name_canonical)) = lower(trim(xref.merge_name))
+    )
 ),
 
 best_crosswalk_match as (
@@ -180,12 +186,13 @@ with_player_id as (
     xwalk.mfl_id,
     xwalk.canonical_name
 
-  from with_alias wa
-  left join transaction_player_ids txn
+  from with_alias as wa
+  left join transaction_player_ids as txn
     on lower(trim(wa.player_name_canonical)) = txn.player_name_lower
-  left join best_crosswalk_match xwalk
-    on wa.player_name_canonical = xwalk.player_name_canonical
-    and wa.position = xwalk.source_position
+  left join best_crosswalk_match as xwalk
+    on
+      wa.player_name_canonical = xwalk.player_name_canonical
+      and wa.position = xwalk.source_position
 ),
 
 final as (
@@ -218,14 +225,9 @@ final as (
     dead_cap_amount,
 
     -- Validation flags
-    case when player_id is null or player_id = -1 then true
-         else false
-    end as is_unmapped_player,
+    coalesce(player_id is null or player_id = -1, false) as is_unmapped_player,
 
-    case when franchise_id is null
-      then true
-      else false
-    end as is_unmapped_franchise,
+    coalesce(franchise_id is null, false) as is_unmapped_franchise,
 
     -- Metadata
     snapshot_date,

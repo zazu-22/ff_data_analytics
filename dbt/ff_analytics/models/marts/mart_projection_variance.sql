@@ -67,7 +67,8 @@ projections as (
     fumbles_lost as projected_fumbles_lost
 
   from {{ ref('mart_real_world_projections') }}
-  where horizon = 'weekly'
+  where
+    horizon = 'weekly'
     and provider = 'ffanalytics_consensus'
 ),
 
@@ -118,11 +119,12 @@ variance as (
     a.actual_receiving_tds - p.projected_receiving_tds as receiving_tds_variance,
     a.actual_fumbles_lost - p.projected_fumbles_lost as fumbles_lost_variance
 
-  from actuals a
-  left join projections p
-    on a.player_id = p.player_id
-    and a.season = p.season
-    and a.week = p.week
+  from actuals as a
+  left join projections as p
+    on
+      a.player_id = p.player_id
+      and a.season = p.season
+      and a.week = p.week
 
   -- Only include rows where we have both actuals AND projections
   where p.player_id is not null

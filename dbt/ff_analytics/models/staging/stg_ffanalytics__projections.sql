@@ -21,10 +21,7 @@ with base as (
     -- Player identity (already mapped by R runner)
     cast(player_id as integer) as player_id_raw,
     player as player_name,
-    case
-      when position_final is not null then position_final
-      else pos
-    end as position,
+    coalesce(position_final, pos) as position,
     team as current_team,
 
     -- Time dimensions
@@ -61,7 +58,11 @@ with base as (
     -- Turnovers
     fumbles_lost
 
-  from read_parquet('{{ var("external_root", "data/raw") }}/ffanalytics/projections/dt=*/projections_consensus_*.parquet', hive_partitioning=true)
+  from
+    read_parquet(
+      '{{ var("external_root", "data/raw") }}/ffanalytics/projections/dt=*/projections_consensus_*.parquet',
+      hive_partitioning = true
+    )
 
   -- Filter out unmapped players (R runner sets player_id = -1 for unmapped)
   where cast(player_id as integer) > 0

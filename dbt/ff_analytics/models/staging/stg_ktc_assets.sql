@@ -36,7 +36,7 @@ with players_raw as (
     asof_date
   from read_parquet(
     '{{ var("external_root", "data/raw") }}/ktc/players/dt=*/*.parquet',
-    hive_partitioning=true
+    hive_partitioning = true
   )
 ),
 
@@ -53,7 +53,7 @@ picks_raw as (
     asof_date
   from read_parquet(
     '{{ var("external_root", "data/raw") }}/ktc/picks/dt=*/*.parquet',
-    hive_partitioning=true
+    hive_partitioning = true
   )
 ),
 
@@ -85,11 +85,12 @@ players_mapped as (
     cast(null as varchar) as pick_tier,
     cast(null as integer) as pick_round,
     cast(null as varchar) as pick_name
-  from players_raw p
-  left join {{ ref('dim_player_id_xref') }} xref
+  from players_raw as p
+  left join {{ ref('dim_player_id_xref') }} as xref
     -- Use merge_name for better matching (handles case differences, punctuation)
-    on lower(trim(p.player_name)) = lower(trim(xref.merge_name))
-    or lower(trim(p.player_name)) = lower(trim(xref.name))
+    on
+      lower(trim(p.player_name)) = lower(trim(xref.merge_name))
+      or lower(trim(p.player_name)) = lower(trim(xref.name))
 ),
 
 -- Picks don't need player mapping, create compatible structure

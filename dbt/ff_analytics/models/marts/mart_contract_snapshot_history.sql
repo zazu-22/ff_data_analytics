@@ -69,4 +69,4 @@ select
   current_timestamp as loaded_at
 
 from {{ ref('stg_sheets__contracts_active') }}
-order by snapshot_date desc, player_name, obligation_year
+order by snapshot_date desc, player_name asc, obligation_year asc

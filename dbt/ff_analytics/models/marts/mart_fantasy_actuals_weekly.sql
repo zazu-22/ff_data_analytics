@@ -59,36 +59,36 @@ select
 
   -- Fantasy points calculation (data-driven from dim_scoring_rule)
   -- Offensive scoring
-  (rw.passing_yards * s.pass_yard_point) +
-  (rw.passing_tds * s.pass_td) +
-  (rw.passing_interceptions * s.pass_int) +  -- Negative value in seed
-  (rw.passing_2pt_conversions * s.pass_two_pt) +
+  (rw.passing_yards * s.pass_yard_point)
+  + (rw.passing_tds * s.pass_td)
+  + (rw.passing_interceptions * s.pass_int)  -- Negative value in seed
+  + (rw.passing_2pt_conversions * s.pass_two_pt)
 
-  (rw.rushing_yards * s.rush_yard_point) +
-  (rw.rushing_tds * s.rush_td) +
-  (rw.rushing_fumbles_lost * s.rush_lost_fumble) +  -- Negative value in seed
-  (rw.rushing_2pt_conversions * s.rush_two_pt) +
+  + (rw.rushing_yards * s.rush_yard_point)
+  + (rw.rushing_tds * s.rush_td)
+  + (rw.rushing_fumbles_lost * s.rush_lost_fumble)  -- Negative value in seed
+  + (rw.rushing_2pt_conversions * s.rush_two_pt)
 
-  (rw.receptions * s.rec_reception) +  -- Half-PPR from seed
-  (rw.receiving_yards * s.rec_yard_point) +
-  (rw.receiving_tds * s.rec_td) +
-  (rw.receiving_fumbles_lost * s.rec_lost_fumble) +  -- Negative value in seed
-  (rw.receiving_2pt_conversions * s.rec_two_pt) +
+  + (rw.receptions * s.rec_reception)  -- Half-PPR from seed
+  + (rw.receiving_yards * s.rec_yard_point)
+  + (rw.receiving_tds * s.rec_td)
+  + (rw.receiving_fumbles_lost * s.rec_lost_fumble)  -- Negative value in seed
+  + (rw.receiving_2pt_conversions * s.rec_two_pt)
 
   -- Defensive scoring (IDP)
   -- Note: Using both solo tackles and assisted tackles with same scoring (0.5 points each per seed)
-  (rw.def_tackles_solo * s.idp_tackle) +
-  (rw.def_tackles_with_assist * s.idp_tackle) +
-  (rw.def_sacks * s.idp_sack) +
-  (rw.def_interceptions * s.idp_interception) +
-  (rw.def_fumbles_forced * s.idp_forced_fumble) +
-  (rw.def_tds * s.idp_td) +
-  (rw.def_safeties * s.idp_safety) +
+  + (rw.def_tackles_solo * s.idp_tackle)
+  + (rw.def_tackles_with_assist * s.idp_tackle)
+  + (rw.def_sacks * s.idp_sack)
+  + (rw.def_interceptions * s.idp_interception)
+  + (rw.def_fumbles_forced * s.idp_forced_fumble)
+  + (rw.def_tds * s.idp_td)
+  + (rw.def_safeties * s.idp_safety)
 
   -- Special teams TDs (using offensive TD scoring as fallback)
-  (rw.special_teams_tds * s.rec_td)  -- 6 points from seed
+  + (rw.special_teams_tds * s.rec_td)  -- 6 points from seed
 
-  as fantasy_points
+    as fantasy_points
 
-from real_world rw
-cross join scoring_pivoted s
+from real_world as rw
+cross join scoring_pivoted as s

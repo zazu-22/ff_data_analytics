@@ -48,7 +48,8 @@ with rookie_draft_calendar_years as (
     min(transaction_date) as draft_date,
     year(min(transaction_date)) as draft_calendar_year
   from {{ ref('stg_sheets__transactions') }}
-  where transaction_type = 'rookie_draft_selection'
+  where
+    transaction_type = 'rookie_draft_selection'
     and asset_type = 'player'
     and player_id is not null
   group by player_id
@@ -59,8 +60,8 @@ base_transactions as (
     t.*,
     rd.draft_date,
     rd.draft_calendar_year
-  from {{ ref('stg_sheets__transactions') }} t
-  left join rookie_draft_calendar_years rd on t.player_id = rd.player_id
+  from {{ ref('stg_sheets__transactions') }} as t
+  left join rookie_draft_calendar_years as rd on t.player_id = rd.player_id
 )
 
 select
@@ -78,25 +79,22 @@ select
   -- Rule: Offseason transactions in rookie draft calendar year must occur AFTER draft
   -- This prevents impossible sequences like "traded before being drafted"
   case
-    when draft_calendar_year is not null
-         and year(transaction_date) = draft_calendar_year
-         and period_type = 'offseason'
-         and transaction_date < draft_date
-         and transaction_type != 'rookie_draft_selection'
+    when
+      draft_calendar_year is not null
+      and year(transaction_date) = draft_calendar_year
+      and period_type = 'offseason'
+      and transaction_date < draft_date
+      and transaction_type != 'rookie_draft_selection'
       then draft_date + interval '1 hour'  -- Force to sequence after draft
     else transaction_date
   end as transaction_date_corrected,
 
   -- Flag indicating chronological correction was applied
-  case
-    when draft_calendar_year is not null
-         and year(transaction_date) = draft_calendar_year
-         and period_type = 'offseason'
-         and transaction_date < draft_date
-         and transaction_type != 'rookie_draft_selection'
-      then true
-    else false
-  end as was_sequence_corrected,
+  coalesce(draft_calendar_year is not null
+  and year(transaction_date) = draft_calendar_year
+  and period_type = 'offseason'
+  and transaction_date < draft_date
+  and transaction_type != 'rookie_draft_selection', false) as was_sequence_corrected,
 
   transaction_year,       -- Partition key for large-scale queries
   season,

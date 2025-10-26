@@ -29,7 +29,8 @@ with projections_long as (
     stat_name,
     stat_value
   from {{ ref('fact_player_projections') }}
-  where measure_domain = 'real_world'
+  where
+    measure_domain = 'real_world'
     and stat_kind = 'projection'
     and provider = 'ffanalytics_consensus'
 ),

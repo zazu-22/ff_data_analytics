@@ -30,13 +30,15 @@ with base as (
     s.st_snaps,
     s.st_pct
 
-  from read_parquet(
-    '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
-  ) s
+  from
+    read_parquet(
+      '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
+    ) as s
   -- Data quality filters: Exclude records missing required identifiers
   -- pfr_player_id: 0.00% of raw data has NULL (0/136,974 rows)
   --   No data loss from NULL filtering in this dataset
-  where s.pfr_player_id is not null
+  where
+    s.pfr_player_id is not null
     and s.season is not null
     and s.week is not null
 ),
@@ -62,18 +64,107 @@ crosswalk as (
       else coalesce(base.pfr_player_id, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base
-  left join {{ ref('dim_player_id_xref') }} xref
+  left join {{ ref('dim_player_id_xref') }} as xref
     on base.pfr_player_id = xref.pfr_id
 ),
 
 unpivoted as (
   -- Unpivot snap stats to long form (6 stat types)
-  select player_id, player_key, game_id, season, week, season_type, position, 'offense_snaps' as stat_name, cast(offense_snaps as double) as stat_value, 'real_world' as measure_domain, 'actual' as stat_kind, 'nflverse' as provider from crosswalk where offense_snaps is not null
-  union all select player_id, player_key, game_id, season, week, season_type, position, 'offense_pct', cast(offense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where offense_pct is not null
-  union all select player_id, player_key, game_id, season, week, season_type, position, 'defense_snaps', cast(defense_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_snaps is not null
-  union all select player_id, player_key, game_id, season, week, season_type, position, 'defense_pct', cast(defense_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where defense_pct is not null
-  union all select player_id, player_key, game_id, season, week, season_type, position, 'st_snaps', cast(st_snaps as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_snaps is not null
-  union all select player_id, player_key, game_id, season, week, season_type, position, 'st_pct', cast(st_pct as double), 'real_world', 'actual', 'nflverse' from crosswalk where st_pct is not null
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'offense_snaps' as stat_name,
+    cast(offense_snaps as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
+  from crosswalk
+  where offense_snaps is not null
+  union all
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'offense_pct',
+    cast(offense_pct as double),
+    'real_world',
+    'actual',
+    'nflverse'
+  from crosswalk
+  where offense_pct is not null
+  union all
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'defense_snaps',
+    cast(defense_snaps as double),
+    'real_world',
+    'actual',
+    'nflverse'
+  from crosswalk
+  where defense_snaps is not null
+  union all
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'defense_pct',
+    cast(defense_pct as double),
+    'real_world',
+    'actual',
+    'nflverse'
+  from crosswalk
+  where defense_pct is not null
+  union all
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'st_snaps',
+    cast(st_snaps as double),
+    'real_world',
+    'actual',
+    'nflverse'
+  from crosswalk
+  where st_snaps is not null
+  union all
+  select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    'st_pct',
+    cast(st_pct as double),
+    'real_world',
+    'actual',
+    'nflverse'
+  from crosswalk
+  where st_pct is not null
 )
 
 select * from unpivoted

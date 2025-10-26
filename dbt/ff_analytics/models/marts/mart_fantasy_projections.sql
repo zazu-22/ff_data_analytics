@@ -46,20 +46,20 @@ select
 
   -- Fantasy points calculation (data-driven from dim_scoring_rule)
   -- Offensive scoring only (projections don't include IDP)
-  (rw.passing_yards * s.pass_yard_point) +
-  (rw.passing_tds * s.pass_td) +
-  (rw.interceptions * s.pass_int) +  -- Negative value in seed
+  (rw.passing_yards * s.pass_yard_point)
+  + (rw.passing_tds * s.pass_td)
+  + (rw.interceptions * s.pass_int)  -- Negative value in seed
 
-  (rw.rushing_yards * s.rush_yard_point) +
-  (rw.rushing_tds * s.rush_td) +
-  (rw.fumbles_lost * s.rush_lost_fumble) +  -- Negative value in seed
+  + (rw.rushing_yards * s.rush_yard_point)
+  + (rw.rushing_tds * s.rush_td)
+  + (rw.fumbles_lost * s.rush_lost_fumble)  -- Negative value in seed
 
-  (rw.receptions * s.rec_reception) +  -- Half-PPR from seed
-  (rw.receiving_yards * s.rec_yard_point) +
-  (rw.receiving_tds * s.rec_td) +
-  (rw.fumbles_lost * s.rec_lost_fumble)  -- Negative value in seed (using same fumble rule)
+  + (rw.receptions * s.rec_reception)  -- Half-PPR from seed
+  + (rw.receiving_yards * s.rec_yard_point)
+  + (rw.receiving_tds * s.rec_td)
+  + (rw.fumbles_lost * s.rec_lost_fumble)  -- Negative value in seed (using same fumble rule)
 
-  as projected_fantasy_points
+    as projected_fantasy_points
 
-from real_world rw
-cross join scoring_pivoted s
+from real_world as rw
+cross join scoring_pivoted as s

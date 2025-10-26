@@ -59,8 +59,8 @@ with current_contracts as (
     loaded_at
   from {{ ref('dim_player_contract_history') }}
   where is_current = true
-    -- Only include contracts with future years (end season >= current year)
-    and contract_end_season >= year(current_date)
+  -- Only include contracts with future years (end season >= current year)
+  and contract_end_season >= year(current_date)
 ),
 
 expanded_years as (
@@ -94,12 +94,12 @@ expanded_years as (
     -- Parse JSON array and unnest to create one row per year
     -- contract_split_json format: "[6, 6, 24]" or "[12, 8, 8, 8, 8]"
     -- Cast JSON to INTEGER[] list first, then unnest
-    unnest(cast(json_extract(cc.contract_split_json, '$') as INTEGER[])) as annual_cap_hit,
+    unnest(cast(json_extract(cc.contract_split_json, '$') as INTEGER [])) as annual_cap_hit,
 
     -- Generate year position (1, 2, 3, ...) for each row
-    unnest(generate_series(1, len(cast(json_extract(cc.contract_split_json, '$') as INTEGER[])))) as year_position
+    unnest(generate_series(1, len(cast(json_extract(cc.contract_split_json, '$') as INTEGER [])))) as year_position
 
-  from current_contracts cc
+  from current_contracts as cc
   where cc.contract_split_json is not null
 ),
 
@@ -112,14 +112,14 @@ with_calculated_fields as (
     (ey.contract_start_season + ey.year_position - 1) as obligation_year,
 
     -- Calculate years remaining from this year forward (including this year)
-    (len(cast(json_extract(contract_split_json, '$') as INTEGER[])) - ey.year_position + 1) as years_remaining,
+    (len(cast(json_extract(contract_split_json, '$') as INTEGER [])) - ey.year_position + 1) as years_remaining,
 
     -- Join to cut liability schedule for dead cap calculation
     sch.dead_cap_pct,
     sch.notes as dead_cap_note
 
-  from expanded_years ey
-  left join {{ ref('dim_cut_liability_schedule') }} sch
+  from expanded_years as ey
+  left join {{ ref('dim_cut_liability_schedule') }} as sch
     on ey.year_position = sch.contract_year
 ),
 
@@ -143,7 +143,7 @@ with_remaining_value as (
       rows between current row and unbounded following
     ) as dead_cap_if_cut_before_year
 
-  from with_calculated_fields cf
+  from with_calculated_fields as cf
 )
 
 select
