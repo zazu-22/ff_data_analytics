@@ -134,14 +134,22 @@ seeds:
   - name: dim_name_alias
     description: "Player name aliases for fuzzy matching from TRANSACTIONS"
     columns:
-      - name: canonical_name
-        description: "Canonical name from dim_player_id_xref"
-        tests:
-          - not_null
       - name: alias_name
         description: "Alternate spelling/format"
         tests:
           - not_null
+      - name: canonical_name
+        description: "Canonical name from dim_player_id_xref"
+        tests:
+          - not_null
+      - name: alias_type
+        description: "Type of alias (typo, nickname, variation, etc.)"
+      - name: notes
+        description: "Additional context about the alias"
+      - name: position
+        description: "Override position for disambiguation"
+      - name: treat_as_position
+        description: "Position to use when matching this alias"
 
   - name: dim_team_conference_division
     description: "NFL conference and division mappings"

@@ -1,92 +1,92 @@
 alias_name,canonical_name,alias_type,notes,position,treat_as_position
-Khalil Shafir,Khalil Shakir,typo,Last name typo
-Khalil Sharkir,Khalil Shakir,typo,Last name typo
-Azeed Al-Shaair,Azeez Al-Shaair,typo,First name typo
-Max Crosby,Maxx Crosby,typo,Double-x spelling
-Jeffrey Simmons,Jeffery Simmons,typo,Double-f vs single-f
-Dax Hill,Daxton Hill,nickname,Nickname variation
-La'Mical Perine,Lamical Perine,variation,Apostrophe variation
-Ty Davis-Price,Tyrion Davis-Price,nickname,Nickname vs full name
-Chrirstian McCaffrey,Christian McCaffrey,typo,Common misspelling
-Davonte Adams,Davante Adams,typo,Common misspelling
-Derick Henry,Derrick Henry,typo,Common misspelling
-Curtis Samnuel,Curtis Samuel,typo,Common misspelling
-Emari Demrcado,Emari Demercado,typo,Typo in last name
-Isaac Guernedo,Isaac Guerendo,typo,Typo in last name
-Issac Guerendo,Isaac Guerendo,typo,First name typo
-James Connor,James Conner,typo,Last name spelling
-Marin Jones,Marvin Jones,typo,First name typo
-Calrton Davis,Carlton Davis,typo,First name typo
-Charvius Ward,Charvarius Ward,typo,First name typo
-Chigozeim Okonkwo,Chigoziem Okonkwo,typo,First name typo
-Jalen Raegor,Jalen Reagor,typo,Last name typo
-Jalen Waddle,Jaylen Waddle,typo,First name spelling
-Johnanthan Abram,Johnathan Abram,typo,First name typo
-Joshua Kelly,Joshua Kelley,typo,Last name spelling
-La'Michal Perine,Lamical Perine,typo,Typo variation
-Levonte David,Lavonte David,typo,First name typo
-Morris Clainborne,Morris Claiborne,typo,Last name typo
-Paulso Adebo,Paulson Adebo,typo,First name typo
-Phillip Rivers,Philip Rivers,typo,Double-L spelling
-Quinton Couples,Quinton Coples,typo,Last name typo - DE not WR
-Quinton Mitchell,Quinyon Mitchell,typo,First name spelling
-Rashaad Weaver,Rashad Weaver,typo,First name spelling
-Rashad Penny,Rashaad Penny,typo,First name spelling
-Steadman Bailey,Stedman Bailey,typo,First name typo
-Tahj Bradley,Tahj Brooks,typo,Commissioner sheet typo for Tahj Brooks
-Terrence Ganaway,Terrance Ganaway,typo,First name spelling
-TreyVeyon Henderson,Trey Benson,typo,Probably wrong player
-Bhayshui Tuten,Bucky Irving,typo,Probably wrong player mapping
-Doriel Green-Beckham,Dorial Green-Beckham,typo,First name typo
-Ezeiel Ansah,Ezekiel Ansah,typo,First name typo
-D'Earnest Johnson,D'Ernest Johnson,typo,Apostrophe placement
-Lanche Seastunk,Lance Dunbar,typo,Completely wrong
-Robbie Anderson,Robbie Chosen,name_change,Was Robby Anderson before name change
-Mitch Trubisky,Mitchell Trubisky,variation,Nickname vs full name
-Will Fuller V,Will Fuller,suffix,Roman numeral V
-Gardner Minshew III,Gardner Minshew,suffix,Roman numeral III
-Henry Ruggs III,Henry Ruggs,suffix,Roman numeral III
-John Johnson III,John Johnson,suffix,Roman numeral III
-John Metchie III,John Metchie,suffix,Roman numeral III
-John Ross III,John Ross,suffix,Roman numeral III
-Luther Burden III,Luther Burden,suffix,Roman numeral III
-Ollie Gordon III,Ollie Gordon,suffix,Roman numeral III
-Jessie Bates III,Jessie Bates,suffix,Roman numeral III
-Adarius Stewart,ArDarius Stewart,typo,Missing 'r' in first name
-Antonio Calloway,Antonio Callaway,typo,Common misspelling of last name
-Ben Stinnot,Ben Sinnott,typo,Letter transposition
-Bradley McDougal,Bradley McDougald,typo,Missing 'd' in last name
-Brashad Smith,Brashard Smith,typo,Spelling of first name
-Chamorri Conner,Chamarri Conner,typo,Vowel substitution in first name
-Damarius Randall,Damarious Randall,typo,Missing 'i' in first name
-Dee Millner,Dee Milliner,typo,Common misspelling of last name
-Dru Phillips,Andru Phillips,nickname,Nickname vs full name
-Eric Harris,Erik Harris,typo,Vowel substitution c vs k
-Jalen Marshall,Jalin Marshall,typo,Vowel substitution e vs i
-Javon Holland,Jevon Holland,typo,Vowel substitution a vs e
-Jeff Heuermann,Jeff Heuerman,typo,Extra 'n' in last name
-Jonathan Cyprien,Johnathan Cyprien,typo,Missing 'h' in first name
-Jonathan Franklin,Johnathan Franklin,typo,Missing 'h' in first name
-Matt Elman,Matt Elam,typo,Common misspelling of last name
-Michael Meyer,Michael Mayer,typo,Common misspelling of last name
-Nakobi Dean,Nakobe Dean,typo,Vowel substitution in first name
-Pete Warner,Pete Werner,typo,Common misspelling of last name
-Quentin Cephus,Quintez Cephus,typo,Name variation
-Robby Anderson,Robbie Chosen,name_change,Legal name change (formerly Robby Anderson)
-Takk McKinley,Takkarist McKinley,nickname,Nickname vs full name
-Tuli Tuipoluti,Tuli Tuipulotu,typo,Letter transposition in last name
-Hollywood Brown,Marquise Brown,nickname,Common nickname
-Quinten Johnston,Quentin Johnston,typo,First name spelling
-Tyjake Spears,Tyjae Spears,typo,First name typo
-DeAdnre Hokins,DeAndre Hopkins,typo,First name typo
-Foyessade Oluokun,Foyesade Oluokun,typo,First name spelling
-Omarion Hamption,Omarion Hampton,typo,Last name typo
-Andrei Iosvias,Andrei Iosivas,typo,Last name spelling
-Jakobi Myers,Jakobi Meyers,typo,Last name spelling
-Nate Herbig,Nick Herbig,typo,Wrong first name
-Terrell Bernard,Terrel Bernard,typo,Double-L spelling
-Coiston Loveland,Colston Loveland,typo,First name spelling
-Terreace Ferguson,Terrance Ferguson,typo,First name typo
-Kendrick Boure,Kendrick Bourne,typo,Last name typo,
+Khalil Shafir,Khalil Shakir,typo,Last name typo,,
+Khalil Sharkir,Khalil Shakir,typo,Last name typo,,
+Azeed Al-Shaair,Azeez Al-Shaair,typo,First name typo,,
+Max Crosby,Maxx Crosby,typo,Double-x spelling,,
+Jeffrey Simmons,Jeffery Simmons,typo,Double-f vs single-f,,
+Dax Hill,Daxton Hill,nickname,Nickname variation,,
+La'Mical Perine,Lamical Perine,variation,Apostrophe variation,,
+Ty Davis-Price,Tyrion Davis-Price,nickname,Nickname vs full name,,
+Chrirstian McCaffrey,Christian McCaffrey,typo,Common misspelling,,
+Davonte Adams,Davante Adams,typo,Common misspelling,,
+Derick Henry,Derrick Henry,typo,Common misspelling,,
+Curtis Samnuel,Curtis Samuel,typo,Common misspelling,,
+Emari Demrcado,Emari Demercado,typo,Typo in last name,,
+Isaac Guernedo,Isaac Guerendo,typo,Typo in last name,,
+Issac Guerendo,Isaac Guerendo,typo,First name typo,,
+James Connor,James Conner,typo,Last name spelling,,
+Marin Jones,Marvin Jones,typo,First name typo,,
+Calrton Davis,Carlton Davis,typo,First name typo,,
+Charvius Ward,Charvarius Ward,typo,First name typo,,
+Chigozeim Okonkwo,Chigoziem Okonkwo,typo,First name typo,,
+Jalen Raegor,Jalen Reagor,typo,Last name typo,,
+Jalen Waddle,Jaylen Waddle,typo,First name spelling,,
+Johnanthan Abram,Johnathan Abram,typo,First name typo,,
+Joshua Kelly,Joshua Kelley,typo,Last name spelling,,
+La'Michal Perine,Lamical Perine,typo,Typo variation,,
+Levonte David,Lavonte David,typo,First name typo,,
+Morris Clainborne,Morris Claiborne,typo,Last name typo,,
+Paulso Adebo,Paulson Adebo,typo,First name typo,,
+Phillip Rivers,Philip Rivers,typo,Double-L spelling,,
+Quinton Couples,Quinton Coples,typo,Last name typo - DE not WR,,
+Quinton Mitchell,Quinyon Mitchell,typo,First name spelling,,
+Rashaad Weaver,Rashad Weaver,typo,First name spelling,,
+Rashad Penny,Rashaad Penny,typo,First name spelling,,
+Steadman Bailey,Stedman Bailey,typo,First name typo,,
+Tahj Bradley,Tahj Brooks,typo,Commissioner sheet typo for Tahj Brooks,,
+Terrence Ganaway,Terrance Ganaway,typo,First name spelling,,
+Doriel Green-Beckham,Dorial Green-Beckham,typo,First name typo,,
+Ezeiel Ansah,Ezekiel Ansah,typo,First name typo,,
+D'Earnest Johnson,D'Ernest Johnson,typo,Apostrophe placement,,
+Lanche Seastunk,Lance Dunbar,typo,Completely wrong,,
+Robbie Anderson,Robbie Chosen,name_change,Was Robby Anderson before name change,,
+Mitch Trubisky,Mitchell Trubisky,variation,Nickname vs full name,,
+Will Fuller V,Will Fuller,suffix,Roman numeral V,,
+Gardner Minshew III,Gardner Minshew,suffix,Roman numeral III,,
+Henry Ruggs III,Henry Ruggs,suffix,Roman numeral III,,
+John Johnson III,John Johnson,suffix,Roman numeral III,,
+John Metchie III,John Metchie,suffix,Roman numeral III,,
+John Ross III,John Ross,suffix,Roman numeral III,,
+Luther Burden III,Luther Burden,suffix,Roman numeral III,,
+Ollie Gordon III,Ollie Gordon,suffix,Roman numeral III,,
+Jessie Bates III,Jessie Bates,suffix,Roman numeral III,,
+Adarius Stewart,ArDarius Stewart,typo,Missing 'r' in first name,,
+Antonio Calloway,Antonio Callaway,typo,Common misspelling of last name,,
+Ben Stinnot,Ben Sinnott,typo,Letter transposition,,
+Bradley McDougal,Bradley McDougald,typo,Missing 'd' in last name,,
+Brashad Smith,Brashard Smith,typo,Spelling of first name,,
+Chamorri Conner,Chamarri Conner,typo,Vowel substitution in first name,,
+Damarius Randall,Damarious Randall,typo,Missing 'i' in first name,,
+Dee Millner,Dee Milliner,typo,Common misspelling of last name,,
+Dru Phillips,Andru Phillips,nickname,Nickname vs full name,,
+Eric Harris,Erik Harris,typo,Vowel substitution c vs k,,
+Jalen Marshall,Jalin Marshall,typo,Vowel substitution e vs i,,
+Javon Holland,Jevon Holland,typo,Vowel substitution a vs e,,
+Jeff Heuermann,Jeff Heuerman,typo,Extra 'n' in last name,,
+Jonathan Cyprien,Johnathan Cyprien,typo,Missing 'h' in first name,,
+Jonathan Franklin,Johnathan Franklin,typo,Missing 'h' in first name,,
+Matt Elman,Matt Elam,typo,Common misspelling of last name,,
+Michael Meyer,Michael Mayer,typo,Common misspelling of last name,,
+Nakobi Dean,Nakobe Dean,typo,Vowel substitution in first name,,
+Pete Warner,Pete Werner,typo,Common misspelling of last name,,
+Quentin Cephus,Quintez Cephus,typo,Name variation,,
+Robby Anderson,Robbie Chosen,name_change,Legal name change (formerly Robby Anderson),,
+Takk McKinley,Takkarist McKinley,nickname,Nickname vs full name,,
+Tuli Tuipoluti,Tuli Tuipulotu,typo,Letter transposition in last name,,
+Hollywood Brown,Marquise Brown,nickname,Common nickname,,
+Quinten Johnston,Quentin Johnston,typo,First name spelling,,
+Tyjake Spears,Tyjae Spears,typo,First name typo,,
+DeAdnre Hokins,DeAndre Hopkins,typo,First name typo,,
+Foyessade Oluokun,Foyesade Oluokun,typo,First name spelling,,
+Omarion Hamption,Omarion Hampton,typo,Last name typo,,
+Andrei Iosvias,Andrei Iosivas,typo,Last name spelling,,
+Jakobi Myers,Jakobi Meyers,typo,Last name spelling,,
+Nate Herbig,Nick Herbig,typo,Wrong first name,,
+Terrell Bernard,Terrel Bernard,typo,Double-L spelling,,
+Coiston Loveland,Colston Loveland,typo,First name spelling,,
+Terreace Ferguson,Terrance Ferguson,typo,First name typo,,
+Kendrick Boure,Kendrick Bourne,typo,Last name typo,,
 Marcus Lattimore,Marshon Lattimore,data_error,Marcus (RB) retired 2014; meant Marshon (DB) for 2021-2022 transactions,DB,
 Cam Heyward,Cameron Heyward,data_error,Position mismatch - listed as WR but is DT (also nickname Cam→Cameron),WR,DL
+Bhayshui Tuten,Bhayshul Tuten,typo,Commissioner sheet spelling vs crosswalk,,
+TreyVeyon Henderson,TreVeyon Henderson,typo,Extra y in first name,,
