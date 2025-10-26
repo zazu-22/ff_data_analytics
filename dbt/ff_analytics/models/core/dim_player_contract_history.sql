@@ -127,45 +127,101 @@ with all_contract_events as (
     and contract_total is not null  -- Must have contract terms
 ),
 
-fourth_year_options as (
-  -- Detect 4th year rookie options and calculate their correct start season
-  -- 4th year options are exercised during offseason but take effect AFTER the 3-year rookie contract ends
-  -- Detection: extension with 1 year, amount in (24,20,16,12,8,4), following a 3-year rookie contract
-  select
-    ext.player_id,
-    ext.transaction_id,
-    ext.contract_total,
-    -- Find preceding rookie contract and calculate when option should start
-    -- Rookie contracts start in their transaction_season (drafted in Aug)
-    -- 4th year option starts after 3-year rookie contract: start_year + 3
-    prev.transaction_season + prev.contract_years as option_start_season
-  from all_contract_events ext
-  left join lateral (
-    select
-      ce.transaction_season,
-      ce.contract_years
-    from all_contract_events ce
-    where ce.player_id = ext.player_id
-      and ce.transaction_date_corrected < ext.transaction_date_corrected
-      and ce.contract_type = 'rookie'
-      and ce.contract_years = 3  -- Rookie contracts are 3 years
-    order by ce.transaction_date_corrected desc
-    limit 1
-  ) prev on true
-  where ext.transaction_type = 'contract_extension'
-    and ext.contract_years = 1
-    and ext.contract_total in (24, 20, 16, 12, 8, 4)  -- Official 4th year option rates
-    and prev.transaction_season is not null  -- Must have preceding rookie contract
-),
-
 enriched_contract_events as (
-  -- Add 4th year option metadata to all contract events
+  -- Enrich contract events, handling incomplete extension contract_split_json
+  -- Some extensions (especially 2024+ rookies) only record the 4th year option amount
+  -- We need to merge remaining base years with the extension year
   select
     ace.*,
-    fyo.option_start_season as fourth_year_option_start_season
+
+    -- For extensions with single-year splits, find the preceding rookie contract
+    case
+      when ace.transaction_type = 'contract_extension'
+        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER[])) = 1
+        and ace.contract_total in (24, 20, 16, 12, 8, 4)  -- 4th year option rates
+      then (
+        select prev.contract_split_json
+        from all_contract_events prev
+        where prev.player_id = ace.player_id
+          and prev.transaction_date_corrected < ace.transaction_date_corrected
+          and prev.contract_type = 'rookie'
+          and prev.contract_years = 3
+        order by prev.transaction_date_corrected desc
+        limit 1
+      )
+      else null
+    end as preceding_rookie_split_json,
+
+    -- Calculate years elapsed since rookie contract start
+    -- Use contract start seasons (accounting for offseason logic) not transaction seasons
+    case
+      when ace.transaction_type = 'contract_extension'
+        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER[])) = 1
+        and ace.contract_total in (24, 20, 16, 12, 8, 4)
+      then (
+        select
+          -- Extension start season - rookie start season = years elapsed
+          (case when ace.period_type = 'offseason' then ace.transaction_season + 1 else ace.transaction_season end) -
+          (case when prev.period_type = 'offseason' then prev.transaction_season + 1 else prev.transaction_season end)
+        from all_contract_events prev
+        where prev.player_id = ace.player_id
+          and prev.transaction_date_corrected < ace.transaction_date_corrected
+          and prev.contract_type = 'rookie'
+          and prev.contract_years = 3
+        order by prev.transaction_date_corrected desc
+        limit 1
+      )
+      else null
+    end as years_elapsed_since_rookie_start
+
   from all_contract_events ace
-  left join fourth_year_options fyo
-    on ace.transaction_id = fyo.transaction_id
+),
+
+enriched_contract_events_with_merged_splits as (
+  -- Merge remaining base years with extension year for incomplete extensions
+  select
+    ece.*,
+
+    -- Build full remaining schedule for incomplete extensions
+    case
+      when ece.preceding_rookie_split_json is not null
+        and ece.years_elapsed_since_rookie_start is not null
+      then
+        -- Slice remaining base years and append extension year
+        list_concat(
+          cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER[])[ece.years_elapsed_since_rookie_start + 1:],
+          cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
+        )
+      else
+        cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
+    end as final_contract_split_array,
+
+    -- Update contract_split_json with merged array
+    case
+      when ece.preceding_rookie_split_json is not null
+        and ece.years_elapsed_since_rookie_start is not null
+      then
+        to_json(
+          list_concat(
+            cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER[])[ece.years_elapsed_since_rookie_start + 1:],
+            cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
+          )
+        )
+      else
+        ece.contract_split_json
+    end as merged_contract_split_json
+
+  from enriched_contract_events ece
+),
+
+final_enriched_events as (
+  -- Replace contract_split_json with merged version
+  -- Include all columns but override contract_split_json and contract_split_array with merged versions
+  select
+    ecm.* exclude (contract_split_json, contract_split_array, merged_contract_split_json, final_contract_split_array, preceding_rookie_split_json, years_elapsed_since_rookie_start),
+    ecm.merged_contract_split_json as contract_split_json,  -- Use merged version
+    ecm.final_contract_split_array as contract_split_array  -- Use merged version
+  from enriched_contract_events_with_merged_splits ecm
 ),
 
 same_date_extensions as (
@@ -250,11 +306,10 @@ same_date_extensions as (
     base.contract_type,
     base.is_rookie_contract,
     base.rfa_matched,
-    base.faad_compensation,
-    base.fourth_year_option_start_season
+    base.faad_compensation
 
-  from enriched_contract_events base
-  inner join enriched_contract_events ext
+  from final_enriched_events base
+  inner join final_enriched_events ext
     on base.player_id = ext.player_id
     and base.transaction_date = ext.transaction_date
     and base.transaction_type != 'contract_extension'
@@ -289,10 +344,9 @@ standalone_contracts as (
     contract_type,
     is_rookie_contract,
     rfa_matched,
-    faad_compensation,
-    fourth_year_option_start_season
+    faad_compensation
 
-  from enriched_contract_events
+  from final_enriched_events
   where extension_id_on_same_date is null
 ),
 
@@ -350,10 +404,8 @@ contract_periods as (
     ) as next_contract_date,
 
     -- Get next contract's start season to check if it starts AFTER current contract ends
-    -- (needed for 4th year options that don't replace the rookie contract)
     lead(
       case
-        when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
         when ce.period_type = 'offseason' then ce.transaction_season + 1
         else ce.transaction_season
       end
@@ -379,15 +431,13 @@ contract_periods as (
     -- Contract timeline
     -- Use split array length if available (handles extensions with full remaining schedule)
     -- Otherwise fall back to contract_years
-    -- For 4th year rookie options, start season = (rookie_start + 3 years)
     -- For offseason transactions, contract starts in the NEXT season
+    -- The contract_split_json already contains the correct year-by-year schedule for extensions
     case
-      when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
       when ce.period_type = 'offseason' then ce.transaction_season + 1
       else ce.transaction_season
     end as contract_start_season,
     (case
-      when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
       when ce.period_type = 'offseason' then ce.transaction_season + 1
       else ce.transaction_season
     end) + (
