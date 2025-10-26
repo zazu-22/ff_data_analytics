@@ -1,5 +1,4 @@
-alias_name,canonical_name,alias_type,notes
-Cam Heyward,Cameron Heyward,nickname,Nickname variation
+alias_name,canonical_name,alias_type,notes,position,treat_as_position
 Khalil Shafir,Khalil Shakir,typo,Last name typo
 Khalil Sharkir,Khalil Shakir,typo,Last name typo
 Azeed Al-Shaair,Azeez Al-Shaair,typo,First name typo
@@ -88,4 +87,6 @@ Nate Herbig,Nick Herbig,typo,Wrong first name
 Terrell Bernard,Terrel Bernard,typo,Double-L spelling
 Coiston Loveland,Colston Loveland,typo,First name spelling
 Terreace Ferguson,Terrance Ferguson,typo,First name typo
-Kendrick Boure,Kendrick Bourne,typo,Last name typo
+Kendrick Boure,Kendrick Bourne,typo,Last name typo,
+Marcus Lattimore,Marshon Lattimore,data_error,Marcus (RB) retired 2014; meant Marshon (DB) for 2021-2022 transactions,DB,
+Cam Heyward,Cameron Heyward,data_error,Position mismatch - listed as WR but is DT (also nickname Cam→Cameron),WR,DL

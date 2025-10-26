@@ -531,19 +531,23 @@ def _normalize_position(txn_position: str | None) -> list[str]:
         return []
 
     position_map = {
-        "DL": ["DE", "DT"],  # Defensive Line → Defensive End or Defensive Tackle
-        "DB": ["S", "CB"],  # Defensive Back → Safety or Cornerback
+        # Defensive positions with hybrid role support
+        "DL": ["DE", "DT", "LB"],  # Defensive Line → includes edge rushers (LB/DE hybrid)
+        "DB": ["S", "CB", "LB"],  # Defensive Back → includes hybrid safety/linebackers
+        "LB": ["LB", "DE", "S", "CB"],  # Linebacker → includes edge rushers and hybrid DBs
         "K": ["PK"],  # Kicker → Place Kicker
-        "LB": ["LB", "DE"],  # Linebacker (includes edge rushers classified as DE)
-        # Offensive positions map 1:1
-        "QB": ["QB"],
-        "RB": ["RB"],
-        "WR": ["WR"],
-        "TE": ["TE"],
-        "FB": ["FB"],
+        # Offensive positions - permissive for position changes and multi-role players
+        "QB": ["QB", "TE", "WR", "RB"],  # QB → includes Taysom Hill types and position changers
+        "RB": ["RB", "WR", "TE"],  # RB → includes players who switched positions
+        "WR": ["WR", "RB", "TE"],  # WR → includes players who switched positions
+        "TE": ["TE", "WR", "QB"],  # TE → includes H-backs and position changes
+        "FB": ["FB", "RB", "TE"],  # FB → fullback variants
         # Special cases
         "D/ST": ["DST"],
         "DST": ["DST"],
+        # Multi-position (Travis Hunter type)
+        "WR/DB": ["WR", "CB", "S", "LB"],  # Multi-position players
+        "RB/WR": ["RB", "WR"],
     }
 
     return position_map.get(txn_position.strip().upper(), [txn_position.strip().upper()])
@@ -652,17 +656,69 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
     if alias_path.exists():
         alias_seed = pl.read_csv(alias_path)
-        # Apply aliases first (replace Player with canonical_name where alias exists)
-        df = (
-            df.join(
-                alias_seed.select(["alias_name", "canonical_name"]),
+
+        # Check if alias seed has position column (for position-specific corrections)
+        alias_has_position = "position" in alias_seed.columns
+
+        if alias_has_position and has_position:
+            # Position-aware alias application
+            # Only apply alias if position matches OR alias position is null
+
+            # Check if treat_as_position column exists
+            alias_cols = ["alias_name", "canonical_name", "position"]
+            if "treat_as_position" in alias_seed.columns:
+                alias_cols.append("treat_as_position")
+
+            df = df.join(
+                alias_seed.select(alias_cols),
                 left_on="Player",
                 right_on="alias_name",
                 how="left",
             )
-            .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
-            .drop("canonical_name")
-        )
+
+            # Apply alias only when:
+            # - Alias position is null/empty (general alias), OR
+            # - Alias position matches transaction position
+            df = df.with_columns(
+                pl.when(
+                    pl.col("canonical_name").is_null()  # No alias match
+                    | pl.col("position").is_null()  # General alias (no position specified)
+                    | (pl.col("Position") == pl.col("position"))  # Position-specific match
+                )
+                .then(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]))
+                .otherwise(pl.col("Player"))  # Keep original if position doesn't match
+                .alias("Player")
+            )
+
+            # Override Position column if treat_as_position is specified
+            if "treat_as_position" in df.columns:
+                df = df.with_columns(
+                    pl.when(pl.col("treat_as_position").is_not_null())
+                    .then(pl.col("treat_as_position"))
+                    .otherwise(pl.col("Position"))
+                    .alias("Position")
+                )
+                df = df.drop(["canonical_name", "position", "treat_as_position"])
+            else:
+                df = df.drop(["canonical_name", "position"])
+        else:
+            # Original logic: position-agnostic alias application
+            alias_cols = ["alias_name", "canonical_name"]
+            if alias_has_position:
+                # Position column exists but transaction data doesn't have position
+                # Still use aliases but ignore position column
+                pass
+
+            df = (
+                df.join(
+                    alias_seed.select(alias_cols),
+                    left_on="Player",
+                    right_on="alias_name",
+                    how="left",
+                )
+                .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
+                .drop("canonical_name")
+            )
 
     # Suffix-aware exact match with disambiguation
     # Strategy: For inputs with explicit suffixes (e.g., "Marvin Harrison Jr."), use exact match.
@@ -695,6 +751,7 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         )
 
         # Filter to position-compatible matches only
+        # Position mismatches should be handled via alias seed, not overridden here
         df_exact = df_exact.filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
 
         # Apply suffix-aware disambiguation scoring
