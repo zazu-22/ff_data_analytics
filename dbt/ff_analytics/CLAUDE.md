@@ -3,17 +3,33 @@
 **Location**: `dbt/ff_analytics/`
 **Purpose**: DuckDB + external Parquet dimensional models following Kimball patterns
 
+## Configuration
+
+**IMPORTANT**: `profiles.yml` is in `.gitignore` - you cannot see it with `ls` or `find`, but it exists at `dbt/ff_analytics/profiles.yml`.
+
+**Profile Configuration** (`profiles.yml`):
+- **Profile name**: `ff_duckdb`
+- **Target**: `local` (default) or `ci`
+- **Database path**: `$PWD/dbt/ff_analytics/target/dev.duckdb` (via `DBT_DUCKDB_PATH` env var)
+- **External data root**: `$PWD/data/raw` (via `EXTERNAL_ROOT` env var)
+- **Schema**: `main`
+- **Extensions**: `[httpfs]`
+
+**Environment Variables** (set by Makefile or manually):
+- `EXTERNAL_ROOT` - Path to raw data (e.g., `$PWD/data/raw`)
+- `DBT_DUCKDB_PATH` - Path to DuckDB database file (e.g., `$PWD/dbt/ff_analytics/target/dev.duckdb`)
+- `DBT_TARGET` - Target name (default: `local`)
+- `DBT_THREADS` - Thread count (default: 4)
+- `DBT_SCHEMA` - Schema name (default: `main`)
+
 ## Quick Commands
 
 ```bash
-# From repo root
-make dbt-run    # dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
-make dbt-test   # dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+# From repo root - use Makefile (handles env vars automatically)
+make dbt-run    # dbt run with proper env setup
+make dbt-test   # dbt test with proper env setup
+make dbt-seed   # dbt seed with proper env setup
 make sqlfix     # Auto-fix SQL style issues
-
-# From this directory
-dbt run --profiles-dir .
-dbt test --profiles-dir .
 
 # Run manually from repo root without make
 mkdir -p .uv-cache
@@ -21,6 +37,15 @@ UV_CACHE_DIR="$(pwd)/.uv-cache" uv run env \
     EXTERNAL_ROOT="$(pwd)/data/raw" \
     DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
     dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+
+# Query database directly with DuckDB CLI (from repo root)
+duckdb dbt/ff_analytics/target/dev.duckdb
+# Within DuckDB: SELECT * FROM main.mart_contract_snapshot_current LIMIT 10;
+
+# Run compiled dbt analysis SQL (from repo root)
+EXTERNAL_ROOT="$(pwd)/data/raw" \
+  dbt compile --select <analysis_name> --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+duckdb dbt/ff_analytics/target/dev.duckdb < dbt/ff_analytics/target/compiled/ff_analytics/analyses/<analysis_name>.sql
 ```
 
 ## Model Organization
