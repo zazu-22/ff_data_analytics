@@ -1144,12 +1144,12 @@ def _to_long_roster(roster_all: pl.DataFrame) -> pl.DataFrame:
             .fill_null("")
             .cast(pl.Utf8)
             .str.strip_chars()
-            .map_elements(lambda x: x.lower() == "x"),
+            .str.to_lowercase() == "x",
             franchise=pl.col("fr")
             .fill_null("")
             .cast(pl.Utf8)
             .str.strip_chars()
-            .map_elements(lambda x: x.lower() == "x"),
+            .str.to_lowercase() == "x",
         )
         .drop(["year_str", "amount_str", "total", "fr"])
         .filter(pl.col("amount").is_not_null() & (pl.col("amount") > 0))
