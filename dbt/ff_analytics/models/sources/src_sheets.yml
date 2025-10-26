@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: sheets_raw
-    description: "Raw Commissioner Google Sheets data loaded via commissioner_parser; local dev reads Parquet under ../../data/raw/commissioner/ (relative to dbt project)."
+    description: "Raw Commissioner Google Sheets data loaded via scripts/ingest/ingest_commissioner_sheet.py (atomic rosters + transactions); local dev reads Parquet under ../../data/raw/commissioner/ (relative to dbt project)."
     schema: raw
     tables:
       - name: transactions
@@ -12,8 +12,9 @@ sources:
 
           **Grain**: One row per transaction event per asset
           **Source**: Commissioner Google Sheet TRANSACTIONS tab
-          **Parser**: src/ingest/sheets/commissioner_parser.py::parse_transactions()
-          **Load Pattern**: Batch snapshot to data/raw/commissioner/transactions/dt=YYYY-MM-DD/transactions.parquet
+          **Ingest**: scripts/ingest/ingest_commissioner_sheet.py (parse + write atomically)
+          **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/transactions/dt=YYYY-MM-DD/
+          **Files**: transactions.parquet, _meta.json
 
           **Special Notes**:
           - Extension transactions show full remaining contract in split_array (not just extension amount)
@@ -206,9 +207,9 @@ sources:
 
           **Grain**: One row per franchise per player per obligation year per snapshot date
           **Source**: Commissioner Google Sheet individual franchise tabs (dead cap CSV section)
-          **Parser**: src/ingest/sheets/commissioner_parser.py::write_normalized_v2()
+          **Ingest**: scripts/ingest/ingest_commissioner_sheet.py (parse + write atomically)
           **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/contracts_cut/dt=YYYY-MM-DD/
-          **Files**: contracts_cut.parquet (fixed filename), _meta.json
+          **Files**: contracts_cut.parquet, _meta.json
 
           **Purpose**:
           This table represents the manual dead cap calculations per league rules:

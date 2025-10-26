@@ -45,21 +45,24 @@ PYTHONPATH=. uv run python tools/make_samples.py ffanalytics \
 
 ______________________________________________________________________
 
-### commissioner_parse.py
+### parse_commissioner_local.py
 
-**Purpose**: Parse commissioner sheets → normalized Parquet
+**Purpose**: Parse commissioner sheets from local CSV → normalized Parquet (dev tool)
+
+**Note**: For production ingestion, use `scripts/ingest/ingest_commissioner_sheet.py` instead.
+This tool is for development/testing with local CSV files.
 
 **Usage**:
 
 ```bash
 # From Google Sheets URL
-uv run python tools/commissioner_parse.py \
+uv run python tools/parse_commissioner_local.py \
   --sheet-url <url> \
   --out-raw data/raw/commissioner \
   --out-csv data/review/commissioner
 
 # From local directory (after sampling)
-uv run python tools/commissioner_parse.py \
+uv run python tools/parse_commissioner_local.py \
   --local-dir ./samples/sheets \
   --out-raw data/raw/commissioner \
   --out-csv data/review/commissioner
@@ -67,7 +70,7 @@ uv run python tools/commissioner_parse.py \
 
 **Outputs**:
 
-- Parquet: `data/raw/commissioner/{roster,cut_contracts,draft_picks}/dt=YYYY-MM-DD/`
+- Parquet: `data/raw/commissioner/{contracts_active,contracts_cut,draft_picks}/dt=YYYY-MM-DD/`
 - CSV previews: `data/review/commissioner/*.csv` (for manual review)
 
 **Requires**: `GOOGLE_APPLICATION_CREDENTIALS` or `GOOGLE_APPLICATION_CREDENTIALS_JSON`
@@ -126,15 +129,15 @@ make dbt-test
 ### Commissioner Data Workflow
 
 ```bash
-# 1. Sample from sheets (or use copy_league_sheet.py)
-# GM roster tabs
-uv run python tools/make_samples.py sheets --tabs Andy Gordon Joe JP --sheet-url <url> --out ./samples
+# Production: Unified atomic ingest (rosters + transactions)
+uv run python scripts/ingest/ingest_commissioner_sheet.py
 
-# TRANSACTIONS tab (separate sample for transaction history)
-uv run python tools/make_samples.py sheets --tabs TRANSACTIONS --sheet-url <url> --out ./samples
+# Dev/testing: Parse from local samples
+# 1. Sample from sheets
+uv run python tools/make_samples.py sheets --tabs Andy Gordon Joe JP TRANSACTIONS --sheet-url <url> --out ./samples
 
 # 2. Parse to Parquet
-uv run python tools/commissioner_parse.py --local-dir ./samples/sheets --out-raw data/raw/commissioner
+uv run python tools/parse_commissioner_local.py --local-dir ./samples/sheets --out-raw data/raw/commissioner
 
 # 3. Run dbt staging
 make dbt-run

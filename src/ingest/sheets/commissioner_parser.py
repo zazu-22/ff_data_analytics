@@ -1,12 +1,22 @@
-"""Commissioner sheet parser → normalized tables.
+"""Commissioner sheet parser → normalized DataFrames (pure parsing, no I/O).
+
+PURE PARSING: This module contains only parsing logic (CSV → DataFrames).
+All file I/O has been extracted to `commissioner_writer.py` for clean separation.
 
 Parses exported per-GM CSV tabs like those under `samples/sheets/<GM>/<GM>.csv`
-into normalized dataframes:
+into normalized DataFrames:
   - roster: active roster with contract columns by year
   - cut_contracts: dead cap commitments
   - draft_picks: current draft pick ownership
 
-Writes Parquet to `data/raw/commissioner/<table>/dt=YYYY-MM-DD/` via storage helper.
+Parsing Functions:
+  - parse_gm_tab(csv_path) → ParsedGM
+  - parse_commissioner_dir(dir_path) → List[ParsedGM]
+  - parse_transactions(csv_path) → dict[str, pl.DataFrame]
+  - prepare_roster_tables(parsed_gms) → dict[str, pl.DataFrame]
+
+For file writing, see `commissioner_writer.py`.
+For orchestration, see `scripts/ingest/ingest_commissioner_sheet.py`.
 """
 
 from __future__ import annotations
@@ -17,8 +27,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import polars as pl
-
-from ingest.common.storage import write_parquet_any
 
 
 @dataclass
@@ -241,50 +249,8 @@ def parse_commissioner_dir(in_dir: Path) -> list[ParsedGM]:
     return results
 
 
-def write_normalized(
-    outputs: Iterable[ParsedGM], out_dir: str = "data/raw/commissioner"
-) -> dict[str, int]:
-    """Write normalized parquet snapshots for roster, cuts, picks.
-
-    Returns counts by table.
-    """
-    import uuid
-    from datetime import UTC, datetime
-
-    dt = datetime.now(UTC).strftime("%Y-%m-%d")
-    base = out_dir.rstrip("/")
-    counts = {"roster": 0, "cut_contracts": 0, "draft_picks": 0}
-
-    if outputs:
-        roster_list = [o.roster for o in outputs if o.roster.height > 0]
-        cuts_list = [o.cuts for o in outputs if o.cuts.height > 0]
-        picks_list = [o.picks for o in outputs if o.picks.height > 0]
-        roster_all = pl.concat(roster_list, how="diagonal") if roster_list else pl.DataFrame()
-        cuts_all = pl.concat(cuts_list, how="diagonal") if cuts_list else pl.DataFrame()
-        picks_all = pl.concat(picks_list, how="diagonal") if picks_list else pl.DataFrame()
-    else:
-        roster_all = pl.DataFrame()
-        cuts_all = pl.DataFrame()
-        picks_all = pl.DataFrame()
-
-    if roster_all.height:
-        uri = f"{base}/roster/dt={dt}/roster_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(roster_all, uri)
-        counts["roster"] = roster_all.height
-    if cuts_all.height:
-        uri = f"{base}/cut_contracts/dt={dt}/cut_contracts_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(cuts_all, uri)
-        counts["cut_contracts"] = cuts_all.height
-    if picks_all.height:
-        uri = f"{base}/draft_picks/dt={dt}/draft_picks_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(picks_all, uri)
-        counts["draft_picks"] = picks_all.height
-
-    return counts
-
-
 # -----------------------------
-# V3: TRANSACTIONS parser
+# TRANSACTIONS parser
 # -----------------------------
 
 
@@ -632,6 +598,274 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
     return df.hstack(contract_parsed)
 
 
+def _apply_name_aliases(df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
+    """Apply name alias corrections from seed file."""
+    alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
+    if not alias_path.exists():
+        return df
+
+    alias_seed = pl.read_csv(alias_path)
+    alias_has_position = "position" in alias_seed.columns
+
+    if alias_has_position and has_position:
+        alias_cols = ["alias_name", "canonical_name", "position"]
+        if "treat_as_position" in alias_seed.columns:
+            alias_cols.append("treat_as_position")
+
+        df = df.join(
+            alias_seed.select(alias_cols),
+            left_on="Player",
+            right_on="alias_name",
+            how="left",
+        )
+        df = df.with_columns(
+            pl.when(
+                pl.col("canonical_name").is_null()
+                | pl.col("position").is_null()
+                | (pl.col("Position") == pl.col("position"))
+            )
+            .then(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]))
+            .otherwise(pl.col("Player"))
+            .alias("Player")
+        )
+
+        if "treat_as_position" in df.columns:
+            df = df.with_columns(
+                pl.when(pl.col("treat_as_position").is_not_null())
+                .then(pl.col("treat_as_position"))
+                .otherwise(pl.col("Position"))
+                .alias("Position")
+            )
+            df = df.drop(["canonical_name", "position", "treat_as_position"])
+        else:
+            df = df.drop(["canonical_name", "position"])
+    else:
+        df = (
+            df.join(
+                alias_seed.select(["alias_name", "canonical_name"]),
+                left_on="Player",
+                right_on="alias_name",
+                how="left",
+            )
+            .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
+            .drop("canonical_name")
+        )
+    return df
+
+
+def _score_and_select_best_match(
+    df_joined: pl.DataFrame, row_idx_col: str, has_position: bool
+) -> pl.DataFrame:
+    """Score player matches and select best candidate per row."""
+    scored_matches = []
+    for row in df_joined.iter_rows(named=True):
+        if row["player_id"] is None:
+            scored_matches.append({row_idx_col: row[row_idx_col], "player_id": None, "score": -1.0})
+        else:
+            _, input_suffix = _extract_suffix(row["Player"])
+            _, xref_suffix = _extract_suffix(row["name"])
+
+            base_score = _calculate_player_score(
+                player_row={
+                    "name": row["name"],
+                    "position": row.get("position"),
+                    "team": row["team"],
+                    "draft_year": row["draft_year"],
+                },
+                input_suffix=input_suffix,
+                has_position=has_position,
+                input_position=row.get("Position"),
+            )
+
+            if row["Player"] == row["name"]:
+                if input_suffix and xref_suffix and input_suffix == xref_suffix:
+                    base_score += 10000
+                elif input_suffix is None and xref_suffix is None:
+                    base_score += 100
+                else:
+                    base_score -= 100
+
+            scored_matches.append(
+                {row_idx_col: row[row_idx_col], "player_id": row["player_id"], "score": base_score}
+            )
+
+    df_scored = pl.DataFrame(scored_matches)
+    return df_scored.sort("score", descending=True).unique(
+        subset=[row_idx_col], keep="first", maintain_order=False
+    )
+
+
+def _exact_match_with_position(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+    """Perform exact match with position filtering and suffix disambiguation."""
+    df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
+        pl.col("Player")
+        .map_elements(_normalize_player_name, return_dtype=pl.String)
+        .alias("player_base_name")
+    )
+
+    df_exact = df_with_idx.join(
+        xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
+        left_on="player_base_name",
+        right_on="merge_name",
+        how="left",
+    )
+
+    df_exact = df_exact.with_columns(
+        pl.when(pl.col("player_id").is_null())
+        .then(False)
+        .otherwise(
+            pl.col("Position")
+            .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
+            .list.contains(pl.col("position"))
+        )
+        .alias("position_compatible_exact")
+    ).filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
+
+    df_exact_ids = _score_and_select_best_match(df_exact, "_row_idx_exact", True).select(
+        ["_row_idx_exact", pl.col("player_id").alias("player_id_exact")]
+    )
+
+    return df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
+        ["_row_idx_exact", "player_base_name"]
+    )
+
+
+def _exact_match_no_position(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+    """Perform exact match without position (roster parsing)."""
+    df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
+        pl.col("Player")
+        .map_elements(_normalize_player_name, return_dtype=pl.String)
+        .alias("player_base_name")
+    )
+
+    df_exact = df_with_idx.join(
+        xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
+        left_on="player_base_name",
+        right_on="merge_name",
+        how="left",
+    )
+
+    df_exact_ids = _score_and_select_best_match(df_exact, "_row_idx_exact", False).select(
+        ["_row_idx_exact", pl.col("player_id").alias("player_id_exact")]
+    )
+
+    return df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
+        ["_row_idx_exact", "player_base_name"]
+    )
+
+
+def _fuzzy_match_with_position(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+    """Perform fuzzy match with position filtering."""
+    df_with_idx = df.with_row_index("_row_idx_fuzzy")
+
+    df_fuzzy = df_with_idx.join(
+        xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
+        left_on="player_normalized",
+        right_on="merge_name",
+        how="left",
+    )
+
+    df_fuzzy = df_fuzzy.with_columns(
+        pl.when(pl.col("player_id").is_null())
+        .then(False)
+        .otherwise(
+            pl.col("Position")
+            .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
+            .list.contains(pl.col("position"))
+        )
+        .alias("position_compatible_fuzzy")
+    ).filter(pl.col("position_compatible_fuzzy") | pl.col("player_id").is_null())
+
+    df_fuzzy_ids = _score_and_select_best_match(df_fuzzy, "_row_idx_fuzzy", True).select(
+        ["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")]
+    )
+
+    return df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
+
+
+def _fuzzy_match_no_position(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+    """Perform fuzzy match without position."""
+    df_with_idx = df.with_row_index("_row_idx_fuzzy")
+
+    df_fuzzy = df_with_idx.join(
+        xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
+        left_on="player_normalized",
+        right_on="merge_name",
+        how="left",
+    )
+
+    df_fuzzy_ids = _score_and_select_best_match(df_fuzzy, "_row_idx_fuzzy", False).select(
+        ["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")]
+    )
+
+    return df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
+
+
+def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+    """Perform partial name matching for difficult cases."""
+    df = df.with_columns(
+        pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")]).alias(
+            "player_id_prelim"
+        )
+    )
+
+    unmapped_mask = (pl.col("player_id_prelim").is_null()) & (pl.col("asset_type") == "player")
+
+    df = df.with_columns(
+        pl.when(unmapped_mask)
+        .then(pl.col("Player").str.split(" ").list.first())
+        .alias("first_name_token"),
+        pl.when(unmapped_mask)
+        .then(pl.col("Player").str.split(" ").list.last())
+        .alias("last_name_token"),
+    )
+
+    df_unmapped_for_partial = df.filter(unmapped_mask)
+
+    partial_matches = []
+    for row in df_unmapped_for_partial.iter_rows(named=True):
+        if not row["first_name_token"] or not row["last_name_token"]:
+            partial_matches.append(None)
+            continue
+
+        compatible_positions = _normalize_position(row["Position"])
+        candidates = xref.filter(pl.col("position").is_in(compatible_positions))
+
+        match = candidates.filter(
+            pl.col("name").str.contains(row["first_name_token"], literal=True)
+            & pl.col("name").str.contains(row["last_name_token"], literal=True)
+        )
+
+        partial_matches.append(match["player_id"][0] if match.height > 0 else None)
+
+    df_partial = df_unmapped_for_partial.with_columns(
+        pl.Series("player_id_partial", partial_matches)
+    )
+    df_unmapped = df.filter(~unmapped_mask).with_columns(
+        pl.lit(None).cast(pl.Int64).alias("player_id_partial")
+    )
+
+    df = pl.concat([df_unmapped, df_partial], how="diagonal")
+
+    return df.with_columns(
+        pl.coalesce(
+            [pl.col("player_id_exact"), pl.col("player_id_fuzzy"), pl.col("player_id_partial")]
+        )
+        .fill_null(-1)
+        .alias("player_id")
+    ).drop(
+        [
+            "player_id_exact",
+            "player_id_fuzzy",
+            "player_id_prelim",
+            "player_id_partial",
+            "first_name_token",
+            "last_name_token",
+            "player_normalized",
+        ]
+    )
+
+
 def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     """Map player names to player_id using crosswalk and alias seeds.
 
@@ -651,477 +885,31 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         raise FileNotFoundError(f"dim_player_id_xref seed not found at {xref_path}")
 
     xref = pl.read_csv(xref_path)
-
-    # Check if Position column exists (only in transactions, not roster)
     has_position = "Position" in df.columns
 
-    # Load name alias seed for typo corrections
-    alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
-    if alias_path.exists():
-        alias_seed = pl.read_csv(alias_path)
+    # Apply name aliases
+    df = _apply_name_aliases(df, has_position)
 
-        # Check if alias seed has position column (for position-specific corrections)
-        alias_has_position = "position" in alias_seed.columns
+    # Exact match
+    df = (
+        _exact_match_with_position(df, xref) if has_position else _exact_match_no_position(df, xref)
+    )
 
-        if alias_has_position and has_position:
-            # Position-aware alias application
-            # Only apply alias if position matches OR alias position is null
-
-            # Check if treat_as_position column exists
-            alias_cols = ["alias_name", "canonical_name", "position"]
-            if "treat_as_position" in alias_seed.columns:
-                alias_cols.append("treat_as_position")
-
-            df = df.join(
-                alias_seed.select(alias_cols),
-                left_on="Player",
-                right_on="alias_name",
-                how="left",
-            )
-
-            # Apply alias only when:
-            # - Alias position is null/empty (general alias), OR
-            # - Alias position matches transaction position
-            df = df.with_columns(
-                pl.when(
-                    pl.col("canonical_name").is_null()  # No alias match
-                    | pl.col("position").is_null()  # General alias (no position specified)
-                    | (pl.col("Position") == pl.col("position"))  # Position-specific match
-                )
-                .then(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]))
-                .otherwise(pl.col("Player"))  # Keep original if position doesn't match
-                .alias("Player")
-            )
-
-            # Override Position column if treat_as_position is specified
-            if "treat_as_position" in df.columns:
-                df = df.with_columns(
-                    pl.when(pl.col("treat_as_position").is_not_null())
-                    .then(pl.col("treat_as_position"))
-                    .otherwise(pl.col("Position"))
-                    .alias("Position")
-                )
-                df = df.drop(["canonical_name", "position", "treat_as_position"])
-            else:
-                df = df.drop(["canonical_name", "position"])
-        else:
-            # Original logic: position-agnostic alias application
-            alias_cols = ["alias_name", "canonical_name"]
-            if alias_has_position:
-                # Position column exists but transaction data doesn't have position
-                # Still use aliases but ignore position column
-                pass
-
-            df = (
-                df.join(
-                    alias_seed.select(alias_cols),
-                    left_on="Player",
-                    right_on="alias_name",
-                    how="left",
-                )
-                .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
-                .drop("canonical_name")
-            )
-
-    # Suffix-aware exact match with disambiguation
-    # Strategy: For inputs with explicit suffixes (e.g., "Marvin Harrison Jr."), use exact match.
-    # For inputs without suffixes that have suffix variants, use disambiguation logic.
-    if has_position:
-        # Exact match with suffix-aware disambiguation
-        df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
-            pl.col("Player")
-            .map_elements(_normalize_player_name, return_dtype=pl.String)
-            .alias("player_base_name")
-        )
-
-        df_exact = df_with_idx.join(
-            xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
-            left_on="player_base_name",
-            right_on="merge_name",
-            how="left",
-        )
-
-        # Add position compatibility flag
-        df_exact = df_exact.with_columns(
-            pl.when(pl.col("player_id").is_null())
-            .then(False)
-            .otherwise(
-                pl.col("Position")
-                .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
-                .list.contains(pl.col("position"))
-            )
-            .alias("position_compatible_exact")
-        )
-
-        # Filter to position-compatible matches only
-        # Position mismatches should be handled via alias seed, not overridden here
-        df_exact = df_exact.filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
-
-        # Apply suffix-aware disambiguation scoring
-        scored_matches = []
-        for row in df_exact.iter_rows(named=True):
-            if row["player_id"] is None:
-                scored_matches.append(
-                    {
-                        "_row_idx_exact": row["_row_idx_exact"],
-                        "player_id": None,
-                        "score": -1.0,
-                    }
-                )
-            else:
-                # Extract suffix from input
-                _, input_suffix = _extract_suffix(row["Player"])
-                _, xref_suffix = _extract_suffix(row["name"])
-
-                # Calculate disambiguation score
-                base_score = _calculate_player_score(
-                    player_row={
-                        "name": row["name"],
-                        "position": row["position"],
-                        "team": row["team"],
-                        "draft_year": row["draft_year"],
-                    },
-                    input_suffix=input_suffix,
-                    has_position=True,
-                    input_position=row.get("Position"),
-                )
-
-                # Extra boost for perfect string match
-                if row["Player"] == row["name"]:
-                    # Perfect match with explicit suffix match → strong boost
-                    if input_suffix and xref_suffix and input_suffix == xref_suffix:
-                        base_score += 10000
-                    # Perfect match with no suffixes → apply only if this is the ONLY candidate
-                    # (we can't tell here, so give small boost and let heuristics decide)
-                    elif input_suffix is None and xref_suffix is None:
-                        base_score += 100
-                    # Suffix mismatch → small penalty
-                    else:
-                        base_score -= 100
-
-                scored_matches.append(
-                    {
-                        "_row_idx_exact": row["_row_idx_exact"],
-                        "player_id": row["player_id"],
-                        "score": base_score,
-                    }
-                )
-
-        # Convert to DataFrame and keep highest-scoring match per row
-        df_scored = pl.DataFrame(scored_matches)
-        df_exact_ids = (
-            df_scored.sort("score", descending=True)
-            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=False)
-            .select(["_row_idx_exact", pl.col("player_id").alias("player_id_exact")])
-        )
-
-        # Join back to original df
-        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
-            ["_row_idx_exact", "player_base_name"]
-        )
-    else:
-        # Exact match without position (roster parsing)
-        # Still use suffix-aware logic for disambiguation
-        df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
-            pl.col("Player")
-            .map_elements(_normalize_player_name, return_dtype=pl.String)
-            .alias("player_base_name")
-        )
-
-        df_exact = df_with_idx.join(
-            xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
-            left_on="player_base_name",
-            right_on="merge_name",
-            how="left",
-        )
-
-        # Apply suffix-aware disambiguation scoring
-        scored_matches = []
-        for row in df_exact.iter_rows(named=True):
-            if row["player_id"] is None:
-                scored_matches.append(
-                    {
-                        "_row_idx_exact": row["_row_idx_exact"],
-                        "player_id": None,
-                        "score": -1.0,
-                    }
-                )
-            else:
-                _, input_suffix = _extract_suffix(row["Player"])
-                _, xref_suffix = _extract_suffix(row["name"])
-
-                base_score = _calculate_player_score(
-                    player_row={
-                        "name": row["name"],
-                        "position": None,
-                        "team": row["team"],
-                        "draft_year": row["draft_year"],
-                    },
-                    input_suffix=input_suffix,
-                    has_position=False,
-                    input_position=None,
-                )
-
-                # Extra boost for perfect string match
-                if row["Player"] == row["name"]:
-                    # Perfect match with explicit suffix match → strong boost
-                    if input_suffix and xref_suffix and input_suffix == xref_suffix:
-                        base_score += 10000
-                    # Perfect match with no suffixes → small boost, let heuristics decide
-                    elif input_suffix is None and xref_suffix is None:
-                        base_score += 100
-                    # Suffix mismatch → small penalty
-                    else:
-                        base_score -= 100
-
-                scored_matches.append(
-                    {
-                        "_row_idx_exact": row["_row_idx_exact"],
-                        "player_id": row["player_id"],
-                        "score": base_score,
-                    }
-                )
-
-        df_scored = pl.DataFrame(scored_matches)
-        df_exact_ids = (
-            df_scored.sort("score", descending=True)
-            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=False)
-            .select(["_row_idx_exact", pl.col("player_id").alias("player_id_exact")])
-        )
-
-        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
-            ["_row_idx_exact", "player_base_name"]
-        )
-
-    # Enhanced fuzzy match with suffix-aware disambiguation
-    # For rows that didn't match exactly, use base name matching with intelligent disambiguation
+    # Fuzzy match
     df = df.with_columns(
         pl.when(pl.col("player_id_exact").is_null() & (pl.col("asset_type") == "player"))
         .then(pl.col("Player").map_elements(_normalize_player_name, return_dtype=pl.String))
         .alias("player_normalized")
     )
 
+    df = (
+        _fuzzy_match_with_position(df, xref) if has_position else _fuzzy_match_no_position(df, xref)
+    )
+
+    # Partial match (position only) or final coalesce
     if has_position:
-        # Suffix-aware fuzzy match with position and recency-based disambiguation
-        df_with_idx = df.with_row_index("_row_idx_fuzzy")
-
-        df_fuzzy = df_with_idx.join(
-            xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
-            left_on="player_normalized",
-            right_on="merge_name",
-            how="left",
-        )
-
-        # Add position compatibility flag
-        df_fuzzy = df_fuzzy.with_columns(
-            pl.when(pl.col("player_id").is_null())
-            .then(False)
-            .otherwise(
-                pl.col("Position")
-                .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
-                .list.contains(pl.col("position"))
-            )
-            .alias("position_compatible_fuzzy")
-        )
-
-        # Filter to position-compatible matches only
-        df_fuzzy = df_fuzzy.filter(pl.col("position_compatible_fuzzy") | pl.col("player_id").is_null())
-
-        # Calculate disambiguation score for each candidate
-        # Row-by-row scoring to handle suffix extraction and scoring logic
-        scored_matches = []
-        for row in df_fuzzy.iter_rows(named=True):
-            if row["player_id"] is None:
-                # No match found
-                scored_matches.append(
-                    {
-                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
-                        "player_id": None,
-                        "score": -1.0,
-                    }
-                )
-            else:
-                # Extract suffix from input
-                _, input_suffix = _extract_suffix(row["Player"])
-
-                # Calculate score
-                score = _calculate_player_score(
-                    player_row={
-                        "name": row["name"],
-                        "position": row["position"],
-                        "team": row["team"],
-                        "draft_year": row["draft_year"],
-                    },
-                    input_suffix=input_suffix,
-                    has_position=True,
-                    input_position=row.get("Position"),
-                )
-
-                scored_matches.append(
-                    {
-                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
-                        "player_id": row["player_id"],
-                        "score": score,
-                    }
-                )
-
-        # Convert to DataFrame and keep highest-scoring match per row
-        df_scored = pl.DataFrame(scored_matches)
-        df_fuzzy_ids = (
-            df_scored.sort("score", descending=True)
-            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=False)
-            .select(["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")])
-        )
-
-        # Join back to original df
-        df = df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
+        df = _partial_match(df, xref)
     else:
-        # Fuzzy match without position (roster parsing)
-        # Still use suffix-aware disambiguation even without position
-        df_with_idx = df.with_row_index("_row_idx_fuzzy")
-
-        df_fuzzy = df_with_idx.join(
-            xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
-            left_on="player_normalized",
-            right_on="merge_name",
-            how="left",
-        )
-
-        # Calculate disambiguation score for each candidate
-        scored_matches = []
-        for row in df_fuzzy.iter_rows(named=True):
-            if row["player_id"] is None:
-                scored_matches.append(
-                    {
-                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
-                        "player_id": None,
-                        "score": -1.0,
-                    }
-                )
-            else:
-                # Extract suffix from input
-                _, input_suffix = _extract_suffix(row["Player"])
-
-                # Calculate score (no position available)
-                score = _calculate_player_score(
-                    player_row={
-                        "name": row["name"],
-                        "position": None,
-                        "team": row["team"],
-                        "draft_year": row["draft_year"],
-                    },
-                    input_suffix=input_suffix,
-                    has_position=False,
-                    input_position=None,
-                )
-
-                scored_matches.append(
-                    {
-                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
-                        "player_id": row["player_id"],
-                        "score": score,
-                    }
-                )
-
-        # Convert to DataFrame and keep highest-scoring match per row
-        df_scored = pl.DataFrame(scored_matches)
-        df_fuzzy_ids = (
-            df_scored.sort("score", descending=True)
-            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=False)
-            .select(["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")])
-        )
-
-        # Join back to original df
-        df = df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
-
-    # Add a third tier:
-    # Partial name matching for difficult cases (e.g., "Josh Allen" → "Josh Hines-Allen")
-    # Only attempt for rows that are still unmapped after exact and fuzzy
-    if has_position:
-        # Identify unmapped rows
-        df = df.with_columns(
-            pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")]).alias(
-                "player_id_prelim"
-            )
-        )
-
-        unmapped_mask = (pl.col("player_id_prelim").is_null()) & (pl.col("asset_type") == "player")
-
-        #  For unmapped players, try partial name matching with position filter
-        # Extract first and last name tokens for matching
-        df = df.with_columns(
-            pl.when(unmapped_mask)
-            .then(
-                pl.col("Player").str.split(" ").list.first()  # First name
-            )
-            .alias("first_name_token"),
-            pl.when(unmapped_mask)
-            .then(
-                pl.col("Player").str.split(" ").list.last()  # Last name
-            )
-            .alias("last_name_token"),
-        )
-
-        # For unmapped players, try partial name matching (optimized with manual iteration)
-        # Build a position-filtered lookup for common partial matches
-        df_unmapped_for_partial = df.filter(unmapped_mask)
-
-        # Manual row-by-row partial matching
-        # More efficient than cross join for small unmapped sets
-        partial_matches = []
-        for row in df_unmapped_for_partial.iter_rows(named=True):
-            if not row["first_name_token"] or not row["last_name_token"]:
-                partial_matches.append(None)
-                continue
-
-            # Filter crosswalk to position-compatible candidates
-            compatible_positions = _normalize_position(row["Position"])
-            candidates = xref.filter(pl.col("position").is_in(compatible_positions))
-
-            # Find first candidate where name contains both tokens
-            match = candidates.filter(
-                pl.col("name").str.contains(row["first_name_token"], literal=True)
-                & pl.col("name").str.contains(row["last_name_token"], literal=True)
-            )
-
-            if match.height > 0:
-                partial_matches.append(match["player_id"][0])
-            else:
-                partial_matches.append(None)
-
-        # Add partial matches back to unmapped rows
-        df_partial = df_unmapped_for_partial.with_columns(
-            pl.Series("player_id_partial", partial_matches)
-        )
-
-        # Combine mapped and unmapped
-        df_unmapped = df.filter(~unmapped_mask).with_columns(
-            pl.lit(None).cast(pl.Int64).alias("player_id_partial")
-        )
-
-        # Combine
-        df = pl.concat([df_unmapped, df_partial], how="diagonal")
-
-        # Final coalesce
-        df = df.with_columns(
-            pl.coalesce(
-                [pl.col("player_id_exact"), pl.col("player_id_fuzzy"), pl.col("player_id_partial")]
-            )
-            .fill_null(-1)
-            .alias("player_id")
-        ).drop(
-            [
-                "player_id_exact",
-                "player_id_fuzzy",
-                "player_id_prelim",
-                "player_id_partial",
-                "first_name_token",
-                "last_name_token",
-                "player_normalized",
-            ]
-        )
-    else:
-        # No position info, just coalesce exact and fuzzy
         df = df.with_columns(
             pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")])
             .fill_null(-1)
@@ -1141,8 +929,6 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             'unmapped_picks': QA table for TBD picks
 
     """
-    from datetime import UTC, datetime
-
     # Load raw transactions
     df = pl.read_csv(csv_path)
 
@@ -1266,24 +1052,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
         (pl.col("asset_type") == "pick") & (pl.col("pick_id").is_null())
     ).select(["Player", "Pick", "Time Frame", "From", "To"])
 
-    # Write output
-    dt = datetime.now(UTC).strftime("%Y-%m-%d")
-    base_path = "data/raw/commissioner/transactions"
-
-    # Main transactions table
-    uri = f"{base_path}/dt={dt}/transactions.parquet"
-    write_parquet_any(transactions, uri)
-
-    # QA tables for observability
-    qa_base = "data/raw/commissioner/transactions_qa"
-    if unmapped_players.height > 0:
-        unmapped_uri = f"{qa_base}/dt={dt}/unmapped_players.parquet"
-        write_parquet_any(unmapped_players, unmapped_uri)
-
-    if unmapped_picks.height > 0:
-        unmapped_picks_uri = f"{qa_base}/dt={dt}/unmapped_picks.parquet"
-        write_parquet_any(unmapped_picks, unmapped_picks_uri)
-
+    # Return DataFrames (no I/O - that's handled by commissioner_writer.py)
     return {
         "transactions": transactions,
         "unmapped_players": unmapped_players,
@@ -1292,7 +1061,65 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
 
 
 # -----------------------------
-# V2: normalized long-form tables
+# Roster table preparation (transforms parsed GM tabs to long-form)
+# -----------------------------
+
+
+def prepare_roster_tables(outputs: Iterable[ParsedGM]) -> dict[str, pl.DataFrame]:
+    """Transform parsed GM tabs into long-form normalized tables.
+
+    This function aggregates all parsed GM tabs and transforms them into
+    the final table structures. It does NOT perform any file I/O - for writing,
+    use commissioner_writer.write_all_commissioner_tables().
+
+    Args:
+        outputs: Iterable of ParsedGM objects (from parse_commissioner_dir)
+
+    Returns:
+        Dict with keys:
+            - 'contracts_active': Active roster contracts (long-form)
+            - 'contracts_cut': Dead cap obligations (long-form)
+            - 'draft_picks': Draft pick ownership
+            - 'draft_pick_conditions': Conditional picks
+
+    Example:
+        parsed_gms = parse_commissioner_dir(Path("samples/sheets"))
+        tables = prepare_roster_tables(parsed_gms)
+        # tables['contracts_active'] is ready for writing
+
+    """
+    # Aggregate DataFrames from all GM tabs
+    roster_all = (
+        pl.concat([o.roster for o in outputs if o.roster.height > 0], how="diagonal")
+        if outputs
+        else pl.DataFrame()
+    )
+    cuts_all = (
+        pl.concat([o.cuts for o in outputs if o.cuts.height > 0], how="diagonal")
+        if outputs
+        else pl.DataFrame()
+    )
+    picks_all = (
+        pl.concat([o.picks for o in outputs if o.picks.height > 0], how="diagonal")
+        if outputs
+        else pl.DataFrame()
+    )
+
+    # Transform to long-form tables
+    contracts_active = _to_long_roster(roster_all)
+    contracts_cut = _to_long_cuts(cuts_all)
+    picks_tbl, conds_tbl = _to_picks_tables(picks_all)
+
+    return {
+        "contracts_active": contracts_active,
+        "contracts_cut": contracts_cut,
+        "draft_picks": picks_tbl,
+        "draft_pick_conditions": conds_tbl,
+    }
+
+
+# -----------------------------
+# V2: normalized long-form tables (internal helpers)
 # -----------------------------
 
 
@@ -1423,62 +1250,3 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         & (pl.col("trade_conditions").cast(pl.Utf8).str.strip_chars() != "")
     ).select(["gm", "year", "round", pl.col("trade_conditions").alias("condition_text")])
     return picks_tbl, conds
-
-
-def write_normalized_v2(
-    outputs: Iterable[ParsedGM], out_dir: str = "data/raw/commissioner"
-) -> dict[str, int]:
-    """Write long-form normalized tables for contracts and picks."""
-    import uuid
-    from datetime import UTC, datetime
-
-    dt = datetime.now(UTC).strftime("%Y-%m-%d")
-    base = out_dir.rstrip("/")
-    counts: dict[str, int] = {
-        "contracts_active": 0,
-        "contracts_cut": 0,
-        "draft_picks": 0,
-        "draft_pick_conditions": 0,
-    }
-
-    roster_all = (
-        pl.concat([o.roster for o in outputs if o.roster.height > 0], how="diagonal")
-        if outputs
-        else pl.DataFrame()
-    )
-    cuts_all = (
-        pl.concat([o.cuts for o in outputs if o.cuts.height > 0], how="diagonal")
-        if outputs
-        else pl.DataFrame()
-    )
-    picks_all = (
-        pl.concat([o.picks for o in outputs if o.picks.height > 0], how="diagonal")
-        if outputs
-        else pl.DataFrame()
-    )
-
-    contracts_active = _to_long_roster(roster_all)
-    contracts_cut = _to_long_cuts(cuts_all)
-    picks_tbl, conds_tbl = _to_picks_tables(picks_all)
-
-    if not contracts_active.is_empty():
-        uri = f"{base}/contracts_active/dt={dt}/contracts_active_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(contracts_active, uri)
-        counts["contracts_active"] = int(contracts_active.height)
-    if not contracts_cut.is_empty():
-        uri = f"{base}/contracts_cut/dt={dt}/contracts_cut_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(contracts_cut, uri)
-        counts["contracts_cut"] = int(contracts_cut.height)
-    if not picks_tbl.is_empty():
-        uri = f"{base}/draft_picks/dt={dt}/draft_picks_{uuid.uuid4().hex[:8]}.parquet"
-        write_parquet_any(picks_tbl, uri)
-        counts["draft_picks"] = int(picks_tbl.height)
-    if not conds_tbl.is_empty():
-        uri = (
-            f"{base}/draft_pick_conditions/dt={dt}/draft_pick_conditions_"
-            f"{uuid.uuid4().hex[:8]}.parquet"
-        )
-        write_parquet_any(conds_tbl, uri)
-        counts["draft_pick_conditions"] = int(conds_tbl.height)
-
-    return counts

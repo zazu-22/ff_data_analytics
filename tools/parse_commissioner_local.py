@@ -1,11 +1,21 @@
-"""Commissioner Sheets end-to-end parser runner.
+"""Parse Commissioner sheets from local CSV → normalized Parquet (dev tool).
+
+⚠️  DEVELOPMENT TOOL ONLY
+For production ingestion, use scripts/ingest/ingest_commissioner_sheet.py instead.
+
+This tool is for local development and testing. It parses GM roster tabs from
+local CSV files (or downloads them from Sheets) and writes normalized Parquet.
+
+IMPORTANT: This tool does NOT guarantee atomic consistency between rosters and
+transactions. For production, always use the unified ingest script which ensures
+rosters and transactions are from the same sheet snapshot.
 
 Options:
 - Pull tabs from a Google Sheet (by URL) into a local temp dir, then parse
 - Or parse an existing local directory exported earlier (e.g., from samples)
 
 Outputs:
-- Writes normalized Parquet to `--out-raw` via the storage helper (local or gs://)
+- Writes normalized Parquet to `--out-raw` via commissioner_writer
 - Writes human-readable CSV previews to `--out-csv` for manual review
 
 Credentials (for --sheet-url mode):
@@ -26,8 +36,9 @@ from dotenv import load_dotenv
 from ingest.sheets.commissioner_parser import (
     ParsedGM,
     parse_commissioner_dir,
-    write_normalized_v2,
+    prepare_roster_tables,
 )
+from ingest.sheets.commissioner_writer import write_all_commissioner_tables
 
 
 def _export_tabs(sheet_url: str, tabs: list[str], out_dir: Path, max_rows: int = 2000) -> Path:
@@ -168,8 +179,18 @@ def main() -> int:
 
     parsed = parse_commissioner_dir(Path(input_dir))
 
-    # Write normalized v2 Parquet via helper
-    write_normalized_v2(parsed, out_dir=args.out_raw)
+    # Transform to long-form tables using parser function
+    roster_tables = prepare_roster_tables(parsed)
+
+    # Write normalized Parquet via writer
+    write_all_commissioner_tables(
+        roster_tables=roster_tables,
+        transactions_tables={
+            "transactions": pl.DataFrame(),
+            "unmapped_players": pl.DataFrame(),
+        },  # Not parsing TRANSACTIONS tab here
+        base_uri=args.out_raw,
+    )
 
     # Optionally write raw tabs (Tier 0) to Parquet if requested
     if args.out_raw_tabs:
@@ -190,47 +211,14 @@ def main() -> int:
     dt = datetime.now(UTC).strftime("%Y-%m-%d")
     out_csv_base = Path(args.out_csv)
     out_csv_base.mkdir(parents=True, exist_ok=True)
-    # Build v2 tables for CSV preview
-    roster_all = (
-        pl.concat([p.roster for p in parsed if p.roster.height > 0], how="diagonal")
-        if parsed
-        else pl.DataFrame()
-    )
-    cuts_all = (
-        pl.concat([p.cuts for p in parsed if p.cuts.height > 0], how="diagonal")
-        if parsed
-        else pl.DataFrame()
-    )
-    picks_all = (
-        pl.concat([p.picks for p in parsed if p.picks.height > 0], how="diagonal")
-        if parsed
-        else pl.DataFrame()
-    )
 
-    from ingest.sheets.commissioner_parser import (
-        _to_long_cuts,
-        _to_long_roster,
-        _to_picks_tables,
-    )
-
-    contracts_active = _to_long_roster(roster_all)
-    contracts_cut = _to_long_cuts(cuts_all)
-    picks_tbl, conds_tbl = _to_picks_tables(picks_all)
-
-    previews = {
-        "contracts_active": contracts_active,
-        "contracts_cut": contracts_cut,
-        "draft_picks": picks_tbl,
-        "draft_pick_conditions": conds_tbl,
-    }
-
-    for name, frame in previews.items():
+    for name, frame in roster_tables.items():
         if frame.is_empty():
             continue
         tdir = out_csv_base / name / f"dt={dt}"
         tdir.mkdir(parents=True, exist_ok=True)
         (tdir / f"{name}.csv").write_text(frame.write_csv())
-    print(json.dumps({k: int(v.height) for k, v in previews.items()}))
+    print(json.dumps({k: int(v.height) for k, v in roster_tables.items()}))
     return 0
 
 
