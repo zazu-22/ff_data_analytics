@@ -27,6 +27,7 @@ service-account-*.json
 
 # Data directories (for local development)
 data/raw/
+data/review/
 
 # dbt build artifacts
 dbt/**/target/
