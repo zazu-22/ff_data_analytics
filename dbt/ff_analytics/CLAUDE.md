@@ -14,6 +14,13 @@ make sqlfix     # Auto-fix SQL style issues
 # From this directory
 dbt run --profiles-dir .
 dbt test --profiles-dir .
+
+# Run manually from repo root without make
+mkdir -p .uv-cache
+UV_CACHE_DIR="$(pwd)/.uv-cache" uv run env \
+    EXTERNAL_ROOT="$(pwd)/data/raw" \
+    DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
+    dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
 ```
 
 ## Model Organization
@@ -70,7 +77,7 @@ tests:
 
 The project implements a **2×2 model** for player performance data:
 
-```
+```text
                  Real-World Stats              Fantasy Points
                  ────────────────              ──────────────
 Actuals          fact_player_stats        →    mart_fantasy_actuals_weekly

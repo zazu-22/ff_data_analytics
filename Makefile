@@ -17,14 +17,18 @@ samples-nflverse:
 dbt-run:
 	@echo "Running dbt (ensure dbt-duckdb is installed)"
 	@mkdir -p dbt/ff_analytics/target
-	env EXTERNAL_ROOT="$$PWD/data/raw" \
+	@mkdir -p .uv-cache
+	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
+		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
 		dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
 
 dbt-test:
 	@echo "Testing dbt models"
 	@mkdir -p dbt/ff_analytics/target
-	env EXTERNAL_ROOT="$$PWD/data/raw" \
+	@mkdir -p .uv-cache
+	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
+		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
 		dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
 
