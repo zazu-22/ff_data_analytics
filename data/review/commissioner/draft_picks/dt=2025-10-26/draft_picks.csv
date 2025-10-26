@@ -1,0 +1,347 @@
+gm,year,round,source_type,original_owner,acquired_from,acquisition_note,condition_flag
+Andy Shepard,2026,1,acquired,,Andy,Andy,true
+Andy Shepard,2026,2,acquired,,Andy,Andy,true
+Andy Shepard,2026,3,acquired,,Andy,Andy,true
+Andy Shepard,2026,4,acquired,,Andy,Andy,true
+Andy Shepard,2026,5,acquired,,Andy,Andy,true
+Andy Shepard,2026,2,acquired,,comp (J. Waddle),comp (J. Waddle),true
+Chip Buckley,2026,1,acquired,,Traded to James,Traded to James,true
+Chip Buckley,2026,2,acquired,,Chip,Chip,true
+Chip Buckley,2026,3,acquired,,Chip,Chip,true
+Chip Buckley,2026,4,acquired,,Chip,Chip,true
+Chip Buckley,2026,5,acquired,,Chip,Chip,true
+Chip Buckley,2026,1,acquired,,James,James,true
+Chip Buckley,2026,2,acquired,,James,James,true
+Chip Buckley,2026,2,acquired,,Piper,Piper,true
+Chip Buckley,2026,3,acquired,,Kevin,Kevin,true
+Eric Cookmeyer,2026,1,acquired,,Traded to James,Traded to James,true
+Eric Cookmeyer,2026,2,acquired,,Eric,Eric,true
+Eric Cookmeyer,2026,3,acquired,,Eric,Eric,true
+Eric Cookmeyer,2026,4,acquired,,Eric,Eric,true
+Eric Cookmeyer,2026,5,acquired,,Traded to Piper,Traded to Piper,true
+Eric Cookmeyer,2026,1,acquired,,Compensation,Compensation,true
+Eric Cookmeyer,2026,2,acquired,,comp (P. Mahomes),comp (P. Mahomes),true
+Eric Cookmeyer,2026,3,acquired,,Piper,Piper,true
+Eric Cookmeyer,2026,3,acquired,,TJ,TJ,true
+Eric Cookmeyer,2026,4,acquired,,James,James,true
+Eric Cookmeyer,2026,4,acquired,,TJ,TJ,true
+Eric Cookmeyer,2026,5,acquired,,James,James,true
+Gordon Peterson,2026,1,acquired,,Traded to JP,Traded to JP,true
+Gordon Peterson,2026,2,acquired,,Gordon,Gordon,true
+Gordon Peterson,2026,3,acquired,,Gordon,Gordon,true
+Gordon Peterson,2026,4,acquired,,Gordon,Gordon,true
+Gordon Peterson,2026,5,acquired,,Gordon,Gordon,true
+Gordon Peterson,2026,1,acquired,,comp (D. Smith),comp (D. Smith),true
+Gordon Peterson,2026,2,acquired,,Kevin,Kevin,true
+Gordon Peterson,2026,2,acquired,,JP,JP,true
+JP Hummer,2026,1,acquired,,Traded to James,Traded to James,true
+JP Hummer,2026,2,acquired,,Traded to Gordon,Traded to Gordon,true
+JP Hummer,2026,3,acquired,,Traded to Kevin,Traded to Kevin,true
+JP Hummer,2026,4,acquired,,JP,JP,true
+JP Hummer,2026,5,acquired,,JP,JP,true
+JP Hummer,2026,2,acquired,,Kevin,Kevin,true
+JP Hummer,2026,2,acquired,,comp (T. Etienne),comp (T. Etienne),true
+JP Hummer,2026,2,acquired,,comp (J. Bates III),comp (J. Bates III),true
+James Vecchio,2026,1,acquired,,Traded to Chip,Traded to Chip,true
+James Vecchio,2026,2,acquired,,Traded to Chip,Traded to Chip,true
+James Vecchio,2026,3,acquired,,Traded to McCreary,Traded to McCreary,true
+James Vecchio,2026,4,acquired,,Traded to Eric,Traded to Eric,true
+James Vecchio,2026,5,acquired,,Traded to Eric,Traded to Eric,true
+James Vecchio,2026,1,acquired,,Chip,Chip,true
+James Vecchio,2026,1,acquired,,JP,JP,true
+James Vecchio,2026,1,acquired,,Eric,Eric,true
+Jason Shaffer,2026,1,acquired,,Jason,Jason,true
+Jason Shaffer,2026,2,acquired,,Jason,Jason,true
+Jason Shaffer,2026,3,acquired,,Jason,Jason,true
+Jason Shaffer,2026,4,acquired,,Jason,Jason,true
+Jason Shaffer,2026,5,acquired,,Jason,Jason,true
+Jason Shaffer,2026,1,acquired,,comp (T. McBride),comp (T. McBride),true
+Joe Stanek,2026,1,acquired,,Joe,Joe,true
+Joe Stanek,2026,2,acquired,,Joe,Joe,true
+Joe Stanek,2026,3,acquired,,Joe,Joe,true
+Joe Stanek,2026,4,acquired,,Joe,Joe,true
+Joe Stanek,2026,5,acquired,,Joe,Joe,true
+Joe Stanek,2026,1,acquired,,Gordon,Gordon,true
+Joe Stanek,2026,1,acquired,,comp (G. Wilson),comp (G. Wilson),true
+Joe Stanek,2026,1,acquired,,comp (A Hutchinson),comp (A Hutchinson),true
+Kevin Eichenbaum,2026,1,acquired,,Traded to Piper,Traded to Piper,true
+Kevin Eichenbaum,2026,2,acquired,,Traded to JP,Traded to JP,true
+Kevin Eichenbaum,2026,3,acquired,,Traded to Chip,Traded to Chip,true
+Kevin Eichenbaum,2026,4,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2026,5,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2026,1,acquired,,Piper,Piper,true
+Kevin Eichenbaum,2026,3,acquired,,JP,JP,true
+Nick McCreary,2026,1,acquired,,McCreary,McCreary,true
+Nick McCreary,2026,2,acquired,,McCreary,McCreary,true
+Nick McCreary,2026,3,acquired,,McCreary,McCreary,true
+Nick McCreary,2026,4,acquired,,McCreary,McCreary,true
+Nick McCreary,2026,5,acquired,,McCreary,McCreary,true
+Nick McCreary,2026,3,acquired,,James,James,true
+Nick Piper,2026,1,acquired,,Traded to Kevin,Traded to Kevin,true
+Nick Piper,2026,2,acquired,,Traded to Chip,Traded to Chip,true
+Nick Piper,2026,3,acquired,,Traded to Eric,Traded to Eric,true
+Nick Piper,2026,4,acquired,,Piper,Piper,true
+Nick Piper,2026,5,acquired,,Piper,Piper,true
+Nick Piper,2026,1,acquired,,Kevin,Kevin,true
+Nick Piper,2026,1,acquired,,Joe,Joe,true
+Nick Piper,2026,1,acquired,,Gordon,Gordon,true
+Nick Piper,2026,5,acquired,,Eric,Eric,true
+TJ Hrabek,2026,1,acquired,,TJ,TJ,true
+TJ Hrabek,2026,2,acquired,,TJ,TJ,true
+TJ Hrabek,2026,3,acquired,,Traded to Eric,Traded to Eric,true
+TJ Hrabek,2026,4,acquired,,Traded to Eric,Traded to Eric,true
+TJ Hrabek,2026,5,acquired,,TJ,TJ,true
+TJ Hrabek,2026,1,acquired,,comp (D. Adams),comp (D. Adams),true
+Andy Shepard,2027,1,acquired,,Andy,Andy,true
+Andy Shepard,2027,2,acquired,,Andy,Andy,true
+Andy Shepard,2027,3,acquired,,Andy,Andy,true
+Andy Shepard,2027,4,acquired,,Andy,Andy,true
+Andy Shepard,2027,5,acquired,,Andy,Andy,true
+Chip Buckley,2027,1,acquired,,Chip,Chip,true
+Chip Buckley,2027,2,acquired,,Chip,Chip,true
+Chip Buckley,2027,3,acquired,,Chip,Chip,true
+Chip Buckley,2027,4,acquired,,Chip,Chip,true
+Chip Buckley,2027,5,acquired,,Chip,Chip,true
+Chip Buckley,2027,2,acquired,,James,James,true
+Eric Cookmeyer,2027,1,acquired,,Eric,Eric,true
+Eric Cookmeyer,2027,2,acquired,,Eric,Eric,true
+Eric Cookmeyer,2027,3,acquired,,Eric,Eric,true
+Eric Cookmeyer,2027,4,acquired,,Eric,Eric,true
+Eric Cookmeyer,2027,5,acquired,,Eric,Eric,true
+Eric Cookmeyer,2027,3,acquired,,James,James,true
+Gordon Peterson,2027,1,acquired,,Gordon,Gordon,true
+Gordon Peterson,2027,2,acquired,,Gordon,Gordon,true
+Gordon Peterson,2027,3,acquired,,Gordon,Gordon,true
+Gordon Peterson,2027,4,acquired,,Gordon,Gordon,true
+Gordon Peterson,2027,5,acquired,,Gordon,Gordon,true
+JP Hummer,2027,1,acquired,,JP,JP,true
+JP Hummer,2027,2,acquired,,JP,JP,true
+JP Hummer,2027,3,acquired,,JP,JP,true
+JP Hummer,2027,4,acquired,,JP,JP,true
+JP Hummer,2027,5,acquired,,JP,JP,true
+JP Hummer,2027,1,acquired,,Gordon,Gordon,true
+James Vecchio,2027,1,acquired,,James,James,true
+James Vecchio,2027,2,acquired,,Traded to Chip,Traded to Chip,true
+James Vecchio,2027,3,acquired,,Traded to Eric,Traded to Eric,true
+James Vecchio,2027,4,acquired,,James,James,true
+James Vecchio,2027,5,acquired,,James,James,true
+Jason Shaffer,2027,1,acquired,,Jason,Jason,true
+Jason Shaffer,2027,2,acquired,,Jason,Jason,true
+Jason Shaffer,2027,3,acquired,,Jason,Jason,true
+Jason Shaffer,2027,4,acquired,,Jason,Jason,true
+Jason Shaffer,2027,5,acquired,,Jason,Jason,true
+Joe Stanek,2027,1,acquired,,Joe,Joe,true
+Joe Stanek,2027,2,acquired,,Joe,Joe,true
+Joe Stanek,2027,3,acquired,,Joe,Joe,true
+Joe Stanek,2027,4,acquired,,Joe,Joe,true
+Joe Stanek,2027,5,acquired,,Joe,Joe,true
+Kevin Eichenbaum,2027,1,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2027,2,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2027,3,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2027,4,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2027,5,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2027,1,acquired,,Piper,Piper,true
+Nick McCreary,2027,1,acquired,,McCreary,McCreary,true
+Nick McCreary,2027,2,acquired,,McCreary,McCreary,true
+Nick McCreary,2027,3,acquired,,McCreary,McCreary,true
+Nick McCreary,2027,4,acquired,,McCreary,McCreary,true
+Nick McCreary,2027,5,acquired,,McCreary,McCreary,true
+Nick Piper,2027,1,acquired,,Traded to Kevin,Traded to Kevin,true
+Nick Piper,2027,2,acquired,,Piper,Piper,true
+Nick Piper,2027,3,acquired,,Piper,Piper,true
+Nick Piper,2027,4,acquired,,Piper,Piper,true
+Nick Piper,2027,5,acquired,,Piper,Piper,true
+TJ Hrabek,2027,1,acquired,,TJ,TJ,true
+TJ Hrabek,2027,2,acquired,,TJ,TJ,true
+TJ Hrabek,2027,3,acquired,,TJ,TJ,true
+TJ Hrabek,2027,4,acquired,,TJ,TJ,true
+TJ Hrabek,2027,5,acquired,,TJ,TJ,true
+Andy Shepard,2028,1,acquired,,Andy,Andy,true
+Andy Shepard,2028,2,acquired,,Andy,Andy,true
+Andy Shepard,2028,3,acquired,,Andy,Andy,true
+Andy Shepard,2028,4,acquired,,Andy,Andy,true
+Andy Shepard,2028,5,acquired,,Andy,Andy,true
+Chip Buckley,2028,1,acquired,,Chip,Chip,true
+Chip Buckley,2028,2,acquired,,Traded to Kevin,Traded to Kevin,true
+Chip Buckley,2028,3,acquired,,Chip,Chip,true
+Chip Buckley,2028,4,acquired,,Chip,Chip,true
+Chip Buckley,2028,5,acquired,,Chip,Chip,true
+Eric Cookmeyer,2028,1,acquired,,Eric,Eric,true
+Eric Cookmeyer,2028,2,acquired,,Eric,Eric,true
+Eric Cookmeyer,2028,3,acquired,,Eric,Eric,true
+Eric Cookmeyer,2028,4,acquired,,Eric,Eric,true
+Eric Cookmeyer,2028,5,acquired,,Eric,Eric,true
+Gordon Peterson,2028,1,acquired,,Gordon,Gordon,true
+Gordon Peterson,2028,2,acquired,,Gordon,Gordon,true
+Gordon Peterson,2028,3,acquired,,Gordon,Gordon,true
+Gordon Peterson,2028,4,acquired,,Gordon,Gordon,true
+Gordon Peterson,2028,5,acquired,,Gordon,Gordon,true
+JP Hummer,2028,1,acquired,,Traded to Piper,Traded to Piper,true
+JP Hummer,2028,2,acquired,,Traded to James,Traded to James,true
+JP Hummer,2028,3,acquired,,JP,JP,true
+JP Hummer,2028,4,acquired,,JP,JP,true
+JP Hummer,2028,5,acquired,,JP,JP,true
+JP Hummer,2028,1,acquired,,Piper,Piper,true
+JP Hummer,2028,2,acquired,,Piper,Piper,true
+James Vecchio,2028,1,acquired,,James,James,true
+James Vecchio,2028,2,acquired,,James,James,true
+James Vecchio,2028,3,acquired,,James,James,true
+James Vecchio,2028,4,acquired,,James,James,true
+James Vecchio,2028,5,acquired,,James,James,true
+James Vecchio,2028,2,acquired,,JP,JP,true
+Jason Shaffer,2028,1,acquired,,Jason,Jason,true
+Jason Shaffer,2028,2,acquired,,Jason,Jason,true
+Jason Shaffer,2028,3,acquired,,Jason,Jason,true
+Jason Shaffer,2028,4,acquired,,Jason,Jason,true
+Jason Shaffer,2028,5,acquired,,Jason,Jason,true
+Joe Stanek,2028,1,acquired,,Joe,Joe,true
+Joe Stanek,2028,2,acquired,,Joe,Joe,true
+Joe Stanek,2028,3,acquired,,Joe,Joe,true
+Joe Stanek,2028,4,acquired,,Joe,Joe,true
+Joe Stanek,2028,5,acquired,,Joe,Joe,true
+Kevin Eichenbaum,2028,1,acquired,,Traded to Piper,Traded to Piper,true
+Kevin Eichenbaum,2028,2,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2028,3,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2028,4,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2028,5,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2028,1,acquired,,Piper,Piper,true
+Kevin Eichenbaum,2028,2,acquired,,Chip,Chip,true
+Nick McCreary,2028,1,acquired,,McCreary,McCreary,true
+Nick McCreary,2028,2,acquired,,McCreary,McCreary,true
+Nick McCreary,2028,3,acquired,,McCreary,McCreary,true
+Nick McCreary,2028,4,acquired,,McCreary,McCreary,true
+Nick McCreary,2028,5,acquired,,McCreary,McCreary,true
+Nick Piper,2028,1,acquired,,Traded to Kevin,Traded to Kevin,true
+Nick Piper,2028,2,acquired,,Traded to JP,Traded to JP,true
+Nick Piper,2028,3,acquired,,Piper,Piper,true
+Nick Piper,2028,4,acquired,,Piper,Piper,true
+Nick Piper,2028,5,acquired,,Piper,Piper,true
+Nick Piper,2028,1,acquired,,Kevin,Kevin,true
+Nick Piper,2028,1,acquired,,JP,JP,true
+TJ Hrabek,2028,1,acquired,,TJ,TJ,true
+TJ Hrabek,2028,2,acquired,,TJ,TJ,true
+TJ Hrabek,2028,3,acquired,,TJ,TJ,true
+TJ Hrabek,2028,4,acquired,,TJ,TJ,true
+TJ Hrabek,2028,5,acquired,,TJ,TJ,true
+Andy Shepard,2029,1,acquired,,Andy,Andy,true
+Andy Shepard,2029,2,acquired,,Andy,Andy,true
+Andy Shepard,2029,3,acquired,,Andy,Andy,true
+Andy Shepard,2029,4,acquired,,Andy,Andy,true
+Andy Shepard,2029,5,acquired,,Andy,Andy,true
+Chip Buckley,2029,1,acquired,,Chip,Chip,true
+Chip Buckley,2029,2,acquired,,Chip,Chip,true
+Chip Buckley,2029,3,acquired,,Chip,Chip,true
+Chip Buckley,2029,4,acquired,,Chip,Chip,true
+Chip Buckley,2029,5,acquired,,Chip,Chip,true
+Eric Cookmeyer,2029,1,acquired,,Eric,Eric,true
+Eric Cookmeyer,2029,2,acquired,,Eric,Eric,true
+Eric Cookmeyer,2029,3,acquired,,Eric,Eric,true
+Eric Cookmeyer,2029,4,acquired,,Eric,Eric,true
+Eric Cookmeyer,2029,5,acquired,,Eric,Eric,true
+Gordon Peterson,2029,1,acquired,,Gordon,Gordon,true
+Gordon Peterson,2029,2,acquired,,Gordon,Gordon,true
+Gordon Peterson,2029,3,acquired,,Gordon,Gordon,true
+Gordon Peterson,2029,4,acquired,,Gordon,Gordon,true
+Gordon Peterson,2029,5,acquired,,Gordon,Gordon,true
+JP Hummer,2029,1,acquired,,JP,JP,true
+JP Hummer,2029,2,acquired,,JP,JP,true
+JP Hummer,2029,3,acquired,,JP,JP,true
+JP Hummer,2029,4,acquired,,JP,JP,true
+JP Hummer,2029,5,acquired,,JP,JP,true
+JP Hummer,2029,2,acquired,,Kevin,Kevin,true
+James Vecchio,2029,1,acquired,,James,James,true
+James Vecchio,2029,2,acquired,,James,James,true
+James Vecchio,2029,3,acquired,,James,James,true
+James Vecchio,2029,4,acquired,,James,James,true
+James Vecchio,2029,5,acquired,,James,James,true
+Jason Shaffer,2029,1,acquired,,Jason,Jason,true
+Jason Shaffer,2029,2,acquired,,Jason,Jason,true
+Jason Shaffer,2029,3,acquired,,Jason,Jason,true
+Jason Shaffer,2029,4,acquired,,Jason,Jason,true
+Jason Shaffer,2029,5,acquired,,Jason,Jason,true
+Joe Stanek,2029,1,acquired,,Joe,Joe,true
+Joe Stanek,2029,2,acquired,,Joe,Joe,true
+Joe Stanek,2029,3,acquired,,Joe,Joe,true
+Joe Stanek,2029,4,acquired,,Joe,Joe,true
+Joe Stanek,2029,5,acquired,,Joe,Joe,true
+Kevin Eichenbaum,2029,1,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2029,2,acquired,,Traded to JP,Traded to JP,true
+Kevin Eichenbaum,2029,3,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2029,4,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2029,5,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2029,2,acquired,,Piper,Piper,true
+Nick McCreary,2029,1,acquired,,McCreary,McCreary,true
+Nick McCreary,2029,2,acquired,,McCreary,McCreary,true
+Nick McCreary,2029,3,acquired,,McCreary,McCreary,true
+Nick McCreary,2029,4,acquired,,McCreary,McCreary,true
+Nick McCreary,2029,5,acquired,,McCreary,McCreary,true
+Nick Piper,2029,1,acquired,,Piper,Piper,true
+Nick Piper,2029,2,acquired,,Traded to Kevin,Traded to Kevin,true
+Nick Piper,2029,3,acquired,,Piper,Piper,true
+Nick Piper,2029,4,acquired,,Piper,Piper,true
+Nick Piper,2029,5,acquired,,Piper,Piper,true
+TJ Hrabek,2029,1,acquired,,TJ,TJ,true
+TJ Hrabek,2029,2,acquired,,TJ,TJ,true
+TJ Hrabek,2029,3,acquired,,TJ,TJ,true
+TJ Hrabek,2029,4,acquired,,TJ,TJ,true
+TJ Hrabek,2029,5,acquired,,TJ,TJ,true
+Andy Shepard,2030,1,acquired,,Andy,Andy,true
+Andy Shepard,2030,2,acquired,,Andy,Andy,true
+Andy Shepard,2030,3,acquired,,Andy,Andy,true
+Andy Shepard,2030,4,acquired,,Andy,Andy,true
+Andy Shepard,2030,5,acquired,,Andy,Andy,true
+Chip Buckley,2030,1,acquired,,Chip,Chip,true
+Chip Buckley,2030,2,acquired,,Chip,Chip,true
+Chip Buckley,2030,3,acquired,,Chip,Chip,true
+Chip Buckley,2030,4,acquired,,Chip,Chip,true
+Chip Buckley,2030,5,acquired,,Chip,Chip,true
+Eric Cookmeyer,2030,1,acquired,,Eric,Eric,true
+Eric Cookmeyer,2030,2,acquired,,Eric,Eric,true
+Eric Cookmeyer,2030,3,acquired,,Eric,Eric,true
+Eric Cookmeyer,2030,4,acquired,,Eric,Eric,true
+Eric Cookmeyer,2030,5,acquired,,Eric,Eric,true
+Gordon Peterson,2030,1,acquired,,Gordon,Gordon,true
+Gordon Peterson,2030,2,acquired,,Gordon,Gordon,true
+Gordon Peterson,2030,3,acquired,,Gordon,Gordon,true
+Gordon Peterson,2030,4,acquired,,Gordon,Gordon,true
+Gordon Peterson,2030,5,acquired,,Gordon,Gordon,true
+JP Hummer,2030,1,acquired,,JP,JP,true
+JP Hummer,2030,2,acquired,,JP,JP,true
+JP Hummer,2030,3,acquired,,JP,JP,true
+JP Hummer,2030,4,acquired,,JP,JP,true
+JP Hummer,2030,5,acquired,,JP,JP,true
+James Vecchio,2030,1,acquired,,James,James,true
+James Vecchio,2030,2,acquired,,James,James,true
+James Vecchio,2030,3,acquired,,James,James,true
+James Vecchio,2030,4,acquired,,James,James,true
+James Vecchio,2030,5,acquired,,James,James,true
+Jason Shaffer,2030,1,acquired,,Jason,Jason,true
+Jason Shaffer,2030,2,acquired,,Jason,Jason,true
+Jason Shaffer,2030,3,acquired,,Jason,Jason,true
+Jason Shaffer,2030,4,acquired,,Jason,Jason,true
+Jason Shaffer,2030,5,acquired,,Jason,Jason,true
+Joe Stanek,2030,1,acquired,,Joe,Joe,true
+Joe Stanek,2030,2,acquired,,Joe,Joe,true
+Joe Stanek,2030,3,acquired,,Joe,Joe,true
+Joe Stanek,2030,4,acquired,,Joe,Joe,true
+Joe Stanek,2030,5,acquired,,Joe,Joe,true
+Kevin Eichenbaum,2030,1,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2030,2,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2030,3,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2030,4,acquired,,Kevin,Kevin,true
+Kevin Eichenbaum,2030,5,acquired,,Kevin,Kevin,true
+Nick McCreary,2030,1,acquired,,McCreary,McCreary,true
+Nick McCreary,2030,2,acquired,,McCreary,McCreary,true
+Nick McCreary,2030,3,acquired,,McCreary,McCreary,true
+Nick McCreary,2030,4,acquired,,McCreary,McCreary,true
+Nick McCreary,2030,5,acquired,,McCreary,McCreary,true
+Nick Piper,2030,1,acquired,,Piper,Piper,true
+Nick Piper,2030,2,acquired,,Piper,Piper,true
+Nick Piper,2030,3,acquired,,Piper,Piper,true
+Nick Piper,2030,4,acquired,,Piper,Piper,true
+Nick Piper,2030,5,acquired,,Piper,Piper,true
+TJ Hrabek,2030,1,acquired,,TJ,TJ,true
+TJ Hrabek,2030,2,acquired,,TJ,TJ,true
+TJ Hrabek,2030,3,acquired,,TJ,TJ,true
+TJ Hrabek,2030,4,acquired,,TJ,TJ,true
+TJ Hrabek,2030,5,acquired,,TJ,TJ,true

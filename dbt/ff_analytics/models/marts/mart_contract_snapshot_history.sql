@@ -41,7 +41,7 @@ select
   -- Player attributes (denormalized)
   player_name,
   canonical_name,                   -- From crosswalk
-  position,
+  roster_slot,                      -- Roster slot (FLEX, BN, IR, TAXI, or starter position)
 
   -- Franchise attributes
   franchise_name,

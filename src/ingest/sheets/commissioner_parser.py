@@ -136,7 +136,7 @@ def _parse_blocks(rows: list[list[str]]) -> tuple[pl.DataFrame, pl.DataFrame, pl
         roster_df = pl.DataFrame(
             roster_rows,
             schema=[
-                "position",
+                "roster_slot",
                 "player",
                 "y2025",
                 "y2026",
@@ -152,7 +152,7 @@ def _parse_blocks(rows: list[list[str]]) -> tuple[pl.DataFrame, pl.DataFrame, pl
     else:
         roster_df = pl.DataFrame(
             schema=[
-                "position",
+                "roster_slot",
                 "player",
                 "y2025",
                 "y2026",
@@ -390,6 +390,50 @@ def _normalize_player_name(name: str | None) -> str:
     return normalized.lower().strip()
 
 
+def _normalize_position(txn_position: str | None) -> list[str]:
+    """Normalize commissioner position labels to crosswalk position labels.
+
+    The commissioner uses IDP fantasy position labels (DL, DB, LB, K) while the
+    crosswalk uses specific NFL positions (DE, DT, S, CB, PK). This function
+    maps commissioner labels to a list of possible crosswalk positions.
+
+    Args:
+        txn_position: Position from TRANSACTIONS sheet (DL, DB, LB, K, QB, RB, etc.)
+
+    Returns:
+        List of equivalent crosswalk positions (e.g., DL → ['DE', 'DT'])
+
+    Examples:
+        >>> _normalize_position("DL")
+        ['DE', 'DT']
+        >>> _normalize_position("QB")
+        ['QB']
+        >>> _normalize_position(None)
+        []
+
+    """
+    if not txn_position:
+        return []
+
+    position_map = {
+        "DL": ["DE", "DT"],  # Defensive Line → Defensive End or Defensive Tackle
+        "DB": ["S", "CB"],  # Defensive Back → Safety or Cornerback
+        "K": ["PK"],  # Kicker → Place Kicker
+        "LB": ["LB", "DE"],  # Linebacker (includes edge rushers classified as DE)
+        # Offensive positions map 1:1
+        "QB": ["QB"],
+        "RB": ["RB"],
+        "WR": ["WR"],
+        "TE": ["TE"],
+        "FB": ["FB"],
+        # Special cases
+        "D/ST": ["DST"],
+        "DST": ["DST"],
+    }
+
+    return position_map.get(txn_position.strip().upper(), [txn_position.strip().upper()])
+
+
 def _parse_pick_id(player_str: str | None, pick_col: str) -> str | None:
     """Parse pick reference to standardized pick_id.
 
@@ -469,8 +513,12 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
 def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     """Map player names to player_id using crosswalk and alias seeds.
 
+    Enhanced with position-aware disambiguation: when fuzzy matching finds multiple
+    candidates (e.g., "Josh Allen" matches both Josh Allen QB and Josh Hines-Allen DE),
+    the Position column (if present) is used to select the correct match.
+
     Args:
-        df: DataFrame with Player and asset_type columns
+        df: DataFrame with Player and asset_type columns, optionally Position
 
     Returns:
         DataFrame with added player_id column (-1 for unmapped)
@@ -481,6 +529,9 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         raise FileNotFoundError(f"dim_player_id_xref seed not found at {xref_path}")
 
     xref = pl.read_csv(xref_path)
+
+    # Check if Position column exists (only in transactions, not roster)
+    has_position = "Position" in df.columns
 
     # Load name alias seed for typo corrections
     alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
@@ -498,13 +549,47 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
             .drop("canonical_name")
         )
 
-    # Exact match
-    df = df.join(
-        xref.select(["name", "player_id"]).rename({"player_id": "player_id_exact"}),
-        left_on="Player",
-        right_on="name",
-        how="left",
-    )
+    # Exact match (includes position validation if available)
+    if has_position:
+        # Exact match with position-aware disambiguation
+        df_with_idx = df.with_row_index("_row_idx_exact")
+
+        df_exact = df_with_idx.join(
+            xref.select(["name", "player_id", "position"]),
+            left_on="Player",
+            right_on="name",
+            how="left",
+        )
+
+        # Add position compatibility flag
+        df_exact = df_exact.with_columns(
+            pl.when(pl.col("player_id").is_null())
+            .then(False)
+            .otherwise(
+                pl.col("Position")
+                .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
+                .list.contains(pl.col("position"))
+            )
+            .alias("position_compatible_exact")
+        )
+
+        # Keep ONLY position-compatible exact matches
+        df_exact_ids = (
+            df_exact.filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
+            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=True)
+            .select(["_row_idx_exact", pl.col("player_id").alias("player_id_exact")])
+        )
+
+        # Join back to original df
+        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop("_row_idx_exact")
+    else:
+        # Exact match without position (roster parsing)
+        df = df.join(
+            xref.select(["name", "player_id"]).rename({"player_id": "player_id_exact"}),
+            left_on="Player",
+            right_on="name",
+            how="left",
+        )
 
     # Enhanced fuzzy match for nulls
     df = df.with_columns(
@@ -513,19 +598,140 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         .alias("player_normalized")
     )
 
-    df = df.join(
-        xref.select(["merge_name", "player_id"]).rename({"player_id": "player_id_fuzzy"}),
-        left_on="player_normalized",
-        right_on="merge_name",
-        how="left",
-    )
+    if has_position:
+        # Fuzzy match with position-aware disambiguation
+        df_with_idx = df.with_row_index("_row_idx_fuzzy")
 
-    # Coalesce exact and fuzzy
-    df = df.with_columns(
-        pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")])
-        .fill_null(-1)  # Unmapped marker
-        .alias("player_id")
-    ).drop(["player_id_exact", "player_id_fuzzy", "player_normalized"])
+        df_fuzzy = df_with_idx.join(
+            xref.select(["merge_name", "player_id", "position"]),
+            left_on="player_normalized",
+            right_on="merge_name",
+            how="left",
+        )
+
+        # Add position compatibility flag
+        df_fuzzy = df_fuzzy.with_columns(
+            pl.when(pl.col("player_id").is_null())
+            .then(False)
+            .otherwise(
+                pl.col("Position")
+                .map_elements(lambda p: _normalize_position(p), return_dtype=pl.List(pl.String))
+                .list.contains(pl.col("position"))
+            )
+            .alias("position_compatible_fuzzy")
+        )
+
+        # Keep ONLY position-compatible fuzzy matches
+        df_fuzzy_ids = (
+            df_fuzzy.filter(pl.col("position_compatible_fuzzy") | pl.col("player_id").is_null())
+            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=True)
+            .select(["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")])
+        )
+
+        # Join back to original df
+        df = df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
+    else:
+        # Fuzzy match without position (roster parsing)
+        df = df.join(
+            xref.select(["merge_name", "player_id"]).rename({"player_id": "player_id_fuzzy"}),
+            left_on="player_normalized",
+            right_on="merge_name",
+            how="left",
+        )
+
+    # Add a third tier:
+    # Partial name matching for difficult cases (e.g., "Josh Allen" → "Josh Hines-Allen")
+    # Only attempt for rows that are still unmapped after exact and fuzzy
+    if has_position:
+        # Identify unmapped rows
+        df = df.with_columns(
+            pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")]).alias(
+                "player_id_prelim"
+            )
+        )
+
+        unmapped_mask = (pl.col("player_id_prelim").is_null()) & (pl.col("asset_type") == "player")
+
+        #  For unmapped players, try partial name matching with position filter
+        # Extract first and last name tokens for matching
+        df = df.with_columns(
+            pl.when(unmapped_mask)
+            .then(
+                pl.col("Player").str.split(" ").list.first()  # First name
+            )
+            .alias("first_name_token"),
+            pl.when(unmapped_mask)
+            .then(
+                pl.col("Player").str.split(" ").list.last()  # Last name
+            )
+            .alias("last_name_token"),
+        )
+
+        # For unmapped players, try partial name matching (optimized with manual iteration)
+        # Build a position-filtered lookup for common partial matches
+        df_unmapped_for_partial = df.filter(unmapped_mask)
+
+        # Manual row-by-row partial matching
+        # More efficient than cross join for small unmapped sets
+        partial_matches = []
+        for row in df_unmapped_for_partial.iter_rows(named=True):
+            if not row["first_name_token"] or not row["last_name_token"]:
+                partial_matches.append(None)
+                continue
+
+            # Filter crosswalk to position-compatible candidates
+            compatible_positions = _normalize_position(row["Position"])
+            candidates = xref.filter(pl.col("position").is_in(compatible_positions))
+
+            # Find first candidate where name contains both tokens
+            match = candidates.filter(
+                pl.col("name").str.contains(row["first_name_token"], literal=True)
+                & pl.col("name").str.contains(row["last_name_token"], literal=True)
+            )
+
+            if match.height > 0:
+                partial_matches.append(match["player_id"][0])
+            else:
+                partial_matches.append(None)
+
+        # Add partial matches back to unmapped rows
+        df_partial = df_unmapped_for_partial.with_columns(
+            pl.Series("player_id_partial", partial_matches)
+        )
+
+        # Combine mapped and unmapped
+        df_unmapped = df.filter(~unmapped_mask).with_columns(
+            pl.lit(None).cast(pl.Int64).alias("player_id_partial")
+        )
+
+        # Combine
+        df = pl.concat([df_unmapped, df_partial], how="diagonal")
+
+        # Final coalesce
+        df = df.with_columns(
+            pl.coalesce(
+                [pl.col("player_id_exact"), pl.col("player_id_fuzzy"), pl.col("player_id_partial")]
+            )
+            .fill_null(-1)
+            .alias("player_id")
+        ).drop(
+            [
+                "player_id_exact",
+                "player_id_fuzzy",
+                "player_id_prelim",
+                "player_id_partial",
+                "first_name_token",
+                "last_name_token",
+                "player_normalized",
+            ]
+        )
+    else:
+        # No position info, just coalesce exact and fuzzy
+        df = df.with_columns(
+            pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")])
+            .fill_null(-1)
+            .alias("player_id")
+        ).drop(["player_id_exact", "player_id_fuzzy", "player_normalized"])
 
     return df
 
@@ -701,7 +907,7 @@ def _to_long_roster(roster_all: pl.DataFrame) -> pl.DataFrame:
     value_cols = [c for c in roster_all.columns if c.startswith("y20")]
     out = (
         roster_all.unpivot(
-            index=["gm", "position", "player", "total", "rfa", "fr"],
+            index=["gm", "roster_slot", "player", "total", "rfa", "fr"],
             on=value_cols,
             variable_name="year_str",
             value_name="amount_str",

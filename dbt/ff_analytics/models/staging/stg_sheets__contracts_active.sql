@@ -39,7 +39,7 @@ with base as (
       '.', ''  -- Remove periods from initials (R.J. → RJ)
     ) as player_name_normalized,
 
-    position,
+    roster_slot,
 
     -- Contract attributes
     rfa,
@@ -63,7 +63,7 @@ with_franchise as (
     base.gm_full_name,
     base.player_name,
     base.player_name_normalized,
-    base.position,
+    base.roster_slot,
     base.rfa,
     base.franchise,
     base.obligation_year,
@@ -105,7 +105,7 @@ with_alias as (
 
 with_defense as (
   -- Map defense names to team identifiers
-  -- Defenses can be in D/ST, BN, or IDP BN positions
+  -- Defenses can be in D/ST, BN, or IDP BN roster slots
   select
     wa.*,
     team.team_abbr as defense_team_abbr,
@@ -158,7 +158,7 @@ final as (
 
     canonical_name,
     player_name,
-    position,
+    roster_slot,
 
     -- Contract measures
     obligation_year,
