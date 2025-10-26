@@ -154,3 +154,217 @@ models:
           config:
             severity: error
             error_if: ">0"
+
+  - name: mart_contract_snapshot_current
+    description: |
+      Contract snapshot mart - current contract obligations by year (transaction-derived).
+
+      **Grain**: One row per player per franchise per contract period per obligation year
+      **Source**: dim_player_contract_history (expands contract_split_array into year-by-year rows)
+
+      Shows each player's current active contract broken down by year, including:
+      - Annual cap hit for each obligation year
+      - Remaining contract value from each year forward
+      - Dead cap liability if cut before that year
+      - Contract metadata (type, rookie flag, effective dates)
+
+      **Extension Handling**: contract_split_array already contains full remaining schedule
+      per league accounting conventions (e.g., 6-6-24 = 2 base years + 1 extension year).
+
+      **Use Cases**:
+      - Salary cap planning: Future year obligations
+      - Dead cap analysis: Cut liability scenarios
+      - Contract timeline: Expiration tracking
+      - Rookie contract management: Extension decisions
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player_id_xref)
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: player_id
+
+      - name: franchise_id
+        description: FK to dim_franchise (franchise owning the contract)
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_franchise')
+              field: franchise_id
+
+      - name: contract_period
+        description: Sequential contract number for this player (1, 2, 3...)
+        tests:
+          - not_null
+
+      - name: obligation_year
+        description: Calendar year of the obligation (2023-2028)
+        tests:
+          - not_null
+
+      - name: year_position
+        description: Position within this contract (1, 2, 3, ...)
+        tests:
+          - not_null
+
+      - name: annual_cap_hit
+        description: Cap hit for this specific year (from contract_split_array)
+        tests:
+          - not_null
+
+      - name: years_remaining
+        description: Years left in contract from this year forward (including this year)
+        tests:
+          - not_null
+
+      - name: remaining_contract_value
+        description: Sum of all cap hits from this year forward
+        tests:
+          - not_null
+
+      - name: dead_cap_if_cut_before_year
+        description: Dead cap liability if cut before this year starts
+        tests:
+          - not_null
+
+      - name: contract_type
+        description: Contract classification (rookie, faad, fasa, trade_acquired, extension, etc.)
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - rookie
+                - faad
+                - fasa
+                - trade_acquired
+                - extension
+                - franchise_tag
+                - waiver_claim
+                - other
+
+      - name: is_rookie_contract
+        description: Flag for rookie contracts
+        tests:
+          - not_null
+
+      - name: contract_history_key
+        description: FK to dim_player_contract_history
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_player_contract_history')
+              field: contract_history_key
+
+      - name: transaction_id_unique
+        description: FK to fact_league_transactions (audit trail)
+        tests:
+          - not_null
+          - relationships:
+              to: ref('fact_league_transactions')
+              field: transaction_id_unique
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_id
+            - franchise_id
+            - contract_period
+            - obligation_year
+          config:
+            severity: error
+            error_if: ">0"
+
+  - name: mart_contract_snapshot_history
+    description: |
+      Contract snapshot mart - historical point-in-time contract obligations (commissioner sheet snapshots).
+
+      **Grain**: One row per player per franchise per snapshot date per obligation year
+      **Source**: stg_sheets__contracts_active (direct from commissioner's CONTRACTS_ACTIVE sheet)
+
+      Provides point-in-time historical view of contract obligations as recorded in the
+      commissioner's CONTRACTS_ACTIVE sheet at various snapshot dates.
+
+      **Key Differences from mart_contract_snapshot_current**:
+      - Uses direct commissioner sheet snapshots (not derived from transaction log)
+      - Includes snapshot_date as grain component (enables time-series)
+      - Shows obligations as commissioner recorded them at each point in time
+      - May include manual corrections not yet in transaction log
+
+      **Use Cases**:
+      - Historical cap space: Obligations as of specific past dates
+      - Validation: Compare transaction-derived vs commissioner snapshots
+      - Trend analysis: Evolution of obligations over time
+      - Commissioner audit: Track changes between snapshot dates
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player_id_xref, -1 if unmapped)
+        tests:
+          - relationships:
+              to: ref('dim_player_id_xref')
+              field: player_id
+              config:
+                where: "player_id != -1 and not is_unmapped_player"
+
+      - name: franchise_id
+        description: FK to dim_franchise (may be null if unmapped)
+        tests:
+          - relationships:
+              to: ref('dim_franchise')
+              field: franchise_id
+              config:
+                where: "franchise_id is not null and not is_unmapped_franchise"
+
+      - name: snapshot_date
+        description: Date of this snapshot from CONTRACTS_ACTIVE sheet
+        tests:
+          - not_null
+
+      - name: obligation_year
+        description: Calendar year of the obligation (2023-2028)
+        tests:
+          - not_null
+
+      - name: cap_hit
+        description: Annual obligation for this year (from commissioner sheet)
+        tests:
+          - not_null
+
+      - name: player_key
+        description: Composite identifier for grain uniqueness (handles unmapped players)
+        tests:
+          - not_null
+
+      - name: rfa
+        description: RFA status flag (from commissioner sheet)
+
+      - name: franchise_tag
+        description: Franchise tag flag (from commissioner sheet)
+
+      - name: is_unmapped_player
+        description: Flag indicating player not found in crosswalk
+        tests:
+          - not_null
+
+      - name: is_unmapped_franchise
+        description: Flag indicating franchise not resolved
+        tests:
+          - not_null
+
+      - name: snapshot_year
+        description: Year extracted from snapshot_date
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_key
+            - franchise_id
+            - snapshot_date
+            - obligation_year
+          config:
+            severity: error
+            error_if: ">0"

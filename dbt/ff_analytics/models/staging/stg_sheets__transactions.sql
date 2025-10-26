@@ -20,7 +20,16 @@ Contract Validation Notes:
 - See docs/analysis/TRANSACTIONS_contract_validation_analysis.md
 */
 
-with base as (
+with latest_partition as (
+  -- Get the most recent partition date to avoid reading duplicate snapshots
+  select max(dt) as latest_dt
+  from read_parquet(
+    '{{ var("external_root", "data/raw") }}/commissioner/transactions/dt=*/*.parquet',
+    hive_partitioning = true
+  )
+),
+
+base as (
   select
     -- Primary keys
     transaction_id_unique,
@@ -65,8 +74,11 @@ with base as (
     "Type" as transaction_type_raw
 
   from read_parquet(
-    '{{ env_var("RAW_COMMISSIONER_TRANSACTIONS_GLOB", "data/raw/commissioner/transactions/dt=*/*.parquet") }}'
+    '{{ var("external_root", "data/raw") }}/commissioner/transactions/dt=*/*.parquet',
+    hive_partitioning = true
   )
+  cross join latest_partition
+  where dt = latest_partition.latest_dt
 ),
 
 with_timeframe as (

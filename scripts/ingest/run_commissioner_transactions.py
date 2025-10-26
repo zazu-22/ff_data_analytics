@@ -40,16 +40,10 @@ import gspread
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
 
+from ingest.sheets.commissioner_parser import parse_transactions
+
 # Load environment variables
 load_dotenv()
-
-# Import parser
-try:
-    from src.ingest.sheets.commissioner_parser import parse_transactions
-except ImportError:
-    # Fallback if running from different directory
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from src.ingest.sheets.commissioner_parser import parse_transactions
 
 
 def get_gspread_client() -> gspread.Client:
@@ -58,6 +52,7 @@ def get_gspread_client() -> gspread.Client:
     creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
     if creds_json:
         import base64
+
         decoded = base64.b64decode(creds_json)
         creds_dict = json.loads(decoded)
         creds = Credentials.from_service_account_info(
@@ -65,7 +60,7 @@ def get_gspread_client() -> gspread.Client:
             scopes=[
                 "https://www.googleapis.com/auth/spreadsheets.readonly",
                 "https://www.googleapis.com/auth/drive.readonly",
-            ]
+            ],
         )
         return gspread.authorize(creds)
 
@@ -77,11 +72,11 @@ def get_gspread_client() -> gspread.Client:
             scopes=[
                 "https://www.googleapis.com/auth/spreadsheets.readonly",
                 "https://www.googleapis.com/auth/drive.readonly",
-            ]
+            ],
         )
         return gspread.authorize(creds)
 
-    raise EnvironmentError(
+    raise OSError(
         "Missing Google credentials. Set GOOGLE_APPLICATION_CREDENTIALS or "
         "GOOGLE_APPLICATION_CREDENTIALS_JSON"
     )
@@ -93,6 +88,7 @@ def download_transactions_tab(sheet_id: str, output_path: Path) -> None:
     Args:
         sheet_id: Google Sheet ID (LEAGUE_SHEET_COPY_ID)
         output_path: Path to write CSV
+
     """
     print(f"📥 Downloading TRANSACTIONS tab from sheet: {sheet_id}")
 
@@ -106,16 +102,17 @@ def download_transactions_tab(sheet_id: str, output_path: Path) -> None:
         raise ValueError(
             f"TRANSACTIONS tab not found in sheet {sheet_id}. "
             "Ensure copy_league_sheet.py has been run first."
-        )
+        ) from None
 
     # Get all values
-    print(f"  Fetching all values...")
+    print("  Fetching all values...")
     all_values = worksheet.get_all_values()
 
     # Write to CSV
     output_path.parent.mkdir(parents=True, exist_ok=True)
     import csv
-    with open(output_path, 'w', newline='', encoding='utf-8') as f:
+
+    with output_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerows(all_values)
 
@@ -123,17 +120,15 @@ def download_transactions_tab(sheet_id: str, output_path: Path) -> None:
 
 
 def main():
-    """Main ingestion workflow."""
-    print("="*80)
+    """Run the main ingestion workflow."""
+    print("=" * 80)
     print("COMMISSIONER TRANSACTIONS INGESTION")
-    print("="*80)
+    print("=" * 80)
 
     # Get config from env
     sheet_id = os.getenv("LEAGUE_SHEET_COPY_ID")
     if not sheet_id:
-        raise EnvironmentError(
-            "Missing LEAGUE_SHEET_COPY_ID. Set this to the copied league sheet ID."
-        )
+        raise OSError("Missing LEAGUE_SHEET_COPY_ID. Set this to the copied league sheet ID.")
 
     # Set up paths
     today = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -149,7 +144,7 @@ def main():
         download_transactions_tab(sheet_id, csv_path)
 
         # Step 2: Parse transactions
-        print(f"\n🔄 Parsing transactions...")
+        print("\n🔄 Parsing transactions...")
         result = parse_transactions(csv_path)
 
         print(f"  ✅ Parsed {result['transactions'].height:,} transaction rows")
@@ -161,12 +156,12 @@ def main():
 
         # Write transactions parquet
         transactions_path = transactions_dir / "transactions.parquet"
-        result['transactions'].write_parquet(transactions_path)
+        result["transactions"].write_parquet(transactions_path)
         print(f"  📝 Wrote transactions: {transactions_path}")
 
         # Write unmapped players (QA)
         unmapped_path = qa_dir / "unmapped_players.parquet"
-        result['unmapped_players'].write_parquet(unmapped_path)
+        result["unmapped_players"].write_parquet(unmapped_path)
         print(f"  📝 Wrote unmapped QA: {unmapped_path}")
 
         # Write metadata
@@ -177,26 +172,25 @@ def main():
             "source_tab": "TRANSACTIONS",
             "asof_datetime": datetime.now(UTC).isoformat(),
             "loader_path": "scripts.ingest.run_commissioner_transactions",
-            "parser_function": "src.ingest.sheets.commissioner_parser.parse_transactions",
+            "parser_function": "ingest.sheets.commissioner_parser.parse_transactions",
             "output_parquet": [transactions_path.name],
-            "row_count": result['transactions'].height,
-            "unmapped_players": result['unmapped_players'].height,
+            "row_count": result["transactions"].height,
+            "unmapped_players": result["unmapped_players"].height,
             "dt": today,
         }
 
-        with open(meta_path, 'w') as f:
+        with meta_path.open("w") as f:
             json.dump(metadata, f, indent=2)
         print(f"  📝 Wrote metadata: {meta_path}")
 
-    print(f"\n{'='*80}")
-    print(f"✅ TRANSACTIONS INGESTION COMPLETE")
-    print(f"{'='*80}")
+    print(f"\n{'=' * 80}")
+    print("✅ TRANSACTIONS INGESTION COMPLETE")
+    print(f"{'=' * 80}")
     print(f"Output: {transactions_dir}")
     print(f"QA: {qa_dir}")
-    print(f"\nNext step: Run dbt models")
-    print(f"  cd dbt/ff_analytics")
-    print(f"  dbt run --select stg_sheets__transactions fact_league_transactions")
-    print(f"  dbt test --select stg_sheets__transactions fact_league_transactions")
+    print("\nNext step: Run dbt models")
+    print("  make dbt-run   # builds staging + marts with correct env vars")
+    print("  make dbt-test  # runs data quality tests")
 
 
 if __name__ == "__main__":
