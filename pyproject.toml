@@ -66,6 +66,7 @@ exclude = [
     "**/*script_snippets/**",
     "data/**",  # Exclude data files from linting
     "notebooks/**/*.py",  # Exclude Jupyter notebook exports
+    "scripts/_debug/**/*.py",
 ]
 
 [tool.ruff.lint]

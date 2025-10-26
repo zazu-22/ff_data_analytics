@@ -61,6 +61,10 @@ notebooks/*.csv
 samples/**/*cache*
 .tmp_analysis/
 
+# One-off development files
+scripts/_debug/**/*
+scripts/troubleshooting/**/*
+
 # Archived and deprecated files
 **/_archive/**
 **/_deprecated/**
