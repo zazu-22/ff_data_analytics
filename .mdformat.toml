@@ -1,0 +1,38 @@
+# .mdformat.toml
+#
+#
+# == Default Values ==
+# These values are equivalent to having no configuration at all.
+# Changing them alters the default behavior.
+#
+wrap = "keep"      # options: {"keep", "no", INTEGER}
+number = false     # options: {false, true}
+end_of_line = "lf" # options: {"lf", "crlf", "keep"}
+validate = true    # options: {false, true}
+#
+# == Optional Values ==
+# extensions = [      # options: a list of enabled extensions (default: all installed are enabled)
+#     "gfm",
+#     "toc",
+# ]
+# codeformatters = [  # options: a list of enabled code formatter languages (default: all installed are enabled)
+#     "python",
+#     "json",
+# ]
+
+exclude = [
+  # exclude the following directories
+  "*.**/**",
+  "config/**",
+  "**/_archive/**",
+  "docs/analysis/**",
+  "docs/issues/**",
+  "**/dbt_packages/**",
+  # exclude all files that are not suffixed .md
+  "**/?",
+  "**/??",
+  "**/???",
+  "**/*[!.]??",
+  "**/*[!m]?",
+  "**/*[!d]",
+]

@@ -1,6 +1,6 @@
 [project]
 name = "ff-analytics"
-version = "0.1.0"
+version = "0.5.0"
 description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
 requires-python = ">=3.13.6"
@@ -21,16 +21,26 @@ dependencies = [
     "polars[pyarrow]>=1.33.1",
     "pyarrow>=21.0.0",
     "pydrive2>=1.21.3",
-    "pyrefly>=0.34.0",
-    "pytest>=8.4.2",
-    "python-lsp-ruff>=2.2.2",
-    "python-lsp-server>=1.13.1",
     "rich>=14.1.0",
-    "ruff>=0.13.2",
     "sqlglot>=27.19.0",
     "vegafusion>=2.0.2",
     "vl-convert-python>=1.8.0",
     "websockets>=15.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "dbt-duckdb>=1.8.0",
+    "mdformat>=1.0.0",
+    "pre-commit>=4.3.0",
+    "pyrefly>=0.34.0",
+    "pytest>=8.4.2",
+    "python-lsp-ruff>=2.2.2",
+    "python-lsp-server>=1.13.1",
+    "ruff>=0.13.2",
+    "sqlfluff>=3.1.1",
+    "sqlfluff-templater-dbt>=3.1.1",
+    "yamllint>=1.35.1",
 ]
 
 [build-system]
@@ -113,15 +123,6 @@ project-excludes = [
     "data/**",  # Exclude data directories
     "notebooks/**",  # Exclude notebooks (analyzed separately)
     "dbt/**",  # DBT has its own linting
-]
-
-[dependency-groups]
-dev = [
-    "pre-commit>=4.3.0",
-    "dbt-duckdb>=1.8.0",
-    "sqlfluff-templater-dbt>=3.1.1",
-    "sqlfluff>=3.1.1",
-    "yamllint>=1.35.1",
 ]
 
 # Type checking configuration
