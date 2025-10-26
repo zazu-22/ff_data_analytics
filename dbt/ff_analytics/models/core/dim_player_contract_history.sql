@@ -126,6 +126,47 @@ with all_contract_events as (
     and contract_total is not null  -- Must have contract terms
 ),
 
+fourth_year_options as (
+  -- Detect 4th year rookie options and calculate their correct start season
+  -- 4th year options are exercised during offseason but take effect AFTER the 3-year rookie contract ends
+  -- Detection: extension with 1 year, amount in (24,20,16,12,8,4), following a 3-year rookie contract
+  select
+    ext.player_id,
+    ext.transaction_id,
+    ext.contract_total,
+    -- Find preceding rookie contract and calculate when option should start
+    -- Rookie contracts start in their transaction_season (drafted in Aug)
+    -- 4th year option starts after 3-year rookie contract: start_year + 3
+    prev.transaction_season + prev.contract_years as option_start_season
+  from all_contract_events ext
+  left join lateral (
+    select
+      ce.transaction_season,
+      ce.contract_years
+    from all_contract_events ce
+    where ce.player_id = ext.player_id
+      and ce.transaction_date < ext.transaction_date
+      and ce.contract_type = 'rookie'
+      and ce.contract_years = 3  -- Rookie contracts are 3 years
+    order by ce.transaction_date desc
+    limit 1
+  ) prev on true
+  where ext.transaction_type = 'contract_extension'
+    and ext.contract_years = 1
+    and ext.contract_total in (24, 20, 16, 12, 8, 4)  -- Official 4th year option rates
+    and prev.transaction_season is not null  -- Must have preceding rookie contract
+),
+
+enriched_contract_events as (
+  -- Add 4th year option metadata to all contract events
+  select
+    ace.*,
+    fyo.option_start_season as fourth_year_option_start_season
+  from all_contract_events ace
+  left join fourth_year_options fyo
+    on ace.transaction_id = fyo.transaction_id
+),
+
 same_date_extensions as (
   -- Combine base contracts with extensions that occur on the same date
   -- Pattern A: Extension split contains FULL remaining schedule from extension date forward
@@ -207,10 +248,11 @@ same_date_extensions as (
     base.contract_type,
     base.is_rookie_contract,
     base.rfa_matched,
-    base.faad_compensation
+    base.faad_compensation,
+    base.fourth_year_option_start_season
 
-  from all_contract_events base
-  inner join all_contract_events ext
+  from enriched_contract_events base
+  inner join enriched_contract_events ext
     on base.player_id = ext.player_id
     and base.transaction_date = ext.transaction_date
     and base.transaction_type != 'contract_extension'
@@ -244,9 +286,10 @@ standalone_contracts as (
     contract_type,
     is_rookie_contract,
     rfa_matched,
-    faad_compensation
+    faad_compensation,
+    fourth_year_option_start_season
 
-  from all_contract_events
+  from enriched_contract_events
   where extension_id_on_same_date is null
 ),
 
@@ -296,6 +339,19 @@ contract_periods as (
       order by ce.transaction_date, ce.transaction_id
     ) as next_contract_date,
 
+    -- Get next contract's start season to check if it starts AFTER current contract ends
+    -- (needed for 4th year options that don't replace the rookie contract)
+    lead(
+      case
+        when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
+        when ce.period_type = 'offseason' then ce.transaction_season + 1
+        else ce.transaction_season
+      end
+    ) over (
+      partition by ce.player_id
+      order by ce.transaction_date, ce.transaction_id
+    ) as next_contract_start_season,
+
     -- Find termination date for this player+franchise (CUT or TRADE-AWAY)
     -- Get the minimum termination date that is AFTER contract start (chronologically)
     -- For same-date transactions (crude date mapping), use transaction_id for proper sequencing
@@ -313,12 +369,15 @@ contract_periods as (
     -- Contract timeline
     -- Use split array length if available (handles extensions with full remaining schedule)
     -- Otherwise fall back to contract_years
+    -- For 4th year rookie options, start season = (rookie_start + 3 years)
     -- For offseason transactions, contract starts in the NEXT season
     case
+      when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
       when ce.period_type = 'offseason' then ce.transaction_season + 1
       else ce.transaction_season
     end as contract_start_season,
     (case
+      when ce.fourth_year_option_start_season is not null then ce.fourth_year_option_start_season
       when ce.period_type = 'offseason' then ce.transaction_season + 1
       else ce.transaction_season
     end) + (
@@ -357,6 +416,7 @@ contract_periods_with_expiry as (
     -- Fix for Bug #2: Same-date sign-and-trade contracts were creating inverted dates
     -- (e.g., effective_date = 2024-01-01, next_contract = 2024-01-01,
     --  old logic: expiration = 2024-01-01 - 1 day = 2023-12-31, BEFORE effective!)
+    -- Fix for 4th year options: Don't terminate rookie contract when option starts in future season
     case
       -- Same-date next contract: expire at END of effective_date (not before)
       when cp.next_contract_date = cp.effective_date
@@ -370,7 +430,13 @@ contract_periods_with_expiry as (
           cp.termination_date - interval '1 day',
           make_date(cp.contract_end_season, 12, 31)
         )
-      -- Next contract exists: use earlier of next_contract or natural end
+      -- Next contract exists BUT starts in a future season (e.g., 4th year option):
+      -- Let current contract expire at natural end, don't terminate early
+      when cp.next_contract_date is not null
+           and cp.next_contract_start_season is not null
+           and cp.next_contract_start_season > cp.contract_end_season
+        then make_date(cp.contract_end_season, 12, 31)
+      -- Next contract exists and starts in same/earlier season: use earlier of next_contract or natural end
       when cp.next_contract_date is not null
         then least(
           cp.next_contract_date - interval '1 day',
@@ -382,9 +448,16 @@ contract_periods_with_expiry as (
 
     -- Is this the current contract?
     -- Current if: no next contract AND no termination, OR termination/next contract is in the future
+    -- Special case: if next contract starts in a future season (4th year option), current contract remains active
     case
       when cp.next_contract_date is null and cp.termination_date is null then true
       when cp.termination_date is not null and cp.termination_date <= current_date then false
+      -- If next contract starts in future season, current contract is still active (check end season)
+      when cp.next_contract_date is not null
+           and cp.next_contract_start_season is not null
+           and cp.next_contract_start_season > cp.contract_end_season
+        then cp.contract_end_season >= year(current_date)  -- Active if end season hasn't passed
+      -- Otherwise, not current if next contract already started
       when cp.next_contract_date is not null and cp.next_contract_date <= current_date then false
       else true
     end as is_current
