@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: mart_real_world_actuals_weekly
+    description: |
+      Real-world actuals mart - weekly player performance in physical stats (no fantasy scoring).
+
+      **Grain**: One row per player per season per week
+      **Source**: fact_player_stats (pivoted from long to wide form)
+
+      Part of 2×2 model:
+      - This mart: Real-world actuals (yards, TDs, receptions, etc.)
+      - Partner mart: mart_fantasy_actuals_weekly (applies scoring rules)
+
+      Provides denormalized player/team attributes via dimension joins.
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player')
+                field: player_id
+              config:
+                where: "player_id != -1"  # Allow unmapped players
+
+      - name: player_key
+        description: Composite player identifier for grain uniqueness
+        tests:
+          - not_null
+
+      - name: season
+        description: NFL season year
+        tests:
+          - not_null
+
+      - name: week
+        description: Week number (1-22, includes playoffs)
+        tests:
+          - not_null
+
+      - name: season_type
+        description: Season type (REG, POST, WC, DIV, CON, SB, PRE)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['REG', 'POST', 'WC', 'DIV', 'CON', 'SB', 'PRE']
+
+      - name: position
+        description: Player position
+        tests:
+          - not_null
+
+      - name: display_name
+        description: Player display name from dim_player
+        tests:
+          - not_null:
+              config:
+                where: "player_id != -1"  # Unmapped players may lack display_name
+
+      - name: games_played
+        description: Games played (always 1 for weekly grain)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1]
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_key
+              - season
+              - week
+              - season_type
+          config:
+            severity: error
+            error_if: ">0"

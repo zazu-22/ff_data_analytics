@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: mart_fantasy_projections
+    description: |
+      Fantasy projections mart - weekly/season player projections with fantasy scoring applied.
+
+      **Grain**: One row per player per season per week per horizon per asof_date
+      **Source**: mart_real_world_projections (with scoring rules applied)
+
+      Part of 2×2 model:
+      - Real-world base: mart_real_world_projections (physical stats)
+      - Fantasy scoring: This mart (applies dim_scoring_rule to calculate points)
+
+      League scoring: Half-PPR (no IDP in projections)
+      - Passing: 0.04/yard, 4/TD, -2/INT
+      - Rushing: 0.1/yard, 6/TD, -2/fumble lost
+      - Receiving: 0.5/reception (half-PPR), 0.1/yard, 6/TD, -2/fumble lost
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player)
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number (NULL for full_season horizon)
+
+      - name: horizon
+        description: |
+          Projection timeframe:
+          - weekly: Single week projection
+          - full_season: Entire season projection
+          - rest_of_season: Remaining games from projection date
+
+      - name: asof_date
+        description: When projection was made (UTC)
+
+      - name: provider
+        description: Projection provider (e.g., 'ffanalytics_consensus')
+
+      - name: display_name
+        description: Player display name from dim_player
+
+      - name: position
+        description: Player position
+
+      - name: projected_fantasy_points
+        description: |
+          Total fantasy points calculated from real-world stat projections and league scoring rules.
+          Applies dim_scoring_rule (half-PPR) to projected passing/rushing/receiving stats.
+          Does not include IDP scoring (projections lack defensive stats).

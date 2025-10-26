@@ -5,16 +5,17 @@ models:
     description: "Projections fact table in long form (real-world stats only)"
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - player_id
-            - season
-            - week
-            - horizon
-            - stat_name
-            - provider
-            - measure_domain
-            - stat_kind
-            - asof_date
+          arguments:
+            combination_of_columns:
+              - player_id
+              - season
+              - week
+              - horizon
+              - stat_name
+              - provider
+              - measure_domain
+              - stat_kind
+              - asof_date
           config:
             severity: warn  # Warn for now since we have limited test data
     columns:
@@ -35,19 +36,22 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['real_world']
+              arguments:
+                values: ['real_world']
       - name: stat_kind
         description: "Always 'projection'"
         tests:
           - not_null
           - accepted_values:
-              values: ['projection']
+              arguments:
+                values: ['projection']
       - name: horizon
         description: "Projection timeframe"
         tests:
           - not_null
           - accepted_values:
-              values: ['weekly', 'full_season', 'rest_of_season']
+              arguments:
+                values: ['weekly', 'full_season', 'rest_of_season']
       - name: asof_date
         description: "When projection was made"
         tests:

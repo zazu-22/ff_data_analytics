@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: dim_schedule
+    description: |
+      NFL game schedule dimension - one row per game for all temporal analysis.
+
+      **Grain**: One row per game (game_id as natural key)
+      **Source**: nflverse schedule dataset
+
+      Includes game timing, participating teams, results, and game context.
+      Used to resolve game_id for player stats and provide game-level attributes.
+
+    columns:
+      - name: game_id
+        description: |
+          Game identifier (unique across all seasons).
+          Primary key for schedule dimension.
+        tests:
+          - unique
+          - not_null
+
+      - name: season
+        description: NFL season year (2020-2025)
+        tests:
+          - not_null
+
+      - name: week
+        description: Week number (1-22, includes playoffs)
+        tests:
+          - not_null
+
+      - name: season_type
+        description: |
+          Season type: REG (regular season), POST (playoffs generic),
+          WC (wild card), DIV (divisional), CON (conference), SB (super bowl), PRE (preseason)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['REG', 'POST', 'WC', 'DIV', 'CON', 'SB', 'PRE']
+
+      - name: game_date
+        description: Game date (YYYY-MM-DD)
+        tests:
+          - not_null
+
+      - name: home_team_id
+        description: Home team identifier (FK to dim_team)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_team')
+                field: team_id
+
+      - name: away_team_id
+        description: Away team identifier (FK to dim_team)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_team')
+                field: team_id

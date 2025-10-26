@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: stg_sheets__contracts_active
+    description: |
+      Staged Commissioner CONTRACTS_ACTIVE sheet - point-in-time contract obligations.
+
+      **Grain**: One row per player per franchise per obligation year per snapshot date
+      **Source**: Commissioner Google Sheet franchise tabs (active contracts CSV section) → parse_contracts()
+      **Key Transformations**:
+      - GM name → franchise_id (SCD Type 2 temporal join)
+      - Player name → player_id via dim_player_id_xref + dim_name_alias
+      - Player_key composite identifier for grain uniqueness
+
+      **Purpose**:
+      This table serves as the **validation source of truth** for contract obligations.
+      It provides point-in-time snapshots of active roster contracts as recorded by the
+      commissioner, which can be compared against transaction-derived contracts from
+      dim_player_contract_history.
+
+      **Relationship to Other Tables**:
+      - dim_player_contract_history: Transaction-derived contract state (to be validated)
+      - stg_sheets__contracts_cut: Dead cap obligations from past cuts
+      - Combined via marts: Complete salary cap picture
+
+      **Player Mapping**:
+      Uses same resolution cascade as contracts_cut:
+      1. Transaction history (authoritative, position-aware)
+      2. Crosswalk with position filtering
+      3. Unmapped players preserved with player_id = -1
+
+    columns:
+      - name: franchise_id
+        description: "FK to dim_franchise (temporal SCD)"
+
+      - name: player_key
+        description: |
+          Composite identifier to prevent grain violations from unmapped players.
+          - Mapped players: player_id (mfl_id as varchar)
+          - Unmapped players: player_name
+
+      - name: player_id
+        description: |
+          FK to dim_player_id_xref (mfl_id).
+          - Mapped players: positive integer mfl_id
+          - Unmapped players: -1 or NULL (crosswalk miss)
+          Unmapped players are preserved via player_key composite identifier.
+
+      - name: obligation_year
+        description: "Year this cap hit is owed (e.g., 2025, 2026)"
+
+      - name: cap_hit
+        description: "Annual obligation for this year (whole dollars)"
+
+      - name: snapshot_date
+        description: "Partition date (dt=YYYY-MM-DD) when this snapshot was taken"
+
+      - name: rfa
+        description: "RFA status flag (from commissioner sheet)"
+
+      - name: franchise
+        description: "Franchise tag flag (from commissioner sheet)"
+
+      - name: roster_slot
+        description: "Roster designation (e.g., active, injured reserve)"
+
+      - name: is_unmapped_player
+        description: "Flag: true if player_id could not be resolved from crosswalk"
+
+      - name: is_unmapped_franchise
+        description: "Flag: true if franchise_id could not be resolved from dim_franchise"

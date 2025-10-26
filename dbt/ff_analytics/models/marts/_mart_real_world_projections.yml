@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: mart_real_world_projections
+    description: |
+      Real-world projections mart - weekly/season player projections (no fantasy scoring).
+
+      **Grain**: One row per player per season per week per horizon per asof_date
+      **Source**: fact_player_projections (pivoted from long to wide form)
+
+      Part of 2×2 model:
+      - This mart: Real-world projections (yards, TDs, receptions, etc.)
+      - Partner mart: mart_fantasy_projections (applies scoring rules)
+
+      Provides denormalized player attributes via dimension joins.
+      Used for raw projection analysis and input to variance analysis.
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player)
+
+      - name: player_name
+        description: Player name from projection source
+
+      - name: position
+        description: Player position
+
+      - name: current_team
+        description: Player's current team from projection source
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number (NULL for full_season horizon)
+
+      - name: horizon
+        description: |
+          Projection timeframe:
+          - weekly: Single week projection
+          - full_season: Entire season projection
+          - rest_of_season: Remaining games from projection date
+
+      - name: asof_date
+        description: When projection was made (UTC)
+
+      - name: provider
+        description: Projection provider (e.g., 'ffanalytics_consensus')
+
+      - name: source_count
+        description: Number of data sources aggregated in consensus
+
+      - name: total_weight
+        description: Sum of weights across all sources in consensus
+
+      - name: completions
+        description: Projected pass completions
+
+      - name: attempts
+        description: Projected pass attempts
+
+      - name: passing_yards
+        description: Projected passing yards
+
+      - name: passing_tds
+        description: Projected passing touchdowns
+
+      - name: interceptions
+        description: Projected interceptions
+
+      - name: rushing_attempts
+        description: Projected rushing attempts
+
+      - name: rushing_yards
+        description: Projected rushing yards
+
+      - name: rushing_tds
+        description: Projected rushing touchdowns
+
+      - name: targets
+        description: Projected receiving targets
+
+      - name: receptions
+        description: Projected receptions
+
+      - name: receiving_yards
+        description: Projected receiving yards
+
+      - name: receiving_tds
+        description: Projected receiving touchdowns
+
+      - name: fumbles_lost
+        description: Projected fumbles lost

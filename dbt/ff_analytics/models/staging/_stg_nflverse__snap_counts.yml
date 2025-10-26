@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: stg_nflverse__snap_counts
+    description: |
+      Staged nflverse snap counts unpivoted to long form.
+
+      **Grain**: One row per player per game per snap stat (6 stat types)
+      **Source**: data/raw/nflverse/snap_counts/ (nflverse snap counts dataset)
+      **Architecture**: Feeds into fact_player_stats (ADR-009 consolidated fact table)
+
+      **Snap Stats**:
+      - offense_snaps: Number of offensive snaps played
+      - offense_pct: Percentage of team's offensive snaps
+      - defense_snaps: Number of defensive snaps played
+      - defense_pct: Percentage of team's defensive snaps
+      - st_snaps: Number of special teams snaps
+      - st_pct: Percentage of team's special teams snaps
+
+      **Data Quality**:
+      - 0% of raw data excluded (no NULL pfr_player_id values)
+      - Mapping coverage: ~81.8% map to crosswalk (18.2% unmapped, mostly linemen)
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id from dim_player_id_xref).
+          Value of -1 indicates unmapped player (no crosswalk match).
+          18.2% unmapped (mostly offensive/defensive linemen not tracked in fantasy).
+
+      - name: player_key
+        description: |
+          Composite identifier for grain uniqueness.
+          - Mapped players: mfl_id (as varchar)
+          - Unmapped players: pfr_player_id (preserves identity)
+          - Unknown: 'UNKNOWN_' || game_id (defensive fail-safe)
+
+      - name: game_id
+        description: nflverse game identifier
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number
+
+      - name: season_type
+        description: Season type (REG, POST, WC, DIV, CON, SB, PRE)
+
+      - name: team
+        description: Player's team abbreviation
+
+      - name: opponent
+        description: Opponent team abbreviation
+
+      - name: position
+        description: Player position
+
+      - name: stat_name
+        description: |
+          Snap count statistic name (6 types):
+          - offense_snaps: Offensive snaps played
+          - offense_pct: Offensive snap percentage
+          - defense_snaps: Defensive snaps played
+          - defense_pct: Defensive snap percentage
+          - st_snaps: Special teams snaps
+          - st_pct: Special teams snap percentage
+
+      - name: stat_value
+        description: Numeric value of the snap statistic
+
+      - name: measure_domain
+        description: Always 'real_world' for snap counts
+
+      - name: stat_kind
+        description: Always 'actual' for historical snap data
+
+      - name: provider
+        description: Always 'nflverse' for this source

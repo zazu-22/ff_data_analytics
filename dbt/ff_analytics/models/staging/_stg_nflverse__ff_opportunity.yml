@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: stg_nflverse__ff_opportunity
+    description: |
+      Staged nflverse fantasy opportunity metrics unpivoted to long form.
+
+      **Grain**: One row per player per game per stat (~38 stat types)
+      **Source**: data/raw/nflverse/ff_opportunity/ (nflverse ff_opportunity dataset)
+      **Architecture**: Feeds into fact_player_stats (ADR-009 consolidated fact table)
+
+      **Stat Categories**:
+      - Expected stats (*_exp): 12 stats - predicted values based on opportunity
+      - Variance stats (*_diff): 12 stats - actual minus expected (over/under-performance)
+      - Air yards: 2 stats - pass_air_yards, rec_air_yards
+      - Team shares: 6 stats - individual and team attempt counts
+      - Total: ~38 stat types
+
+      **Data Quality**:
+      - 6.75% of raw data excluded (NULL player_id - unidentifiable players)
+      - Of identifiable players: 99.86% map to crosswalk, 0.14% unmapped
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id from dim_player_id_xref).
+          Value of -1 indicates unmapped player (no crosswalk match).
+
+      - name: player_key
+        description: |
+          Composite identifier for grain uniqueness.
+          - Mapped players: mfl_id (as varchar)
+          - Unmapped players: gsis_id (preserves identity)
+          - Unknown: 'UNKNOWN_' || game_id (defensive fail-safe)
+
+      - name: game_id
+        description: nflverse game identifier
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number
+
+      - name: season_type
+        description: |
+          Season type (always 'REG' for ff_opportunity - dataset limitation)
+
+      - name: position
+        description: Player position
+
+      - name: stat_name
+        description: |
+          Opportunity statistic name (~38 types):
+          - Expected: pass_completions_exp, receptions_exp, pass_yards_gained_exp, etc.
+          - Variance: pass_completions_diff, receptions_diff, pass_yards_gained_diff, etc.
+          - Air yards: pass_air_yards, rec_air_yards
+          - Attempts: pass_attempt, rec_attempt, rush_attempt, *_team variants
+
+      - name: stat_value
+        description: Numeric value of the statistic
+
+      - name: measure_domain
+        description: Always 'real_world' for opportunity metrics
+
+      - name: stat_kind
+        description: Always 'actual' for opportunity data
+
+      - name: provider
+        description: Always 'nflverse' for this source

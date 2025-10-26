@@ -1,0 +1,129 @@
+version: 2
+
+models:
+  - name: mart_contract_snapshot_current
+    description: |
+      Contract snapshot mart - current contract obligations by year (transaction-derived).
+
+      **Grain**: One row per player per franchise per contract period per obligation year
+      **Source**: dim_player_contract_history (expands contract_split_array into year-by-year rows)
+
+      Shows each player's current active contract broken down by year, including:
+      - Annual cap hit for each obligation year
+      - Remaining contract value from each year forward
+      - Dead cap liability if cut before that year
+      - Contract metadata (type, rookie flag, effective dates)
+
+      **Extension Handling**: contract_split_array already contains full remaining schedule
+      per league accounting conventions (e.g., 6-6-24 = 2 base years + 1 extension year).
+
+      **Use Cases**:
+      - Salary cap planning: Future year obligations
+      - Dead cap analysis: Cut liability scenarios
+      - Contract timeline: Expiration tracking
+      - Rookie contract management: Extension decisions
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player_id_xref)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+
+      - name: franchise_id
+        description: FK to dim_franchise (franchise owning the contract)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+
+      - name: contract_period
+        description: Sequential contract number for this player (1, 2, 3...)
+        tests:
+          - not_null
+
+      - name: obligation_year
+        description: Calendar year of the obligation (2023-2028)
+        tests:
+          - not_null
+
+      - name: year_position
+        description: Position within this contract (1, 2, 3, ...)
+        tests:
+          - not_null
+
+      - name: annual_cap_hit
+        description: Cap hit for this specific year (from contract_split_array)
+        tests:
+          - not_null
+
+      - name: years_remaining
+        description: Years left in contract from this year forward (including this year)
+        tests:
+          - not_null
+
+      - name: remaining_contract_value
+        description: Sum of all cap hits from this year forward
+        tests:
+          - not_null
+
+      - name: dead_cap_if_cut_before_year
+        description: Dead cap liability if cut before this year starts
+        tests:
+          - not_null
+
+      - name: contract_type
+        description: Contract classification (rookie, faad, fasa, trade_acquired, extension, etc.)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - rookie
+                  - faad
+                  - fasa
+                  - trade_acquired
+                  - extension
+                  - franchise_tag
+                  - waiver_claim
+                  - other
+
+      - name: is_rookie_contract
+        description: Flag for rookie contracts
+        tests:
+          - not_null
+
+      - name: contract_history_key
+        description: FK to dim_player_contract_history
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player_contract_history')
+                field: contract_history_key
+
+      - name: transaction_id_unique
+        description: FK to fact_league_transactions (audit trail)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fact_league_transactions')
+                field: transaction_id_unique
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_id
+              - franchise_id
+              - contract_period
+              - obligation_year
+          config:
+            severity: error
+            error_if: ">0"

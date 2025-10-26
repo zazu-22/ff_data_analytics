@@ -1,0 +1,137 @@
+version: 2
+
+models:
+  - name: dim_player_contract_history
+    description: |
+      Player contract history dimension - clean contract state over time.
+
+      Grain: One row per player per contract period per franchise
+      Source: fact_league_transactions (contract-creating events)
+      Architecture: Type 2 SCD dimension
+
+      Tracks complete contract lifecycle from signing through termination,
+      enabling dead cap calculations, roster timeline reconstruction, and
+      salary cap analysis.
+    columns:
+      - name: contract_history_key
+        description: Surrogate key (player_id + franchise_id + contract_period)
+        tests:
+          - not_null
+          - unique
+
+      - name: player_id
+        description: FK to dim_player_id_xref (canonical mfl_id)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+
+      - name: franchise_id
+        description: FK to dim_franchise (franchise owning this contract)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+
+      - name: contract_period
+        description: Sequential contract number for this player (1, 2, 3...)
+        tests:
+          - not_null
+
+      - name: contract_type
+        description: |
+          Contract classification:
+          - rookie: From rookie draft
+          - faad: Free agent auction draft (UFA/RFA)
+          - fasa: Free agent signing (in-season/offseason)
+          - trade_acquired: Inherited via trade
+          - extension: Contract extension
+          - franchise_tag: Franchise tag
+          - waiver_claim: Claimed off waivers
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - rookie
+                  - faad
+                  - fasa
+                  - trade_acquired
+                  - extension
+                  - franchise_tag
+                  - waiver_claim
+                  - other
+              config:
+                severity: error
+
+      - name: is_rookie_contract
+        description: Flag for rookie contracts (enables dim_rookie_contract_scale lookup)
+        tests:
+          - not_null
+
+      - name: contract_total
+        description: Total contract value ($)
+        tests:
+          - not_null
+
+      - name: contract_years
+        description: Contract length in years (1-5)
+        tests:
+          - not_null
+
+      - name: annual_amount
+        description: Average annual value (contract_total / contract_years)
+
+      - name: contract_start_season
+        description: Season when contract became effective
+        tests:
+          - not_null
+
+      - name: contract_end_season
+        description: Season when contract expires
+        tests:
+          - not_null
+
+      - name: effective_date
+        description: Date when this contract state became active (Type 2 SCD)
+        tests:
+          - not_null
+
+      - name: expiration_date
+        description: Date when this contract state ended (9999-12-31 if current)
+        tests:
+          - not_null
+
+      - name: is_current
+        description: Flag indicating if this is the player's current contract
+        tests:
+          - not_null
+
+      - name: dead_cap_if_cut_today
+        description: |
+          Dead cap liability if player cut today (calculated using
+          dim_cut_liability_schedule). Only populated for current contracts.
+
+      - name: transaction_id_unique
+        description: FK to fact_league_transactions (audit trail)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fact_league_transactions')
+                field: transaction_id_unique
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_id
+              - franchise_id
+              - contract_period
+          config:
+            severity: error
+            error_if: ">0"

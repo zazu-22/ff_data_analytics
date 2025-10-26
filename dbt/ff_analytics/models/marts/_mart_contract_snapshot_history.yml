@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: mart_contract_snapshot_history
+    description: |
+      Contract snapshot mart - historical point-in-time contract obligations (commissioner sheet snapshots).
+
+      **Grain**: One row per player per franchise per snapshot date per obligation year
+      **Source**: stg_sheets__contracts_active (direct from commissioner's CONTRACTS_ACTIVE sheet)
+
+      Provides point-in-time historical view of contract obligations as recorded in the
+      commissioner's CONTRACTS_ACTIVE sheet at various snapshot dates.
+
+      **Key Differences from mart_contract_snapshot_current**:
+      - Uses direct commissioner sheet snapshots (not derived from transaction log)
+      - Includes snapshot_date as grain component (enables time-series)
+      - Shows obligations as commissioner recorded them at each point in time
+      - May include manual corrections not yet in transaction log
+
+      **Use Cases**:
+      - Historical cap space: Obligations as of specific past dates
+      - Validation: Compare transaction-derived vs commissioner snapshots
+      - Trend analysis: Evolution of obligations over time
+      - Commissioner audit: Track changes between snapshot dates
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player_id_xref, -1 if unmapped)
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+              config:
+                where: "player_id != -1 and not is_unmapped_player"
+
+      - name: franchise_id
+        description: FK to dim_franchise (may be null if unmapped)
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+              config:
+                where: "franchise_id is not null and not is_unmapped_franchise"
+
+      - name: snapshot_date
+        description: Date of this snapshot from CONTRACTS_ACTIVE sheet
+        tests:
+          - not_null
+
+      - name: obligation_year
+        description: Calendar year of the obligation (2023-2028)
+        tests:
+          - not_null
+
+      - name: cap_hit
+        description: Annual obligation for this year (from commissioner sheet)
+        tests:
+          - not_null
+
+      - name: player_key
+        description: Composite identifier for grain uniqueness (handles unmapped players)
+        tests:
+          - not_null
+
+      - name: rfa
+        description: RFA status flag (from commissioner sheet)
+
+      - name: franchise_tag
+        description: Franchise tag flag (from commissioner sheet)
+
+      - name: is_unmapped_player
+        description: Flag indicating player not found in crosswalk
+        tests:
+          - not_null
+
+      - name: is_unmapped_franchise
+        description: Flag indicating franchise not resolved
+        tests:
+          - not_null
+
+      - name: snapshot_year
+        description: Year extracted from snapshot_date
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_key
+              - franchise_id
+              - snapshot_date
+              - obligation_year
+          config:
+            severity: error
+            error_if: ">0"

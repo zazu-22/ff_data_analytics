@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: stg_sheets__transactions
+    description: |
+      Staged Commissioner TRANSACTIONS sheet with dimension joins and validation flags.
+
+      **Grain**: One row per transaction event per asset
+      **Source**: Commissioner Google Sheet TRANSACTIONS tab → parse_transactions()
+      **Key Transformations**:
+      - Timeframe → transaction_date mapping
+      - Owner name → franchise_id (SCD Type 2 temporal join)
+      - Player crosswalk mapping (100% coverage via dim_name_alias)
+      - Contract validation flag calculation
+      - JSON casting for DuckDB compatibility
+
+      **Contract Validation**:
+      Extensions intentionally have length mismatches because:
+      - Contract field: shows extension amount only (e.g., 24/1)
+      - Split field: shows full remaining schedule (e.g., 6-6-24)
+      See: docs/analysis/TRANSACTIONS_contract_validation_analysis.md
+
+    columns:
+      - name: transaction_id_unique
+        description: "Unique identifier for this transaction-asset row (PK)"
+        tests:
+          - unique
+          - not_null
+
+      - name: transaction_id
+        description: "Transaction event ID (groups multi-asset trades)"
+        tests:
+          - not_null
+
+      - name: player_key
+        description: |
+          Composite identifier to prevent grain violations from unmapped players.
+          - Mapped players: player_id (mfl_id as varchar)
+          - Unmapped players: player_name
+          - Non-players: asset-specific prefix + transaction_id_unique
+        tests:
+          - not_null
+
+      - name: transaction_type
+        description: "Refined transaction type (11 types)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - rookie_draft_selection
+                  - cut
+                  - trade
+                  - waiver_claim
+                  - fasa_signing
+                  - faad_ufa_signing
+                  - faad_rfa_matched
+                  - offseason_ufa_signing
+                  - contract_extension
+                  - franchise_tag
+                  - amnesty_cut
+                  - unknown
+
+      - name: asset_type
+        description: "Asset classification"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - player
+                  - pick
+                  - defense
+                  - cap_space
+                  - unknown
+
+      - name: transaction_date
+        description: "Derived transaction date (from timeframe + period_type)"
+        tests:
+          - not_null
+
+      - name: transaction_year
+        description: "Year extracted from transaction_date"
+        tests:
+          - not_null
+
+      - name: timeframe_string
+        description: "Original timeframe from sheet (e.g., '2024 Offseason')"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_timeframe')
+                field: timeframe_string
+
+      - name: from_franchise_id
+        description: "Source franchise (null for waiver wire)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+              config:
+                where: "from_franchise_id is not null"
+
+      - name: to_franchise_id
+        description: "Destination franchise (null for waiver wire)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+              config:
+                where: "to_franchise_id is not null"
+
+      - name: player_id
+        description: "Canonical player ID (mfl_id from crosswalk)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+              config:
+                where: "asset_type = 'player' and player_id != -1"
+
+      - name: pick_id
+        description: |
+          Standardized pick ID (YYYY_R#_P##).
+
+          Note: Not all pick_ids exist in dim_pick. Compensatory picks (e.g., P14+)
+          and traded duplicate slots are valid but not in the standard seed.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_pick')
+                field: pick_id
+              config:
+                where: "asset_type = 'pick' and pick_id is not null and pick_id not like '%_TBD'"
+                severity: warn  # Compensatory picks expected to fail
+
+      - name: contract_split_json
+        description: "Year-by-year cap hits as JSON array for DuckDB"
+
+      - name: has_contract_length_mismatch
+        description: "Flag: len(split) != years (expected for Extensions)"
+
+      - name: has_contract_sum_mismatch
+        description: "Flag: sum(split) != total (rounding or errors)"
+
+      - name: validation_notes
+        description: "Explanation of validation issues"

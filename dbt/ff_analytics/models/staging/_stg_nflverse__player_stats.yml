@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: stg_nflverse__player_stats
+    description: |
+      Staged nflverse weekly player statistics unpivoted to long form.
+
+      **Grain**: One row per player per game per stat (~71 stat types)
+      **Source**: data/raw/nflverse/weekly/ (nflverse weekly player stats)
+      **Architecture**: Primary feed into fact_player_stats (ADR-009 consolidated fact table)
+
+      **Stat Categories**:
+      - Passing stats: 11 stats (completions, attempts, yards, TDs, INTs, air yards, etc.)
+      - Rushing stats: 8 stats (carries, yards, TDs, fumbles, first downs, etc.)
+      - Receiving stats: 11 stats (targets, receptions, yards, TDs, air yards, etc.)
+      - Defensive stats: 15 stats (tackles, sacks, INTs, pass defended, etc.)
+      - Kicking stats: 21 stats (field goals by distance, extra points, etc.)
+      - Punting stats: 5 stats (punts, yards, blocked, etc.)
+      - Sacks suffered: 4 stats (QB sacks, yards lost, fumbles)
+      - Special teams: 1 stat (special_teams_tds)
+      - Total: ~71 stat types
+
+      **Game ID**: Surrogate key (season_week_team_opponent) generated since raw data lacks it
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id from dim_player_id_xref).
+          Value of -1 indicates unmapped player (no crosswalk match).
+
+      - name: player_key
+        description: |
+          Composite identifier for grain uniqueness.
+          - Mapped players: mfl_id (as varchar)
+          - Unmapped players: gsis_id (preserves identity)
+          - Unknown: 'UNKNOWN_' || game_id (defensive fail-safe)
+
+      - name: game_id
+        description: |
+          Surrogate game identifier (season_week_team_opponent).
+          Generated since raw nflverse weekly data doesn't include game_id.
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number (1-22, includes playoffs)
+
+      - name: season_type
+        description: Season type (REG, POST, WC, DIV, CON, SB, PRE)
+
+      - name: team
+        description: Player's team abbreviation
+
+      - name: opponent_team
+        description: Opponent team abbreviation
+
+      - name: position
+        description: Player position
+
+      - name: stat_name
+        description: |
+          Player statistic name (~71 types):
+          - Passing: completions, attempts, passing_yards, passing_tds, passing_interceptions, etc.
+          - Rushing: carries, rushing_yards, rushing_tds, rushing_fumbles, etc.
+          - Receiving: targets, receptions, receiving_yards, receiving_tds, etc.
+          - Defense: def_tackles_solo, def_sacks, def_interceptions, def_pass_defended, etc.
+          - Kicking: fg_made, fg_att, fg_made_0_19, fg_made_20_29, pat_made, etc.
+          - Punting: punts, punt_yards, punt_blocked, etc.
+
+      - name: stat_value
+        description: Numeric value of the statistic
+
+      - name: measure_domain
+        description: Always 'real_world' for raw player stats
+
+      - name: stat_kind
+        description: Always 'actual' for historical game data
+
+      - name: provider
+        description: Always 'nflverse' for this source

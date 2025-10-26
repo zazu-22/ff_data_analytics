@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: stg_sheets__contracts_cut
+    description: |
+      Staged Commissioner CONTRACTS_CUT sheet - dead cap obligations from past cuts.
+
+      **Grain**: One row per franchise per player per obligation year per snapshot date
+      **Source**: Commissioner Google Sheet franchise tabs (dead cap CSV section) → parse_contracts()
+      **Key Transformations**:
+      - GM name → franchise_id (SCD Type 2 temporal join)
+      - Player name → player_id via dim_player_id_xref + dim_name_alias
+      - Player_key composite identifier for grain uniqueness
+
+      **Purpose**:
+      This table represents the **source of truth** for dead cap obligations calculated
+      per league rules (50% years 1-2, 25% years 3-5). It serves as the validation
+      baseline for comparing against transaction-derived dead cap calculations.
+
+      **Relationship to Other Tables**:
+      - stg_sheets__contracts_active: Active roster obligations
+      - stg_sheets__contracts_cut: Dead cap from past cuts
+      - Combined = Total salary cap obligations
+
+      **Player Mapping**:
+      Uses same resolution cascade as contracts_active:
+      1. Transaction history (authoritative, position-aware)
+      2. Crosswalk with position filtering
+      3. Unmapped players preserved with player_id = -1
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - franchise_id
+              - player_key
+              - obligation_year
+              - snapshot_date
+          config:
+            severity: error
+            error_if: ">0"
+
+    columns:
+      - name: franchise_id
+        description: "FK to dim_franchise (temporal SCD)"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+              config:
+                where: "franchise_id is not null"
+
+      - name: player_key
+        description: |
+          Composite identifier to prevent grain violations from unmapped players.
+          - Mapped players: player_id (mfl_id as varchar)
+          - Unmapped players: player_name
+        tests:
+          - not_null
+
+      - name: player_id
+        description: |
+          FK to dim_player_id_xref (mfl_id).
+          - Mapped players: positive integer mfl_id
+          - Unmapped players: -1 or NULL (crosswalk miss)
+          Unmapped players are preserved via player_key composite identifier.
+
+      - name: obligation_year
+        description: "Year this dead cap amount is owed (e.g., 2025, 2026)"
+        tests:
+          - not_null
+
+      - name: dead_cap_amount
+        description: |
+          Dead cap amount owed for this year (whole dollars).
+          Calculated per league rules: 50% years 1-2, 25% years 3-5.
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "Partition date (dt=YYYY-MM-DD)"
+        tests:
+          - not_null
+
+      - name: is_unmapped_player
+        description: "Flag: true if player_id could not be resolved from crosswalk"
+
+      - name: is_unmapped_franchise
+        description: "Flag: true if franchise_id could not be resolved from dim_franchise"

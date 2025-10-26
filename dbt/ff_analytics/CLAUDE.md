@@ -65,6 +65,31 @@ Each subdirectory has a README.md with specific guidance:
 | `seeds/` | Reference data | `dim_*` crosswalks, rules |
 | `macros/` | Reusable SQL functions | Freshness gates, helpers |
 
+### Schema Documentation Pattern
+
+This project follows **per-model YAML documentation** (dbt best practice):
+
+- **One YAML file per model** (or small group of tightly related models)
+- **Naming convention**: `_<model_name>.yml`
+  - Underscore prefix groups docs with models in file listings
+  - Makes it clear it's documentation, not a model
+- **Location**: Same directory as the SQL model
+- **Example**: `stg_ktc_assets.sql` + `_stg_ktc_assets.yml`
+
+**Benefits**:
+
+1. **Easier navigation** - Documentation lives next to the model SQL
+2. **Reduced merge conflicts** - Multiple developers can work on different models
+3. **Clearer ownership** - Each model's docs are self-contained
+4. **Better code reviews** - Changes to model and its tests in same PR
+5. **Scalability** - Works better as projects grow
+
+**When creating new models**:
+
+- ALWAYS create a corresponding `_<model_name>.yml` file
+- At minimum, document: description, grain, key tests
+- Follow existing YAML files as templates
+
 ## Key Patterns
 
 ### Grain Declaration
@@ -75,13 +100,14 @@ Each subdirectory has a README.md with specific guidance:
 # models/core/schema.yml (fact_player_stats)
 tests:
   - dbt_utils.unique_combination_of_columns:
-      combination_of_columns:
-        - player_key  # Composite identifier (not player_id!)
-        - game_id
-        - stat_name
-        - provider
-        - measure_domain
-        - stat_kind
+      arguments:
+        combination_of_columns:
+          - player_key  # Composite identifier (not player_id!)
+          - game_id
+          - stat_name
+          - provider
+          - measure_domain
+          - stat_kind
       config:
         severity: error
         error_if: ">0"
@@ -190,6 +216,52 @@ All large models use external Parquet. DuckDB catalog is in-memory only.
 | `dbt_utils.unique_combination_of_columns` | Grain enforcement | Fact grain |
 | `accepted_values` | Controlled vocabularies | Enums, flags |
 | `freshness` | Data recency | Source level |
+
+### Test Syntax (dbt 1.10+)
+
+**IMPORTANT**: dbt 1.10+ requires test arguments to be nested under an `arguments:` property.
+
+**Correct syntax** (use this):
+
+```yaml
+# Generic tests with arguments
+- accepted_values:
+    arguments:
+      values: ['value1', 'value2']
+
+- relationships:
+    arguments:
+      to: ref('other_model')
+      field: id
+    config:
+      where: "field is not null"
+
+- dbt_utils.unique_combination_of_columns:
+    arguments:
+      combination_of_columns:
+        - column1
+        - column2
+    config:
+      severity: error
+```
+
+**Deprecated syntax** (don't use):
+
+```yaml
+# Old syntax - will generate deprecation warnings
+- accepted_values:
+    values: ['value1', 'value2']  # WRONG
+
+- relationships:
+    to: ref('other_model')  # WRONG
+    field: id
+```
+
+**Key points**:
+
+- `arguments:` wraps all test parameters (to, field, values, combination_of_columns, etc.)
+- `config:` remains a sibling to `arguments:` (not nested inside)
+- `not_null` and `unique` tests have no arguments, so no changes needed
 
 ## References
 

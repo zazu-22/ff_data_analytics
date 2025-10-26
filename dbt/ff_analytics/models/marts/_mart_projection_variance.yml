@@ -1,0 +1,123 @@
+version: 2
+
+models:
+  - name: mart_projection_variance
+    description: |
+      Projection variance mart - compare actual performance vs pre-game projections.
+
+      **Grain**: One row per player per season per week (actuals grain)
+      **Sources**:
+      - mart_real_world_actuals_weekly (actual performance)
+      - mart_real_world_projections (weekly projections)
+
+      **Analysis Focus**:
+      - Variance = actual - projected for each stat
+      - Only includes projections made BEFORE the game (asof_date <= game week)
+      - Focuses on weekly projections (horizon='weekly')
+      - Regular season only (season_type='REG')
+      - Uses latest projection available before each week
+
+      **Use Cases**:
+      - Projection accuracy analysis by position/player
+      - Identify consistent over/under performers
+      - Adjust future projection models
+      - Evaluate projection source quality
+
+      **Future Enhancements** (per model comments):
+      - Track multiple projection snapshots per week
+      - Add percentage error, absolute error metrics
+      - Aggregated accuracy by position/source
+
+    columns:
+      - name: player_id
+        description: Canonical player identifier (FK to dim_player)
+
+      - name: display_name
+        description: Player display name
+
+      - name: position
+        description: Player position
+
+      - name: season
+        description: NFL season year
+
+      - name: week
+        description: Week number (regular season only)
+
+      - name: season_type
+        description: Season type (currently only 'REG' included)
+
+      - name: asof_date
+        description: When projection was made (latest before game week)
+
+      - name: actual_passing_yards
+        description: Actual passing yards in the game
+
+      - name: projected_passing_yards
+        description: Projected passing yards before the game
+
+      - name: variance_passing_yards
+        description: Actual - Projected passing yards
+
+      - name: actual_passing_tds
+        description: Actual passing touchdowns
+
+      - name: projected_passing_tds
+        description: Projected passing touchdowns
+
+      - name: variance_passing_tds
+        description: Actual - Projected passing touchdowns
+
+      - name: actual_rushing_yards
+        description: Actual rushing yards
+
+      - name: projected_rushing_yards
+        description: Projected rushing yards
+
+      - name: variance_rushing_yards
+        description: Actual - Projected rushing yards
+
+      - name: actual_rushing_tds
+        description: Actual rushing touchdowns
+
+      - name: projected_rushing_tds
+        description: Projected rushing touchdowns
+
+      - name: variance_rushing_tds
+        description: Actual - Projected rushing touchdowns
+
+      - name: actual_receptions
+        description: Actual receptions
+
+      - name: projected_receptions
+        description: Projected receptions
+
+      - name: variance_receptions
+        description: Actual - Projected receptions
+
+      - name: actual_receiving_yards
+        description: Actual receiving yards
+
+      - name: projected_receiving_yards
+        description: Projected receiving yards
+
+      - name: variance_receiving_yards
+        description: Actual - Projected receiving yards
+
+      - name: actual_receiving_tds
+        description: Actual receiving touchdowns
+
+      - name: projected_receiving_tds
+        description: Projected receiving touchdowns
+
+      - name: variance_receiving_tds
+        description: Actual - Projected receiving touchdowns
+
+      - name: actual_fumbles_lost
+        description: Actual fumbles lost
+
+      - name: projected_fumbles_lost
+        description: Projected fumbles lost
+
+      - name: variance_fumbles_lost
+        description: Actual - Projected fumbles lost

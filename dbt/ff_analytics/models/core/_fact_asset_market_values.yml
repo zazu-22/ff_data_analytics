@@ -1,0 +1,102 @@
+version: 2
+
+models:
+  - name: fact_asset_market_values
+    description: |
+      KTC dynasty market values fact table - time-series of asset valuations.
+
+      Tracks crowdsourced dynasty market values from KeepTradeCut across time.
+      Values represent community consensus on asset worth in dynasty leagues.
+
+      **Grain**: One row per asset per market_scope per asof_date
+      **Sources**: stg_ktc_assets (players + picks UNION)
+      **Architecture**: Snapshot fact table (Kimball) - periodic snapshots
+
+      **Asset Types**:
+      - player: Active NFL players and rookies
+      - pick: Future draft picks (2025-2028, Early/Mid/Late, rounds 1-5)
+
+      **Market Scopes**:
+      - dynasty_1qb: Standard 1-QB dynasty league format
+      - dynasty_superflex: Superflex (2-QB) dynasty league format
+
+      **Data Attribution**:
+      Market values sourced from KeepTradeCut (https://keeptradecut.com/dynasty-rankings)
+      per their content usage guidelines.
+
+    columns:
+      - name: player_key
+        description: |
+          Composite identity key for grain uniqueness.
+          - Mapped players: mfl_id (as varchar)
+          - Unmapped players: player_name
+          - Picks: pick_name
+        tests:
+          - not_null
+
+      - name: market_scope
+        description: League format (dynasty_1qb or dynasty_superflex)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - dynasty_1qb
+                  - dynasty_superflex
+
+      - name: asof_date
+        description: Snapshot date of market values
+        tests:
+          - not_null
+
+      - name: asset_type
+        description: Asset classification (player or pick)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - player
+                  - pick
+
+      - name: provider
+        description: Data source provider
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - keeptradecut
+
+      - name: overall_rank
+        description: Overall rank across all assets in this market_scope
+        tests:
+          - not_null
+
+      - name: ktc_value
+        description: KTC value score (0-10000 scale)
+        tests:
+          - not_null
+
+      - name: player_id
+        description: |
+          FK to dim_player_id_xref (null for picks and unmapped players).
+          Value of -1 indicates unmapped player (no crosswalk match).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: mfl_id
+              config:
+                where: "asset_type = 'player' and player_id != -1"
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_key
+              - market_scope
+              - asof_date
+          config:
+            severity: error
+            error_if: ">0"

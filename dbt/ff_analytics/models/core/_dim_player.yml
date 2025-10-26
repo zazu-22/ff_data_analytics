@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: dim_player
+    description: |
+      Player dimension - conformed dimension for all player-based analysis.
+
+      **Grain**: One row per player (mfl_id as canonical player_id)
+      **Source**: dim_player_id_xref seed (nflverse ff_playerids with 19 provider ID mappings)
+
+      **SCD Type 1** (overwrite): current_team
+      **SCD Type 0** (immutable): draft_year, birthdate
+
+      Provides display attributes and cross-platform provider ID mappings.
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical player identifier (mfl_id).
+          Primary key for player dimension.
+        tests:
+          - unique
+          - not_null
+
+      - name: display_name
+        description: Player display name for presentation
+        tests:
+          - not_null
+
+      - name: position
+        description: |
+          Player position (QB, RB, WR, TE, K, etc.).
+          Fantasy-relevant positions: QB, RB, WR, TE, K, FB
+        tests:
+          - not_null
+
+      - name: current_team
+        description: |
+          Current team assignment (SCD Type 1 - overwrites on change).
+          Null for unsigned free agents.
+
+      - name: draft_year
+        description: |
+          NFL draft year (SCD Type 0 - immutable).
+          Null for undrafted free agents.
