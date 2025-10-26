@@ -19,10 +19,13 @@ from google.oauth2.service_account import Credentials
 
 # Timeout handler for hung operations
 class TimeoutError(Exception):
+    """Exception raised when an operation times out."""
+
     pass
 
 
 def timeout_handler(signum, frame):
+    """Signal handler that raises TimeoutError."""
     raise TimeoutError("Operation timed out")
 
 
@@ -234,6 +237,7 @@ def upload_to_gcs(
 
 
 def main():
+    """Ingest Commissioner Sheet to GCS."""
     parser = argparse.ArgumentParser(description="Ingest Commissioner Sheet to GCS")
     parser.add_argument("--creds", required=True, help="Path to GCP service account key")
     parser.add_argument("--sheet-url", required=True, help="Commissioner Sheet URL")
@@ -300,7 +304,7 @@ def main():
             "total_tabs": len(tabs_to_export),
         }
 
-        with open("ingestion_summary.json", "w") as f:
+        with Path("ingestion_summary.json").open("w") as f:
             json.dump(summary, f, indent=2)
 
         return 0 if success_count > 0 else 1

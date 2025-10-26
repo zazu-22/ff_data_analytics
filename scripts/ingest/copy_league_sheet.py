@@ -41,11 +41,13 @@ LOG_SHEET_BASENAME="league_sheet_ingest_logs"
 """
 
 import hashlib
+import logging
 import os
 import sys
 import time
 import uuid
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import cast
 
 import gspread
@@ -58,6 +60,9 @@ from rich.pretty import pprint
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # === Import helpers ===
 try:
@@ -88,7 +93,7 @@ except Exception:
     except Exception:
         # Fallback when running the script directly; ensure script dir is on sys.path
         # os and sys are already imported at the top of this module; reuse them here.
-        sys.path.insert(0, os.path.dirname(__file__))
+        sys.path.insert(0, str(Path(__file__).parent))
         from ff_analytics_utils.google_drive_helper import (
             build_drive,
             ensure_folder,
@@ -135,6 +140,7 @@ def print_run_summary(
     stats: dict[str, int],
     tab_results: list[dict[str, object]],
 ):
+    """Print a structured summary of the league sheets copy run."""
     # File metadata + parents (names if visible)
     src_meta = get_file_metadata(drive, src_sheet_id, fields="id,name,parents,modifiedTime,version")
     dst_meta = get_file_metadata(drive, dst_sheet_id, fields="id,name,parents,modifiedTime,version")
@@ -265,6 +271,7 @@ except Exception:  # pragma: no cover - fallback if package not importable
 # Utility helpers (local)
 # -----------------------
 def ensure_log_sheet(spreadsheet: Spreadsheet, name=LOG_SHEET_NAME):
+    """Ensure the log sheet exists with required columns."""
     try:
         ws = spreadsheet.worksheet(name)
         # Check if we need to add the new column for existing sheets
@@ -297,6 +304,7 @@ def ensure_log_sheet(spreadsheet: Spreadsheet, name=LOG_SHEET_NAME):
 
 
 def ensure_state_sheet(spreadsheet: Spreadsheet, name=STATE_SHEET_NAME):
+    """Ensure the state sheet exists for storing run metadata."""
     try:
         ws = spreadsheet.worksheet(name)
     except WorksheetNotFound:
@@ -306,6 +314,7 @@ def ensure_state_sheet(spreadsheet: Spreadsheet, name=STATE_SHEET_NAME):
 
 
 def state_get(ws, key: str):
+    """Get a value from the state sheet by key."""
     vals = ws.get_all_values()
     for row in vals[1:]:
         if len(row) >= 2 and row[0] == key:
@@ -314,6 +323,7 @@ def state_get(ws, key: str):
 
 
 def state_set(ws, key: str, value: str) -> None:
+    """Set a value in the state sheet by key."""
     vals = ws.get_all_values()
     for r, row in enumerate(vals[1:], start=2):
         if len(row) >= 2 and row[0] == key:
@@ -323,6 +333,7 @@ def state_set(ws, key: str, value: str) -> None:
 
 
 def last_success_utc_by_tab(log_ws) -> dict[str, datetime]:
+    """Extract last successful run timestamp for each tab from the log sheet."""
     out: dict[str, datetime] = {}
     rows = log_ws.get_all_values()
     if not rows:
@@ -340,7 +351,8 @@ def last_success_utc_by_tab(log_ws) -> dict[str, datetime]:
             continue
         try:
             ts = parse_rfc3339(row[idx_finished])
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Failed to parse timestamp in log row: {e}")
             continue
         if tab not in out or ts > out[tab]:
             out[tab] = ts
@@ -348,6 +360,7 @@ def last_success_utc_by_tab(log_ws) -> dict[str, datetime]:
 
 
 def log_row(log_ws, **k) -> None:
+    """Append a row to the log sheet with run details."""
     log_ws.append_row(
         [
             k.get("run_id"),
@@ -370,32 +383,15 @@ def log_row(log_ws, **k) -> None:
 
 
 def a1(r: int, c: int) -> str:
+    """Convert row/column indices to A1 notation."""
     return gspread.utils.rowcol_to_a1(r, c)
 
 
 # -----------------------
 # Main
 # -----------------------
-def main() -> int:
-    # Auth
-    creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)
-    gc = gspread.authorize(creds)
-    drive = build_drive(creds)
-    gc.set_timeout((10, 180))  # (connect, read)
-
-    # Open spreadsheets
-    try:
-        src = gc.open_by_key(COMMISSIONER_SHEET_ID)
-    except Exception as e:
-        print(f"ERROR: cannot open SOURCE spreadsheet: {e}", file=sys.stderr)
-        sys.exit(2)
-    try:
-        dst = gc.open_by_key(LEAGUE_SHEET_COPY_ID)
-    except Exception as e:
-        print(f"ERROR: cannot open DEST spreadsheet: {e}", file=sys.stderr)
-        sys.exit(2)
-
-    # Decide where logs live
+def _setup_logging_spreadsheet(gc, drive, dst):
+    """Set up the logging spreadsheet (separate or in destination)."""
     separate_logs_enabled = LOG_IN_SEPARATE_SPREADSHEET
     folder_id = None
     log_file_id = None
@@ -424,17 +420,15 @@ def main() -> int:
             print(f"WARNING: Could not create/access separate log sheet: {e}", file=sys.stderr)
             print("Falling back to using destination sheet for logging.", file=sys.stderr)
             logs_ss = dst
-            separate_logs_enabled = False  # Update flag for summary
+            separate_logs_enabled = False
     else:
         logs_ss = dst
 
-    log_ws = ensure_log_sheet(logs_ss)
-    state_ws = ensure_state_sheet(logs_ss)
+    return logs_ss, separate_logs_enabled, folder_id, log_file_id
 
-    # Drive file-level modifiedTime
-    src_modified_utc, src_meta = get_file_modified_time_utc(drive, COMMISSIONER_SHEET_ID)
 
-    # Whole-run skip (optional)
+def _check_whole_run_skip(state_ws, log_ws, src_modified_utc):
+    """Check if entire run should be skipped due to unchanged source."""
     prev_src_mtime = state_get(state_ws, "src_modifiedTime_utc")
     if ENTIRE_RUN_SKIP_IF_UNCHANGED and prev_src_mtime:
         try:
@@ -448,10 +442,10 @@ def main() -> int:
                 log_row(
                     log_ws,
                     run_id=run_id,
-                    tab="[ENTIRE_RUN]",  # Special marker for whole-run entries
+                    tab="[ENTIRE_RUN]",
                     status="SKIP_UNCHANGED",
                     started_at=started_iso,
-                    finished_at=started_iso,  # Same as start for skipped runs
+                    finished_at=started_iso,
                     duration_ms=0,
                     src_sheet_id=COMMISSIONER_SHEET_ID,
                     src_tab_title="[ALL]",
@@ -462,36 +456,160 @@ def main() -> int:
                     checksum=None,
                     src_modifiedTime_utc=src_modified_utc.isoformat(),
                 )
-                return 0
-        except Exception:
-            pass
+                return True
+        except Exception as e:
+            logger.debug(f"Failed to parse previous modifiedTime for skip check: {e}")
+    return False
 
-    # Source worksheets (metadata only)
+
+def _copy_single_tab(src_ws, dst, drive, run_id, title):
+    """Copy a single tab from source to destination and return metadata."""
+    # Server-side copyTo
+    new_id = None
+    if copy_league_sheet is not None and CopyOptions is not None:
+        summary = copy_league_sheet(
+            COMMISSIONER_SHEET_ID,
+            LEAGUE_SHEET_COPY_ID,
+            [title],
+            CopyOptions(paste_values_only=True),
+        )
+        tab_res = (summary.get("tabs") or [{}])[0]
+        if tab_res.get("status") != "copied":
+            raise RuntimeError(f"Copy failed for {title}: {tab_res}")
+        new_id = tab_res.get("new_sheet_id")
+    else:
+        new_props = src_ws.copy_to(LEAGUE_SHEET_COPY_ID)
+        new_id = new_props["sheetId"]
+
+    # Process the new sheet
+    new_ws = next(w for w in dst.worksheets() if w.id == new_id)
+    temp_name = f"__incoming_{title}_{run_id[:8]}"
+    new_ws.update_title(temp_name)
+    rows, cols = new_ws.row_count, new_ws.col_count
+
+    # Detect old tab
+    old_id = None
+    try:
+        old_ws = dst.worksheet(title)
+        old_id = old_ws.id
+    except WorksheetNotFound:
+        pass
+
+    # Atomic batch update
+    now_iso = datetime.now(UTC).isoformat()
+    requests = [
+        {
+            "copyPaste": {
+                "source": {
+                    "sheetId": new_id,
+                    "startRowIndex": 0,
+                    "endRowIndex": rows,
+                    "startColumnIndex": 0,
+                    "endColumnIndex": cols,
+                },
+                "destination": {"sheetId": new_id, "startRowIndex": 0, "startColumnIndex": 0},
+                "pasteType": "PASTE_VALUES",
+                "pasteOrientation": "NORMAL",
+            }
+        },
+        *([{"deleteSheet": {"sheetId": old_id}}] if old_id is not None else []),
+        {
+            "updateSheetProperties": {
+                "properties": {"sheetId": new_id, "title": title},
+                "fields": "title",
+            }
+        },
+        {
+            "createDeveloperMetadata": {
+                "developerMetadata": {
+                    "metadataKey": "bk_last_refresh_iso",
+                    "metadataValue": now_iso,
+                    "visibility": "DOCUMENT",
+                    "location": {"sheetId": new_id},
+                }
+            }
+        },
+        {
+            "createDeveloperMetadata": {
+                "developerMetadata": {
+                    "metadataKey": "bk_source_spreadsheet_id",
+                    "metadataValue": COMMISSIONER_SHEET_ID,
+                    "visibility": "DOCUMENT",
+                    "location": {"sheetId": new_id},
+                }
+            }
+        },
+        {
+            "createDeveloperMetadata": {
+                "developerMetadata": {
+                    "metadataKey": "bk_source_tab_title",
+                    "metadataValue": title,
+                    "visibility": "DOCUMENT",
+                    "location": {"sheetId": new_id},
+                }
+            }
+        },
+        {
+            "createDeveloperMetadata": {
+                "developerMetadata": {
+                    "metadataKey": "bk_run_id",
+                    "metadataValue": run_id,
+                    "visibility": "DOCUMENT",
+                    "location": {"sheetId": new_id},
+                }
+            }
+        },
+        {
+            "createDeveloperMetadata": {
+                "developerMetadata": {
+                    "metadataKey": "bk_src_modifiedTime_utc",
+                    "metadataValue": get_file_metadata(
+                        drive, COMMISSIONER_SHEET_ID, "modifiedTime"
+                    )["modifiedTime"],
+                    "visibility": "DOCUMENT",
+                    "location": {"sheetId": new_id},
+                }
+            }
+        },
+        {
+            "addProtectedRange": {
+                "protectedRange": {
+                    "range": {"sheetId": new_id},
+                    "description": "Values-only extract – prefer editing the source sheet.",
+                    "warningOnly": True,
+                }
+            }
+        },
+    ]
+
+    dst.batch_update({"requests": requests})
+
+    # Checksum
+    rng = f"{a1(1, 1)}:{a1(min(CHECKSUM_ROWS, rows), min(CHECKSUM_COLS, cols))}"
+    top = dst.worksheet(title).get(
+        rng, value_render_option=cast(ValueRenderOption, "UNFORMATTED_VALUE")
+    )
+    m = hashlib.sha256()
+    for r in top:
+        m.update(("|".join(str(c) for c in r)).encode("utf-8"))
+    checksum = m.hexdigest()[:16]
+
+    return new_id, rows, cols, checksum
+
+
+def _process_tabs(src, dst, drive, log_ws, run_id, src_modified_utc, last_ok_map):
+    """Process all tabs to copy from source to destination."""
     src_map = {ws.title: ws for ws in src.worksheets()}
-
-    # Last per-tab OK
-    last_ok_map: dict[str, datetime] = last_success_utc_by_tab(log_ws)
-
-    run_id: str = uuid.uuid4().hex
-    print(f"Starting BK extract run {run_id} at {datetime.now(UTC).isoformat()}")
-
-    run_started_iso = datetime.now(UTC).isoformat()
-
     stats: dict[str, int] = {"copied": 0, "skipped": 0, "errors": 0}
-    tab_results: list[dict[str, object]] = []  # collect brief per-tab records for the summary
+    tab_results: list[dict[str, object]] = []
 
     for title in TABS_TO_COPY:
-        # Per-tab skip: if we already refreshed this tab at/after the file's modifiedTime, skip it
+        # Per-tab skip check
         last_ok: datetime | None = last_ok_map.get(title)
         if last_ok and last_ok >= src_modified_utc:
-            message = (
-                f"[SKIP] {title}: already refreshed at {last_ok.isoformat()} "
-                f"(src modified {src_modified_utc.isoformat()})"
-            )
-            print(message)
-
-            # Log the individual tab skip
             skip_time = datetime.now(UTC).isoformat()
+            print(f"[SKIP] {title}: already refreshed at {last_ok.isoformat()}")
+
             log_row(
                 log_ws,
                 run_id=run_id,
@@ -509,18 +627,13 @@ def main() -> int:
                 checksum=None,
                 src_modifiedTime_utc=src_modified_utc.isoformat(),
             )
-
             tab_results.append(
-                {
-                    "tab": title,
-                    "status": "SKIP",
-                    "reason": "unchanged_since_source_modifiedTime",
-                }
+                {"tab": title, "status": "SKIP", "reason": "unchanged_since_source_modifiedTime"}
             )
             stats["skipped"] += 1
-
             continue
 
+        # Copy the tab
         t0 = time.perf_counter()
         started_iso = datetime.now(UTC).isoformat()
         status = "OK"
@@ -534,158 +647,17 @@ def main() -> int:
                 raise WorksheetNotFound(f"Source tab '{title}' not found")
 
             src_ws = src_map[title]
-
-            # 1) Server-side copyTo (no value reads)
-            if copy_league_sheet is not None and CopyOptions is not None:
-                # Delegate the copy + paste-values to the core library for consistency
-                summary = copy_league_sheet(
-                    COMMISSIONER_SHEET_ID,
-                    LEAGUE_SHEET_COPY_ID,
-                    [title],
-                    CopyOptions(paste_values_only=True),
-                )
-                tab_res = (summary.get("tabs") or [{}])[0]
-                if tab_res.get("status") != "copied":
-                    raise RuntimeError(f"Copy failed for {title}: {tab_res}")
-                new_id = tab_res.get("new_sheet_id")
-            else:
-                # Fallback: gspread's worksheet.copy_to
-                new_props = src_ws.copy_to(LEAGUE_SHEET_COPY_ID)  # returns dict with 'sheetId'
-                new_id = new_props["sheetId"]
-
-            # Get the new sheet by id
-            new_ws = next(w for w in dst.worksheets() if w.id == new_id)
-            temp_name = f"__incoming_{title}_{run_id[:8]}"
-            new_ws.update_title(temp_name)
-
-            # Grid size
-            rows, cols = new_ws.row_count, new_ws.col_count
-
-            # Detect old tab
-            old_id = None
-            try:
-                old_ws = dst.worksheet(title)
-                old_id = old_ws.id
-            except WorksheetNotFound:
-                pass
-
-            # 2) Atomic batchUpdate
-            now_iso = datetime.now(UTC).isoformat()
-            requests = [
-                {  # Freeze formulas -> values
-                    "copyPaste": {
-                        "source": {
-                            "sheetId": new_id,
-                            "startRowIndex": 0,
-                            "endRowIndex": rows,
-                            "startColumnIndex": 0,
-                            "endColumnIndex": cols,
-                        },
-                        "destination": {
-                            "sheetId": new_id,
-                            "startRowIndex": 0,
-                            "startColumnIndex": 0,
-                        },
-                        "pasteType": "PASTE_VALUES",
-                        "pasteOrientation": "NORMAL",
-                    }
-                },
-                *([{"deleteSheet": {"sheetId": old_id}}] if old_id is not None else []),
-                {  # Rename
-                    "updateSheetProperties": {
-                        "properties": {"sheetId": new_id, "title": title},
-                        "fields": "title",
-                    }
-                },
-                # Developer metadata for observability
-                {
-                    "createDeveloperMetadata": {
-                        "developerMetadata": {
-                            "metadataKey": "bk_last_refresh_iso",
-                            "metadataValue": now_iso,
-                            "visibility": "DOCUMENT",
-                            "location": {"sheetId": new_id},
-                        }
-                    }
-                },
-                {
-                    "createDeveloperMetadata": {
-                        "developerMetadata": {
-                            "metadataKey": "bk_source_spreadsheet_id",
-                            "metadataValue": COMMISSIONER_SHEET_ID,
-                            "visibility": "DOCUMENT",
-                            "location": {"sheetId": new_id},
-                        }
-                    }
-                },
-                {
-                    "createDeveloperMetadata": {
-                        "developerMetadata": {
-                            "metadataKey": "bk_source_tab_title",
-                            "metadataValue": title,
-                            "visibility": "DOCUMENT",
-                            "location": {"sheetId": new_id},
-                        }
-                    }
-                },
-                {
-                    "createDeveloperMetadata": {
-                        "developerMetadata": {
-                            "metadataKey": "bk_run_id",
-                            "metadataValue": run_id,
-                            "visibility": "DOCUMENT",
-                            "location": {"sheetId": new_id},
-                        }
-                    }
-                },
-                {
-                    "createDeveloperMetadata": {
-                        "developerMetadata": {
-                            "metadataKey": "bk_src_modifiedTime_utc",
-                            "metadataValue": get_file_metadata(
-                                drive, COMMISSIONER_SHEET_ID, "modifiedTime"
-                            )["modifiedTime"],
-                            "visibility": "DOCUMENT",
-                            "location": {"sheetId": new_id},
-                        }
-                    }
-                },
-                {  # Warning-only protection
-                    "addProtectedRange": {
-                        "protectedRange": {
-                            "range": {"sheetId": new_id},
-                            "description": "Values-only extract – prefer editing the source sheet.",
-                            "warningOnly": True,
-                        }
-                    }
-                },
-            ]
-
-            dst.batch_update({"requests": requests})
-
-            # 3) Lightweight checksum (DEST only)
-            rng = f"{a1(1, 1)}:{a1(min(CHECKSUM_ROWS, rows), min(CHECKSUM_COLS, cols))}"
-            # ValueRenderOption is a typing Literal; cast the string to satisfy type checkers
-            top = dst.worksheet(title).get(
-                rng, value_render_option=cast(ValueRenderOption, "UNFORMATTED_VALUE")
-            )
-            m = hashlib.sha256()
-            for r in top:
-                m.update(("|".join(str(c) for c in r)).encode("utf-8"))
-            checksum = m.hexdigest()[:16]
-
+            new_id, rows, cols, checksum = _copy_single_tab(src_ws, dst, drive, run_id, title)
             dst_tab_id = new_id
 
         except Exception as e:
             status = f"ERROR: {type(e).__name__}: {e}"
-
-            # Cleanup temp sheet if created (best-effort)
+            # Cleanup temp sheet
             if new_id is not None:
                 try:
                     dst.batch_update({"requests": [{"deleteSheet": {"sheetId": new_id}}]})
-                except Exception:
-                    # ignore cleanup errors
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to clean up temp sheet {new_id}: {e}")
 
         finally:
             finished_iso = datetime.now(UTC).isoformat()
@@ -723,16 +695,64 @@ def main() -> int:
                     "checksum16": checksum,
                 }
             )
-
             time.sleep(PAUSE_BETWEEN_TABS_SEC)
 
-    # Persist last seen source modifiedTime (for whole-run skip next time)
+    return stats, tab_results
+
+
+def main() -> int:
+    """Run the league sheet copy script."""
+    # Auth
+    creds = Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=SCOPES)
+    gc = gspread.authorize(creds)
+    drive = build_drive(creds)
+    gc.set_timeout((10, 180))  # (connect, read)
+
+    # Open spreadsheets
+    try:
+        src = gc.open_by_key(COMMISSIONER_SHEET_ID)
+    except Exception as e:
+        print(f"ERROR: cannot open SOURCE spreadsheet: {e}", file=sys.stderr)
+        sys.exit(2)
+    try:
+        dst = gc.open_by_key(LEAGUE_SHEET_COPY_ID)
+    except Exception as e:
+        print(f"ERROR: cannot open DEST spreadsheet: {e}", file=sys.stderr)
+        sys.exit(2)
+
+    # Decide where logs live
+    logs_ss, separate_logs_enabled, folder_id, log_file_id = _setup_logging_spreadsheet(
+        gc, drive, dst
+    )
+
+    log_ws = ensure_log_sheet(logs_ss)
+    state_ws = ensure_state_sheet(logs_ss)
+
+    # Drive file-level modifiedTime
+    src_modified_utc, src_meta = get_file_modified_time_utc(drive, COMMISSIONER_SHEET_ID)
+
+    # Whole-run skip check
+    if _check_whole_run_skip(state_ws, log_ws, src_modified_utc):
+        return 0
+
+    # Last per-tab OK
+    last_ok_map: dict[str, datetime] = last_success_utc_by_tab(log_ws)
+
+    run_id: str = uuid.uuid4().hex
+    print(f"Starting BK extract run {run_id} at {datetime.now(UTC).isoformat()}")
+    run_started_iso = datetime.now(UTC).isoformat()
+
+    # Process all tabs
+    stats, tab_results = _process_tabs(
+        src, dst, drive, log_ws, run_id, src_modified_utc, last_ok_map
+    )
+
+    # Persist last seen source modifiedTime
     state_set(state_ws, "src_modifiedTime_utc", src_modified_utc.isoformat())
 
     finished_iso: str = datetime.now(UTC).isoformat()
 
-    # Add a run summary entry if this was a forced run where everything was skipped
-    # (Different from the whole-run skip at the beginning which exits early)
+    # Log summary if forced run with all current
     if (
         not ENTIRE_RUN_SKIP_IF_UNCHANGED
         and stats["skipped"] == len(TABS_TO_COPY)
