@@ -198,3 +198,67 @@ sources:
 
               Values: Trade, Cut, Signing, Draft, FA, Waivers, Extension, Franchise, Amnesty
               Refined into transaction_type_refined using dim_timeframe context.
+
+      - name: contracts_cut
+        external_location: "data/raw/commissioner/contracts_cut/dt=*/contracts_cut.parquet"
+        description: |
+          Dead cap obligations from past player cuts (Commissioner's source of truth).
+
+          **Grain**: One row per franchise per player per obligation year per snapshot date
+          **Source**: Commissioner Google Sheet individual franchise tabs (dead cap CSV section)
+          **Parser**: src/ingest/sheets/commissioner_parser.py::write_normalized_v2()
+          **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/contracts_cut/dt=YYYY-MM-DD/
+          **Files**: contracts_cut.parquet (fixed filename), _meta.json
+
+          **Purpose**:
+          This table represents the manual dead cap calculations per league rules:
+          - 50% of original contract amount for years 1-2
+          - 25% of original contract amount for years 3-5
+          - Dead cap obligations persist across multiple years after a cut
+
+          **Relationship to Other Tables**:
+          - stg_sheets__contracts_active: Players currently on rosters (active cap obligations)
+          - stg_sheets__contracts_cut: Players previously cut (dead cap obligations)
+          - Combined = Total salary cap obligations per franchise
+
+          **Validation Use Case**:
+          This table serves as the source of truth for validating transaction-derived
+          dead cap calculations (fact_contract_cuts) by comparing Commissioner's manual
+          calculations against formula-derived values from cut transaction events.
+
+        meta:
+          owner: "@jason"
+          external_location: "data/raw/commissioner/contracts_cut/dt=*/*.parquet"
+
+        columns:
+          - name: gm
+            description: "Franchise owner full name (e.g., 'Andy Shepard', 'Nick McCreary'). Maps to dim_franchise.owner_name."
+            tests:
+              - not_null
+
+          - name: player
+            description: "Player name as it appears in Commissioner sheet. Maps to player_id via dim_player_id_xref + dim_name_alias."
+            tests:
+              - not_null
+
+          - name: position
+            description: |
+              Player position (QB, RB, WR, TE, K, DB, LB, DL, etc.).
+              Used for player disambiguation when resolving player_id.
+
+          - name: year
+            description: "Obligation year for this dead cap amount (e.g., 2025, 2026, 2027)."
+            tests:
+              - not_null
+
+          - name: dead_cap_amount
+            description: |
+              Dead cap amount owed for this year (whole dollars).
+              Calculated per league rules: 50% years 1-2, 25% years 3-5.
+            tests:
+              - not_null
+
+          - name: dt
+            description: "Snapshot date (partition key). Format: YYYY-MM-DD."
+            tests:
+              - not_null
