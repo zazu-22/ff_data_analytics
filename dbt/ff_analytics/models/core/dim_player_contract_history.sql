@@ -118,36 +118,81 @@ with all_contract_events as (
 
 same_date_extensions as (
   -- Combine base contracts with extensions that occur on the same date
-  -- The extension adds years to the END of the base contract
+  -- Pattern A: Extension split contains FULL remaining schedule from extension date forward
+  -- Pattern B: Extension split contains only ADDED years appended to base
   select
     base.transaction_id,
     base.transaction_id_unique,
     base.transaction_type,
     base.transaction_date,
-    base.transaction_season,
-    coalesce(ext.period_type, base.period_type) as period_type,  -- Use extension's period_type, fall back to base
+    -- For Pattern A (full remaining), use extension season/period since split starts from extension date
+    -- For Pattern B (added only), use base season/period since we're concatenating
+    case
+      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER[]))
+        then ext.transaction_season
+      else base.transaction_season
+    end as transaction_season,
+    case
+      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER[]))
+        then ext.period_type
+      else base.period_type
+    end as period_type,
     base.player_id,
     base.player_name,
     base.position,
     base.franchise_id,
     base.franchise_name,
 
-    -- Extension split_json contains full remaining schedule
-    -- Calculate total and years from extension split if available, otherwise use base
+    -- Extension handling: Two patterns exist in the data
+    -- Pattern A: Extension split contains FULL remaining schedule (contract_years < split_length)
+    --            Example: base [6,6,6] → ext [6,6,24] with contract_years=1
+    -- Pattern B: Extension split contains only ADDED years (contract_years == split_length)
+    --            Example: base [6,6,6] → ext [24] with contract_years=1
+    -- Detect pattern by comparing contract_years to split array length
     case
-      when ext.contract_split_json is not null then
-        -- Sum the extension split array to get actual total
-        (select sum(unnest) from unnest(cast(json_extract(ext.contract_split_json, '$') as INTEGER[])))
-      else base.contract_total
+      when ext.contract_split_json is null then base.contract_total
+      when ext.contract_years < len(ext_splits.ext_split)
+        -- Pattern A: Extension has full remaining schedule, use extension total
+        then list_sum(ext_splits.ext_split)
+      else
+        -- Pattern B: Extension is added years only, sum base + extension
+        base.contract_total + ext.contract_total
     end as contract_total,
     case
-      when ext.contract_split_json is not null then
-        -- Count years from extension split array
-        len(cast(json_extract(ext.contract_split_json, '$') as INTEGER[]))
-      else base.contract_years
+      when ext.contract_split_json is null then base.contract_years
+      when ext.contract_years < len(ext_splits.ext_split)
+        -- Pattern A: Extension has full remaining schedule, count from extension
+        then len(ext_splits.ext_split)
+      else
+        -- Pattern B: Extension is added years only, sum base + extension years
+        base.contract_years + ext.contract_years
     end as contract_years,
-    coalesce(ext.contract_split_json, base.contract_split_json) as contract_split_json,
-    coalesce(ext.contract_split_array, base.contract_split_array) as contract_split_array,
+    case
+      when ext.contract_split_json is null then base.contract_split_json
+      when ext.contract_years < len(ext_splits.ext_split)
+        -- Pattern A: Extension has full remaining schedule, use as-is
+        then ext.contract_split_json
+      else
+        -- Pattern B: Extension is added years only, concatenate
+        to_json(
+          list_concat(
+            base_splits.base_split,
+            ext_splits.ext_split
+          )
+        )
+    end as contract_split_json,
+    case
+      when ext.contract_split_array is null then base.contract_split_array
+      when ext.contract_years < len(ext_splits.ext_split)
+        -- Pattern A: Use extension array
+        then ext.contract_split_array
+      else
+        -- Pattern B: Concatenate arrays (fall back to parsed splits if JSON-only)
+        coalesce(
+          list_concat(base.contract_split_array, ext.contract_split_array),
+          list_concat(base_splits.base_split, ext_splits.ext_split)
+        )
+    end as contract_split_array,
 
     base.contract_type,
     base.is_rookie_contract,
@@ -160,6 +205,12 @@ same_date_extensions as (
     and base.transaction_date = ext.transaction_date
     and base.transaction_type != 'contract_extension'
     and ext.transaction_type = 'contract_extension'
+  cross join lateral (
+    select cast(json_extract(base.contract_split_json, '$') as INTEGER[]) as base_split
+  ) base_splits
+  cross join lateral (
+    select cast(json_extract(ext.contract_split_json, '$') as INTEGER[]) as ext_split
+  ) ext_splits
 ),
 
 standalone_contracts as (
