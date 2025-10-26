@@ -301,7 +301,7 @@ contract_creating_events as (
 ),
 
 contract_terminating_events as (
-  -- Extract CUT and TRADE-AWAY events that terminate contracts
+  -- Extract CUT, TRADE-AWAY, AMNESTY CUT, and WAIVER RELEASE events that terminate contracts
   select
     transaction_id,
     transaction_id_unique,
@@ -313,7 +313,12 @@ contract_terminating_events as (
   where asset_type = 'player'
     and player_id is not null
     and player_id != -1
-    and transaction_type in ('cut', 'trade')  -- Both cut and trade-away terminate contracts
+    and (
+      -- Cut, amnesty cut, and trade-away terminate contracts
+      transaction_type in ('cut', 'amnesty_cut', 'trade')
+      -- Waiver releases also terminate contracts (waiver_claim with NULL destination)
+      or (transaction_type = 'waiver_claim' and to_franchise_id is null)
+    )
     and from_franchise_id is not null
 ),
 
