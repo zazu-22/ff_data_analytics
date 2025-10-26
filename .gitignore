@@ -58,3 +58,4 @@ notebooks/*.csv
 *.log
 .cache/
 samples/**/*cache*
+.tmp_analysis/

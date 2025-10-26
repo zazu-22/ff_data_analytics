@@ -52,6 +52,7 @@ with all_contract_events as (
     transaction_id_unique,
     transaction_type,
     transaction_date,
+    transaction_date_corrected,  -- Use corrected date for chronological ordering
     season as transaction_season,
     period_type,
 
@@ -145,10 +146,10 @@ fourth_year_options as (
       ce.contract_years
     from all_contract_events ce
     where ce.player_id = ext.player_id
-      and ce.transaction_date < ext.transaction_date
+      and ce.transaction_date_corrected < ext.transaction_date_corrected
       and ce.contract_type = 'rookie'
       and ce.contract_years = 3  -- Rookie contracts are 3 years
-    order by ce.transaction_date desc
+    order by ce.transaction_date_corrected desc
     limit 1
   ) prev on true
   where ext.transaction_type = 'contract_extension'
@@ -176,6 +177,7 @@ same_date_extensions as (
     base.transaction_id_unique,
     base.transaction_type,
     base.transaction_date,
+    base.transaction_date_corrected,  -- Pass through corrected date
     -- For Pattern A (full remaining), use extension season/period since split starts from extension date
     -- For Pattern B (added only), use base season/period since we're concatenating
     case
@@ -272,6 +274,7 @@ standalone_contracts as (
     transaction_id_unique,
     transaction_type,
     transaction_date,
+    transaction_date_corrected,  -- Pass through corrected date
     transaction_season,
     period_type,
     player_id,
@@ -329,9 +332,10 @@ contract_periods as (
 
     -- Contract period identification
     -- Order by transaction_id as well for deterministic ordering of same-date contracts
+    -- Use transaction_date_corrected for chronologically correct sequencing
     row_number() over (
       partition by ce.player_id
-      order by ce.transaction_date, ce.transaction_id
+      order by ce.transaction_date_corrected, ce.transaction_id
     ) as contract_period,
 
     -- Validity dates (Type 2 SCD)
@@ -339,9 +343,10 @@ contract_periods as (
 
     -- Find next contract date for this player
     -- Order by transaction_id as well to handle same-date contracts deterministically
+    -- Use transaction_date_corrected for chronologically correct sequencing
     lead(ce.transaction_date) over (
       partition by ce.player_id
-      order by ce.transaction_date, ce.transaction_id
+      order by ce.transaction_date_corrected, ce.transaction_id
     ) as next_contract_date,
 
     -- Get next contract's start season to check if it starts AFTER current contract ends
@@ -354,12 +359,12 @@ contract_periods as (
       end
     ) over (
       partition by ce.player_id
-      order by ce.transaction_date, ce.transaction_id
+      order by ce.transaction_date_corrected, ce.transaction_id
     ) as next_contract_start_season,
 
     -- Find termination date for this player+franchise (CUT or TRADE-AWAY)
     -- Get the minimum termination date that is AFTER contract start (chronologically)
-    -- For same-date transactions (crude date mapping), use transaction_id for proper sequencing
+    -- For same-date transactions, use transaction_id for proper sequencing
     (
       select min(term.transaction_date)
       from contract_terminating_events term

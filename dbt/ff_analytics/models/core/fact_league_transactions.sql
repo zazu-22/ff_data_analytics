@@ -40,6 +40,29 @@ transaction_id=2145, player_key=2025_R1_P04, asset_type=pick → Same trade, pic
 Composite Key: transaction_id_unique (PK)
 */
 
+with rookie_draft_calendar_years as (
+  -- Identify draft calendar year for each player to enable chronological safeguards
+  -- Prevents impossible transaction sequences (e.g., traded before being drafted)
+  select
+    player_id,
+    min(transaction_date) as draft_date,
+    year(min(transaction_date)) as draft_calendar_year
+  from {{ ref('stg_sheets__transactions') }}
+  where transaction_type = 'rookie_draft_selection'
+    and asset_type = 'player'
+    and player_id is not null
+  group by player_id
+),
+
+base_transactions as (
+  select
+    t.*,
+    rd.draft_date,
+    rd.draft_calendar_year
+  from {{ ref('stg_sheets__transactions') }} t
+  left join rookie_draft_calendar_years rd on t.player_id = rd.player_id
+)
+
 select
   -- Degenerate dimensions (stored in fact, no separate dim table)
   transaction_id_unique,  -- Primary key
@@ -50,6 +73,31 @@ select
 
   -- Time dimension
   transaction_date,
+
+  -- CHRONOLOGICAL SAFEGUARD: Corrected date for proper sequencing
+  -- Rule: Offseason transactions in rookie draft calendar year must occur AFTER draft
+  -- This prevents impossible sequences like "traded before being drafted"
+  case
+    when draft_calendar_year is not null
+         and year(transaction_date) = draft_calendar_year
+         and period_type = 'offseason'
+         and transaction_date < draft_date
+         and transaction_type != 'rookie_draft_selection'
+      then draft_date + interval '1 hour'  -- Force to sequence after draft
+    else transaction_date
+  end as transaction_date_corrected,
+
+  -- Flag indicating chronological correction was applied
+  case
+    when draft_calendar_year is not null
+         and year(transaction_date) = draft_calendar_year
+         and period_type = 'offseason'
+         and transaction_date < draft_date
+         and transaction_type != 'rookie_draft_selection'
+      then true
+    else false
+  end as was_sequence_corrected,
+
   transaction_year,       -- Partition key for large-scale queries
   season,
   period_type,
@@ -95,4 +143,4 @@ select
   from_owner_name,        -- Original owner name from sheet
   to_owner_name           -- Original owner name from sheet
 
-from {{ ref('stg_sheets__transactions') }}
+from base_transactions
