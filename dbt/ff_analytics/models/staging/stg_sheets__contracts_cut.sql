@@ -87,7 +87,7 @@ with_franchise as (
     fran.owner_name
 
   from base
-  left join {{ ref('dim_franchise') }} as fran
+  left join {{ ref('dim_franchise') }} fran
     on case
       when base.gm_full_name like 'Nick McCreary' then 'McCreary'
       when base.gm_full_name like 'Nick Piper' then 'Piper'
@@ -103,8 +103,8 @@ with_alias as (
     wf.*,
     coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
-  from with_franchise as wf
-  left join {{ ref('dim_name_alias') }} as alias
+  from with_franchise wf
+  left join {{ ref('dim_name_alias') }} alias
     on wf.player_name_normalized = alias.alias_name
 ),
 
@@ -147,8 +147,8 @@ crosswalk_candidates as (
       else 0
     end as match_score
 
-  from with_alias as wa
-  left join {{ ref('dim_player_id_xref') }} as xref
+  from with_alias wa
+  left join {{ ref('dim_player_id_xref') }} xref
     on (
       lower(trim(wa.player_name_canonical)) = lower(trim(xref.name))
       or lower(trim(wa.player_name_canonical)) = lower(trim(xref.merge_name))
@@ -186,10 +186,10 @@ with_player_id as (
     xwalk.mfl_id,
     xwalk.canonical_name
 
-  from with_alias as wa
-  left join transaction_player_ids as txn
+  from with_alias wa
+  left join transaction_player_ids txn
     on lower(trim(wa.player_name_canonical)) = txn.player_name_lower
-  left join best_crosswalk_match as xwalk
+  left join best_crosswalk_match xwalk
     on
       wa.player_name_canonical = xwalk.player_name_canonical
       and wa.position = xwalk.source_position

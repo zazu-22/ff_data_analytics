@@ -90,6 +90,6 @@ select
   -- Computed games played (always 1 for weekly grain)
   1 as games_played
 
-from pivoted as p
-left join {{ ref('dim_player') }} as d
+from pivoted p
+left join {{ ref('dim_player') }} d
   on p.player_id = d.player_id

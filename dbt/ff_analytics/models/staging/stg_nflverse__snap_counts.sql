@@ -33,7 +33,7 @@ with base as (
   from
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
-    ) as s
+    ) s
   -- Data quality filters: Exclude records missing required identifiers
   -- pfr_player_id: 0.00% of raw data has NULL (0/136,974 rows)
   --   No data loss from NULL filtering in this dataset
@@ -64,7 +64,7 @@ crosswalk as (
       else coalesce(base.pfr_player_id, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base
-  left join {{ ref('dim_player_id_xref') }} as xref
+  left join {{ ref('dim_player_id_xref') }} xref
     on base.pfr_player_id = xref.pfr_id
 ),
 

@@ -44,6 +44,6 @@ select
   null as team_logo_espn,
   null as team_wordmark
 
-from base_teams as t
-left join {{ ref('dim_team_conference_division') }} as cd
+from base_teams t
+left join {{ ref('dim_team_conference_division') }} cd
   on t.team = cd.team_abbr

@@ -99,7 +99,7 @@ expanded_years as (
     -- Generate year position (1, 2, 3, ...) for each row
     unnest(generate_series(1, len(cast(json_extract(cc.contract_split_json, '$') as INTEGER [])))) as year_position
 
-  from current_contracts as cc
+  from current_contracts cc
   where cc.contract_split_json is not null
 ),
 
@@ -118,8 +118,8 @@ with_calculated_fields as (
     sch.dead_cap_pct,
     sch.notes as dead_cap_note
 
-  from expanded_years as ey
-  left join {{ ref('dim_cut_liability_schedule') }} as sch
+  from expanded_years ey
+  left join {{ ref('dim_cut_liability_schedule') }} sch
     on ey.year_position = sch.contract_year
 ),
 
@@ -143,7 +143,7 @@ with_remaining_value as (
       rows between current row and unbounded following
     ) as dead_cap_if_cut_before_year
 
-  from with_calculated_fields as cf
+  from with_calculated_fields cf
 )
 
 select

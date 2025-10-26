@@ -60,8 +60,8 @@ base_transactions as (
     t.*,
     rd.draft_date,
     rd.draft_calendar_year
-  from {{ ref('stg_sheets__transactions') }} as t
-  left join rookie_draft_calendar_years as rd on t.player_id = rd.player_id
+  from {{ ref('stg_sheets__transactions') }} t
+  left join rookie_draft_calendar_years rd on t.player_id = rd.player_id
 )
 
 select

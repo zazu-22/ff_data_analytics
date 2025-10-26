@@ -2,9 +2,31 @@
 templater = dbt
 dialect = duckdb
 exclude_rules = L034,L044
+# Increase file size limit to handle large models
+large_file_skip_byte_limit = 30000
+# Reduce noise from dbt macro warnings
+warnings_file_skip = **/.venv/**,**/target/**,**/dbt_packages/**
 
 [sqlfluff:templater:dbt]
 project_dir = dbt/ff_analytics
 profiles_dir = dbt/ff_analytics
 profile = ff_duckdb
 target = local
+
+[sqlfluff:indentation]
+# More lenient indentation to avoid noise
+tab_space_size = 2
+indent_unit = space
+
+[sqlfluff:rules:capitalisation.keywords]
+# DuckDB functions are case-insensitive
+capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.table]
+# Allow implicit table aliasing in staging (raw provider schemas)
+aliasing = implicit
+
+[sqlfluff:rules:references.qualification]
+# Less strict for staging models that use raw schemas
+# Can override per-model if needed
+allow_implicit_aliases = true

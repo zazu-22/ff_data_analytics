@@ -119,8 +119,8 @@ variance as (
     a.actual_receiving_tds - p.projected_receiving_tds as receiving_tds_variance,
     a.actual_fumbles_lost - p.projected_fumbles_lost as fumbles_lost_variance
 
-  from actuals as a
-  left join projections as p
+  from actuals a
+  left join projections p
     on
       a.player_id = p.player_id
       and a.season = p.season

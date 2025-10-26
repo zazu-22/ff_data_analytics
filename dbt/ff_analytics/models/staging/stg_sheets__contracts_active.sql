@@ -84,7 +84,7 @@ with_franchise as (
     fran.owner_name
 
   from base
-  left join {{ ref('dim_franchise') }} as fran
+  left join {{ ref('dim_franchise') }} fran
     on case
       when base.gm_full_name like 'Nick McCreary' then 'McCreary'
       when base.gm_full_name like 'Nick Piper' then 'Piper'
@@ -100,8 +100,8 @@ with_alias as (
     wf.*,
     coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
-  from with_franchise as wf
-  left join {{ ref('dim_name_alias') }} as alias
+  from with_franchise wf
+  left join {{ ref('dim_name_alias') }} alias
     on wf.player_name_normalized = alias.alias_name
 ),
 
@@ -113,8 +113,8 @@ with_defense as (
     team.team_abbr as defense_team_abbr,
     coalesce(team.team_abbr is not null, false) as is_defense
 
-  from with_alias as wa
-  left join {{ ref('dim_team') }} as team
+  from with_alias wa
+  left join {{ ref('dim_team') }} team
     on wa.player_name = team.team_name
 ),
 
@@ -170,8 +170,8 @@ crosswalk_candidates as (
       else 0
     end as match_score
 
-  from with_defense as wd
-  left join {{ ref('dim_player_id_xref') }} as xref
+  from with_defense wd
+  left join {{ ref('dim_player_id_xref') }} xref
     on
       (not wd.is_defense)
       and (
@@ -215,8 +215,8 @@ with_player_id as (
     xwalk.mfl_id,
     xwalk.canonical_name
 
-  from with_defense as wd
-  left join transaction_player_ids as txn
+  from with_defense wd
+  left join transaction_player_ids txn
     on lower(trim(wd.player_name_canonical)) = txn.player_name_lower
     -- Add position filtering to prevent duplicate rows for same name (e.g., Josh Allen QB vs DB)
     and (
@@ -232,7 +232,7 @@ with_player_id as (
       -- BN, TAXI, IR can be any position - prefer offensive, but allow defensive
       or (wd.roster_slot in ('BN', 'TAXI', 'IR'))
     )
-  left join best_crosswalk_match as xwalk
+  left join best_crosswalk_match xwalk
     on
       wd.player_name_canonical = xwalk.player_name_canonical
       and wd.roster_slot = xwalk.roster_slot

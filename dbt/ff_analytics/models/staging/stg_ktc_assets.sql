@@ -85,8 +85,8 @@ players_mapped as (
     cast(null as varchar) as pick_tier,
     cast(null as integer) as pick_round,
     cast(null as varchar) as pick_name
-  from players_raw as p
-  left join {{ ref('dim_player_id_xref') }} as xref
+  from players_raw p
+  left join {{ ref('dim_player_id_xref') }} xref
     -- Use merge_name for better matching (handles case differences, punctuation)
     on
       lower(trim(p.player_name)) = lower(trim(xref.merge_name))

@@ -69,7 +69,7 @@ with base as (
   from
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}'
-    ) as o
+    ) o
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~6.75% of raw data has NULL (2,115/31,339 rows)
   --   These are unidentifiable players with NULL position and small opportunity counts (1-4 targets)
@@ -104,7 +104,7 @@ crosswalk as (
       else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base
-  left join {{ ref('dim_player_id_xref') }} as xref
+  left join {{ ref('dim_player_id_xref') }} xref
     on base.gsis_id_raw = xref.gsis_id
 ),
 

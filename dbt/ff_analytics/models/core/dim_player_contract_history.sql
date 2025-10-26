@@ -84,10 +84,7 @@ with all_contract_events as (
     end as contract_type,
 
     -- Rookie contract flag
-    case
-      when transaction_type = 'rookie_draft_selection' then true
-      else false
-    end as is_rookie_contract,
+    coalesce(transaction_type = 'rookie_draft_selection', false) as is_rookie_contract,
 
     -- Special transaction measures
     rfa_matched,
@@ -96,20 +93,21 @@ with all_contract_events as (
     -- Check if there's an extension on the same date for this player
     -- AND there's also a base contract on the same date (otherwise it's standalone)
     case
-      when max(case when transaction_type = 'contract_extension' then 1 else 0 end) over (
-             partition by player_id, transaction_date
-           ) = 1
-       and max(case when transaction_type != 'contract_extension' then 1 else 0 end) over (
-             partition by player_id, transaction_date
-           ) = 1
-      then max(case when transaction_type = 'contract_extension' then transaction_id end) over (
-             partition by player_id, transaction_date
-           )
-      else null
+      when
+        max(case when transaction_type = 'contract_extension' then 1 else 0 end) over (
+          partition by player_id, transaction_date
+        ) = 1
+        and max(case when transaction_type != 'contract_extension' then 1 else 0 end) over (
+          partition by player_id, transaction_date
+        ) = 1
+        then max(case when transaction_type = 'contract_extension' then transaction_id end) over (
+          partition by player_id, transaction_date
+        )
     end as extension_id_on_same_date
 
   from {{ ref('fact_league_transactions') }}
-  where asset_type = 'player'
+  where
+    asset_type = 'player'
     and player_id is not null
     and player_id != -1  -- Exclude unmapped players
     and to_franchise_id is not null  -- Must have destination franchise (excludes waiver wire)
@@ -136,42 +134,46 @@ enriched_contract_events as (
 
     -- For extensions with single-year splits, find the preceding rookie contract
     case
-      when ace.transaction_type = 'contract_extension'
-        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER[])) = 1
+      when
+        ace.transaction_type = 'contract_extension'
+        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER [])) = 1
         and ace.contract_total in (24, 20, 16, 12, 8, 4)  -- 4th year option rates
-      then (
-        select prev.contract_split_json
-        from all_contract_events prev
-        where prev.player_id = ace.player_id
-          and prev.transaction_date_corrected < ace.transaction_date_corrected
-          and prev.contract_type = 'rookie'
-          and prev.contract_years = 3
-        order by prev.transaction_date_corrected desc
-        limit 1
-      )
-      else null
+        then (
+          select prev.contract_split_json
+          from all_contract_events prev
+          where
+            prev.player_id = ace.player_id
+            and prev.transaction_date_corrected < ace.transaction_date_corrected
+            and prev.contract_type = 'rookie'
+            and prev.contract_years = 3
+          order by prev.transaction_date_corrected desc
+          limit 1
+        )
     end as preceding_rookie_split_json,
 
     -- Calculate years elapsed since rookie contract start
     -- Use contract start seasons (accounting for offseason logic) not transaction seasons
     case
-      when ace.transaction_type = 'contract_extension'
-        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER[])) = 1
+      when
+        ace.transaction_type = 'contract_extension'
+        and len(cast(json_extract(ace.contract_split_json, '$') as INTEGER [])) = 1
         and ace.contract_total in (24, 20, 16, 12, 8, 4)
-      then (
-        select
-          -- Extension start season - rookie start season = years elapsed
-          (case when ace.period_type = 'offseason' then ace.transaction_season + 1 else ace.transaction_season end) -
-          (case when prev.period_type = 'offseason' then prev.transaction_season + 1 else prev.transaction_season end)
-        from all_contract_events prev
-        where prev.player_id = ace.player_id
-          and prev.transaction_date_corrected < ace.transaction_date_corrected
-          and prev.contract_type = 'rookie'
-          and prev.contract_years = 3
-        order by prev.transaction_date_corrected desc
-        limit 1
-      )
-      else null
+        then (
+          select
+            -- Extension start season - rookie start season = years elapsed
+            (case when ace.period_type = 'offseason' then ace.transaction_season + 1 else ace.transaction_season end)
+            - (
+              case when prev.period_type = 'offseason' then prev.transaction_season + 1 else prev.transaction_season end
+            )
+          from all_contract_events prev
+          where
+            prev.player_id = ace.player_id
+            and prev.transaction_date_corrected < ace.transaction_date_corrected
+            and prev.contract_type = 'rookie'
+            and prev.contract_years = 3
+          order by prev.transaction_date_corrected desc
+          limit 1
+        )
     end as years_elapsed_since_rookie_start
 
   from all_contract_events ace
@@ -184,29 +186,35 @@ enriched_contract_events_with_merged_splits as (
 
     -- Build full remaining schedule for incomplete extensions
     case
-      when ece.preceding_rookie_split_json is not null
+      when
+        ece.preceding_rookie_split_json is not null
         and ece.years_elapsed_since_rookie_start is not null
-      then
-        -- Slice remaining base years and append extension year
-        list_concat(
-          cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER[])[ece.years_elapsed_since_rookie_start + 1:],
-          cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
-        )
+        then
+          -- Slice remaining base years and append extension year
+          list_concat(
+            cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER [])[
+              ece.years_elapsed_since_rookie_start + 1:
+            ],
+            cast(json_extract(ece.contract_split_json, '$') as INTEGER [])
+          )
       else
-        cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
+        cast(json_extract(ece.contract_split_json, '$') as INTEGER [])
     end as final_contract_split_array,
 
     -- Update contract_split_json with merged array
     case
-      when ece.preceding_rookie_split_json is not null
+      when
+        ece.preceding_rookie_split_json is not null
         and ece.years_elapsed_since_rookie_start is not null
-      then
-        to_json(
-          list_concat(
-            cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER[])[ece.years_elapsed_since_rookie_start + 1:],
-            cast(json_extract(ece.contract_split_json, '$') as INTEGER[])
+        then
+          to_json(
+            list_concat(
+              cast(json_extract(ece.preceding_rookie_split_json, '$') as INTEGER [])[
+                ece.years_elapsed_since_rookie_start + 1:
+              ],
+              cast(json_extract(ece.contract_split_json, '$') as INTEGER [])
+            )
           )
-        )
       else
         ece.contract_split_json
     end as merged_contract_split_json
@@ -218,7 +226,14 @@ final_enriched_events as (
   -- Replace contract_split_json with merged version
   -- Include all columns but override contract_split_json and contract_split_array with merged versions
   select
-    ecm.* exclude (contract_split_json, contract_split_array, merged_contract_split_json, final_contract_split_array, preceding_rookie_split_json, years_elapsed_since_rookie_start),
+    ecm.* exclude (
+      contract_split_json,
+      contract_split_array,
+      merged_contract_split_json,
+      final_contract_split_array,
+      preceding_rookie_split_json,
+      years_elapsed_since_rookie_start
+    ),
     ecm.merged_contract_split_json as contract_split_json,  -- Use merged version
     ecm.final_contract_split_array as contract_split_array  -- Use merged version
   from enriched_contract_events_with_merged_splits ecm
@@ -237,12 +252,12 @@ same_date_extensions as (
     -- For Pattern A (full remaining), use extension season/period since split starts from extension date
     -- For Pattern B (added only), use base season/period since we're concatenating
     case
-      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER[]))
+      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER []))
         then ext.transaction_season
       else base.transaction_season
     end as transaction_season,
     case
-      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER[]))
+      when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as INTEGER []))
         then ext.period_type
       else base.period_type
     end as period_type,
@@ -310,15 +325,17 @@ same_date_extensions as (
 
   from final_enriched_events base
   inner join final_enriched_events ext
-    on base.player_id = ext.player_id
-    and base.transaction_date = ext.transaction_date
-    and base.transaction_type != 'contract_extension'
-    and ext.transaction_type = 'contract_extension'
+    on
+      base.player_id = ext.player_id
+      and base.transaction_date = ext.transaction_date
+      and base.transaction_type != 'contract_extension'
+      and ext.transaction_type = 'contract_extension'
+  cross join
+    lateral (
+      select cast(json_extract(base.contract_split_json, '$') as INTEGER []) as base_split
+    ) base_splits
   cross join lateral (
-    select cast(json_extract(base.contract_split_json, '$') as INTEGER[]) as base_split
-  ) base_splits
-  cross join lateral (
-    select cast(json_extract(ext.contract_split_json, '$') as INTEGER[]) as ext_split
+    select cast(json_extract(ext.contract_split_json, '$') as INTEGER []) as ext_split
   ) ext_splits
 ),
 
@@ -367,7 +384,8 @@ contract_terminating_events as (
     player_id,
     from_franchise_id as franchise_id
   from {{ ref('fact_league_transactions') }}
-  where asset_type = 'player'
+  where
+    asset_type = 'player'
     and player_id is not null
     and player_id != -1
     and (
@@ -420,7 +438,8 @@ contract_periods as (
     (
       select min(term.transaction_date)
       from contract_terminating_events term
-      where term.player_id = ce.player_id
+      where
+        term.player_id = ce.player_id
         and term.franchise_id = ce.franchise_id
         and (
           term.transaction_date > ce.transaction_date
@@ -442,26 +461,26 @@ contract_periods as (
       else ce.transaction_season
     end) + (
       coalesce(
-        len(cast(json_extract(ce.contract_split_json, '$') as INTEGER[])),
+        len(cast(json_extract(ce.contract_split_json, '$') as INTEGER [])),
         ce.contract_years
       ) - 1
     ) as contract_end_season,
 
     -- Calculated measures (use actual years from split if available)
     case
-      when coalesce(
-             len(cast(json_extract(ce.contract_split_json, '$') as INTEGER[])),
-             ce.contract_years
-           ) > 0
+      when
+        coalesce(
+          len(cast(json_extract(ce.contract_split_json, '$') as INTEGER [])),
+          ce.contract_years
+        ) > 0
         then round(
-          ce.contract_total::numeric /
-          coalesce(
-            len(cast(json_extract(ce.contract_split_json, '$') as INTEGER[])),
+          cast(ce.contract_total as NUMERIC)
+          / cast(coalesce(
+            len(cast(json_extract(ce.contract_split_json, '$') as INTEGER [])),
             ce.contract_years
-          )::numeric,
+          ) as NUMERIC),
           2
         )
-      else null
     end as annual_amount
 
   from contract_creating_events ce
@@ -487,19 +506,20 @@ contract_periods_with_expiry as (
       -- Termination exists: use earlier of termination or natural end
       when cp.termination_date is not null
         then least(
-          cp.termination_date - interval '1 day',
+          cp.termination_date - INTERVAL '1 day',
           make_date(cp.contract_end_season, 12, 31)
         )
       -- Next contract exists BUT starts in a future season (e.g., 4th year option):
       -- Let current contract expire at natural end, don't terminate early
-      when cp.next_contract_date is not null
-           and cp.next_contract_start_season is not null
-           and cp.next_contract_start_season > cp.contract_end_season
+      when
+        cp.next_contract_date is not null
+        and cp.next_contract_start_season is not null
+        and cp.next_contract_start_season > cp.contract_end_season
         then make_date(cp.contract_end_season, 12, 31)
       -- Next contract exists and starts in same/earlier season: use earlier of next_contract or natural end
       when cp.next_contract_date is not null
         then least(
-          cp.next_contract_date - interval '1 day',
+          cp.next_contract_date - INTERVAL '1 day',
           make_date(cp.contract_end_season, 12, 31)
         )
       -- No next contract or termination: expire at natural end date
@@ -513,9 +533,10 @@ contract_periods_with_expiry as (
       when cp.next_contract_date is null and cp.termination_date is null then true
       when cp.termination_date is not null and cp.termination_date <= current_date then false
       -- If next contract starts in future season, current contract is still active (check end season)
-      when cp.next_contract_date is not null
-           and cp.next_contract_start_season is not null
-           and cp.next_contract_start_season > cp.contract_end_season
+      when
+        cp.next_contract_date is not null
+        and cp.next_contract_start_season is not null
+        and cp.next_contract_start_season > cp.contract_end_season
         then cp.contract_end_season >= year(current_date)  -- Active if end season hasn't passed
       -- Otherwise, not current if next contract already started
       when cp.next_contract_date is not null and cp.next_contract_date <= current_date then false
@@ -534,14 +555,16 @@ with_dead_cap as (
     -- Dead cap calculation (simplified - assumes even split if no split_array)
     -- In practice, use contract_split_array for accurate year-by-year amounts
     case
-      when cp.is_current then (
-        -- Sum remaining years' dead cap liability
-        select sum(
-          (cp.annual_amount * sch.dead_cap_pct)::int
+      when cp.is_current
+        then (
+          -- Sum remaining years' dead cap liability
+          select
+            sum(
+              cast((cp.annual_amount * sch.dead_cap_pct) as INT)
+            )
+          from {{ ref('dim_cut_liability_schedule') }} sch
+          where sch.contract_year <= cp.contract_years
         )
-        from {{ ref('dim_cut_liability_schedule') }} sch
-        where sch.contract_year <= cp.contract_years
-      )
       else 0
     end as dead_cap_if_cut_today
 

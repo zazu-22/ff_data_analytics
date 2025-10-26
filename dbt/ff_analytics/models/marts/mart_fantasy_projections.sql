@@ -61,5 +61,5 @@ select
 
     as projected_fantasy_points
 
-from real_world as rw
-cross join scoring_pivoted as s
+from real_world rw
+cross join scoring_pivoted s
