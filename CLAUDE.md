@@ -40,11 +40,11 @@ uv sync
 # 2. Generate samples
 make samples-nflverse
 
-# 3. Run dbt models
-make dbt-run
+# 3. Run dbt models (uv-wrapped env)
+make dbt-run  # uv run env ...
 
 # 4. Test
-make dbt-test
+make dbt-test  # uv run env ...
 ```
 
 See `Makefile` for all targets: `make help`

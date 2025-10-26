@@ -31,7 +31,7 @@ Keep `PYTHONPATH=.` when running Python modules so `src/` packages resolve corre
 - **Environment setup**: `uv sync` (Python 3.13.6 via `.python-version`). Add packages with `uv add` / `uv add --dev`.
 - **Sample generation**: `uv run python tools/make_samples.py nflverse --datasets players weekly --seasons 2024 --out ./samples`.
 - **Run nflverse loader**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
-- **dbt**: `make dbt-run` / `make dbt-test` (DuckDB profile under `dbt/ff_analytics/`).
+- **dbt**: `make dbt-run` / `make dbt-test` (wrapped in `uv run` to ensure adapters and env vars) — outputs land in `dbt/ff_analytics/target/dev.duckdb`.
 - **Python tests**: `pytest -q` (fixtures in `samples/`). Ensure Sheets parsers and storage helpers stay covered.
 - **Formatting & lint**: `uv run pre-commit run --all-files` (ruff, mdformat, sqlfluff, yamllint, etc.).
 

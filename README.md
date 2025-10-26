@@ -41,6 +41,7 @@
 - Follow repo conventions: `docs/dev/repo_conventions_and_structure.md`
 - Set up pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files`
 - Useful make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`
+- `make dbt-run` / `make dbt-test` wrap `uv run` with the project env (EXTERNAL_ROOT + DuckDB path prewired).
 
 ## Cloud Storage (GCS) Output Support
 
