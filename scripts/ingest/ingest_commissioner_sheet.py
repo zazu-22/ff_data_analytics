@@ -10,10 +10,14 @@ Architecture:
     3. Writes using centralized writer (handles local/GCS)
 
 Environment Variables:
-    LEAGUE_SHEET_COPY_ID: Source sheet ID (required)
+    LEAGUE_SHEET_COPY_ID: Source sheet ID (required, or use LEAGUE_SHEET_COPY_URL)
+    LEAGUE_SHEET_COPY_URL: Source sheet URL (alternative to ID)
     OUTPUT_PATH: Base output path - "data/raw" (local) OR "gs://bucket/raw" (cloud)
     GOOGLE_APPLICATION_CREDENTIALS: Path to service account JSON
     OR GOOGLE_APPLICATION_CREDENTIALS_JSON: Base64-encoded JSON
+
+IMPORTANT: Use LEAGUE_SHEET_COPY (the simplified copy), NOT the full Commissioner sheet.
+The copy process (copy_league_sheet.py) must run first to create the copy.
 
 Outputs:
     {OUTPUT_PATH}/commissioner/
@@ -193,10 +197,23 @@ def main():
     print("=" * 80)
     print(f"Started: {start_time.isoformat()}")
 
-    # Get config from env
+    # Get config from env (support both URL and ID)
     sheet_id = os.getenv("LEAGUE_SHEET_COPY_ID")
+    sheet_url = os.getenv("LEAGUE_SHEET_COPY_URL")
+
+    # Extract ID from URL if only URL is provided
+    if not sheet_id and sheet_url:
+        # Extract ID from URL format: https://docs.google.com/spreadsheets/d/{ID}/...
+        if "/spreadsheets/d/" in sheet_url:
+            sheet_id = sheet_url.split("/spreadsheets/d/")[1].split("/")[0]
+        else:
+            raise OSError(f"Invalid LEAGUE_SHEET_COPY_URL format: {sheet_url}")
+
     if not sheet_id:
-        raise OSError("Missing LEAGUE_SHEET_COPY_ID environment variable")
+        raise OSError(
+            "Missing LEAGUE_SHEET_COPY_ID or LEAGUE_SHEET_COPY_URL environment variable. "
+            "This should point to the League Sheet COPY (not the Commissioner sheet)."
+        )
 
     output_base = os.getenv("OUTPUT_PATH", "data/raw")
     print("\nConfig:")
