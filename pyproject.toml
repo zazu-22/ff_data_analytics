@@ -50,6 +50,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Ruff configuration
 [tool.ruff]
 line-length = 100
 target-version = "py313"  # Updated to match requires-python = ">=3.13.6"
@@ -103,10 +104,7 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
 
-[tool.mdformat]
-wrap = 100
-number = false
-
+# Type checking configuration
 [tool.pyrefly]
 project-includes = [
     "ingest/**/*.py",  # Core ingestion modules
@@ -124,10 +122,6 @@ project-excludes = [
     "notebooks/**",  # Exclude notebooks (analyzed separately)
     "dbt/**",  # DBT has its own linting
 ]
-
-# Type checking configuration
-# Note: This project uses Pyrefly (Meta's Rust-based type checker) for fast type checking
-# Pyrefly config is already in [tool.pyrefly] section above
 
 # SQL linting configuration
 [tool.sqlfluff.core]
