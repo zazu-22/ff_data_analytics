@@ -288,22 +288,34 @@ def write_normalized(
 # -----------------------------
 
 
-def _derive_transaction_type(period_type: str, txn_type: str, rfa_matched: str) -> str:
+def _derive_transaction_type(
+    period_type: str, txn_type: str, rfa_matched: str, from_owner: str, to_owner: str
+) -> str:
     """Derive precise transaction type using dim_timeframe.period_type.
 
     Args:
         period_type: From dim_timeframe (e.g., 'rookie_draft', 'faad', 'regular')
         txn_type: Raw Type column value
         rfa_matched: RFA Matched column value
+        from_owner: Source owner/franchise name
+        to_owner: Destination owner/franchise name
 
     Returns:
         Refined transaction type string
 
     """
+    # Normalize owner strings (case-insensitive, strip whitespace)
+    from_normalized = (from_owner or "").strip().lower()
+
+    # Waiver claim special handling: Type="Cut" but From="Waiver Wire" or "Cap Space"
+    if txn_type == "Cut":
+        if from_normalized in ["waiver wire", "cap space"]:
+            return "waiver_claim"
+        return "cut"
+
     # Simple mappings
     simple_map = {
         "Trade": "trade",
-        "Cut": "cut",
         "Waivers": "waiver_claim",
         "Extension": "contract_extension",
         "Amnesty": "amnesty_cut",
@@ -550,9 +562,11 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
 
     # Derive transaction_type_refined using helper
     df = df.with_columns(
-        pl.struct(["period_type", "Type", "RFA Matched"])
+        pl.struct(["period_type", "Type", "RFA Matched", "From", "To"])
         .map_elements(
-            lambda x: _derive_transaction_type(x["period_type"], x["Type"], x["RFA Matched"]),
+            lambda x: _derive_transaction_type(
+                x["period_type"], x["Type"], x["RFA Matched"], x["From"], x["To"]
+            ),
             return_dtype=pl.String,
         )
         .alias("transaction_type_refined")
