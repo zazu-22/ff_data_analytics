@@ -117,10 +117,12 @@ with_defense as (
 ),
 
 transaction_player_ids as (
-  -- Get authoritative player_id from transaction history (position-aware matching already done)
+  -- Get authoritative player_id from transaction history with position info
+  -- Need position to disambiguate players with same name (e.g., Josh Allen QB vs DB)
   select distinct
     lower(trim(player_name)) as player_name_lower,
-    player_id
+    player_id,
+    position
   from {{ ref('fact_league_transactions') }}
   where asset_type = 'player'
     and player_id is not null
@@ -210,6 +212,20 @@ with_player_id as (
   from with_defense wd
   left join transaction_player_ids txn
     on lower(trim(wd.player_name_canonical)) = txn.player_name_lower
+    -- Add position filtering to prevent duplicate rows for same name (e.g., Josh Allen QB vs DB)
+    and (
+      -- Exact position match
+      (wd.roster_slot = txn.position)
+      -- FLEX can be RB/WR/TE
+      or (wd.roster_slot = 'FLEX' and txn.position in ('RB', 'WR', 'TE'))
+      -- IDP slots must be defensive
+      or (wd.roster_slot in ('IDP BN', 'IDP TAXI') and txn.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S'))
+      or (wd.roster_slot = 'DB' and txn.position in ('DB', 'CB', 'S'))
+      or (wd.roster_slot = 'DL' and txn.position in ('DL', 'DE', 'DT'))
+      or (wd.roster_slot = 'LB' and txn.position = 'LB')
+      -- BN, TAXI, IR can be any position - prefer offensive, but allow defensive
+      or (wd.roster_slot in ('BN', 'TAXI', 'IR'))
+    )
   left join best_crosswalk_match xwalk
     on wd.player_name_canonical = xwalk.player_name_canonical
     and wd.roster_slot = xwalk.roster_slot
