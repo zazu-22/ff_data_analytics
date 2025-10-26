@@ -33,6 +33,7 @@ def generate_dim_player_id_xref(
         raw_path: Path to nflverse ff_playerids parquet file
         output_path: Path to write seed CSV
         verbose: Print diagnostic info
+
     """
     # Load raw nflverse player IDs
     df = pl.read_parquet(raw_path)
@@ -107,17 +108,16 @@ def generate_dim_player_id_xref(
 
 if __name__ == "__main__":
     import sys
-    from glob import glob
 
     # Find latest nflverse ff_playerids parquet
     pattern = "data/raw/nflverse/ff_playerids/dt=*/ff_playerids*.parquet"
-    files = sorted(glob(pattern), reverse=True)
+    files = sorted(Path().glob(pattern), reverse=True)
 
     if not files:
         print(f"ERROR: No nflverse ff_playerids files found matching: {pattern}")
         sys.exit(1)
 
-    raw_path = Path(files[0])
+    raw_path = files[0]
     output_path = Path("dbt/ff_analytics/seeds/dim_player_id_xref.csv")
 
     print(f"Using latest raw data: {raw_path}")

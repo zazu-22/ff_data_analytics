@@ -314,9 +314,9 @@ class TestParseTransactions:
         assert defenses.height > 0, "Expected defense units in transactions"
         # Ensure we see a healthy sample of defense assets without enforcing
         # historical volume (handful of seasons ≈ 200 rows in current fixture)
-        assert (
-            defenses.height >= 150
-        ), f"Expected at least 150 defense transactions, saw {defenses.height}"
+        assert defenses.height >= 150, (
+            f"Expected at least 150 defense transactions, saw {defenses.height}"
+        )
 
     def test_parse_transactions_picks_have_pick_id(self, sample_path):
         """Verify all picks have valid pick_id values."""
@@ -347,9 +347,9 @@ class TestParseTransactions:
                 if sum(split_list) != row["total"]:
                     sum_mismatches += 1
         # Most contracts should validate correctly (allow < 5% errors for real-world data)
-        assert (
-            len_mismatches < contracts.height * 0.05
-        ), f"Too many length mismatches: {len_mismatches}/{contracts.height}"
-        assert (
-            sum_mismatches < contracts.height * 0.05
-        ), f"Too many sum mismatches: {sum_mismatches}/{contracts.height}"
+        assert len_mismatches < contracts.height * 0.05, (
+            f"Too many length mismatches: {len_mismatches}/{contracts.height}"
+        )
+        assert sum_mismatches < contracts.height * 0.05, (
+            f"Too many sum mismatches: {sum_mismatches}/{contracts.height}"
+        )

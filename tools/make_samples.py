@@ -206,6 +206,7 @@ def sample_sleeper(datasets: list[str], out: Path, league_id: str | None, max_ro
             raise SystemExit(f"Unknown Sleeper dataset: {ds}")
 
         out_dir = _ensure_out(out, "sleeper", ds)
+        assert isinstance(league_df, pd.DataFrame)
         paths = _write_outputs(
             league_df, out_dir, "sleeper", ds, {"league_id": league_id}, max_rows=max_rows
         )
@@ -262,7 +263,7 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str | None = None, max_
         header = ws.row_values(1)
         if header:
             col_counts: dict[str, int] = {}
-            unique_columns: list[str] = []
+            unique_columns = []
             for col in header:
                 if col in col_counts:
                     col_counts[col] += 1
@@ -274,7 +275,7 @@ def sample_sheets(tabs: list[str], out: Path, sheet_url: str | None = None, max_
             end_cell = rowcol_to_a1(max_rows + 1, len(header))
             data_range = f"A2:{end_cell}"
             data_rows = ws.get(data_range)
-            sheet_df = pd.DataFrame(data_rows, columns=unique_columns)
+            sheet_df = pd.DataFrame(data_rows, columns=unique_columns)  # type: ignore[arg-type]
         else:
             sheet_df = pd.DataFrame()
         out_dir = _ensure_out(out, "sheets", tab)
@@ -342,6 +343,45 @@ def sample_ktc(out: Path, assets: list[str], top_n: int = 100, max_rows: int = 1
     return manifest
 
 
+def _process_projection_output(
+    result: dict,
+    output_type: str,
+    week: int,
+    season: int,
+    positions: list[str],
+    sites: list[str],
+    out: Path,
+    max_rows: int,
+) -> dict | None:
+    """Process and write a single projection output (consensus or raw)."""
+    from pathlib import Path as PathLib
+
+    path = result["output_files"].get(output_type)
+    if not path or not PathLib(path).exists():
+        return None
+
+    df = pd.read_parquet(path)
+    if len(df) > max_rows:
+        df = df.sample(n=max_rows, random_state=SEED)
+
+    dataset_name = f"projections_{output_type}_week_{week}"
+    sample_dir = _ensure_out(out, "ffanalytics", dataset_name)
+
+    meta = {
+        "season": season,
+        "week": week,
+        "horizon": "full_season" if week == 0 else "weekly",
+        "positions": positions,
+        "sites": sites,
+    }
+    if output_type == "consensus":
+        meta["player_mapping_coverage"] = result.get("player_mapping", {}).get(
+            "mapping_coverage", 0
+        )
+
+    return _write_outputs(df, sample_dir, "ffanalytics", dataset_name, meta, max_rows=max_rows)
+
+
 # ---------- FFanalytics (subset of sites/weeks/positions) ----------
 def sample_ffanalytics(
     out: Path,
@@ -380,15 +420,12 @@ def sample_ffanalytics(
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
 
-    from src.ingest.ffanalytics import load_projections
+    from ingest.ffanalytics import load_projections
 
     # Default values
-    if positions is None:
-        positions = ["QB", "RB", "WR", "TE"]  # Skip K, DST for samples
-    if sites is None:
-        sites = ["FantasyPros", "NumberFire"]  # Fast sources for samples
-    if weeks is None:
-        weeks = [1, 0]  # Week 1 (weekly) + week 0 (full_season)
+    positions = positions or ["QB", "RB", "WR", "TE"]
+    sites = sites or ["FantasyPros", "NumberFire"]
+    weeks = weeks or [1, 0]
 
     manifest = {}
     out_dir_arg = out / "ffanalytics"
@@ -396,80 +433,21 @@ def sample_ffanalytics(
     for week in weeks:
         print(f"Generating sample for week {week} ({'full_season' if week == 0 else 'weekly'})...")
 
-        # Use Python loader
         result = load_projections(
-            sources=sites,
-            positions=positions,
-            season=season,
-            week=week,
-            out_dir=str(out_dir_arg),
+            sources=sites, positions=positions, season=season, week=week, out_dir=str(out_dir_arg)
         )
 
-        # Get output paths from manifest
         if "output_files" not in result:
             print(f"Warning: No output files for week {week}")
             continue
 
-        pd.Timestamp.utcnow().strftime("%Y-%m-%d")
-
-        # Process CONSENSUS projections (primary output)
-        consensus_path = result["output_files"].get("consensus")
-        if consensus_path and PathLib(consensus_path).exists():
-            df_consensus = pd.read_parquet(consensus_path)
-
-            # Sample data
-            if len(df_consensus) > max_rows:
-                df_consensus = df_consensus.sample(n=max_rows, random_state=SEED)
-
-            # Write sample
-            dataset_name = f"projections_consensus_week_{week}"
-            sample_dir = _ensure_out(out, "ffanalytics", dataset_name)
-            paths = _write_outputs(
-                df_consensus,
-                sample_dir,
-                "ffanalytics",
-                dataset_name,
-                {
-                    "season": season,
-                    "week": week,
-                    "horizon": "full_season" if week == 0 else "weekly",
-                    "positions": positions,
-                    "sites": sites,
-                    "player_mapping_coverage": result.get("player_mapping", {}).get(
-                        "mapping_coverage", 0
-                    ),
-                },
-                max_rows=max_rows,
+        # Process consensus and raw projections
+        for output_type in ["consensus", "raw"]:
+            paths = _process_projection_output(
+                result, output_type, week, season, positions, sites, out, max_rows
             )
-            manifest[f"consensus_week_{week}"] = paths
-
-        # Process RAW projections (for reference)
-        raw_path = result["output_files"].get("raw")
-        if raw_path and PathLib(raw_path).exists():
-            df_raw = pd.read_parquet(raw_path)
-
-            # Sample data
-            if len(df_raw) > max_rows:
-                df_raw = df_raw.sample(n=max_rows, random_state=SEED)
-
-            # Write sample
-            dataset_name = f"projections_raw_week_{week}"
-            sample_dir = _ensure_out(out, "ffanalytics", dataset_name)
-            paths = _write_outputs(
-                df_raw,
-                sample_dir,
-                "ffanalytics",
-                dataset_name,
-                {
-                    "season": season,
-                    "week": week,
-                    "horizon": "full_season" if week == 0 else "weekly",
-                    "positions": positions,
-                    "sites": sites,
-                },
-                max_rows=max_rows,
-            )
-            manifest[f"raw_week_{week}"] = paths
+            if paths:
+                manifest[f"{output_type}_week_{week}"] = paths
 
     return manifest
 
