@@ -367,10 +367,59 @@ def _infer_asset_type(player_str: str | None, position_str: str) -> str:
         return "unknown"
 
 
+def _extract_suffix(name: str | None) -> tuple[str, str | None]:
+    """Extract generational suffix from player name.
+
+    Handles Jr/Jr./Junior, Sr/Sr./Senior, II, III, IV, V variations.
+
+    Args:
+        name: Raw player name (e.g., "Marvin Harrison Jr.")
+
+    Returns:
+        Tuple of (base_name, suffix) where suffix is normalized or None
+
+    Examples:
+        >>> _extract_suffix("Marvin Harrison Jr.")
+        ("Marvin Harrison", "Jr.")
+        >>> _extract_suffix("Patrick Mahomes II")
+        ("Patrick Mahomes", "II")
+        >>> _extract_suffix("Tom Brady")
+        ("Tom Brady", None)
+
+    """
+    if not name:
+        return "", None
+
+    # Remove periods from initials (A.J. → AJ) but preserve suffix periods
+    name_clean = name.strip()
+
+    # Define suffix patterns (order matters - check longer patterns first)
+    suffix_patterns = [
+        (" Junior", " Jr."),  # Normalize "Junior" to "Jr."
+        (" Jr.", " Jr."),
+        (" Jr", " Jr."),
+        (" Senior", " Sr."),  # Normalize "Senior" to "Sr."
+        (" Sr.", " Sr."),
+        (" Sr", " Sr."),
+        (" II", " II"),
+        (" III", " III"),
+        (" IV", " IV"),
+        (" V", " V"),
+    ]
+
+    for pattern, normalized_suffix in suffix_patterns:
+        if name_clean.endswith(pattern):
+            base_name = name_clean[: -len(pattern)].strip()
+            return base_name, normalized_suffix.strip()
+
+    return name_clean, None
+
+
 def _normalize_player_name(name: str | None) -> str:
     """Normalize player name for fuzzy matching.
 
     Removes periods from initials, removes suffixes, lowercase, strip.
+    This is used for the legacy fuzzy matching tier.
 
     Args:
         name: Raw player name
@@ -381,13 +430,79 @@ def _normalize_player_name(name: str | None) -> str:
     """
     if not name:
         return ""
+
+    # Extract base name (removes suffix)
+    base_name, _ = _extract_suffix(name)
+
     # Remove periods from initials (A.J. → AJ)
-    normalized = name.replace(".", "")
-    # Remove common suffixes
-    for suffix in [" Jr", " Jr.", " II", " III", " IV", " Sr", " Sr."]:
-        normalized = normalized.replace(suffix, "")
+    normalized = base_name.replace(".", "")
+
     # Lowercase and strip
     return normalized.lower().strip()
+
+
+def _calculate_player_score(
+    player_row: dict,
+    input_suffix: str | None,
+    has_position: bool,
+    input_position: str | None,
+) -> float:
+    """Calculate disambiguation score for a player candidate.
+
+    Higher score = better match. Used to disambiguate when multiple players
+    have the same base name (e.g., Marvin Harrison Sr. vs Jr.).
+
+    Scoring factors:
+    - Suffix match: +1000 (exact suffix match)
+    - Suffix expectation: +500 (no input suffix, but candidate has Jr/II/III → likely newer player)
+    - Active player: +100 (team is not FA/FA*/RET)
+    - Draft year recency: +0 to +50 (more recent = higher score, capped at 50 years)
+
+    Args:
+        player_row: Row dict from crosswalk with keys: name, position, team, draft_year
+        input_suffix: Extracted suffix from input name (Jr., Sr., II, etc.) or None
+        has_position: Whether position filtering is available
+        input_position: Position from input (if has_position=True)
+
+    Returns:
+        Disambiguation score (higher = better match)
+
+    """
+    score = 0.0
+
+    # Extract suffix from crosswalk name
+    _, xref_suffix = _extract_suffix(player_row.get("name", ""))
+
+    # 1. Suffix matching
+    if input_suffix and xref_suffix:
+        if input_suffix == xref_suffix:
+            score += 1000  # Perfect suffix match
+    elif not input_suffix and xref_suffix:
+        # No suffix in input, but candidate has Jr/II/III
+        # Assume user means the newer player (common case: "Marvin Harrison" in 2024 → Jr.)
+        if xref_suffix in ["Jr.", "II", "III", "IV", "V"]:
+            score += 500
+    elif input_suffix and not xref_suffix:
+        # Input has suffix but candidate doesn't → less likely match
+        score -= 500
+
+    # 2. Activity status (active players preferred)
+    team = player_row.get("team", "")
+    if team and team not in ["FA", "FA*", "RET", "", None]:
+        score += 100
+
+    # 3. Draft year recency (more recent = higher score)
+    draft_year = player_row.get("draft_year")
+    if draft_year:
+        try:
+            year_int = int(draft_year)
+            # Add up to 50 points for recency (2024 = 50, 2023 = 49, ..., 1974 = 0)
+            recency_score = max(0, min(50, year_int - 1974))
+            score += recency_score
+        except (ValueError, TypeError):
+            pass
+
+    return score
 
 
 def _normalize_position(txn_position: str | None) -> list[str]:
@@ -549,15 +664,21 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
             .drop("canonical_name")
         )
 
-    # Exact match (includes position validation if available)
+    # Suffix-aware exact match with disambiguation
+    # Strategy: For inputs with explicit suffixes (e.g., "Marvin Harrison Jr."), use exact match.
+    # For inputs without suffixes that have suffix variants, use disambiguation logic.
     if has_position:
-        # Exact match with position-aware disambiguation
-        df_with_idx = df.with_row_index("_row_idx_exact")
+        # Exact match with suffix-aware disambiguation
+        df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
+            pl.col("Player")
+            .map_elements(_normalize_player_name, return_dtype=pl.String)
+            .alias("player_base_name")
+        )
 
         df_exact = df_with_idx.join(
-            xref.select(["name", "player_id", "position"]),
-            left_on="Player",
-            right_on="name",
+            xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
+            left_on="player_base_name",
+            right_on="merge_name",
             how="left",
         )
 
@@ -573,25 +694,147 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
             .alias("position_compatible_exact")
         )
 
-        # Keep ONLY position-compatible exact matches
+        # Filter to position-compatible matches only
+        df_exact = df_exact.filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
+
+        # Apply suffix-aware disambiguation scoring
+        scored_matches = []
+        for row in df_exact.iter_rows(named=True):
+            if row["player_id"] is None:
+                scored_matches.append(
+                    {
+                        "_row_idx_exact": row["_row_idx_exact"],
+                        "player_id": None,
+                        "score": -1.0,
+                    }
+                )
+            else:
+                # Extract suffix from input
+                _, input_suffix = _extract_suffix(row["Player"])
+                _, xref_suffix = _extract_suffix(row["name"])
+
+                # Calculate disambiguation score
+                base_score = _calculate_player_score(
+                    player_row={
+                        "name": row["name"],
+                        "position": row["position"],
+                        "team": row["team"],
+                        "draft_year": row["draft_year"],
+                    },
+                    input_suffix=input_suffix,
+                    has_position=True,
+                    input_position=row.get("Position"),
+                )
+
+                # Extra boost for perfect string match
+                if row["Player"] == row["name"]:
+                    # Perfect match with explicit suffix match → strong boost
+                    if input_suffix and xref_suffix and input_suffix == xref_suffix:
+                        base_score += 10000
+                    # Perfect match with no suffixes → apply only if this is the ONLY candidate
+                    # (we can't tell here, so give small boost and let heuristics decide)
+                    elif input_suffix is None and xref_suffix is None:
+                        base_score += 100
+                    # Suffix mismatch → small penalty
+                    else:
+                        base_score -= 100
+
+                scored_matches.append(
+                    {
+                        "_row_idx_exact": row["_row_idx_exact"],
+                        "player_id": row["player_id"],
+                        "score": base_score,
+                    }
+                )
+
+        # Convert to DataFrame and keep highest-scoring match per row
+        df_scored = pl.DataFrame(scored_matches)
         df_exact_ids = (
-            df_exact.filter(pl.col("position_compatible_exact") | pl.col("player_id").is_null())
-            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=True)
+            df_scored.sort("score", descending=True)
+            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=False)
             .select(["_row_idx_exact", pl.col("player_id").alias("player_id_exact")])
         )
 
         # Join back to original df
-        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop("_row_idx_exact")
+        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
+            ["_row_idx_exact", "player_base_name"]
+        )
     else:
         # Exact match without position (roster parsing)
-        df = df.join(
-            xref.select(["name", "player_id"]).rename({"player_id": "player_id_exact"}),
-            left_on="Player",
-            right_on="name",
+        # Still use suffix-aware logic for disambiguation
+        df_with_idx = df.with_row_index("_row_idx_exact").with_columns(
+            pl.col("Player")
+            .map_elements(_normalize_player_name, return_dtype=pl.String)
+            .alias("player_base_name")
+        )
+
+        df_exact = df_with_idx.join(
+            xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
+            left_on="player_base_name",
+            right_on="merge_name",
             how="left",
         )
 
-    # Enhanced fuzzy match for nulls
+        # Apply suffix-aware disambiguation scoring
+        scored_matches = []
+        for row in df_exact.iter_rows(named=True):
+            if row["player_id"] is None:
+                scored_matches.append(
+                    {
+                        "_row_idx_exact": row["_row_idx_exact"],
+                        "player_id": None,
+                        "score": -1.0,
+                    }
+                )
+            else:
+                _, input_suffix = _extract_suffix(row["Player"])
+                _, xref_suffix = _extract_suffix(row["name"])
+
+                base_score = _calculate_player_score(
+                    player_row={
+                        "name": row["name"],
+                        "position": None,
+                        "team": row["team"],
+                        "draft_year": row["draft_year"],
+                    },
+                    input_suffix=input_suffix,
+                    has_position=False,
+                    input_position=None,
+                )
+
+                # Extra boost for perfect string match
+                if row["Player"] == row["name"]:
+                    # Perfect match with explicit suffix match → strong boost
+                    if input_suffix and xref_suffix and input_suffix == xref_suffix:
+                        base_score += 10000
+                    # Perfect match with no suffixes → small boost, let heuristics decide
+                    elif input_suffix is None and xref_suffix is None:
+                        base_score += 100
+                    # Suffix mismatch → small penalty
+                    else:
+                        base_score -= 100
+
+                scored_matches.append(
+                    {
+                        "_row_idx_exact": row["_row_idx_exact"],
+                        "player_id": row["player_id"],
+                        "score": base_score,
+                    }
+                )
+
+        df_scored = pl.DataFrame(scored_matches)
+        df_exact_ids = (
+            df_scored.sort("score", descending=True)
+            .unique(subset=["_row_idx_exact"], keep="first", maintain_order=False)
+            .select(["_row_idx_exact", pl.col("player_id").alias("player_id_exact")])
+        )
+
+        df = df_with_idx.join(df_exact_ids, on="_row_idx_exact", how="left").drop(
+            ["_row_idx_exact", "player_base_name"]
+        )
+
+    # Enhanced fuzzy match with suffix-aware disambiguation
+    # For rows that didn't match exactly, use base name matching with intelligent disambiguation
     df = df.with_columns(
         pl.when(pl.col("player_id_exact").is_null() & (pl.col("asset_type") == "player"))
         .then(pl.col("Player").map_elements(_normalize_player_name, return_dtype=pl.String))
@@ -599,11 +842,11 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     )
 
     if has_position:
-        # Fuzzy match with position-aware disambiguation
+        # Suffix-aware fuzzy match with position and recency-based disambiguation
         df_with_idx = df.with_row_index("_row_idx_fuzzy")
 
         df_fuzzy = df_with_idx.join(
-            xref.select(["merge_name", "player_id", "position"]),
+            xref.select(["merge_name", "player_id", "position", "name", "team", "draft_year"]),
             left_on="player_normalized",
             right_on="merge_name",
             how="left",
@@ -621,10 +864,52 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
             .alias("position_compatible_fuzzy")
         )
 
-        # Keep ONLY position-compatible fuzzy matches
+        # Filter to position-compatible matches only
+        df_fuzzy = df_fuzzy.filter(pl.col("position_compatible_fuzzy") | pl.col("player_id").is_null())
+
+        # Calculate disambiguation score for each candidate
+        # Row-by-row scoring to handle suffix extraction and scoring logic
+        scored_matches = []
+        for row in df_fuzzy.iter_rows(named=True):
+            if row["player_id"] is None:
+                # No match found
+                scored_matches.append(
+                    {
+                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
+                        "player_id": None,
+                        "score": -1.0,
+                    }
+                )
+            else:
+                # Extract suffix from input
+                _, input_suffix = _extract_suffix(row["Player"])
+
+                # Calculate score
+                score = _calculate_player_score(
+                    player_row={
+                        "name": row["name"],
+                        "position": row["position"],
+                        "team": row["team"],
+                        "draft_year": row["draft_year"],
+                    },
+                    input_suffix=input_suffix,
+                    has_position=True,
+                    input_position=row.get("Position"),
+                )
+
+                scored_matches.append(
+                    {
+                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
+                        "player_id": row["player_id"],
+                        "score": score,
+                    }
+                )
+
+        # Convert to DataFrame and keep highest-scoring match per row
+        df_scored = pl.DataFrame(scored_matches)
         df_fuzzy_ids = (
-            df_fuzzy.filter(pl.col("position_compatible_fuzzy") | pl.col("player_id").is_null())
-            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=True)
+            df_scored.sort("score", descending=True)
+            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=False)
             .select(["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")])
         )
 
@@ -632,12 +917,62 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         df = df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
     else:
         # Fuzzy match without position (roster parsing)
-        df = df.join(
-            xref.select(["merge_name", "player_id"]).rename({"player_id": "player_id_fuzzy"}),
+        # Still use suffix-aware disambiguation even without position
+        df_with_idx = df.with_row_index("_row_idx_fuzzy")
+
+        df_fuzzy = df_with_idx.join(
+            xref.select(["merge_name", "player_id", "name", "team", "draft_year"]),
             left_on="player_normalized",
             right_on="merge_name",
             how="left",
         )
+
+        # Calculate disambiguation score for each candidate
+        scored_matches = []
+        for row in df_fuzzy.iter_rows(named=True):
+            if row["player_id"] is None:
+                scored_matches.append(
+                    {
+                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
+                        "player_id": None,
+                        "score": -1.0,
+                    }
+                )
+            else:
+                # Extract suffix from input
+                _, input_suffix = _extract_suffix(row["Player"])
+
+                # Calculate score (no position available)
+                score = _calculate_player_score(
+                    player_row={
+                        "name": row["name"],
+                        "position": None,
+                        "team": row["team"],
+                        "draft_year": row["draft_year"],
+                    },
+                    input_suffix=input_suffix,
+                    has_position=False,
+                    input_position=None,
+                )
+
+                scored_matches.append(
+                    {
+                        "_row_idx_fuzzy": row["_row_idx_fuzzy"],
+                        "player_id": row["player_id"],
+                        "score": score,
+                    }
+                )
+
+        # Convert to DataFrame and keep highest-scoring match per row
+        df_scored = pl.DataFrame(scored_matches)
+        df_fuzzy_ids = (
+            df_scored.sort("score", descending=True)
+            .unique(subset=["_row_idx_fuzzy"], keep="first", maintain_order=False)
+            .select(["_row_idx_fuzzy", pl.col("player_id").alias("player_id_fuzzy")])
+        )
+
+        # Join back to original df
+        df = df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
 
     # Add a third tier:
     # Partial name matching for difficult cases (e.g., "Josh Allen" → "Josh Hines-Allen")
