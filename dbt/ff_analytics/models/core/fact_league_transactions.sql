@@ -90,11 +90,13 @@ select
   end as transaction_date_corrected,
 
   -- Flag indicating chronological correction was applied
-  coalesce(draft_calendar_year is not null
-  and year(transaction_date) = draft_calendar_year
-  and period_type = 'offseason'
-  and transaction_date < draft_date
-  and transaction_type != 'rookie_draft_selection', false) as was_sequence_corrected,
+  coalesce(
+    draft_calendar_year is not null
+    and year(transaction_date) = draft_calendar_year
+    and period_type = 'offseason'
+    and transaction_date < draft_date
+    and transaction_type != 'rookie_draft_selection', false
+  ) as was_sequence_corrected,
 
   transaction_year,       -- Partition key for large-scale queries
   season,
