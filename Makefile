@@ -1,6 +1,6 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test quickstart-local sqlfix
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix
 
 help:
 	@echo "Available targets:"
@@ -22,6 +22,15 @@ dbt-run:
 		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
 		dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+
+dbt-seed:
+	@echo "Seeding dbt sources"
+	@mkdir -p dbt/ff_analytics/target
+	@mkdir -p .uv-cache
+	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
+		EXTERNAL_ROOT="$$PWD/data/raw" \
+		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+		dbt seed --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
 
 dbt-test:
 	@echo "Testing dbt models"
