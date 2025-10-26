@@ -36,7 +36,7 @@ repos:
         exclude: ^notebooks/.*/\.ipynb_checkpoints/.*
 
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.17
+    rev: 1.0.0
     hooks:
       - id: mdformat
         additional_dependencies: [mdformat-gfm]
@@ -74,20 +74,22 @@ repos:
     hooks:
       - id: sqlfluff-lint
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
-        additional_dependencies: [
-          "dbt-core>=1.8.0",
-          "dbt-duckdb>=1.8.0",
-          "sqlfluff-templater-dbt>=3.1.1",
-        ]
+        additional_dependencies:
+          [
+            "dbt-core>=1.8.0",
+            "dbt-duckdb>=1.8.0",
+            "sqlfluff-templater-dbt>=3.1.1",
+          ]
       - id: sqlfluff-fix
         name: sqlfluff-fix (manual)
         stages: [manual]
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
-        additional_dependencies: [
-          "dbt-core>=1.8.0",
-          "dbt-duckdb>=1.8.0",
-          "sqlfluff-templater-dbt>=3.1.1",
-        ]
+        additional_dependencies:
+          [
+            "dbt-core>=1.8.0",
+            "dbt-duckdb>=1.8.0",
+            "sqlfluff-templater-dbt>=3.1.1",
+          ]
         args: [--config, pyproject.toml]
 
   - repo: https://github.com/rhysd/actionlint
