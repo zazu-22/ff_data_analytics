@@ -26,7 +26,8 @@ ______________________________________________________________________
 - Commissioner Sheet roster tabs exist (parsed in `.tmp_commissioner_extract/`)
 - Row 3 of each GM's tab contains cap space data: Available, Dead, Traded
 - Example from Jason's tab:
-  ```
+
+  ```csv
   Available Cap Space,,$80,$80,$158,$183,$250
   Dead Cap Space,,$26,$13,$6,$0,$0
   Traded Cap Space,$7,$0,$0,$0,$0
@@ -388,7 +389,7 @@ ______________________________________________________________________
 
 1. **Data validation:**
 
-   - ✅ Jason's cap space matches sheet: $80 (2025), $80 (2026), $158 (2027), $183 (2028), $250 (2029)
+   - ✅ Jason's cap space matches sheet: $81 (2025), $80 (2026), $158 (2027), $183 (2028), $250 (2029)
    - ✅ All 12 franchises have data for 5 years
    - ✅ Reconciliation differences documented (expected to be non-zero due to manual adjustments)
 
@@ -437,7 +438,7 @@ ______________________________________________________________________
 
 ## Commit Message
 
-```
+```text
 feat: add cap space parsing and mart for FASA bid planning
 
 Parse cap space data from Commissioner Sheet roster tabs (row 3) to
@@ -457,6 +458,6 @@ ______________________________________________________________________
 
 ## Notes
 
-- **Manual adjustments:** Commissioner has made some manual cap space adjustments, so `reconciliation_difference` will be non-zero. This is expected and documented in the mart.
+- **Manual adjustments:** Commissioner has made some manual cap space adjustments, so `reconciliation_difference` may be non-zero. This is expected and documented in the mart.
 - **Source of truth:** Always use `cap_space_available` (reported) for decisions, not calculated values.
 - **Traded cap:** Positive values = acquired cap, negative = sent cap via trades.

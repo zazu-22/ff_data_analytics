@@ -168,7 +168,7 @@ LEFT JOIN (
 
 **Success Criteria:**
 
-- ✅ Jason's cap space: $80 (2025), $80 (2026), $158 (2027), $183 (2028), $250 (2029)
+- ✅ Jason's cap space: $81 (2025), $80 (2026), $158 (2027), $183 (2028), $250 (2029)
 - ✅ All 12 franchises have cap data for 5 years
 - ✅ Reconciliation differences documented (if any)
 
