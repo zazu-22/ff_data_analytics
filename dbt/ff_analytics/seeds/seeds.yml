@@ -64,6 +64,11 @@ seeds:
 
   - name: dim_pick
     description: "Base draft picks 2012-2030 (compensatory picks added via TRANSACTIONS)"
+    config:
+      column_types:
+        season: BIGINT
+        round: BIGINT
+        overall_pick: BIGINT
     columns:
       - name: pick_id
         description: "Unique pick identifier (e.g., 2024_R1_P01)"
@@ -83,19 +88,19 @@ seeds:
                 severity: error
               arguments:
                 values: [1, 2, 3, 4, 5]
-      - name: round_slot
-        description: "Pick number within round (1-12 for base picks)"
+      - name: overall_pick
+        description: "Overall pick number in draft (P01-P60 for base picks, >60 for comp, 99 for TBD)"
         tests:
           - not_null
       - name: pick_type
-        description: "Pick type (base or compensatory)"
+        description: "Pick type (base, compensatory, or conditional)"
         tests:
           - not_null
           - accepted_values:
               config:
                 severity: error
               arguments:
-                values: ['base', 'compensatory']
+                values: ['base', 'compensatory', 'conditional']
 
   - name: dim_scoring_rule
     description: "Fantasy scoring rules (SCD Type 2)"

@@ -26,7 +26,7 @@ select
   current_team as team,
   null as season,
   null as round,
-  null as round_slot,
+  null as overall_pick,
   'Active NFL player' as asset_category
 from {{ ref('dim_player') }}
 
@@ -38,12 +38,12 @@ select
   'pick' as asset_type,
   null as player_id,
   pick_id,
-  season || ' Round ' || round || ' Pick ' || round_slot as asset_name,
+  season || ' Round ' || round || ' Pick ' || overall_pick as asset_name,
   null as position,
   null as team,
   season,
   round,
-  round_slot,
+  overall_pick,
   case
     when pick_type = 'compensatory' then 'Compensatory pick'
     when pick_type = 'rfa_compensation' then 'RFA compensation pick'
