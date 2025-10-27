@@ -25,8 +25,8 @@ ______________________________________________________________________
 | Task | File | Priority | Duration | Status |
 |------|------|----------|----------|--------|
 | 1.1 | [01_task_cap_space_foundation.md](./01_task_cap_space_foundation.md) | CRITICAL | 4h | ✅ Complete |
-| 1.2 | [02_task_sleeper_production_integration.md](./02_task_sleeper_production_integration.md) | CRITICAL | 8h | ⬜ Not Started |
-| 1.3 | [03_task_fasa_target_mart.md](./03_task_fasa_target_mart.md) | CRITICAL | 8h | ⬜ Not Started |
+| 1.2 | [02_task_sleeper_production_integration.md](./02_task_sleeper_production_integration.md) | CRITICAL | 8h | ✅ Complete |
+| 1.3 | [03_task_fasa_target_mart.md](./03_task_fasa_target_mart.md) | CRITICAL | 8h | ✅ Complete |
 | 1.4 | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md) | CRITICAL | 4h | ⬜ Not Started |
 
 **Milestone:** FASA notebook ready for Wednesday bids (24 hours before deadline)
@@ -143,9 +143,9 @@ Update task status here and in `00_SPRINT_PLAN.md`:
 
 ### Phase 1 Progress (Critical: Must complete in 24 hours)
 
-- ⬜ Task 1.1: Cap Space Foundation
-- ⬜ Task 1.2: Sleeper Production Integration
-- ⬜ Task 1.3: FASA Target Mart
+- ✅ Task 1.1: Cap Space Foundation
+- ✅ Task 1.2: Sleeper Production Integration
+- ✅ Task 1.3: FASA Target Mart
 - ⬜ Task 1.4: FASA Strategy Notebook
 
 ### Phase 2 Progress

@@ -1735,15 +1735,15 @@ You should update this section when you begin and complete each task.
   - [x] Create stg_sheets\_\_cap_space.sql
   - [x] Create mart_cap_situation.sql
   - [x] Validate Jason's cap: $81 (2025) - 100% reconciliation accuracy (50/50 franchise-seasons)
-- [ ] Task 1.2: Sleeper integration (4-12h)
-  - [ ] Create src/ingest/sleeper/client.py
-  - [ ] Create scripts/ingest/load_sleeper.py
-  - [ ] Create stg_sleeper\_\_\*.sql (3 models)
-  - [ ] Validate FA pool: 500-800 players
-- [ ] Task 1.3: FASA target mart (12-20h)
-  - [ ] Create mart_fasa_targets.sql
-  - [ ] Create mart_my_roster_droppable.sql
-  - [ ] Run and validate: All FAs scored
+- [x] Task 1.2: Sleeper integration (4-12h)
+  - [x] Create src/ingest/sleeper/client.py
+  - [x] Create scripts/ingest/load_sleeper.py
+  - [x] Create stg_sleeper\_\_\*.sql (3 models)
+  - [x] Validate FA pool: 500-800 players
+- [x] Task 1.3: FASA target mart (12-20h)
+  - [x] Create mart_fasa_targets.sql
+  - [x] Create mart_my_roster_droppable.sql
+  - [x] Run and validate: All FAs scored
 - [ ] Task 1.4: FASA notebook (20-24h)
   - [ ] Create fasa_weekly_strategy.ipynb
   - [ ] Validate: Notebook runs end-to-end
