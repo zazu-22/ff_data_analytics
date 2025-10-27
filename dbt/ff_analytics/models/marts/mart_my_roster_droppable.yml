@@ -1,0 +1,109 @@
+version: 2
+
+models:
+  - name: mart_my_roster_droppable
+    description: |
+      Identify drop candidates on Jason's roster for FASA cap space planning.
+
+      Scores each rostered player by droppability (0-100) based on production,
+      cap hit, dead cap liability, and roster depth. Calculates cap space freed
+      and opportunity cost to guide drop decisions.
+
+      **Grain:** player_key, asof_date
+
+      **Refresh:** Daily (after contract updates)
+
+      **Key Business Logic:**
+      - droppable_score = low production (30) + high cap (30) + low dead cap (20) + depth (20)
+      - Recommendations: KEEP < 40, DROP_FOR_UPSIDE >= 40, CONSIDER >= 60, DROP_FOR_CAP >= 80
+      - Cap space freed = current cap hit - dead cap if cut now
+
+    config:
+      materialized: external
+      location: "{{ env_var('EXTERNAL_ROOT') }}/marts/mart_my_roster_droppable/dt={{ run_started_at.strftime('%Y-%m-%d') }}/*.parquet"
+
+    columns:
+      - name: player_key
+        description: "Canonical player identifier (MFL ID)"
+        data_tests:
+          - not_null
+
+      - name: player_name
+        description: "Player display name"
+        data_tests:
+          - not_null
+
+      - name: position
+        description: "Fantasy position"
+        data_tests:
+          - not_null
+
+      - name: years_remaining
+        description: "Contract years remaining"
+
+      - name: current_year_cap_hit
+        description: "Current year cap hit ($)"
+
+      - name: future_years_cap_hit
+        description: "Future years total cap hit ($)"
+
+      - name: total_remaining
+        description: "Total remaining contract value ($)"
+
+      - name: dead_cap_if_cut_now
+        description: "Dead cap hit if cut today ($)"
+
+      - name: cap_space_freed
+        description: "Cap space freed if cut today ($ saved)"
+
+      - name: fantasy_ppg_last_8
+        description: "Fantasy points per game (last 8 games)"
+
+      - name: projected_ppg_ros
+        description: "Projected fantasy points per game (rest of season)"
+
+      - name: points_per_dollar
+        description: "Projected PPG / current cap hit (efficiency)"
+
+      - name: replacement_surplus
+        description: "Projected PPG minus median FA at position"
+
+      - name: droppable_score
+        description: "Droppability score (0-100, higher = more droppable)"
+        data_tests:
+          - not_null
+
+      - name: opportunity_cost
+        description: "Cap savings minus production value ($ opportunity)"
+
+      - name: position_depth_rank
+        description: "Rank at position on roster (1 = best)"
+
+      - name: roster_tier
+        description: "Roster tier classification"
+        data_tests:
+          - accepted_values:
+              values: ['STARTER', 'FLEX', 'BENCH']
+
+      - name: weeks_until_contract_expires
+        description: "Years remaining on contract (alias)"
+
+      - name: drop_recommendation
+        description: "Drop recommendation category"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['KEEP', 'CONSIDER', 'DROP_FOR_UPSIDE', 'DROP_FOR_CAP']
+
+      - name: asof_date
+        description: "Snapshot date"
+        data_tests:
+          - not_null
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_key
+            - asof_date
+      - dbt_utils.expression_is_true:
+          expression: "droppable_score >= 0 AND droppable_score <= 100"

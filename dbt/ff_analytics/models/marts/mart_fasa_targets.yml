@@ -1,0 +1,161 @@
+version: 2
+
+models:
+  - name: mart_fasa_targets
+    description: |
+      Score and rank every free agent for FASA bidding decisions.
+
+      Combines recent performance, rest-of-season projections, opportunity metrics,
+      and market values into a composite value_score (0-100). Provides bid
+      recommendations and confidence levels for FASA planning.
+
+      **Grain:** player_key, asof_date
+
+      **Refresh:** Daily (after Sleeper FA pool refresh)
+
+      **Key Business Logic:**
+      - value_score = 40% projections + 25% opportunity + 20% efficiency + 15% market
+      - Bid recommendations vary by position ($1 per 10 pts for RB, 12 for WR, etc.)
+      - Confidence based on recent performance + snap share + replacement level
+
+    config:
+      materialized: external
+      location: "{{ env_var('EXTERNAL_ROOT') }}/marts/mart_fasa_targets/dt={{ run_started_at.strftime('%Y-%m-%d') }}/*.parquet"
+
+    columns:
+      - name: player_key
+        description: "Canonical player identifier (MFL ID)"
+        data_tests:
+          - not_null
+
+      - name: player_name
+        description: "Player display name"
+        data_tests:
+          - not_null
+
+      - name: position
+        description: "Fantasy position"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['QB', 'RB', 'WR', 'TE']
+
+      - name: nfl_team
+        description: "Current NFL team abbreviation"
+
+      - name: age
+        description: "Player age as of current season"
+
+      - name: nfl_experience
+        description: "Years in NFL"
+
+      - name: injury_status
+        description: "Current injury designation from Sleeper"
+
+      - name: fantasy_ppg_last_3
+        description: "Fantasy points per game (last 3 games)"
+
+      - name: fantasy_ppg_last_4
+        description: "Fantasy points per game (last 4 games)"
+
+      - name: fantasy_ppg_last_8
+        description: "Fantasy points per game (last 8 games)"
+
+      - name: fantasy_ppg_season
+        description: "Fantasy points per game (season average)"
+
+      - name: attempts_per_game_l4
+        description: "Rush attempts + targets per game (last 4)"
+
+      - name: targets_per_game_l4
+        description: "Targets per game (last 4)"
+
+      - name: ypc
+        description: "Yards per carry (season)"
+
+      - name: ypr
+        description: "Yards per reception (season)"
+
+      - name: catch_rate
+        description: "Receptions / targets (season)"
+
+      - name: target_share_l4
+        description: "Team target share (last 4 games)"
+
+      - name: snap_share_l4
+        description: "Team snap share (last 4 games)"
+
+      - name: air_yards_share_l4
+        description: "Team air yards share (last 4 games)"
+
+      - name: projected_ppg_ros
+        description: "Projected fantasy points per game (rest of season)"
+
+      - name: projected_total_ros
+        description: "Projected total fantasy points (rest of season)"
+
+      - name: weeks_remaining
+        description: "Number of weeks remaining in season"
+
+      - name: ktc_value
+        description: "Keep Trade Cut dynasty value (1QB)"
+
+      - name: ktc_rank_overall
+        description: "Keep Trade Cut overall rank"
+
+      - name: ktc_rank_at_position
+        description: "Keep Trade Cut rank at position"
+
+      - name: ktc_trend_4wk
+        description: "KTC value change (4 weeks)"
+
+      - name: value_score
+        description: "Composite value score (0-100, higher = better target)"
+
+      - name: points_above_replacement
+        description: "Projected PPG minus 25th percentile at position"
+
+      - name: breakout_indicator
+        description: "Flag for trending usage + efficiency breakout"
+
+      - name: regression_risk_flag
+        description: "Flag for overperformance vs projections"
+
+      - name: suggested_bid_1yr
+        description: "Recommended 1-year bid amount ($)"
+
+      - name: suggested_bid_2yr
+        description: "Recommended 2-year bid amount ($)"
+
+      - name: bid_confidence
+        description: "Confidence level for bid recommendation"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['HIGH', 'MEDIUM', 'LOW']
+
+      - name: priority_rank_overall
+        description: "Overall priority rank (1 = highest value)"
+        data_tests:
+          - not_null
+
+      - name: priority_rank_at_position
+        description: "Position priority rank (1 = highest value)"
+        data_tests:
+          - not_null
+
+      - name: asof_date
+        description: "Snapshot date"
+        data_tests:
+          - not_null
+
+      - name: current_week
+        description: "Most recent completed NFL week"
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - player_key
+            - asof_date
+      - dbt_utils.expression_is_true:
+          expression: "(value_score >= 0 AND value_score <= 100) OR value_score IS NULL"
