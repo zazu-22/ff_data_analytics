@@ -1,0 +1,55 @@
+# Test suite template for dbt models
+# Use dbt 1.10+ syntax with arguments: wrapper
+
+version: 2
+
+models:
+  - name: {model_name}
+    description: {model description}
+
+    # Grain uniqueness test (for fact tables)
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - {pk_column_1}
+              - {pk_column_2}
+          config:
+            severity: error
+
+    columns:
+      # Primary key tests
+      - name: {pk_column}
+        description: {PK description}
+        data_tests:
+          - not_null
+          - unique
+
+      # Foreign key relationship tests
+      - name: {fk_column}
+        description: Foreign key to {ref_table}
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('{ref_table}')
+                field: {ref_column}
+              config:
+                where: "{fk_column} IS NOT NULL"
+
+      # Enum/categorical tests
+      - name: {enum_column}
+        description: {Enum description}
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['{value1}', '{value2}', '{value3}']
+
+      # Measure validation
+      - name: {measure_column}
+        description: {Measure description}
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"  # Non-negative constraint
