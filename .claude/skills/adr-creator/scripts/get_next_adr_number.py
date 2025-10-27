@@ -4,6 +4,7 @@
 import re
 from pathlib import Path
 
+
 def get_next_adr_number(adr_dir: Path = Path("docs/adr")) -> int:
     """Find the highest ADR number and return next."""
     adr_files = list(adr_dir.glob("ADR-*.md"))
@@ -13,11 +14,12 @@ def get_next_adr_number(adr_dir: Path = Path("docs/adr")) -> int:
 
     numbers = []
     for file in adr_files:
-        match = re.search(r'ADR-(\d+)', file.name)
+        match = re.search(r"ADR-(\d+)", file.name)
         if match:
             numbers.append(int(match.group(1)))
 
     return max(numbers) + 1 if numbers else 1
+
 
 if __name__ == "__main__":
     next_num = get_next_adr_number()

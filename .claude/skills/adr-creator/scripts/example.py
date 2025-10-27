@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example helper script for adr-creator
+"""Example helper script for adr-creator
 
 This is a placeholder script that can be executed directly.
 Replace with actual implementation or delete if not needed.
@@ -10,10 +9,12 @@ Example real scripts from other skills:
 - pdf/scripts/convert_pdf_to_images.py - Converts PDF pages to images
 """
 
+
 def main():
     print("This is an example script for adr-creator")
     # TODO: Add actual script logic here
     # This could be data processing, file conversion, API calls, etc.
+
 
 if __name__ == "__main__":
     main()
