@@ -103,6 +103,15 @@ See implementation checklist for detailed status by component.
 - **Idempotent**: All jobs retryable
 - **Failure handling**: Last-known-good (LKG) pattern
 
+**Debugging dbt Test Failures**:
+
+When dbt tests fail (duplicates, relationship violations, etc.), **assume the issue is in our transformation code, not the source data**. Check in order:
+
+1. Multiple snapshots being read (`dt=*` patterns without latest-only filtering)
+2. Join logic creating many-to-many relationships
+3. Missing deduplication (QUALIFY/DISTINCT) in staging models
+4. Only after ruling out code issues should you inspect source data quality
+
 ## Critical Specifications
 
 | Document | Purpose |

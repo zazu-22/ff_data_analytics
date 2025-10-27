@@ -118,7 +118,8 @@ with base as (
 
   from
     read_parquet(
-      '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet'
+      '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet',
+      hive_partitioning = true
     ) w
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~0.12% of raw data has NULL (113/97,415 rows)
@@ -128,6 +129,8 @@ with base as (
     w.player_id is not null
     and w.season is not null
     and w.week is not null
+    -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
+    and {{ latest_snapshot_only(var("external_root", "data/raw") ~ "/nflverse/weekly/dt=*/*.parquet") }}
 ),
 
 crosswalk as (

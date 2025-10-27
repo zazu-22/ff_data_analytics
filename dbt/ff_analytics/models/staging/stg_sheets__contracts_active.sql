@@ -236,6 +236,22 @@ with_player_id as (
     on
       wd.player_name_canonical = xwalk.player_name_canonical
       and wd.roster_slot = xwalk.roster_slot
+  -- Deduplicate when a player matches multiple positions in transaction history
+  -- This occurs for flexible roster slots (BN, TAXI, IR) with multi-position players
+  -- Example: Quincy Williams (LB/DB) on IR would match both positions
+  qualify row_number() over (
+    partition by
+      wd.player_name_canonical,
+      wd.roster_slot,
+      wd.gm_full_name,
+      wd.obligation_year,
+      wd.snapshot_date
+    order by
+      -- Prefer transaction-based player_id over crosswalk
+      case when txn.player_id is not null then 1 else 2 end,
+      -- Tiebreaker: prefer offensive positions for flexible slots
+      case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
+  ) = 1
 ),
 
 final as (

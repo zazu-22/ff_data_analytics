@@ -32,7 +32,8 @@ with base as (
 
   from
     read_parquet(
-      '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}'
+      '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}',
+      hive_partitioning = true
     ) s
   -- Data quality filters: Exclude records missing required identifiers
   -- pfr_player_id: 0.00% of raw data has NULL (0/136,974 rows)
@@ -41,6 +42,8 @@ with base as (
     s.pfr_player_id is not null
     and s.season is not null
     and s.week is not null
+    -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
+    and {{ latest_snapshot_only(env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet")) }}
 ),
 
 crosswalk as (

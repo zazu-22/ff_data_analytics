@@ -68,7 +68,8 @@ with base as (
 
   from
     read_parquet(
-      '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}'
+      '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}',
+      hive_partitioning = true
     ) o
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~6.75% of raw data has NULL (2,115/31,339 rows)
@@ -81,6 +82,8 @@ with base as (
     and o.season is not null
     and o.week is not null
     and o.game_id is not null
+    -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
+    and {{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
 ),
 
 crosswalk as (
