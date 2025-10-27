@@ -20,7 +20,7 @@ models:
 
     config:
       materialized: external
-      location: "{{ env_var('EXTERNAL_ROOT') }}/marts/mart_my_roster_droppable/dt={{ run_started_at.strftime('%Y-%m-%d') }}/*.parquet"
+      location: "{{ env_var('EXTERNAL_ROOT') }}/marts/mart_my_roster_droppable/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
 
     columns:
       - name: player_key
