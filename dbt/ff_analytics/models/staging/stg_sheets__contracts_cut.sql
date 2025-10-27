@@ -57,10 +57,11 @@ with base as (
     -- Snapshot metadata
     dt as snapshot_date
 
-  from read_parquet(
-    '{{ var("external_root", "data/raw") }}/commissioner/contracts_cut/dt=*/contracts_cut.parquet'
-  )
-  where {{ latest_snapshot_only(var("external_root", "data/raw") ~ '/commissioner/contracts_cut/dt=*/contracts_cut.parquet') }}
+  from
+    read_parquet(
+      '{{ var("external_root", "data/raw") }}/commissioner/contracts_cut/dt=*/contracts_cut.parquet'
+    )
+  where     {{ latest_snapshot_only(var("external_root", "data/raw") ~ '/commissioner/contracts_cut/dt=*/contracts_cut.parquet') }}
 ),
 
 with_franchise as (

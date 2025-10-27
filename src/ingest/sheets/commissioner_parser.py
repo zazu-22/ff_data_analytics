@@ -28,7 +28,6 @@ from pathlib import Path
 
 import polars as pl
 
-
 _FALSE_CONDITION_MARKERS = {
     "",
     "-",
@@ -1256,16 +1255,10 @@ def _to_long_roster(roster_all: pl.DataFrame) -> pl.DataFrame:
             .str.replace_all(r"[,$]", "")
             .str.replace("", "0")
             .cast(pl.Float64, strict=False),
-            rfa=pl.col("rfa")
-            .fill_null("")
-            .cast(pl.Utf8)
-            .str.strip_chars()
-            .str.to_lowercase() == "x",
-            franchise=pl.col("fr")
-            .fill_null("")
-            .cast(pl.Utf8)
-            .str.strip_chars()
-            .str.to_lowercase() == "x",
+            rfa=pl.col("rfa").fill_null("").cast(pl.Utf8).str.strip_chars().str.to_lowercase()
+            == "x",
+            franchise=pl.col("fr").fill_null("").cast(pl.Utf8).str.strip_chars().str.to_lowercase()
+            == "x",
         )
         .drop(["year_str", "amount_str", "total", "fr"])
         .filter(pl.col("amount").is_not_null() & (pl.col("amount") > 0))
@@ -1346,17 +1339,9 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         .then(pl.lit("owned"))
         .otherwise(pl.lit("acquired")),
         trade_recipient=pl.when(pl.col("owner_lower").str.starts_with("traded to"))
-        .then(
-            pl.col("owner_clean")
-            .str.replace_all(r"(?i)^traded to[: ]*", "")
-            .str.strip_chars()
-        )
+        .then(pl.col("owner_clean").str.replace_all(r"(?i)^traded to[: ]*", "").str.strip_chars())
         .when(pl.col("owner_lower").str.starts_with("trade to"))
-        .then(
-            pl.col("owner_clean")
-            .str.replace_all(r"(?i)^trade to[: ]*", "")
-            .str.strip_chars()
-        )
+        .then(pl.col("owner_clean").str.replace_all(r"(?i)^trade to[: ]*", "").str.strip_chars())
         .otherwise(pl.lit(None)),
     )
 
@@ -1377,10 +1362,7 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
     )
 
     picks = picks.with_columns(
-        condition_text=pl.col("trade_conditions")
-        .fill_null("")
-        .cast(pl.Utf8)
-        .str.strip_chars(),
+        condition_text=pl.col("trade_conditions").fill_null("").cast(pl.Utf8).str.strip_chars(),
     )
 
     condition_lower = pl.col("condition_text").str.to_lowercase()
@@ -1438,7 +1420,9 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
     if records:
         from collections import defaultdict
 
-        acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]] = defaultdict(list)
+        acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]] = defaultdict(
+            list
+        )
         for rec in records:
             if rec.get("source_type") != "acquired":
                 continue
@@ -1448,7 +1432,9 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
             gm_aliases.update(_alias_tokens(rec.get("gm_first")))
             gm_aliases.update(_alias_tokens(rec.get("gm_last")))
             from_aliases = _alias_tokens(rec.get("acquisition_note_lower"))
-            acquired_lookup[(year, rnd)].append((gm_aliases, from_aliases, bool(rec.get("condition_flag"))))
+            acquired_lookup[(year, rnd)].append(
+                (gm_aliases, from_aliases, bool(rec.get("condition_flag")))
+            )
 
         for rec in records:
             if rec.get("source_type") != "trade_out" or rec.get("condition_flag"):

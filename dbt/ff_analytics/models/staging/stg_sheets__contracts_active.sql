@@ -52,9 +52,10 @@ with base as (
     -- Snapshot metadata
     dt as snapshot_date
 
-  from read_parquet(
-    '{{ var("external_root", "data/raw") }}/commissioner/contracts_active/dt=*/*.parquet'
-  )
+  from
+    read_parquet(
+      '{{ var("external_root", "data/raw") }}/commissioner/contracts_active/dt=*/*.parquet'
+    )
   where {{ latest_snapshot_only(var("external_root", "data/raw") ~ '/commissioner/contracts_active/dt=*/*.parquet') }}
 ),
 
@@ -280,13 +281,14 @@ final as (
       when is_defense then 'DEF_' || defense_team_abbr
       when coalesce(player_id, -1) != -1
         then cast(player_id as varchar)
-      when player_name = '' then
-        'EMPTY_' || roster_slot || '_' || cast(
-          row_number() over (
-            partition by franchise_id, roster_slot, obligation_year, snapshot_date
-            order by cap_hit desc
-          ) as varchar
-        )
+      when player_name = ''
+        then
+          'EMPTY_' || roster_slot || '_' || cast(
+            row_number() over (
+              partition by franchise_id, roster_slot, obligation_year, snapshot_date
+              order by cap_hit desc
+            ) as varchar
+          )
       else coalesce(player_name, 'UNKNOWN_PLAYER')
     end as player_key,
 
