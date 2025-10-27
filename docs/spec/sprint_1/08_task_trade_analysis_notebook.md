@@ -1,4 +1,4 @@
-# Task 2.3: Trade Analysis Notebook
+# Task 2.4: Trade Analysis Notebook
 
 **Sprint:** Sprint 1
 **Phase:** Phase 2
@@ -11,7 +11,7 @@ Create `notebooks/trade_targets_analysis.ipynb` for trade partner identification
 
 ## Dependencies
 
-- ✅ Task 2.2 complete (trade marts exist)
+- ✅ Task 2.3 complete (trade marts exist)
 
 ## Notebook Sections
 
@@ -39,5 +39,5 @@ uv run jupyter nbconvert --execute --to notebook \
 
 ```
 feat: add trade analysis notebook
-Resolves: Sprint 1 Task 2.3
+Resolves: Sprint 1 Task 2.4
 ```

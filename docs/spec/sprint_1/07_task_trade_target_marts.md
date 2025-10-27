@@ -1,4 +1,4 @@
-# Task 2.2: Trade Target Marts
+# Task 2.3: Trade Target Marts
 
 **Sprint:** Sprint 1
 **Phase:** Phase 2
@@ -11,7 +11,7 @@ Create `mart_trade_targets` (all rosters) and `mart_my_trade_chips` (my overvalu
 
 ## Dependencies
 
-- ✅ Task 2.1 complete (valuation model exists)
+- ✅ Task 2.2 complete (valuation model exists)
 - ✅ `fact_asset_market_values` (KTC) exists
 - ✅ `stg_sheets__contracts_active` exists
 
@@ -48,5 +48,5 @@ make dbt-test --select mart_trade_targets mart_my_trade_chips
 
 ```
 feat: add trade target marts for buy-low/sell-high analysis
-Resolves: Sprint 1 Task 2.2
+Resolves: Sprint 1 Task 2.3
 ```

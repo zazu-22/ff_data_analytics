@@ -35,10 +35,10 @@ ______________________________________________________________________
 
 | Task | File | Priority | Duration | Status |
 |------|------|----------|----------|--------|
-| 2.1 | [05_task_baseline_valuation_model.md](./05_task_baseline_valuation_model.md) | HIGH | 8h | ⬜ Not Started |
-| 2.2 | [06_task_trade_target_marts.md](./06_task_trade_target_marts.md) | HIGH | 8h | ⬜ Not Started |
-| 2.3 | [07_task_trade_analysis_notebook.md](./07_task_trade_analysis_notebook.md) | MEDIUM | 4h | ⬜ Not Started |
-| 2.4 | [08_task_historical_backfill.md](./08_task_historical_backfill.md) | MEDIUM | 8h (background) | ⬜ Not Started |
+| 2.1 | [05_task_historical_backfill.md](./05_task_historical_backfill.md) | HIGH | 8h | ⬜ Not Started |
+| 2.2 | [06_task_baseline_valuation_model.md](./06_task_baseline_valuation_model.md) | HIGH | 8h | ⬜ Not Started |
+| 2.3 | [07_task_trade_target_marts.md](./07_task_trade_target_marts.md) | HIGH | 8h | ⬜ Not Started |
+| 2.4 | [08_task_trade_analysis_notebook.md](./08_task_trade_analysis_notebook.md) | MEDIUM | 4h | ⬜ Not Started |
 
 **Milestone:** Trade analysis toolkit operational
 
@@ -105,15 +105,15 @@ Task 1.4 (FASA Notebook)
   ⬇
 ✅ Wednesday FASA Ready
 
-Task 2.1 (Valuation Model) ──┐
-  ⬇                           ⬇
-Task 2.2 (Trade Marts) ←──────┘
+Task 2.1 (Historical Backfill) ──┐ [REQUIRED FIRST]
+  ⬇                               ⬇
+Task 2.2 (Valuation Model) ←──────┘
   ⬇
-Task 2.3 (Trade Notebook)
+Task 2.3 (Trade Marts)
+  ⬇
+Task 2.4 (Trade Notebook)
   ⬇
 ✅ Trade Analysis Ready
-
-Task 2.4 (Backfill) [runs in parallel, not blocking]
 
 Task 3.1 (GitHub Actions) ──┐
   ⬇                          ⬇
@@ -125,8 +125,8 @@ Task 3.2 (Documentation) ←───┘
 **Key:**
 
 - Arrows show hard dependencies (must wait for completion)
-- Task 2.4 can run in background while other tasks proceed
-- Task 1.1 is optional for Task 1.2 (helpful but not blocking)
+- Task 2.1 (Historical Backfill) must complete before Task 2.2 (Valuation Model)
+- All Phase 2 tasks are now sequential (no background processing)
 
 ______________________________________________________________________
 
@@ -150,10 +150,10 @@ Update task status here and in `00_SPRINT_PLAN.md`:
 
 ### Phase 2 Progress
 
-- ⬜ Task 2.1: Baseline Valuation Model
-- ⬜ Task 2.2: Trade Target Marts
-- ⬜ Task 2.3: Trade Analysis Notebook
-- ⬜ Task 2.4: Historical Backfill
+- ⬜ Task 2.1: Historical Backfill (REQUIRED FIRST)
+- ⬜ Task 2.2: Baseline Valuation Model
+- ⬜ Task 2.3: Trade Target Marts
+- ⬜ Task 2.4: Trade Analysis Notebook
 
 ### Phase 3 Progress
 

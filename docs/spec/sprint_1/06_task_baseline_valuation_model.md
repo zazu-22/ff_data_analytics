@@ -1,4 +1,4 @@
-# Task 2.1: Baseline Valuation Model
+# Task 2.2: Baseline Valuation Model
 
 **Sprint:** Sprint 1 - FASA Optimization & Trade Intelligence
 **Phase:** Phase 2 - Trade Intelligence
@@ -23,8 +23,8 @@ ______________________________________________________________________
 
 **Dependencies:**
 
-- ✅ `fact_player_stats` exists with historical data
-- ⬜ Historical backfill helpful but not required (can use 2024 only)
+- ✅ Task 2.1 complete: Historical backfill (2012-2024)
+- ✅ `fact_player_stats` contains historical data (required for training)
 
 ______________________________________________________________________
 
@@ -126,5 +126,5 @@ Train linear regression model to predict player fair value using:
 Model achieves MAE < 5.0 and R² > 0.50, enabling buy-low/sell-high
 identification by comparing model predictions to KTC market values.
 
-Resolves: Sprint 1 Task 2.1
+Resolves: Sprint 1 Task 2.2
 ```

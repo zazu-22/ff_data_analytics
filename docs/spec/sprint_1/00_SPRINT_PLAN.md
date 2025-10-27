@@ -44,9 +44,10 @@ ______________________________________________________________________
 
 **Milestone:** `mart_trade_targets` + `trade_targets_analysis.ipynb` functional
 
-- ✅ Hour 24-32: Baseline valuation model
-- ✅ Hour 32-40: Trade analysis notebook
-- ✅ Hour 40-48: Historical backfill (runs in background)
+- ✅ Hour 24-32: Historical backfill (required for model training)
+- ✅ Hour 32-40: Baseline valuation model
+- ✅ Hour 40-44: Trade target marts
+- ✅ Hour 44-48: Trade analysis notebook
 
 ### Phase 3: Automation & Production
 
@@ -1104,9 +1105,39 @@ ______________________________________________________________________
 
 ## Phase 2: Trade Intelligence (24-48 hours)
 
-### Task 2.1: Baseline Valuation Model (24-32 hours)
+### Task 2.1: Historical Backfill (24-32 hours)
+
+**Objective:** Load 2012-2024 nflverse data required for valuation model training and aging curve analysis.
+
+**Command:**
+
+```bash
+# Run backfill (takes several hours)
+for year in {2012..2024}; do
+  uv run python scripts/ingest/load_nflverse.py \
+    --seasons $year \
+    --datasets weekly,snap_counts,ff_opportunity \
+    --out data/raw/nflverse
+done
+
+# After complete, refresh dbt
+export EXTERNAL_ROOT="$PWD/data/raw"
+make dbt-run --full-refresh
+```
+
+**Success Criteria:**
+
+- ✅ 2012-2024 data loaded (13 seasons)
+- ✅ `fact_player_stats` contains historical data
+- ✅ `mart_player_features_historical` spans 2012-2024
+
+______________________________________________________________________
+
+### Task 2.2: Baseline Valuation Model (32-40 hours)
 
 **Objective:** Train regression model to predict player fair value.
+
+**Dependencies:** Task 2.1 complete (historical data required for training)
 
 **Files Created:**
 
@@ -1436,7 +1467,7 @@ if __name__ == "__main__":
 
 ______________________________________________________________________
 
-### Task 2.2: Trade Target Marts (32-40 hours)
+### Task 2.3: Trade Target Marts (40-44 hours)
 
 **Files Created:**
 
@@ -1470,7 +1501,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-### Task 2.3: Trade Analysis Notebook (36-44 hours)
+### Task 2.4: Trade Analysis Notebook (44-48 hours)
 
 **File Created:**
 
@@ -1492,7 +1523,11 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-### Task 2.4: Historical Backfill (40-48 hours, runs in background)
+### NOTE: Task sequence updated - Historical Backfill moved to Task 2.1
+
+(Content for tasks below preserved in original positions to maintain line number references used by individual task files. See task files 05-08 for correct sequence.)
+
+### [Content] Historical Backfill (originally Task 2.4, now Task 2.1)
 
 **Objective:** Load 2012-2024 nflverse data for aging curves and historical analysis.
 
@@ -1751,21 +1786,22 @@ You should update this section when you begin and complete each task.
 
 ### Phase 2 Progress
 
-- [ ] Task 2.1: Valuation model (24-32h)
+- [ ] Task 2.1: Historical backfill (24-32h) - **REQUIRED FIRST**
+  - [ ] Run backfill script (2012-2024)
+  - [ ] Validate: Historical data loaded
+  - [ ] Verify mart_player_features_historical spans full date range
+- [ ] Task 2.2: Baseline valuation model (32-40h)
   - [ ] Create mart_player_features_historical.sql
   - [ ] Create player_valuation.py
   - [ ] Train model: MAE < 5.0, R² > 0.50
   - [ ] Save model: player_valuation_v1.pkl
-- [ ] Task 2.2: Trade marts (32-40h)
+- [ ] Task 2.3: Trade target marts (40-44h)
   - [ ] Create mart_trade_targets.sql
   - [ ] Create mart_my_trade_chips.sql
   - [ ] Validate: 300+ players scored
-- [ ] Task 2.3: Trade notebook (36-44h)
+- [ ] Task 2.4: Trade analysis notebook (44-48h)
   - [ ] Create trade_targets_analysis.ipynb
   - [ ] Validate: Notebook runs end-to-end
-- [ ] Task 2.4: Backfill (40-48h, background)
-  - [ ] Run backfill script (2012-2024)
-  - [ ] Validate: Historical data loaded
 
 ### Phase 3 Progress
 

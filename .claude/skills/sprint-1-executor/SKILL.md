@@ -40,10 +40,10 @@ When user requests task execution:
    - Task 1.2: `references/02_task_sleeper_production_integration.md`
    - Task 1.3: `references/03_task_fasa_target_mart.md`
    - Task 1.4: `references/04_task_fasa_strategy_notebook.md`
-   - Task 2.1: `references/05_task_baseline_valuation_model.md`
-   - Task 2.2: `references/06_task_trade_target_marts.md`
-   - Task 2.3: `references/07_task_trade_analysis_notebook.md`
-   - Task 2.4: `references/08_task_historical_backfill.md`
+   - Task 2.1: `references/05_task_historical_backfill.md`
+   - Task 2.2: `references/06_task_baseline_valuation_model.md`
+   - Task 2.3: `references/07_task_trade_target_marts.md`
+   - Task 2.4: `references/08_task_trade_analysis_notebook.md`
    - Task 3.1: `references/09_task_github_actions_workflows.md`
    - Task 3.2: `references/10_task_documentation_polish.md`
 
@@ -227,13 +227,13 @@ If blocked by dependencies:
 
 - Task 1.1 → Task 1.2 → Task 1.3 → Task 1.4 (Wednesday FASA ready)
 
-**Trade Analysis (sequential):**
+**Trade Analysis (sequential - all required in order):**
 
-- Task 2.1 → Task 2.2 → Task 2.3
+- Task 2.1 (Historical Backfill) → Task 2.2 (Valuation Model) → Task 2.3 (Trade Marts) → Task 2.4 (Trade Notebook)
+- **NOTE:** Task 2.1 must complete first (no background processing)
 
-**Independent:**
+**Automation (sequential):**
 
-- Task 2.4 (can run in background)
 - Task 3.1 → Task 3.2 (after other phases)
 
 See `references/README.md` dependency diagram for full details.

@@ -1,1 +1,0 @@
-../../../../docs/spec/sprint_1/05_task_baseline_valuation_model.md
