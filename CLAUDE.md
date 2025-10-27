@@ -14,6 +14,7 @@ For detailed context on specific areas, see:
 - `tools/CLAUDE.md` - CLI utilities and workflows
 - `scripts/CLAUDE.md` - Operational scripts by category
 - `src/ingest/CLAUDE.md` - Provider integration patterns
+- `.claude/skills/sprint-1-executor/` - Sprint 1 task execution skill
 
 ## Package Structure
 
@@ -27,43 +28,8 @@ For detailed context on specific areas, see:
 - **Package Manager**: UV (v0.8.8)
 - **Python Version**: 3.13.6 (managed via .python-version)
 - **dbt Version**: dbt-fusion 2.0.0-preview.32 (DuckDB adapter)
-- **Setup**: `uv sync`
-- **Add dependency**: `uv add <package>`
-- **Run with uv**: `uv run python <script.py>`
-
-### Quick Start
-
-```bash
-# 1. Setup
-uv sync
-
-# 2. Generate samples
-make samples-nflverse
-
-# 3. Run dbt models (uv-wrapped env)
-make dbt-run  # uv run env ...
-
-# 4. Test
-make dbt-test  # uv run env ...
-```
 
 See `Makefile` for all targets: `make help`
-
-## Current Implementation Status
-
-Per SPEC-1 v2.3 (updated 2025-10-24):
-
-- **Phase 1 Seeds**: ✅ Complete (6/8 seeds, 2 optional) - All tracks unblocked
-  - dim_player_id_xref (12,133 players, 19 provider IDs)
-  - dim_franchise, dim_pick, dim_scoring_rule, dim_timeframe, dim_name_alias
-- **Track A (NFL Actuals)**: 95% Complete - nflverse → fact_player_stats → weekly marts ✅
-- **Track B (League Data)**: 100% Complete - TRANSACTIONS → fact_league_transactions ✅
-- **Track C (Market Data)**: 0% - KTC integration stub only
-- **Track D (Projections)**: 100% Complete - FFanalytics → fact_player_projections → projection marts ✅
-
-**Test Coverage**: 147/149 dbt tests passing (98.7%)
-
-See implementation checklist for detailed status by component.
 
 ## Key Components
 
@@ -90,10 +56,11 @@ See implementation checklist for detailed status by component.
 | ------------------------- | -------------------------------- | -------------------- |
 | Commissioner Google Sheet | League roster/contracts/picks | Authoritative |
 | NFLverse/nflreadpy | NFL statistics | Primary stats source |
+| FF Analytics | Projections | Fantasy projections source |
 | Sleeper | League platform data | Integration |
 | KTC | Dynasty valuations (1QB default) | Market signals |
 
-**Entity Resolution**: Canonical player/team/franchise IDs via `dim_player_id_xref` crosswalk. See Kimball guide for patterns.
+**Entity Resolution**: Canonical player/team/franchise IDs via `dim_player_id_xref` crosswalk. See `docs/spec/kimball_modeling_guidance/kimbal_modeling.md` for patterns.
 
 ## Data Quality & Testing
 
@@ -114,12 +81,12 @@ When dbt tests fail (duplicates, relationship violations, etc.), **assume the is
 
 ## Critical Specifications
 
-| Document | Purpose |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `docs/spec/SPEC-1_v_2.2.md` | Complete data architecture (2×2 stat model, trade valuation, lineage) |
-| `docs/architecture/kimball_modeling_guidance/kimbal_modeling.md` | Dimensional modeling patterns for dbt |
-| `docs/dev/repo_conventions_and_structure.md` | Repo layout, naming, data paths |
-| `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md` | Implementation status and sequencing (updated 2025-10-24) |
+- Implementation details are documented in `docs/spec/`
+- Most files are datestamped -- prefer the latest version when known
+- Standalone sprints are documented in `docs/spec/sprint_<number>/`
+- When in doubt, ask the user for guidance about the currently active plan
+- See `docs/spec/kimball_modeling_guidance/kimbal_modeling.md` for dimensional modeling patterns for dbt
+- See `docs/dev/repo_conventions_and_structure.md` for repo layout, naming, data paths
 
 ## Coding Conventions
 
@@ -130,11 +97,5 @@ When dbt tests fail (duplicates, relationship violations, etc.), **assume the is
 
 ## Environment Variables & Security
 
-Required in `.env` (see `.env.template`):
-
-- `GOOGLE_APPLICATION_CREDENTIALS` or `GOOGLE_APPLICATION_CREDENTIALS_JSON`
-- `SLEEPER_LEAGUE_ID`
-- `COMMISSIONER_SHEET_ID`, `LEAGUE_SHEET_COPY_ID`
-- `GCS_BUCKET` (for cloud operations)
-
-**Security**: Never commit secrets; use repo secrets for CI
+- See `.env` for all environment variables
+- **Security**: Never commit secrets; use repo secrets for CI

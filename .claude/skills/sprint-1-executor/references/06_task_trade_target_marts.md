@@ -1,0 +1,1 @@
+../../../../docs/spec/sprint_1/06_task_trade_target_marts.md
