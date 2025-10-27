@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: stg_sleeper__fa_pool
+    description: |
+      Free agent pool with player identity mapping.
+
+      Grain: player_key, asof_date
+      Source: Sleeper API (calculated FA pool)
+
+      Key transformations:
+      - Map sleeper_id → mfl_id via dim_player_id_xref
+      - Filter to fantasy-relevant positions
+      - Add player_key composite identifier
+
+    columns:
+      - name: player_key
+        description: |
+          Composite player identifier:
+          - Mapped players: player_key = mfl_id
+          - Unmapped players: player_key = 'sleeper_' + sleeper_player_id
+        tests:
+          - not_null
+          - unique
+
+      - name: mfl_id
+        description: MFL player ID (canonical player_id, null if unmapped)
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+              config:
+                where: "mfl_id IS NOT NULL"
+
+      - name: sleeper_player_id
+        description: Sleeper player ID (raw)
+        tests:
+          - not_null
+
+      - name: player_name
+        description: Player full name
+        tests:
+          - not_null
+
+      - name: position
+        description: Player position
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['QB', 'RB', 'WR', 'TE', 'K', 'PK', 'DL', 'LB', 'DB', 'DEF', 'S', 'CB', 'DE', 'DT']
+
+      - name: nfl_team
+        description: Current NFL team
+
+      - name: nfl_status
+        description: NFL roster status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Active', 'Injured Reserve', 'Questionable', 'Doubtful', 'Out', 'PUP']
+
+      - name: is_mapped_to_mfl_id
+        description: Flag indicating if player mapped to canonical mfl_id
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]

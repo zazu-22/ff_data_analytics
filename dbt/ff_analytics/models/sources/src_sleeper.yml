@@ -1,0 +1,92 @@
+version: 2
+
+sources:
+  - name: sleeper
+    description: |
+      Sleeper platform data loaded via production loader.
+
+      Schedule: Daily refresh (6am/6pm EST via GitHub Actions)
+      Loader: scripts/ingest/load_sleeper.py
+
+      Future: Will migrate to BigQuery external tables pointing to GCS.
+
+    tables:
+      - name: rosters
+        description: |
+          Current roster ownership by team.
+
+          Grain: roster_id (one row per team)
+          Refresh: Daily
+
+        external_location: "data/raw/sleeper/rosters/dt=*/rosters_*.parquet"
+
+        columns:
+          - name: roster_id
+            description: Sleeper roster ID (unique per team)
+          - name: owner_id
+            description: Sleeper user ID (owner)
+          - name: players
+            description: Array of sleeper_player_ids on roster
+          - name: starters
+            description: Array of sleeper_player_ids in starting lineup
+
+      - name: players
+        description: |
+          Full NFL player database from Sleeper (~5MB).
+
+          Grain: sleeper_player_id (one row per player)
+          Refresh: Daily (cached 1hr in loader)
+
+        external_location: "data/raw/sleeper/players/dt=*/players_*.parquet"
+
+        columns:
+          - name: sleeper_player_id
+            description: Sleeper player ID (primary key)
+          - name: full_name
+            description: Player full name
+          - name: position
+            description: Player position (QB, RB, WR, TE, K, DEF, etc.)
+          - name: team
+            description: Current NFL team
+          - name: status
+            description: NFL roster status (Active, Injured Reserve, etc.)
+
+      - name: fa_pool
+        description: |
+          Free agent pool (calculated as all_players - rostered_players).
+
+          Grain: sleeper_player_id (one row per FA)
+          Refresh: Daily
+
+          Calculation: Players with status Active/IR/Q/D/O and NOT on any roster.
+
+        external_location: "data/raw/sleeper/fa_pool/dt=*/fa_pool_*.parquet"
+
+        columns:
+          - name: sleeper_player_id
+            description: Sleeper player ID
+          - name: full_name
+            description: Player full name
+          - name: position
+            description: Player position
+          - name: team
+            description: Current NFL team
+          - name: status
+            description: NFL roster status
+
+      - name: users
+        description: |
+          League users/owners.
+
+          Grain: user_id (one row per user)
+          Refresh: Daily
+
+        external_location: "data/raw/sleeper/users/dt=*/users_*.parquet"
+
+        columns:
+          - name: user_id
+            description: Sleeper user ID
+          - name: username
+            description: Sleeper username
+          - name: display_name
+            description: Display name
