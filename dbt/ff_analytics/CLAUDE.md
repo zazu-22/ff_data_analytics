@@ -217,6 +217,8 @@ All large models use external Parquet. DuckDB catalog is in-memory only.
 | `accepted_values` | Controlled vocabularies | Enums, flags |
 | `freshness` | Data recency | Source level |
 
+**Known Issue**: dbt 1.10 has a [false positive bug](https://github.com/dbt-labs/dbt-fusion/issues/507) that incorrectly flags `dbt_utils.unique_combination_of_columns` tests as missing `arguments:` even when syntax is correct. These deprecation warnings can be safely ignored until dbt patches the bug.
+
 ### Test Syntax (dbt 1.10+)
 
 **IMPORTANT**: Follow these two critical rules to avoid deprecation warnings:

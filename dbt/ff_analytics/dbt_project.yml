@@ -22,3 +22,8 @@ models:
   +materialized: table
   # Model-specific configs are defined in individual model files
   # Directory-level configs will be added as needed
+
+  # Disable dbt_utils integration tests to avoid deprecation warnings from package
+  dbt_utils:
+    integration_tests:
+      +enabled: false
