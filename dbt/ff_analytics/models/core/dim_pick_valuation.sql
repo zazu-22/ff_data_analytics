@@ -97,10 +97,7 @@ select
   round_pick_number,
 
   -- Provisional flag for KTC value lookup
-  case
-    when pick_type = 'conditional' then true
-    else false
-  end as is_provisional,
+  coalesce(pick_type = 'conditional', false) as is_provisional,
 
   -- TODO: Join to KTC pick values
   -- For now, return null - will populate when KTC integration is complete

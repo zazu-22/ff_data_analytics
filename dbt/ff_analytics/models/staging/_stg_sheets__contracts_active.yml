@@ -69,3 +69,55 @@ models:
 
       - name: is_unmapped_franchise
         description: "Flag: true if franchise_id could not be resolved from dim_franchise"
+
+    tests:
+      # Grain uniqueness test
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - franchise_id
+              - player_key
+              - obligation_year
+              - snapshot_date
+          config:
+            severity: error
+            error_if: ">0"
+
+      # Validate empty player rows are preserved (weekly pickup placeholders)
+      # This test ensures our parser fix and QUALIFY fix work correctly
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: |
+              (
+                select count(*)
+                from {{ ref('stg_sheets__contracts_active') }}
+                where player_name = '' and cap_hit > 0
+              ) >= 10
+            config:
+              severity: warn
+          name: empty_player_slots_preserved
+
+    columns:
+      - name: franchise_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+
+      - name: player_key
+        tests:
+          - not_null
+
+      - name: obligation_year
+        tests:
+          - not_null
+
+      - name: cap_hit
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        tests:
+          - not_null

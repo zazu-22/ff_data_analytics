@@ -55,6 +55,7 @@ with base as (
   from read_parquet(
     '{{ var("external_root", "data/raw") }}/commissioner/contracts_active/dt=*/*.parquet'
   )
+  where {{ latest_snapshot_only(var("external_root", "data/raw") ~ '/commissioner/contracts_active/dt=*/*.parquet') }}
 ),
 
 with_franchise as (
@@ -239,19 +240,23 @@ with_player_id as (
   -- Deduplicate when a player matches multiple positions in transaction history
   -- This occurs for flexible roster slots (BN, TAXI, IR) with multi-position players
   -- Example: Quincy Williams (LB/DB) on IR would match both positions
-  qualify row_number() over (
-    partition by
-      wd.player_name_canonical,
-      wd.roster_slot,
-      wd.gm_full_name,
-      wd.obligation_year,
-      wd.snapshot_date
-    order by
-      -- Prefer transaction-based player_id over crosswalk
-      case when txn.player_id is not null then 1 else 2 end,
-      -- Tiebreaker: prefer offensive positions for flexible slots
-      case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
-  ) = 1
+  -- IMPORTANT: Skip deduplication for empty player names (weekly pickup placeholders)
+  -- since multiple empty slots in same position are legitimate (e.g., two DB slots unfilled)
+  qualify
+    wd.player_name = ''  -- Keep all empty player name rows (don't deduplicate)
+    or row_number() over (
+      partition by
+        wd.player_name_canonical,
+        wd.roster_slot,
+        wd.gm_full_name,
+        wd.obligation_year,
+        wd.snapshot_date
+      order by
+        -- Prefer transaction-based player_id over crosswalk
+        case when txn.player_id is not null then 1 else 2 end,
+        -- Tiebreaker: prefer offensive positions for flexible slots
+        case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
+    ) = 1
 ),
 
 final as (
@@ -269,11 +274,19 @@ final as (
     -- Player key logic (same pattern as stg_sheets__transactions):
     -- - Defenses: player_key = 'DEF_' || team_abbr
     -- - Mapped players: player_key = player_id (mfl_id as varchar)
+    -- - Empty players: player_key = 'EMPTY_' || roster_slot || '_' || row_number (for weekly pickup placeholders)
     -- - Unmapped players: player_key = player_name (preserves identity via raw name)
     case
       when is_defense then 'DEF_' || defense_team_abbr
       when coalesce(player_id, -1) != -1
         then cast(player_id as varchar)
+      when player_name = '' then
+        'EMPTY_' || roster_slot || '_' || cast(
+          row_number() over (
+            partition by franchise_id, roster_slot, obligation_year, snapshot_date
+            order by cap_hit desc
+          ) as varchar
+        )
       else coalesce(player_name, 'UNKNOWN_PLAYER')
     end as player_key,
 

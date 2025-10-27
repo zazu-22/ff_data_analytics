@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: mart_cap_situation
+    description: |
+      Comprehensive cap space analysis by franchise and season.
+
+      Grain: franchise_id, season
+      Purpose: Support FASA bid planning and roster decisions
+
+      Key features:
+      - Reported cap space (source of truth from Commissioner)
+      - Calculated cap space (for reconciliation)
+      - Active contracts and dead cap breakdowns
+      - 5-year forward view (2025-2029)
+
+    columns:
+      - name: franchise_id
+        description: Franchise identifier
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+
+      - name: franchise_name
+        description: Franchise name
+        tests:
+          - not_null
+
+      - name: season
+        description: Fantasy season year
+        tests:
+          - not_null
+
+      - name: cap_space_available
+        description: Cap space available for new contracts (use this for decisions)
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - franchise_id
+              - season
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "abs(reconciliation_difference) <= 20"
+            config:
+              severity: error
+              error_if: ">0"
+          name: cap_reconciliation_within_tolerance

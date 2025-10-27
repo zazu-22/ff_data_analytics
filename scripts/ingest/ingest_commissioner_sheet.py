@@ -236,6 +236,7 @@ def main():
         print(f"    • contracts_cut: {roster_tables['contracts_cut'].height} rows")
         print(f"    • draft_picks: {roster_tables['draft_picks'].height} rows")
         print(f"    • draft_pick_conditions: {roster_tables['draft_pick_conditions'].height} rows")
+        print(f"    • cap_space: {roster_tables['cap_space'].height} rows")
 
         # Step 3: Parse transactions tab (pure parsing)
         print("\n🔄 Parsing transactions...")

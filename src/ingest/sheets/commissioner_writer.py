@@ -156,6 +156,7 @@ def write_all_commissioner_tables(
             - 'contracts_cut': Dead cap obligations
             - 'draft_picks': Draft pick ownership
             - 'draft_pick_conditions': Conditional picks
+            - 'cap_space': Cap space by season
         transactions_tables: Dict with keys:
             - 'transactions': Transaction history
             - 'unmapped_players': QA table
@@ -173,6 +174,7 @@ def write_all_commissioner_tables(
                 'contracts_cut': cut_df,
                 'draft_picks': picks_df,
                 'draft_pick_conditions': conds_df,
+                'cap_space': cap_df,
             },
             transactions_tables={
                 'transactions': txn_df,
@@ -188,7 +190,13 @@ def write_all_commissioner_tables(
     counts: dict[str, int] = {}
 
     # Write roster-derived tables
-    for table_name in ["contracts_active", "contracts_cut", "draft_picks", "draft_pick_conditions"]:
+    for table_name in [
+        "contracts_active",
+        "contracts_cut",
+        "draft_picks",
+        "draft_pick_conditions",
+        "cap_space",
+    ]:
         if table_name in roster_tables:
             counts[table_name] = _write_table_with_metadata(
                 roster_tables[table_name], table_name, base_uri, dt

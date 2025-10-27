@@ -30,8 +30,10 @@ sources:
             description: |
               Unique identifier for each transaction asset row (PK).
               Format: {transaction_id}_{asset_index} (e.g., "3910_0", "2145_2")
+
+              Note: Uniqueness is tested at staging level (stg_sheets__transactions) after
+              filtering to latest snapshot. Source may contain multiple snapshots.
             tests:
-              - unique
               - not_null
 
           - name: transaction_id
@@ -261,5 +263,62 @@ sources:
 
           - name: dt
             description: "Snapshot date (partition key). Format: YYYY-MM-DD."
+            tests:
+              - not_null
+
+      - name: cap_space
+        external_location: "data/raw/commissioner/cap_space/dt=*/cap_space.parquet"
+        description: |
+          Cap space data from roster tabs (row 3: Available, Dead, Traded)
+
+          **Grain**: One row per franchise per season per snapshot date
+          **Source**: Commissioner Google Sheet individual franchise tabs (row 3 cap space section)
+          **Ingest**: scripts/ingest/ingest_commissioner_sheet.py (parse + write atomically)
+          **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/cap_space/dt=YYYY-MM-DD/
+          **Files**: cap_space.parquet, _meta.json
+
+          **Purpose**:
+          This table represents the Commissioner's reported cap space values for each franchise
+          across a 5-year window (2025-2029). Values include:
+          - Available Cap Space: Cap available for new contracts
+          - Dead Cap Space: Dead cap from cut contracts
+          - Traded Cap Space: Net cap space traded (positive = acquired, negative = sent)
+
+          **Relationship to Other Tables**:
+          - stg_sheets__contracts_active: Active contracts consuming cap space
+          - stg_sheets__contracts_cut: Cut contracts creating dead cap
+          - Combined with contracts = Total cap obligations per franchise
+
+          **Use Case**:
+          Source of truth for FASA bid planning and roster decisions. The reported values
+          may differ from calculated values due to manual Commissioner adjustments.
+
+        meta:
+          owner: "@jason"
+          external_location: "data/raw/commissioner/cap_space/dt=*/*.parquet"
+
+        columns:
+          - name: gm
+            description: "Franchise owner full name (e.g., 'Andy Shepard', 'Nick McCreary'). Maps to dim_franchise.owner_name."
+            tests:
+              - not_null
+
+          - name: season
+            description: "Fantasy season year (e.g., 2025, 2026, 2027, 2028, 2029)."
+            tests:
+              - not_null
+
+          - name: available_cap_space
+            description: "Cap space available for new contracts (whole dollars, reported by Commissioner)."
+            tests:
+              - not_null
+
+          - name: dead_cap_space
+            description: "Dead cap from cut contracts (whole dollars)."
+            tests:
+              - not_null
+
+          - name: traded_cap_space
+            description: "Net cap space traded (positive = acquired, negative = sent, whole dollars)."
             tests:
               - not_null

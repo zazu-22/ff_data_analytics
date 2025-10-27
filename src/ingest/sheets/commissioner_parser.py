@@ -49,12 +49,14 @@ class ParsedGM:
     - roster: active contracts table
     - cuts: cut contracts (dead cap) table
     - picks: draft picks/ownership table
+    - cap_space: cap space by season table
     """
 
     gm: str
     roster: pl.DataFrame
     cuts: pl.DataFrame
     picks: pl.DataFrame
+    cap_space: pl.DataFrame
 
 
 def _read_csv_rows(path: Path) -> list[list[str]]:
@@ -96,8 +98,18 @@ def _find_block_starts(header: list[str]) -> tuple[list[int], int | None, int | 
 
 def _slice_roster_row(row: list[str], roster_cols: list[int]) -> list[str] | None:
     player_val = row[1].strip() if len(row) > 1 else ""
+
+    # Allow empty player names if there's a contract amount
+    # Business rule: Required roster spots (QB, RB, WR, TE, FLEX, DL, LB, DB, K, D/ST)
+    # that don't have a signed player get a $1 placeholder for mandatory weekly pickups.
+    # These are legitimate cap obligations that must be included.
     if not player_val:
-        return None
+        # Check if there's a 2025 contract amount (column 2)
+        amount_val = row[2].strip() if len(row) > 2 else ""
+        amount_clean = amount_val.replace("$", "").replace(",", "").strip()
+        if not amount_clean or amount_clean == "0":
+            return None  # Truly empty row
+
     return [row[c].strip() if c < len(row) else "" for c in roster_cols]
 
 
@@ -227,11 +239,96 @@ def _parse_blocks(rows: list[list[str]]) -> tuple[pl.DataFrame, pl.DataFrame, pl
     return roster_df, cuts_df, picks_df
 
 
+def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
+    """Parse cap space section from GM roster tab (row 3).
+
+    Input: Raw CSV rows with row 3 format (all three sections in same row):
+        Row 3: Available Cap Space,,$80,$80,$158,$183,$250,,,,,,Dead Cap Space,,$26,$13,$6,$0,$0,,Traded Cap Space,$7,$0,$0,$0,$0...
+
+    Column structure:
+        - Available Cap Space: columns 2-6 (years 2025-2029)
+        - Dead Cap Space: columns 14-18 (years 2025-2029)
+        - Traded Cap Space: columns 21-25 (years 2025-2029)
+
+    Output: Long-form DataFrame
+        Columns: gm, season, available_cap_space, dead_cap_space, traded_cap_space
+        Rows: One per (gm, season) - typically 5 rows (2025-2029)
+
+    Args:
+        rows: Raw CSV rows from GM tab
+        gm_name: GM display name
+
+    Returns:
+        DataFrame with cap space by season
+
+    """
+    # Find cap space row (row 3, contains "Available Cap Space")
+    cap_space_row = None
+    for i, row in enumerate(rows[:10]):  # Cap space is in first 10 rows
+        if not row:
+            continue
+        if "available cap space" in row[0].strip().lower():
+            cap_space_row = row
+            break
+
+    # If no cap space data found, return empty DataFrame
+    if not cap_space_row:
+        return pl.DataFrame(
+            schema={
+                "gm": pl.Utf8,
+                "season": pl.Int32,
+                "available_cap_space": pl.Int32,
+                "dead_cap_space": pl.Int32,
+                "traded_cap_space": pl.Int32,
+            }
+        )
+
+    # Column offsets for the three cap space sections
+    # Available Cap Space: columns 2-6
+    # Dead Cap Space: columns 14-18
+    # Traded Cap Space: columns 21-25
+    available_start = 2
+    dead_start = 14
+    traded_start = 21
+
+    seasons = [2025, 2026, 2027, 2028, 2029]
+    cap_data = []
+
+    for idx, season in enumerate(seasons):
+        # Extract values from their respective column positions
+        available_col = available_start + idx
+        dead_col = dead_start + idx
+        traded_col = traded_start + idx
+
+        # Get values, handling missing columns
+        available = cap_space_row[available_col] if available_col < len(cap_space_row) else "0"
+        dead = cap_space_row[dead_col] if dead_col < len(cap_space_row) else "0"
+        traded = cap_space_row[traded_col] if traded_col < len(cap_space_row) else "0"
+
+        # Clean values (remove $ and commas)
+        available_clean = available.strip().replace("$", "").replace(",", "") or "0"
+        dead_clean = dead.strip().replace("$", "").replace(",", "") or "0"
+        traded_clean = traded.strip().replace("$", "").replace(",", "") or "0"
+
+        cap_data.append(
+            {
+                "gm": gm_name,
+                "season": season,
+                "available_cap_space": int(available_clean),
+                "dead_cap_space": int(dead_clean),
+                "traded_cap_space": int(traded_clean),
+            }
+        )
+
+    return pl.DataFrame(cap_data)
+
+
 def parse_gm_tab(csv_path: Path) -> ParsedGM:
     """Parse a single GM CSV tab and return normalized DataFrames for that GM."""
     rows = _read_csv_rows(csv_path)
     gm = _extract_gm_name(rows) or csv_path.parent.name
     roster, cuts, picks = _parse_blocks(rows)
+    cap_space = parse_cap_space(rows, gm)
 
     # Add GM column and basic cleaning
     roster = roster.with_columns(
@@ -239,7 +336,7 @@ def parse_gm_tab(csv_path: Path) -> ParsedGM:
     )[["gm", *roster.columns]]
     cuts = cuts.with_columns(gm=pl.lit(gm))[["gm", *cuts.columns]]
     picks = picks.with_columns(gm=pl.lit(gm))[["gm", *picks.columns]]
-    return ParsedGM(gm=gm, roster=roster, cuts=cuts, picks=picks)
+    return ParsedGM(gm=gm, roster=roster, cuts=cuts, picks=picks, cap_space=cap_space)
 
 
 def parse_commissioner_dir(in_dir: Path) -> list[ParsedGM]:
@@ -1093,6 +1190,7 @@ def prepare_roster_tables(outputs: Iterable[ParsedGM]) -> dict[str, pl.DataFrame
             - 'contracts_cut': Dead cap obligations (long-form)
             - 'draft_picks': Draft pick ownership
             - 'draft_pick_conditions': Conditional picks
+            - 'cap_space': Cap space by season
 
     Example:
         parsed_gms = parse_commissioner_dir(Path("samples/sheets"))
@@ -1116,6 +1214,11 @@ def prepare_roster_tables(outputs: Iterable[ParsedGM]) -> dict[str, pl.DataFrame
         if outputs
         else pl.DataFrame()
     )
+    cap_space_all = (
+        pl.concat([o.cap_space for o in outputs if o.cap_space.height > 0], how="diagonal")
+        if outputs
+        else pl.DataFrame()
+    )
 
     # Transform to long-form tables
     contracts_active = _to_long_roster(roster_all)
@@ -1127,6 +1230,7 @@ def prepare_roster_tables(outputs: Iterable[ParsedGM]) -> dict[str, pl.DataFrame
         "contracts_cut": contracts_cut,
         "draft_picks": picks_tbl,
         "draft_pick_conditions": conds_tbl,
+        "cap_space": cap_space_all,
     }
 
 

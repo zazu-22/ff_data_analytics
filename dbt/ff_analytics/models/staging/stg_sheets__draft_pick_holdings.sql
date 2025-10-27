@@ -26,8 +26,8 @@ with raw as (
     dt as snapshot_date
   from read_parquet(
     '{{ var("external_root", "data/raw") }}/commissioner/draft_picks/dt=*/*.parquet',
-    hive_partitioning=true,
-    union_by_name=true
+    hive_partitioning = true,
+    union_by_name = true
   )
 ),
 
@@ -50,8 +50,9 @@ with_franchise as (
     fran.owner_name
   from with_owner_keys wok
   left join {{ ref('dim_franchise') }} fran
-    on wok.owner_key = fran.owner_name
-    and wok.year between fran.season_start and fran.season_end
+    on
+      wok.owner_key = fran.owner_name
+      and wok.year between fran.season_start and fran.season_end
 ),
 
 classified as (
@@ -65,34 +66,34 @@ enriched as (
   select
     c.*,
     case
-      when source_type = 'trade_out' then 'trade_out'
-      when acquisition_note_lower like 'compensation%' then 'compensatory'
-      when acquisition_note_lower like 'comp%' then 'compensatory'
-      when source_type = 'acquired' then 'acquired'
-      when source_type = 'owned' then 'original'
+      when c.source_type = 'trade_out' then 'trade_out'
+      when c.acquisition_note_lower like 'compensation%' then 'compensatory'
+      when c.acquisition_note_lower like 'comp%' then 'compensatory'
+      when c.source_type = 'acquired' then 'acquired'
+      when c.source_type = 'owned' then 'original'
       else 'unknown'
     end as pick_category,
     case
-      when source_type = 'trade_out' then false
-      when condition_flag then false
+      when c.source_type = 'trade_out' then false
+      when c.condition_flag then false
       else true
     end as is_current_holding,
     case
-      when acquisition_note_lower like 'compensation%' then true
-      when acquisition_note_lower like 'comp%' then true
+      when c.acquisition_note_lower like 'compensation%' then true
+      when c.acquisition_note_lower like 'comp%' then true
       else false
     end as is_comp_pick,
     case
-      when trade_recipient is null then null
-      when trade_recipient like 'Nick McCreary%' then 'McCreary'
-      when trade_recipient like 'Nick Piper%' then 'Piper'
-      else split_part(trade_recipient, ' ', 1)
+      when c.trade_recipient is null then null
+      when c.trade_recipient like 'Nick McCreary%' then 'McCreary'
+      when c.trade_recipient like 'Nick Piper%' then 'Piper'
+      else split_part(c.trade_recipient, ' ', 1)
     end as trade_recipient_key,
     case
-      when acquisition_note is null or acquisition_note = '' then owner_key
-      when acquisition_note like 'Nick McCreary%' then 'McCreary'
-      when acquisition_note like 'Nick Piper%' then 'Piper'
-      else split_part(acquisition_note, ' ', 1)
+      when c.acquisition_note is null or c.acquisition_note = '' then c.owner_key
+      when c.acquisition_note like 'Nick McCreary%' then 'McCreary'
+      when c.acquisition_note like 'Nick Piper%' then 'Piper'
+      else split_part(c.acquisition_note, ' ', 1)
     end as acquisition_owner_key
   from classified c
 )

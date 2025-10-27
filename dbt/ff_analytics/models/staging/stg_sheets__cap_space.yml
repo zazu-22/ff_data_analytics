@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: stg_sheets__cap_space
+    description: |
+      Cap space data from Commissioner Sheet roster tabs.
+
+      Grain: franchise_id, season
+      Source: Commissioner Sheet (row 3 of each GM's roster tab)
+      Refresh: Daily (via copy_league_sheet workflow)
+
+    columns:
+      - name: franchise_id
+        description: Franchise identifier (F001-F012)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+
+      - name: season
+        description: Fantasy season year
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2025, 2026, 2027, 2028, 2029]
+
+      - name: available_cap_space
+        description: Cap space available for new contracts (reported by Commissioner)
+        tests:
+          - not_null
+
+      - name: dead_cap_space
+        description: Dead cap from cut contracts
+        tests:
+          - not_null
+
+      - name: traded_cap_space
+        description: Net cap space traded (positive = acquired, negative = sent)
+        tests:
+          - not_null
+
+      - name: base_cap
+        description: Starting cap space each season ($250)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [250]
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - franchise_id
+              - season
