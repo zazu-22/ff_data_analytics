@@ -5,9 +5,9 @@
 help:
 	@echo "Available targets:"
 	@echo "  ingest-sheets     Ingest league sheets locally"
-	@echo "  dbt-seed          Seed dbt sources"
-	@echo "  dbt-run           Run dbt models locally (DuckDB)"
-	@echo "  dbt-test          Run dbt tests locally"
+	@echo "  dbt-seed          Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
+	@echo "  dbt-run           Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
+	@echo "  dbt-test          Run dbt tests locally (use 'make dbt-test ARGS=<dbt test args>')"
 	@echo "  lintcheck              Run linter checks	"
 	@echo "  lintfix           Run linter auto-fixes"
 	@echo "  typecheck         Run type checks"
@@ -27,7 +27,7 @@ dbt-seed:
 	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
 		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
-		dbt seed --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+		dbt seed --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 dbt-run:
 	@echo "Running dbt (ensure dbt-duckdb is installed)"
@@ -36,7 +36,7 @@ dbt-run:
 	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
 		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
-		dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+		dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 dbt-test:
 	@echo "Testing dbt models"
@@ -45,7 +45,7 @@ dbt-test:
 	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
 		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
-		dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+		dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 lintcheck:
 	@echo "=========================================="
