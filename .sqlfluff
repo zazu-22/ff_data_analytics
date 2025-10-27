@@ -4,6 +4,9 @@ dialect = duckdb
 exclude_rules = L034,L044
 # Increase file size limit to handle large models
 large_file_skip_byte_limit = 30000
+# Exclude third-party packages, build artifacts, and archive directories from linting
+exclude_dirs = .venv,target,dbt_packages,_archive
+exclude = **/.venv/**,**/target/**,**/dbt_packages/**,dbt/ff_analytics/analyses/_archive/**
 # Reduce noise from dbt macro warnings
 warnings_file_skip = **/.venv/**,**/target/**,**/dbt_packages/**
 
