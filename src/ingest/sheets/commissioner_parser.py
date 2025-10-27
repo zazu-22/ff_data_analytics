@@ -29,6 +29,18 @@ from pathlib import Path
 import polars as pl
 
 
+_FALSE_CONDITION_MARKERS = {
+    "",
+    "-",
+    "none",
+    "n/a",
+    "na",
+    "no",
+    "false",
+    "0",
+}
+
+
 @dataclass
 class ParsedGM:
     """Parsed outputs for a single GM tab.
@@ -1200,36 +1212,164 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
     # Keep only actual picks where round is present (1..5)
     long = long.filter(pl.col("round").is_not_null())
 
-    def _source_type(owner: str, gm: str) -> str:
-        o = (owner or "").lower()
-        if o == gm.lower():
-            return "owned"
-        # treat anything else as acquired; capture details
-        return "acquired"
-
     picks = long.with_columns(
-        source_type=pl.struct(["owner", "gm"]).map_elements(
-            lambda s: _source_type(s["owner"], s["gm"])  # noqa: E731
-        )
-    )
-
-    # Extract acquisition fields
-    picks = picks.with_columns(
-        acquired_from=pl.when(pl.col("source_type") == "acquired")
-        .then(pl.col("owner"))
-        .otherwise(pl.lit(None)),
-        original_owner=pl.when(pl.col("source_type") == "owned")
-        .then(pl.col("owner"))
-        .otherwise(pl.lit(None)),
-        acquisition_note=pl.when(pl.col("source_type") == "acquired")
-        .then(pl.col("owner"))
-        .otherwise(pl.lit(None)),
-        condition_flag=pl.col("trade_conditions")
+        owner_clean=pl.col("owner").fill_null("").cast(pl.Utf8).str.strip_chars(),
+        owner_lower=pl.col("owner")
         .fill_null("")
         .cast(pl.Utf8)
         .str.strip_chars()
-        .ne(""),
+        .str.to_lowercase(),
+        gm_clean=pl.col("gm").fill_null("").cast(pl.Utf8).str.strip_chars(),
     )
+
+    picks = picks.with_columns(
+        gm_lower=pl.col("gm_clean").str.to_lowercase(),
+        gm_tokens=pl.col("gm_clean")
+        .str.replace_all(r"[^\w\s]", " ")
+        .str.to_lowercase()
+        .str.split(" "),
+    )
+
+    picks = picks.with_columns(
+        owner_matches=pl.col("gm_tokens").list.contains(pl.col("owner_lower"))
+        | (pl.col("owner_lower") == pl.col("gm_lower"))
+    )
+
+    picks = picks.with_columns(
+        source_type=pl.when(pl.col("owner_lower").str.starts_with("traded to"))
+        .then(pl.lit("trade_out"))
+        .when(pl.col("owner_matches"))
+        .then(pl.lit("owned"))
+        .otherwise(pl.lit("acquired")),
+        trade_recipient=pl.when(pl.col("owner_lower").str.starts_with("traded to"))
+        .then(
+            pl.col("owner_clean")
+            .str.replace_all(r"(?i)^traded to[: ]*", "")
+            .str.strip_chars()
+        )
+        .when(pl.col("owner_lower").str.starts_with("trade to"))
+        .then(
+            pl.col("owner_clean")
+            .str.replace_all(r"(?i)^trade to[: ]*", "")
+            .str.strip_chars()
+        )
+        .otherwise(pl.lit(None)),
+    )
+
+    picks = picks.with_columns(
+        acquired_from=pl.when(pl.col("source_type") == "acquired")
+        .then(pl.col("owner_clean"))
+        .otherwise(pl.lit(None)),
+        original_owner=pl.when(pl.col("source_type") == "owned")
+        .then(pl.col("owner_clean"))
+        .when(pl.col("source_type") == "trade_out")
+        .then(pl.col("gm_clean"))
+        .otherwise(pl.lit(None)),
+        acquisition_note=pl.when(pl.col("source_type") == "acquired")
+        .then(pl.col("owner_clean"))
+        .when(pl.col("source_type") == "trade_out")
+        .then(pl.col("trade_recipient"))
+        .otherwise(pl.lit(None)),
+    )
+
+    picks = picks.with_columns(
+        condition_text=pl.col("trade_conditions")
+        .fill_null("")
+        .cast(pl.Utf8)
+        .str.strip_chars(),
+    )
+
+    condition_lower = pl.col("condition_text").str.to_lowercase()
+    picks = picks.with_columns(
+        condition_flag=(
+            condition_lower.is_in(list(_FALSE_CONDITION_MARKERS)).not_()
+            & (
+                condition_lower.str.contains(r"\bif\b")
+                | condition_lower.str.contains("conting")
+                | condition_lower.str.contains("pending")
+                | condition_lower.str.contains("conditional")
+                | condition_lower.str.contains("unless")
+                | condition_lower.str.contains("upon")
+            )
+        )
+    )
+
+    picks = picks.with_columns(
+        gm_first=pl.col("gm_clean")
+        .str.replace_all(r"[^\w\s]", " ")
+        .str.strip_chars()
+        .str.split(" ")
+        .list.first()
+        .str.to_lowercase(),
+        gm_last=pl.col("gm_clean")
+        .str.replace_all(r"[^\w\s]", " ")
+        .str.strip_chars()
+        .str.split(" ")
+        .list.last()
+        .str.to_lowercase(),
+        gm_full_lower=pl.col("gm_clean").str.to_lowercase(),
+        trade_recipient_lower=pl.col("trade_recipient")
+        .fill_null("")
+        .str.strip_chars()
+        .str.to_lowercase(),
+        acquisition_note_lower=pl.col("acquisition_note")
+        .fill_null("")
+        .str.strip_chars()
+        .str.to_lowercase(),
+    )
+
+    # Symmetric pending propagation: ensure outbound trades inherit counterpart contingencies
+    def _alias_tokens(value: str | None) -> set[str]:
+        if not value:
+            return set()
+        base = value.lower().strip()
+        if not base:
+            return set()
+        tokens = {base}
+        clean = base.replace(".", " ").replace("-", " ")
+        tokens.update(part for part in clean.split() if part)
+        return tokens
+
+    records = picks.to_dicts()
+    if records:
+        from collections import defaultdict
+
+        acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]] = defaultdict(list)
+        for rec in records:
+            if rec.get("source_type") != "acquired":
+                continue
+            year = rec["year"]
+            rnd = rec["round"]
+            gm_aliases = _alias_tokens(rec.get("gm_clean"))
+            gm_aliases.update(_alias_tokens(rec.get("gm_first")))
+            gm_aliases.update(_alias_tokens(rec.get("gm_last")))
+            from_aliases = _alias_tokens(rec.get("acquisition_note_lower"))
+            acquired_lookup[(year, rnd)].append((gm_aliases, from_aliases, bool(rec.get("condition_flag"))))
+
+        for rec in records:
+            if rec.get("source_type") != "trade_out" or rec.get("condition_flag"):
+                continue
+            year = rec["year"]
+            rnd = rec["round"]
+            recipient_aliases = _alias_tokens(rec.get("trade_recipient_lower"))
+            gm_aliases = _alias_tokens(rec.get("gm_clean"))
+            gm_aliases.update(_alias_tokens(rec.get("gm_first")))
+            gm_aliases.update(_alias_tokens(rec.get("gm_last")))
+
+            partner_pending = False
+            for to_aliases, from_aliases, pending_flag in acquired_lookup.get((year, rnd), []):
+                if not pending_flag:
+                    continue
+                if recipient_aliases and not (recipient_aliases & to_aliases):
+                    continue
+                if not gm_aliases & from_aliases:
+                    continue
+                partner_pending = True
+                break
+            if partner_pending:
+                rec["condition_flag"] = True
+
+        picks = pl.DataFrame(records)
 
     picks_tbl = picks.select(
         [
@@ -1240,13 +1380,18 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
             "original_owner",
             "acquired_from",
             "acquisition_note",
+            "trade_recipient",
             "condition_flag",
         ]
     )
 
-    # Conditions table
-    conds = long.filter(
-        pl.col("trade_conditions").is_not_null()
-        & (pl.col("trade_conditions").cast(pl.Utf8).str.strip_chars() != "")
-    ).select(["gm", "year", "round", pl.col("trade_conditions").alias("condition_text")])
+    conds = picks.filter(pl.col("condition_flag")).select(
+        [
+            "gm",
+            "year",
+            "round",
+            pl.col("condition_text").alias("condition_text"),
+            "trade_recipient",
+        ]
+    )
     return picks_tbl, conds
