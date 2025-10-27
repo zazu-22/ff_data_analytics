@@ -60,7 +60,8 @@ When user requests task execution:
 5. **Validate the implementation** - Run all validation commands from task file:
    - Execute validation bash commands exactly as written
    - Verify all success criteria are met
-   - Check code quality: `make lint`, `make typecheck`, `make sqlcheck`
+   - Check code quality: `make lintcheck`, `make typecheck`, `make sqlcheck`
+   - **IMPORTANT**: If running `make lintfix` or `make sqlfix`, re-run dbt tests afterward to confirm linters didn't break anything
    - Run dbt tests: `make dbt-test --select [models]`
 
 6. **Report results** - Communicate clearly to user:
@@ -110,6 +111,7 @@ Each task file contains these sections (use them in order):
 - Include comprehensive tests in `.yml`
 - Set `EXTERNAL_ROOT` environment variable before dbt commands
 - Run `make sqlcheck` for SQL linting
+- If running `make sqlfix` for auto-formatting, **always re-run dbt tests** to confirm no functional changes
 - Validate with `make dbt-run --select` and `make dbt-test --select`
 
 ### Notebook Tasks (1.4, 2.3)
@@ -169,6 +171,11 @@ make dbt-run --select [model_name]
 make dbt-test --select [model_name]
 dbt show --select [model_name] --limit 10
 make sqlcheck
+
+# If running linter auto-fix:
+make sqlfix
+# IMPORTANT: Re-run tests after linter changes
+make dbt-test --select [model_name]
 ```
 
 ### For Data Outputs
