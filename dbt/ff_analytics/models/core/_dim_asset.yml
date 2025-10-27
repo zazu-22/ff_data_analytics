@@ -14,13 +14,13 @@ models:
       - name: asset_id
         description: |
           Surrogate key: 'player_<player_id>' or 'pick_<pick_id>'
-        tests:
+        data_tests:
           - not_null
           - unique
 
       - name: asset_type
         description: Asset classification (player | pick | defense | cap_space)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -33,7 +33,7 @@ models:
       - name: player_id
         description: |
           FK to dim_player (populated for players, null for picks)
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player')
@@ -44,7 +44,7 @@ models:
       - name: pick_id
         description: |
           FK to dim_pick (populated for picks, null for players)
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_pick')
@@ -54,7 +54,7 @@ models:
 
       - name: asset_name
         description: Display name (player name or pick description)
-        tests:
+        data_tests:
           - not_null
 
       - name: position
@@ -79,5 +79,5 @@ models:
           - 'Standard draft pick'
           - 'Compensatory pick'
           - 'RFA compensation pick'
-        tests:
+        data_tests:
           - not_null

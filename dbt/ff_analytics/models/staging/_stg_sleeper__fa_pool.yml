@@ -19,13 +19,13 @@ models:
           Composite player identifier:
           - Mapped players: player_key = mfl_id
           - Unmapped players: player_key = 'sleeper_' + sleeper_player_id
-        tests:
+        data_tests:
           - not_null
           - unique
 
       - name: mfl_id
         description: MFL player ID (canonical player_id, null if unmapped)
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -35,17 +35,17 @@ models:
 
       - name: sleeper_player_id
         description: Sleeper player ID (raw)
-        tests:
+        data_tests:
           - not_null
 
       - name: player_name
         description: Player full name
-        tests:
+        data_tests:
           - not_null
 
       - name: position
         description: Player position
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -56,14 +56,14 @@ models:
 
       - name: nfl_status
         description: NFL roster status
-        tests:
+        data_tests:
           - accepted_values:
               arguments:
                 values: ['Active', 'Injured Reserve', 'Questionable', 'Doubtful', 'Out', 'PUP']
 
       - name: is_mapped_to_mfl_id
         description: Flag indicating if player mapped to canonical mfl_id
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:

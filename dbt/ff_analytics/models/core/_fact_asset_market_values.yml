@@ -31,12 +31,12 @@ models:
           - Mapped players: mfl_id (as varchar)
           - Unmapped players: player_name
           - Picks: pick_name
-        tests:
+        data_tests:
           - not_null
 
       - name: market_scope
         description: League format (dynasty_1qb or dynasty_superflex)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -46,12 +46,12 @@ models:
 
       - name: asof_date
         description: Snapshot date of market values
-        tests:
+        data_tests:
           - not_null
 
       - name: asset_type
         description: Asset classification (player or pick)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -61,7 +61,7 @@ models:
 
       - name: provider
         description: Data source provider
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -70,19 +70,19 @@ models:
 
       - name: overall_rank
         description: Overall rank across all assets in this market_scope
-        tests:
+        data_tests:
           - not_null
 
       - name: ktc_value
         description: KTC value score (0-10000 scale)
-        tests:
+        data_tests:
           - not_null
 
       - name: player_id
         description: |
           FK to dim_player_id_xref (null for picks and unmapped players).
           Value of -1 indicates unmapped player (no crosswalk match).
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -90,7 +90,7 @@ models:
               config:
                 where: "asset_type = 'player' and player_id != -1"
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

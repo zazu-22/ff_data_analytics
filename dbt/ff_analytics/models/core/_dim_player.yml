@@ -18,20 +18,20 @@ models:
         description: |
           Canonical player identifier (mfl_id).
           Primary key for player dimension.
-        tests:
+        data_tests:
           - unique
           - not_null
 
       - name: display_name
         description: Player display name for presentation
-        tests:
+        data_tests:
           - not_null
 
       - name: position
         description: |
           Player position (QB, RB, WR, TE, K, etc.).
           Fantasy-relevant positions: QB, RB, WR, TE, K, FB
-        tests:
+        data_tests:
           - not_null
 
       - name: current_team

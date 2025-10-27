@@ -38,7 +38,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['QB', 'RB', 'WR', 'TE']
+              arguments:
+                values: ['QB', 'RB', 'WR', 'TE']
 
       - name: nfl_team
         description: "Current NFL team abbreviation"
@@ -132,7 +133,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['HIGH', 'MEDIUM', 'LOW']
+              arguments:
+                values: ['HIGH', 'MEDIUM', 'LOW']
 
       - name: priority_rank_overall
         description: "Overall priority rank (1 = highest value)"

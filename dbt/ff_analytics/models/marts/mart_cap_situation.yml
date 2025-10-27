@@ -17,7 +17,7 @@ models:
     columns:
       - name: franchise_id
         description: Franchise identifier
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -26,20 +26,20 @@ models:
 
       - name: franchise_name
         description: Franchise name
-        tests:
+        data_tests:
           - not_null
 
       - name: season
         description: Fantasy season year
-        tests:
+        data_tests:
           - not_null
 
       - name: cap_space_available
         description: Cap space available for new contracts (use this for decisions)
-        tests:
+        data_tests:
           - not_null
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

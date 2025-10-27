@@ -16,20 +16,20 @@ models:
         description: |
           Team identifier (team abbreviation - stable across seasons).
           Primary key for team dimension.
-        tests:
+        data_tests:
           - unique
           - not_null
 
       - name: team_name
         description: Full team name (e.g., "Kansas City Chiefs")
-        tests:
+        data_tests:
           - not_null
 
       - name: conference
         description: |
           Conference (AFC or NFC).
           Sourced from dim_team_conference_division seed.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -39,7 +39,7 @@ models:
         description: |
           Division (North, South, East, West).
           Sourced from dim_team_conference_division seed.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:

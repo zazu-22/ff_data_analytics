@@ -29,7 +29,7 @@ models:
         description: |
           Unique identifier for each transaction-asset row (Primary Key).
           Format: {transaction_id}_{asset_index}
-        tests:
+        data_tests:
           - unique
           - not_null
 
@@ -37,7 +37,7 @@ models:
         description: |
           Transaction event identifier (groups all assets in same trade/event).
           Multi-asset trades share the same transaction_id.
-        tests:
+        data_tests:
           - not_null
 
       - name: player_key
@@ -48,7 +48,7 @@ models:
           - Picks: pick_id or 'PICK_' prefix
           - Defense: player_name or 'DEFENSE_' prefix
           - Cap space: 'CAP_' prefix
-        tests:
+        data_tests:
           - not_null
 
       - name: transaction_type
@@ -56,7 +56,7 @@ models:
           Refined transaction type (11 types).
 
           Derived from dim_timeframe.period_type + raw Type field.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -79,7 +79,7 @@ models:
           Asset classification (4 types + unknown).
 
           Inferred from Player/Position fields.
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -99,17 +99,17 @@ models:
           - faad: Aug 15
           - offseason: Mar 1
           - regular: week-based calculation from NFL season start
-        tests:
+        data_tests:
           - not_null
 
       - name: transaction_year
         description: Year extracted from transaction_date (2012-2025)
-        tests:
+        data_tests:
           - not_null
 
       - name: season
         description: Fantasy season year (2012-2025)
-        tests:
+        data_tests:
           - not_null
 
       - name: from_franchise_id
@@ -117,7 +117,7 @@ models:
           Source franchise ID (null for waiver wire sources).
 
           FK to dim_franchise (SCD Type 2 temporal join on season).
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_franchise')
@@ -130,7 +130,7 @@ models:
           Destination franchise ID (null for waiver wire destinations).
 
           FK to dim_franchise (SCD Type 2 temporal join on season).
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_franchise')
@@ -147,7 +147,7 @@ models:
           - Non-players: null
 
           100% player mapping coverage achieved.
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -163,7 +163,7 @@ models:
 
           **Note**: Compensatory picks (P13+) and TBD picks may not exist in dim_pick seed.
           This is expected - not all transaction picks are in the standard 12-team seed.
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_pick')
@@ -233,7 +233,7 @@ models:
 
           Compensation given to losing team when RFA is signed by another team.
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

@@ -83,7 +83,8 @@ models:
         description: "Roster tier classification"
         data_tests:
           - accepted_values:
-              values: ['STARTER', 'FLEX', 'BENCH']
+              arguments:
+                values: ['STARTER', 'FLEX', 'BENCH']
 
       - name: weeks_until_contract_expires
         description: "Years remaining on contract (alias)"
@@ -93,7 +94,8 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['KEEP', 'CONSIDER', 'DROP_FOR_UPSIDE', 'DROP_FOR_CAP']
+              arguments:
+                values: ['KEEP', 'CONSIDER', 'DROP_FOR_UPSIDE', 'DROP_FOR_CAP']
 
       - name: asof_date
         description: "Snapshot date"

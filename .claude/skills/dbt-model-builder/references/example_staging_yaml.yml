@@ -27,12 +27,12 @@ models:
           - Mapped players: mfl_id (as varchar)
           - Unmapped players: player_name
           - Picks: pick_name
-        tests:
+        data_tests:
           - not_null
 
       - name: asset_type
         description: "Asset classification (player or pick)"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -42,7 +42,7 @@ models:
 
       - name: market_scope
         description: "League format (dynasty_1qb or dynasty_superflex)"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -52,22 +52,22 @@ models:
 
       - name: asof_date
         description: "Snapshot date of market values"
-        tests:
+        data_tests:
           - not_null
 
       - name: overall_rank
         description: "Overall rank across all assets in this market_scope"
-        tests:
+        data_tests:
           - not_null
 
       - name: ktc_value
         description: "KTC value score (0-10000 scale)"
-        tests:
+        data_tests:
           - not_null
 
       - name: player_id
         description: "FK to dim_player_id_xref (null for picks and unmapped players)"
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -77,7 +77,7 @@ models:
 
       - name: provider
         description: "Data source identifier"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:

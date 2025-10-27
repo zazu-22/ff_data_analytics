@@ -23,13 +23,13 @@ models:
     columns:
       - name: transaction_id_unique
         description: "Unique identifier for this transaction-asset row (PK)"
-        tests:
+        data_tests:
           - unique
           - not_null
 
       - name: transaction_id
         description: "Transaction event ID (groups multi-asset trades)"
-        tests:
+        data_tests:
           - not_null
 
       - name: player_key
@@ -38,12 +38,12 @@ models:
           - Mapped players: player_id (mfl_id as varchar)
           - Unmapped players: player_name
           - Non-players: asset-specific prefix + transaction_id_unique
-        tests:
+        data_tests:
           - not_null
 
       - name: transaction_type
         description: "Refined transaction type (11 types)"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -63,7 +63,7 @@ models:
 
       - name: asset_type
         description: "Asset classification"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -76,17 +76,17 @@ models:
 
       - name: transaction_date
         description: "Derived transaction date (from timeframe + period_type)"
-        tests:
+        data_tests:
           - not_null
 
       - name: transaction_year
         description: "Year extracted from transaction_date"
-        tests:
+        data_tests:
           - not_null
 
       - name: timeframe_string
         description: "Original timeframe from sheet (e.g., '2024 Offseason')"
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -95,7 +95,7 @@ models:
 
       - name: from_franchise_id
         description: "Source franchise (null for waiver wire)"
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_franchise')
@@ -105,7 +105,7 @@ models:
 
       - name: to_franchise_id
         description: "Destination franchise (null for waiver wire)"
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_franchise')
@@ -115,7 +115,7 @@ models:
 
       - name: player_id
         description: "Canonical player ID (mfl_id from crosswalk)"
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -129,7 +129,7 @@ models:
 
           Note: Not all pick_ids exist in dim_pick. Compensatory picks (e.g., P14+)
           and traded duplicate slots are valid but not in the standard seed.
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_pick')

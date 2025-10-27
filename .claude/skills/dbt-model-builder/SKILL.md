@@ -191,20 +191,57 @@ Templates for creating models:
 
 ### dbt 1.10+ Test Syntax
 
-**IMPORTANT**: Wrap test parameters in `arguments:`
+**CRITICAL**: Follow these two rules to avoid deprecation warnings:
+
+1. **Use `data_tests:` key** (not `tests:`): dbt 1.5+ introduced `data_tests:` to distinguish from `unit_tests:`
+2. **Wrap test parameters in `arguments:`**: dbt 1.10+ requires this for all generic tests with parameters
 
 ```yaml
-# Correct
-- relationships:
-    arguments:
-      to: ref('dim_player')
-      field: player_id
+# CORRECT - Column-level tests
+columns:
+  - name: position
+    data_tests:  # Use data_tests:, not tests:
+      - not_null
+      - accepted_values:
+          arguments:  # Arguments must be nested
+            values: ['QB', 'RB', 'WR', 'TE']
 
-# Wrong (deprecated)
-- relationships:
-    to: ref('dim_player')
-    field: player_id
+  - name: player_id
+    data_tests:
+      - not_null
+      - relationships:
+          arguments:  # Wrap to, field in arguments:
+            to: ref('dim_player')
+            field: player_id
+          config:  # config: is sibling to arguments:
+            where: "player_id > 0"
+
+# CORRECT - Model-level tests
+data_tests:  # Use data_tests:, not tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+          - player_key
+          - game_id
+
+# WRONG - Deprecated syntax (will cause warnings)
+columns:
+  - name: position
+    tests:  # WRONG - should be data_tests:
+      - accepted_values:
+          values: ['QB', 'RB']  # WRONG - should be under arguments:
+
+tests:  # WRONG - should be data_tests:
+  - relationships:
+      to: ref('dim_player')  # WRONG - should be under arguments:
+      field: player_id
 ```
+
+**Key Points:**
+- Always use `data_tests:` (not `tests:`)
+- `arguments:` wraps test parameters (to, field, values, combination_of_columns)
+- `config:` is a sibling to `arguments:`, not nested inside
+- `not_null` and `unique` have no arguments, use directly
 
 ### External Parquet Configuration
 

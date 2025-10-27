@@ -219,49 +219,69 @@ All large models use external Parquet. DuckDB catalog is in-memory only.
 
 ### Test Syntax (dbt 1.10+)
 
-**IMPORTANT**: dbt 1.10+ requires test arguments to be nested under an `arguments:` property.
+**IMPORTANT**: Follow these two critical rules to avoid deprecation warnings:
+
+1. **Use `data_tests:` key** (not `tests:`): dbt 1.5+ introduced `data_tests:` to distinguish from `unit_tests:`
+2. **Nest test arguments under `arguments:`**: dbt 1.10+ requires this for all generic tests with parameters
 
 **Correct syntax** (use this):
 
 ```yaml
-# Generic tests with arguments
-- accepted_values:
-    arguments:
-      values: ['value1', 'value2']
+# Column-level tests
+columns:
+  - name: position
+    description: "Player position"
+    data_tests:  # Use data_tests:, not tests:
+      - not_null
+      - accepted_values:
+          arguments:  # Arguments must be nested
+            values: ['QB', 'RB', 'WR', 'TE']
 
-- relationships:
-    arguments:
-      to: ref('other_model')
-      field: id
-    config:
-      where: "field is not null"
+  - name: franchise_id
+    description: "FK to dim_franchise"
+    data_tests:
+      - not_null
+      - relationships:
+          arguments:
+            to: ref('dim_franchise')
+            field: franchise_id
+          config:  # config: is a sibling to arguments:
+            where: "franchise_id is not null"
 
-- dbt_utils.unique_combination_of_columns:
-    arguments:
-      combination_of_columns:
-        - column1
-        - column2
-    config:
-      severity: error
+# Model-level tests
+data_tests:  # Use data_tests:, not tests:
+  - dbt_utils.unique_combination_of_columns:
+      arguments:
+        combination_of_columns:
+          - player_key
+          - game_id
+      config:
+        severity: error
 ```
 
 **Deprecated syntax** (don't use):
 
 ```yaml
-# Old syntax - will generate deprecation warnings
-- accepted_values:
-    values: ['value1', 'value2']  # WRONG
+# OLD - Will generate deprecation warnings
+columns:
+  - name: position
+    tests:  # WRONG - should be data_tests:
+      - accepted_values:
+          values: ['QB', 'RB']  # WRONG - should be under arguments:
 
-- relationships:
-    to: ref('other_model')  # WRONG
-    field: id
+tests:  # WRONG - should be data_tests:
+  - relationships:
+      to: ref('other_model')  # WRONG - should be under arguments:
+      field: id
 ```
 
 **Key points**:
 
+- Always use `data_tests:` for both column-level and model-level tests
 - `arguments:` wraps all test parameters (to, field, values, combination_of_columns, etc.)
 - `config:` remains a sibling to `arguments:` (not nested inside)
-- `not_null` and `unique` tests have no arguments, so no changes needed
+- `not_null` and `unique` tests have no arguments, so just use `- not_null` and `- unique` directly
+- Legacy `tests:` key still works but is deprecated; use `data_tests:` for clarity
 
 ## References
 

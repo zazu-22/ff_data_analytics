@@ -26,7 +26,7 @@ models:
     columns:
       - name: player_id
         description: Canonical player identifier (FK to dim_player_id_xref, -1 if unmapped)
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
@@ -36,7 +36,7 @@ models:
 
       - name: franchise_id
         description: FK to dim_franchise (may be null if unmapped)
-        tests:
+        data_tests:
           - relationships:
               arguments:
                 to: ref('dim_franchise')
@@ -46,22 +46,22 @@ models:
 
       - name: snapshot_date
         description: Date of this snapshot from CONTRACTS_ACTIVE sheet
-        tests:
+        data_tests:
           - not_null
 
       - name: obligation_year
         description: Calendar year of the obligation (2023-2028)
-        tests:
+        data_tests:
           - not_null
 
       - name: cap_hit
         description: Annual obligation for this year (from commissioner sheet)
-        tests:
+        data_tests:
           - not_null
 
       - name: player_key
         description: Composite identifier for grain uniqueness (handles unmapped players)
-        tests:
+        data_tests:
           - not_null
 
       - name: rfa
@@ -72,20 +72,20 @@ models:
 
       - name: is_unmapped_player
         description: Flag indicating player not found in crosswalk
-        tests:
+        data_tests:
           - not_null
 
       - name: is_unmapped_franchise
         description: Flag indicating franchise not resolved
-        tests:
+        data_tests:
           - not_null
 
       - name: snapshot_year
         description: Year extracted from snapshot_date
-        tests:
+        data_tests:
           - not_null
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

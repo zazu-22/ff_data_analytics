@@ -26,7 +26,7 @@ models:
     columns:
       - name: player_id
         description: Canonical player identifier (FK to dim_player_id_xref)
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -35,7 +35,7 @@ models:
 
       - name: franchise_id
         description: FK to dim_franchise (franchise owning the contract)
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -44,42 +44,42 @@ models:
 
       - name: contract_period
         description: Sequential contract number for this player (1, 2, 3...)
-        tests:
+        data_tests:
           - not_null
 
       - name: obligation_year
         description: Calendar year of the obligation (2023-2028)
-        tests:
+        data_tests:
           - not_null
 
       - name: year_position
         description: Position within this contract (1, 2, 3, ...)
-        tests:
+        data_tests:
           - not_null
 
       - name: annual_cap_hit
         description: Cap hit for this specific year (from contract_split_array)
-        tests:
+        data_tests:
           - not_null
 
       - name: years_remaining
         description: Years left in contract from this year forward (including this year)
-        tests:
+        data_tests:
           - not_null
 
       - name: remaining_contract_value
         description: Sum of all cap hits from this year forward
-        tests:
+        data_tests:
           - not_null
 
       - name: dead_cap_if_cut_before_year
         description: Dead cap liability if cut before this year starts
-        tests:
+        data_tests:
           - not_null
 
       - name: contract_type
         description: Contract classification (rookie, faad, fasa, trade_acquired, extension, etc.)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -95,12 +95,12 @@ models:
 
       - name: is_rookie_contract
         description: Flag for rookie contracts
-        tests:
+        data_tests:
           - not_null
 
       - name: contract_history_key
         description: FK to dim_player_contract_history
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -109,14 +109,14 @@ models:
 
       - name: transaction_id_unique
         description: FK to fact_league_transactions (audit trail)
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('fact_league_transactions')
                 field: transaction_id_unique
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

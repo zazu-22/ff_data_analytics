@@ -32,12 +32,20 @@ models:
     columns:
       - name: franchise_id
         description: "FK to dim_franchise (temporal SCD)"
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
 
       - name: player_key
         description: |
           Composite identifier to prevent grain violations from unmapped players.
           - Mapped players: player_id (mfl_id as varchar)
           - Unmapped players: player_name
+        data_tests:
+          - not_null
 
       - name: player_id
         description: |
@@ -48,12 +56,18 @@ models:
 
       - name: obligation_year
         description: "Year this cap hit is owed (e.g., 2025, 2026)"
+        data_tests:
+          - not_null
 
       - name: cap_hit
         description: "Annual obligation for this year (whole dollars)"
+        data_tests:
+          - not_null
 
       - name: snapshot_date
         description: "Partition date (dt=YYYY-MM-DD) when this snapshot was taken"
+        data_tests:
+          - not_null
 
       - name: rfa
         description: "RFA status flag (from commissioner sheet)"
@@ -70,7 +84,7 @@ models:
       - name: is_unmapped_franchise
         description: "Flag: true if franchise_id could not be resolved from dim_franchise"
 
-    tests:
+    data_tests:
       # Grain uniqueness test
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -93,31 +107,6 @@ models:
                 from {{ ref('stg_sheets__contracts_active') }}
                 where player_name = '' and cap_hit > 0
               ) >= 10
-            config:
-              severity: warn
+          config:
+            severity: warn
           name: empty_player_slots_preserved
-
-    columns:
-      - name: franchise_id
-        tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('dim_franchise')
-                field: franchise_id
-
-      - name: player_key
-        tests:
-          - not_null
-
-      - name: obligation_year
-        tests:
-          - not_null
-
-      - name: cap_hit
-        tests:
-          - not_null
-
-      - name: snapshot_date
-        tests:
-          - not_null

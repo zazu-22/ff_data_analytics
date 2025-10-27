@@ -20,7 +20,7 @@ models:
           Canonical player identifier (mfl_id from dim_player_id_xref).
           Maps to 19 fantasy platform provider IDs.
           Value of -1 indicates unmapped player (no crosswalk match).
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -38,19 +38,19 @@ models:
 
           This prevents duplicate grain violations when multiple unmapped players
           appear in the same game (e.g., depth TEs without crosswalk entries).
-        tests:
+        data_tests:
           - not_null
 
       - name: game_id
         description: |
           Game identifier. For player_stats: surrogate key (season_week_team_opponent).
           For snap_counts/ff_opportunity: nflverse game_id.
-        tests:
+        data_tests:
           - not_null
 
       - name: season
         description: NFL season year (2020-2025)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -58,14 +58,14 @@ models:
 
       - name: week
         description: Week number (1-22, includes playoffs)
-        tests:
+        data_tests:
           - not_null
 
       - name: season_type
         description: |
           Season type: REG (regular season), POST (playoffs generic),
           WC (wild card), DIV (divisional), CON (conference), SB (super bowl), PRE (preseason)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -76,7 +76,7 @@ models:
           Player position. Fantasy-relevant positions: QB, RB, WR, TE, K.
           Non-fantasy positions include: T, G, C, OL, LS, DE, DT, LB, CB, S, etc.
           Used to filter grain tests to fantasy-relevant players only.
-        tests:
+        data_tests:
           - not_null
 
       - name: stat_name
@@ -86,19 +86,19 @@ models:
           - 71 base stats (passing, rushing, receiving, defense, kicking)
           - 6 snap stats (offense_snaps, offense_pct, defense_snaps, defense_pct, st_snaps, st_pct)
           - 32 opportunity stats (*_exp, *_diff, air_yards, attempt metrics)
-        tests:
+        data_tests:
           - not_null
 
       - name: stat_value
         description: Numeric value of the statistic
-        tests:
+        data_tests:
           - not_null
 
       - name: measure_domain
         description: |
           Measurement domain (real_world or fantasy).
           Currently all values are 'real_world' (fantasy scoring applied in marts).
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -108,7 +108,7 @@ models:
         description: |
           Type of statistic (actual or projection).
           Currently all values are 'actual' (projections in separate fact table per ADR-007).
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -116,13 +116,13 @@ models:
 
       - name: provider
         description: Data source provider (currently all 'nflverse')
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['nflverse']
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

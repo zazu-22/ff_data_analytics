@@ -28,7 +28,7 @@ models:
       2. Crosswalk with position filtering
       3. Unmapped players preserved with player_id = -1
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
@@ -43,7 +43,7 @@ models:
     columns:
       - name: franchise_id
         description: "FK to dim_franchise (temporal SCD)"
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -57,7 +57,7 @@ models:
           Composite identifier to prevent grain violations from unmapped players.
           - Mapped players: player_id (mfl_id as varchar)
           - Unmapped players: player_name
-        tests:
+        data_tests:
           - not_null
 
       - name: player_id
@@ -69,19 +69,19 @@ models:
 
       - name: obligation_year
         description: "Year this dead cap amount is owed (e.g., 2025, 2026)"
-        tests:
+        data_tests:
           - not_null
 
       - name: dead_cap_amount
         description: |
           Dead cap amount owed for this year (whole dollars).
           Calculated per league rules: 50% years 1-2, 25% years 3-5.
-        tests:
+        data_tests:
           - not_null
 
       - name: snapshot_date
         description: "Partition date (dt=YYYY-MM-DD)"
-        tests:
+        data_tests:
           - not_null
 
       - name: is_unmapped_player

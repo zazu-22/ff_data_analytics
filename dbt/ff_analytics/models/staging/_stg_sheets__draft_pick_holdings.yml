@@ -8,47 +8,47 @@ models:
       and current holding flags that exclude outbound trades and unresolved contingencies.
     columns:
       - name: snapshot_date
-        tests:
+        data_tests:
           - not_null
       - name: year
-        tests:
+        data_tests:
           - not_null
       - name: round
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [1, 2, 3, 4, 5]
       - name: gm_full_name
-        tests:
+        data_tests:
           - not_null
       - name: owner_key
         description: Normalized owner identifier (first or last name key) for GM/franchise mapping.
       - name: franchise_id
         description: Franchise that currently owns the GM tab in the commissioner sheet.
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_franchise')
                 field: franchise_id
       - name: pick_category
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['original', 'acquired', 'compensatory', 'trade_out']
       - name: is_current_holding
-        tests:
+        data_tests:
           - not_null
       - name: is_comp_pick
-        tests:
+        data_tests:
           - not_null
       - name: is_pending
-        tests:
+        data_tests:
           - not_null
       - name: source_type
-        tests:
+        data_tests:
           - not_null
       - name: acquisition_note
         description: Raw commissioner text describing the acquisition (original owner or comp note).
@@ -58,7 +58,7 @@ models:
         description: Counterparty GM for outbound trades (if applicable).
       - name: trade_recipient_key
         description: Normalized owner key for the trade recipient (first/last name key).
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

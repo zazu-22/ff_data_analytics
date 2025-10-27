@@ -33,7 +33,7 @@ sources:
 
               Note: Uniqueness is tested at staging level (stg_sheets__transactions) after
               filtering to latest snapshot. Source may contain multiple snapshots.
-            tests:
+            data_tests:
               - not_null
 
           - name: transaction_id
@@ -48,7 +48,7 @@ sources:
               Values: rookie_draft_selection, cut, trade, waiver_claim, fasa_signing,
               faad_ufa_signing, faad_rfa_matched, offseason_ufa_signing,
               contract_extension, franchise_tag, amnesty_cut, unknown
-            tests:
+            data_tests:
               - not_null
 
           - name: asset_type
@@ -56,7 +56,7 @@ sources:
               Type of asset being transacted.
 
               Values: player, pick, defense, cap_space, unknown
-            tests:
+            data_tests:
               - not_null
 
           - name: Time Frame
@@ -64,7 +64,7 @@ sources:
               Original timeframe string from sheet (e.g., "2024 Offseason", "2024 Week 10").
               Maps to dim_timeframe for transaction_date derivation.
             quote: true
-            tests:
+            data_tests:
               - not_null
 
           - name: season
@@ -236,12 +236,12 @@ sources:
         columns:
           - name: gm
             description: "Franchise owner full name (e.g., 'Andy Shepard', 'Nick McCreary'). Maps to dim_franchise.owner_name."
-            tests:
+            data_tests:
               - not_null
 
           - name: player
             description: "Player name as it appears in Commissioner sheet. Maps to player_id via dim_player_id_xref + dim_name_alias."
-            tests:
+            data_tests:
               - not_null
 
           - name: position
@@ -251,19 +251,19 @@ sources:
 
           - name: year
             description: "Obligation year for this dead cap amount (e.g., 2025, 2026, 2027)."
-            tests:
+            data_tests:
               - not_null
 
           - name: dead_cap_amount
             description: |
               Dead cap amount owed for this year (whole dollars).
               Calculated per league rules: 50% years 1-2, 25% years 3-5.
-            tests:
+            data_tests:
               - not_null
 
           - name: dt
             description: "Snapshot date (partition key). Format: YYYY-MM-DD."
-            tests:
+            data_tests:
               - not_null
 
       - name: cap_space
@@ -300,25 +300,25 @@ sources:
         columns:
           - name: gm
             description: "Franchise owner full name (e.g., 'Andy Shepard', 'Nick McCreary'). Maps to dim_franchise.owner_name."
-            tests:
+            data_tests:
               - not_null
 
           - name: season
             description: "Fantasy season year (e.g., 2025, 2026, 2027, 2028, 2029)."
-            tests:
+            data_tests:
               - not_null
 
           - name: available_cap_space
             description: "Cap space available for new contracts (whole dollars, reported by Commissioner)."
-            tests:
+            data_tests:
               - not_null
 
           - name: dead_cap_space
             description: "Dead cap from cut contracts (whole dollars)."
-            tests:
+            data_tests:
               - not_null
 
           - name: traded_cap_space
             description: "Net cap space traded (positive = acquired, negative = sent, whole dollars)."
-            tests:
+            data_tests:
               - not_null

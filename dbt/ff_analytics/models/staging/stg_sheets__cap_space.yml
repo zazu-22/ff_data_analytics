@@ -12,7 +12,7 @@ models:
     columns:
       - name: franchise_id
         description: Franchise identifier (F001-F012)
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -21,7 +21,7 @@ models:
 
       - name: season
         description: Fantasy season year
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
@@ -29,28 +29,28 @@ models:
 
       - name: available_cap_space
         description: Cap space available for new contracts (reported by Commissioner)
-        tests:
+        data_tests:
           - not_null
 
       - name: dead_cap_space
         description: Dead cap from cut contracts
-        tests:
+        data_tests:
           - not_null
 
       - name: traded_cap_space
         description: Net cap space traded (positive = acquired, negative = sent)
-        tests:
+        data_tests:
           - not_null
 
       - name: base_cap
         description: Starting cap space each season ($250)
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [250]
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:

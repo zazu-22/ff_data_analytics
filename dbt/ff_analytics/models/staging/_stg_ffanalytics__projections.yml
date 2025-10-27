@@ -6,7 +6,7 @@ models:
     columns:
       - name: player_id
         description: "Canonical player ID (mfl_id) mapped by R runner"
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -14,25 +14,25 @@ models:
                 field: mfl_id
       - name: season
         description: "NFL season year"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [2020, 2021, 2022, 2023, 2024, 2025]
       - name: horizon
         description: "Projection timeframe"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['weekly', 'full_season', 'rest_of_season', 'unknown']
       - name: asof_date
         description: "When projection was made (UTC)"
-        tests:
+        data_tests:
           - not_null
       - name: provider
         description: "Projection provider"
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               arguments:

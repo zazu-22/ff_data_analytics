@@ -21,7 +21,7 @@ models:
     columns:
       - name: player_id
         description: Canonical player identifier (FK to dim_player)
-        tests:
+        data_tests:
           - not_null
           - relationships:
               arguments:
@@ -32,32 +32,32 @@ models:
 
       - name: player_key
         description: Composite player identifier for grain uniqueness
-        tests:
+        data_tests:
           - not_null
 
       - name: season
         description: NFL season year
-        tests:
+        data_tests:
           - not_null
 
       - name: week
         description: Week number (1-22, includes playoffs)
-        tests:
+        data_tests:
           - not_null
 
       - name: season_type
         description: Season type (REG, POST, WC, DIV, CON, SB, PRE)
-        tests:
+        data_tests:
           - not_null
 
       - name: position
         description: Player position
-        tests:
+        data_tests:
           - not_null
 
       - name: display_name
         description: Player display name
-        tests:
+        data_tests:
           - not_null:
               config:
                 where: "player_id != -1"  # Unmapped players may lack display_name
@@ -66,10 +66,10 @@ models:
         description: |
           Total fantasy points calculated from real-world stats and league scoring rules.
           Includes offensive (passing/rushing/receiving) and defensive (IDP) scoring.
-        tests:
+        data_tests:
           - not_null
 
-    tests:
+    data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
