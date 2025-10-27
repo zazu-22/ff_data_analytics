@@ -104,8 +104,10 @@ models:
 
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
+          arguments:
+            combination_of_columns:
             - player_key
             - asof_date
       - dbt_utils.expression_is_true:
-          expression: "droppable_score >= 0 AND droppable_score <= 100"
+          arguments:
+            expression: "droppable_score >= 0 AND droppable_score <= 100"

@@ -156,8 +156,10 @@ models:
 
     data_tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - player_key
-            - asof_date
+          arguments:
+            combination_of_columns:
+              - player_key
+              - asof_date
       - dbt_utils.expression_is_true:
-          expression: "(value_score >= 0 AND value_score <= 100) OR value_score IS NULL"
+          arguments:
+            expression: "(value_score >= 0 AND value_score <= 100) OR value_score IS NULL"
