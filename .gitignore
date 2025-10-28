@@ -40,6 +40,7 @@ dbt/**/dbt_packages/
 
 # Jupyter notebook artifacts
 .ipynb_checkpoints/
+.virtual_documents/
 notebooks/*.csv
 
 # R project artifacts
