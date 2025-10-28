@@ -38,23 +38,25 @@ recent_stats AS (
             ROW_NUMBER() OVER (PARTITION BY player_key ORDER BY season DESC, week DESC) AS game_recency
         FROM {{ ref('mart_fantasy_actuals_weekly') }}
         WHERE season = YEAR(CURRENT_DATE)
-            AND week <= (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE CAST(game_date AS DATE) < CURRENT_DATE)
+            AND week <= (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE)
     )
     GROUP BY player_key
 ),
 
 projections AS (
-    -- Rest of season projections
+    -- Rest of season projections (join through dim_player to get mfl_id)
     SELECT
-        player_id AS mfl_id,
-        SUM(projected_fantasy_points) AS projected_total_ros,
-        AVG(projected_fantasy_points) AS projected_ppg_ros,
+        dp.mfl_id,
+        SUM(proj.projected_fantasy_points) AS projected_total_ros,
+        AVG(proj.projected_fantasy_points) AS projected_ppg_ros,
         COUNT(*) AS weeks_remaining
-    FROM {{ ref('mart_fantasy_projections') }}
-    WHERE season = YEAR(CURRENT_DATE)
-        AND week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE CAST(game_date AS DATE) < CURRENT_DATE)
-        AND horizon = 'full_season'
-    GROUP BY player_id
+    FROM {{ ref('mart_fantasy_projections') }} proj
+    INNER JOIN {{ ref('dim_player') }} dp ON proj.player_id = dp.player_id
+    WHERE proj.season = YEAR(CURRENT_DATE)
+        AND proj.week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE)
+        AND proj.horizon = 'weekly'  -- Changed from 'full_season'
+        AND dp.mfl_id IS NOT NULL
+    GROUP BY dp.mfl_id
 ),
 
 opportunity AS (
@@ -211,7 +213,7 @@ SELECT
 
     -- Metadata
     CURRENT_DATE AS asof_date,
-    (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE CAST(game_date AS DATE) < CURRENT_DATE) AS current_week
+    (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE) AS current_week
 
 FROM fa_pool fa
 LEFT JOIN recent_stats rs USING (player_key)

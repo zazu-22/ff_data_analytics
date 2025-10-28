@@ -12,6 +12,7 @@ with fa_raw as (
 player_xref as (
   select
     player_id,
+    mfl_id,
     sleeper_id,
     coalesce(name, merge_name) as player_name,
     position as xref_position
@@ -21,7 +22,7 @@ player_xref as (
 select
   -- Identity (map sleeper_id → mfl_id)
   coalesce(cast(xref.player_id as VARCHAR), 'sleeper_' || fa.sleeper_player_id) as player_key,
-  xref.player_id as mfl_id,
+  xref.mfl_id as mfl_id,  -- Use actual MFL ID, not internal player_id
   fa.sleeper_player_id,
 
   -- Demographics
