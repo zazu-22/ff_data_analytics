@@ -99,6 +99,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "notebooks/**/*.ipynb" = [
     "E501",  # Line too long (notebooks often have long print/display statements)
+    "F821",  # Undefined name (Jupyter built-ins: display, get_ipython, etc.)
 ]
 
 [tool.ruff.lint.isort]

@@ -22,18 +22,23 @@ repos:
     hooks:
       - id: ruff
         files: ^(src/|scripts/|tools/|tests/).*\.py$
-        args: ["--fix", "--unsafe-fixes"]
+        args: ["--fix", "--unsafe-fixes", "--config=pyproject.toml"]
       - id: ruff-format
         files: ^(src/|scripts/|tools/|tests/).*\.py$
+        args: ["--config=pyproject.toml"]
 
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.8.5
     hooks:
       - id: nbqa-ruff
-        additional_dependencies: [ruff]
-        args: ["--fix", "--unsafe-fixes"]
+        additional_dependencies: [ruff==0.6.4]  # Pin to match main ruff version
+        args:
+          - "--fix"
+          - "--unsafe-fixes"
+          - "--config=pyproject.toml"     # Explicitly use repo config
+          - "--extend-ignore=E501,F821"   # Notebooks: long lines + undefined names (display, get_ipython)
         files: ^notebooks/.*\.ipynb$
-        exclude: ^notebooks/.*/\.ipynb_checkpoints/.*
+        exclude: ^notebooks/.*_executed\.ipynb$
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0
