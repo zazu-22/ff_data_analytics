@@ -267,19 +267,27 @@ def _scrape_week_projections(
             player_xref=player_xref,
         )
 
+        # CRITICAL: Files must be week-specific to avoid overwriting
+        # Format: projections_consensus_season2025_week9_2025-10-28.parquet
         consensus_file = (
-            staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_{dt}.parquet"
+            staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_season{season}_week{week}_{dt}.parquet"
         )
-        raw_file = staging_dir / "projections" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
+        raw_file = staging_dir / "projections" / f"dt={dt}" / f"projections_raw_season{season}_week{week}_{dt}.parquet"
 
-        if consensus_file.exists():
+        # Rename the generic files to week-specific names immediately after load
+        generic_consensus = staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_{dt}.parquet"
+        generic_raw = staging_dir / "projections" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
+
+        if generic_consensus.exists():
+            generic_consensus.rename(consensus_file)
             df_consensus = pl.read_parquet(consensus_file)
             all_consensus_dfs.append(df_consensus)
             print(f"✓ {len(df_consensus)} rows")
         else:
             print("⚠️  No consensus file")
 
-        if raw_file.exists():
+        if generic_raw.exists():
+            generic_raw.rename(raw_file)
             all_raw_dfs.append(pl.read_parquet(raw_file))
 
         scraped_weeks.append(week)
@@ -402,8 +410,9 @@ def load_projections_multi_week(
 
     # Combine all weeks into single dataframes
     print(f"\n🔗 Combining {len(all_consensus_dfs)} weeks into single snapshot...")
-    combined_consensus = pl.concat(all_consensus_dfs, how="vertical_relaxed")
-    combined_raw = pl.concat(all_raw_dfs, how="vertical_relaxed") if all_raw_dfs else None
+    # Use diagonal strategy to handle column order differences between weeks
+    combined_consensus = pl.concat(all_consensus_dfs, how="diagonal")
+    combined_raw = pl.concat(all_raw_dfs, how="diagonal") if all_raw_dfs else None
 
     # Write to final destination
     final_dir = Path(out_dir) / "projections" / f"dt={dt}"

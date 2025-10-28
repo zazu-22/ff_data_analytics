@@ -45,13 +45,14 @@ recent_stats AS (
 
 projections AS (
     -- Rest of season projections (join through dim_player to get mfl_id)
+    -- NOTE: proj.player_id is actually mfl_id from ffanalytics staging
     SELECT
         dp.mfl_id,
         SUM(proj.projected_fantasy_points) AS projected_total_ros,
         AVG(proj.projected_fantasy_points) AS projected_ppg_ros,
         COUNT(*) AS weeks_remaining
     FROM {{ ref('mart_fantasy_projections') }} proj
-    INNER JOIN {{ ref('dim_player') }} dp ON proj.player_id = dp.player_id
+    INNER JOIN {{ ref('dim_player') }} dp ON proj.player_id = dp.mfl_id  -- Join on mfl_id, not player_id!
     WHERE proj.season = YEAR(CURRENT_DATE)
         AND proj.week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE)
         AND proj.horizon = 'weekly'  -- Changed from 'full_season'
