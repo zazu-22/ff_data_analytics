@@ -72,4 +72,6 @@ scripts/troubleshooting/**/*
 **/.archive/**
 **/.deprecated/**
 **/.old/**
-**/.old/**
+
+# Executed notebook outputs (generated during runs)
+notebooks/*_executed.ipynb

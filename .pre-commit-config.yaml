@@ -1,5 +1,5 @@
 # Auto-formatting and linting hooks for this repository.
-# Install:   pip install pre-commit && pre-commit install
+# Install:   uv add --dev pre-commit && uv run pre-commit install
 # Run all:   pre-commit run --all-files
 
 # Global excludes: never modify archived or large/raw data folders
@@ -8,8 +8,8 @@ exclude: |
     \.archive/|
     data/raw/|
     data/data_dictionaries/|
-    notebooks/|
     notebooks/\.ipynb_checkpoints/|
+    notebooks/.*_executed\.ipynb|
     \.claude/|
     samples/
     |dbt/.*/target/
@@ -21,10 +21,10 @@ repos:
     rev: v0.6.4
     hooks:
       - id: ruff
-        files: ^(ingest/|src/|tools/|tests/).*\.py$
+        files: ^(src/|scripts/|tools/|tests/).*\.py$
         args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
-        files: ^(ingest/|src/|tools/|tests/).*\.py$
+        files: ^(src/|scripts/|tools/|tests/).*\.py$
 
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.8.5

@@ -102,7 +102,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ingest", "tools", "tests"]  # Added tests module
+known-first-party = ["ff_analytics_utils"]  # Actual importable package in src/
 combine-as-imports = true
 force-single-line = false  # Allow multi-line imports for readability
 
