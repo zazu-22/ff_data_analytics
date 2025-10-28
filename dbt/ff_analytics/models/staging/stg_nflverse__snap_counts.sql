@@ -31,10 +31,12 @@ with base as (
     s.st_pct
 
   from
+    -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}',
-      s.hive_partitioning = true
+      hive_partitioning = true
     ) s
+    -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
   -- pfr_player_id: 0.00% of raw data has NULL (0/136,974 rows)
   --   No data loss from NULL filtering in this dataset

@@ -117,10 +117,12 @@ with base as (
     w.fantasy_points_ppr
 
   from
+    -- noqa: disable=references.qualification
     read_parquet(
       '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet',
-      w.hive_partitioning = true
+      hive_partitioning = true
     ) w
+    -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~0.12% of raw data has NULL (113/97,415 rows)
   --   These are unidentifiable players with no position info

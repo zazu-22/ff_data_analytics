@@ -21,7 +21,7 @@ player_xref as (
 
 select
   -- Identity (map sleeper_id → mfl_id)
-  coalesce(cast(xref.player_id as VARCHAR), 'sleeper_' || fa.sleeper_player_id) as player_key,
+  coalesce(cast(xref.mfl_id as VARCHAR), 'sleeper_' || fa.sleeper_player_id) as player_key,
   xref.mfl_id as mfl_id,  -- Use actual MFL ID, not internal player_id
   fa.sleeper_player_id,
 

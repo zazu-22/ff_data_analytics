@@ -67,10 +67,12 @@ with base as (
     o.rush_attempt_team
 
   from
+    -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}',
-      o.hive_partitioning = true
+      hive_partitioning = true
     ) o
+    -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
   -- player_id (gsis_id): ~6.75% of raw data has NULL (2,115/31,339 rows)
   --   These are unidentifiable players with NULL position and small opportunity counts (1-4 targets)
