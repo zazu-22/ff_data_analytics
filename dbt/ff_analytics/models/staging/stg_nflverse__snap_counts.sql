@@ -46,7 +46,6 @@ with base as (
     and s.week is not null
     -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
     and     {{ latest_snapshot_only(env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet")) }}
-{{ latest_snapshot_only(env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet")) }}
 ),
 
 crosswalk as (

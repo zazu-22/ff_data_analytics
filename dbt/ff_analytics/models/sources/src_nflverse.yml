@@ -19,3 +19,7 @@ sources:
         description: "NFL schedules and results."
       - name: teams
         description: "Team reference data."
+      - name: snap_counts
+        description: "Snap participation by phase (offense, defense, ST)."
+      - name: ff_opportunity
+        description: "Expected stats, variances, team shares (170+ columns)."

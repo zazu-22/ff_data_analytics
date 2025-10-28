@@ -29,6 +29,14 @@ models:
         data_tests:
           - not_null
 
+      - name: owner_name
+        description: Owner/GM name - use this for filtering in notebooks (e.g., WHERE owner_name = 'Jason')
+        data_tests:
+          - not_null
+
+      - name: division
+        description: League division (North/South/etc)
+
       - name: season
         description: Fantasy season year
         data_tests:

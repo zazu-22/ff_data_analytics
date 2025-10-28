@@ -1779,10 +1779,14 @@ You should update this section when you begin and complete each task.
   - [x] Create mart_fasa_targets.sql
   - [x] Create mart_my_roster_droppable.sql
   - [x] Run and validate: All FAs scored
-- [ ] Task 1.4: FASA notebook (20-24h)
-  - [ ] Create fasa_weekly_strategy.ipynb
-  - [ ] Validate: Notebook runs end-to-end
-  - [ ] Deliverable ready for Wednesday
+- [x] Task 1.4: FASA notebook (20-24h) - **Substantially Complete**
+  - [x] Create fasa_weekly_strategy.ipynb
+  - [x] Validate: Notebook runs end-to-end
+  - [ ] Deliverable ready for Wednesday - **BLOCKED: Data quality issues**
+    - **Known Issues:** snap_share_l4 = NULL for all players (ff_opportunity weeks 5-8 missing)
+    - **Impact:** Value scores negative (-85 to -130), bid recommendations show $0 or $NaN
+    - **Fix Required:** Reload ff_opportunity for 2025 weeks 5-8, rebuild marts, re-execute notebook
+    - **Infrastructure Status:** ✅ Code complete, pipeline functional, awaiting data refresh
 
 ### Phase 2 Progress
 

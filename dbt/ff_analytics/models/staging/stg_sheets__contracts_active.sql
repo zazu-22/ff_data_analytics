@@ -207,11 +207,11 @@ with_player_id as (
     wd.*,
 
     -- Cascading player_id resolution:
-    -- 1. Transaction history (authoritative, position-aware)
-    -- 2. Crosswalk with position filtering
+    -- 1. Crosswalk (authoritative mfl_id from nflverse)
+    -- 2. Transaction history (fallback only, may have stale IDs)
     case
       when wd.is_defense then null
-      else coalesce(txn.player_id, xwalk.player_id)
+      else coalesce(xwalk.player_id, txn.player_id)
     end as player_id,
 
     xwalk.mfl_id,
@@ -253,8 +253,8 @@ with_player_id as (
         wd.obligation_year,
         wd.snapshot_date
       order by
-        -- Prefer transaction-based player_id over crosswalk
-        case when txn.player_id is not null then 1 else 2 end,
+        -- Prefer crosswalk-based player_id (authoritative mfl_id from nflverse)
+        case when xwalk.player_id is not null then 1 else 2 end,
         -- Tiebreaker: prefer offensive positions for flexible slots
         case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
     ) = 1

@@ -2,6 +2,12 @@
 
 Thin Python wrapper around R-based FFanalytics scraper.
 Handles subprocess invocation, error handling, and GCS writes.
+
+Production Functions:
+    - load_projections_ros: Auto-detect current week and scrape remaining season
+    (default for automation)
+    - load_projections_multi_week: Manual multi-week scraping with explicit week list
+    - load_projections: Single-week scraping (legacy/manual use)
 """
 
 from __future__ import annotations
@@ -20,18 +26,124 @@ try:
 except ImportError:
     pl = None
 
+try:
+    import duckdb
+except ImportError:
+    duckdb = None
+
+# ============================================================================
+# Constants - Define once, use everywhere
+# ============================================================================
+
+# All 9 sources configured in ffanalytics_projection_weights_mapped.csv
+DEFAULT_SOURCES = "FantasyPros,NumberFire,FantasySharks,ESPN,FFToday,CBS,NFL,RTSports,Walterfootball"
+
+# All 9 positions supported by ffanalytics package
+DEFAULT_POSITIONS = "QB,RB,WR,TE,K,DST,DL,LB,DB"
+
+# Default file paths (relative to repo root)
+DEFAULT_OUT_DIR = "data/raw/ffanalytics"
+DEFAULT_WEIGHTS_CSV = "config/projections/ffanalytics_projection_weights_mapped.csv"
+DEFAULT_PLAYER_XREF = "dbt/ff_analytics/seeds/dim_player_id_xref.csv"
+
+# Fantasy season constants
+FANTASY_SEASON_END_WEEK = 17  # Week 18 excluded (teams rest starters)
+
+
+# ============================================================================
+# Helper Functions - Extract common patterns
+# ============================================================================
+
+def _get_repo_root() -> Path:
+    """Get repository root directory (4 levels up from this file)."""
+    return Path(__file__).parent.parent.parent.parent
+
+
+def _get_current_season() -> int:
+    """Get current NFL season year."""
+    return datetime.now(UTC).year
+
+
+def _normalize_sources(sources: str | list[str] | None) -> str:
+    """Normalize sources to comma-separated string, defaulting to ALL sources."""
+    if sources is None:
+        return DEFAULT_SOURCES
+    if isinstance(sources, list):
+        return ",".join(sources)
+    return sources
+
+
+def _normalize_positions(positions: str | list[str]) -> str:
+    """Normalize positions to comma-separated string."""
+    if isinstance(positions, list):
+        return ",".join(positions)
+    return positions
+
+
+def _parse_manifest_from_stdout(
+    stdout: str, season: int, week: int, sources: str
+) -> dict[str, Any]:
+    """Parse JSON manifest from R script stdout.
+
+    Args:
+        stdout: R script stdout containing JSON manifest
+        season: Season year for fallback manifest
+        week: Week number for fallback manifest
+        sources: Sources used for fallback manifest
+
+    Returns:
+        dict: Parsed manifest or fallback minimal manifest
+    """
+    # Parse JSON manifest from stdout (last line starting with "{")
+    lines = stdout.strip().split("\n")
+    manifest_line = None
+    for line in reversed(lines):
+        if line.startswith("{"):
+            manifest_line = line
+            break
+
+    if manifest_line:
+        try:
+            return json.loads(manifest_line)
+        except json.JSONDecodeError as e:
+            # R script ran but didn't output valid JSON
+            return {
+                "dataset": "ffanalytics_projections",
+                "season": season,
+                "week": week,
+                "status": "partial_success",
+                "error": f"Could not parse manifest: {e}",
+            }
+    else:
+        # Fallback: construct minimal manifest
+        return {
+            "dataset": "ffanalytics_projections",
+            "season": season,
+            "week": week,
+            "sources": sources,
+            "status": "success",
+        }
+
+
+# ============================================================================
+# Main Loader Functions
+# ============================================================================
 
 def load_projections(
-    sources: str | list[str] = "FantasyPros,NumberFire,ESPN,CBS",
-    positions: str | list[str] = "QB,RB,WR,TE,K,DST",
-    season: int = 2024,
+    sources: str | list[str] | None = None,
+    positions: str | list[str] = DEFAULT_POSITIONS,
+    season: int | None = None,
     week: int = 0,
-    out_dir: str = "data/raw/ffanalytics",
-    weights_csv: str = "config/projections/ffanalytics_projection_weights_mapped.csv",
-    player_xref: str = "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+    out_dir: str = DEFAULT_OUT_DIR,
+    weights_csv: str = DEFAULT_WEIGHTS_CSV,
+    player_xref: str = DEFAULT_PLAYER_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    """Load fantasy football projections with weighted consensus.
+    """Load fantasy football projections with weighted consensus (single week).
+
+    **NOTE**: This is the base single-week loader used internally by load_projections_multi_week
+    and load_projections_ros. For production use, prefer load_projections_ros() for automatic
+    rest-of-season scraping.
 
     This function invokes the R runner (scripts/R/ffanalytics_run.R) which:
     1. Scrapes projections from multiple sources
@@ -41,9 +153,9 @@ def load_projections(
     5. Outputs both raw and consensus Parquet files
 
     Args:
-        sources: Comma-separated source names or list (e.g., "FantasyPros,ESPN")
-        positions: Comma-separated positions or list (e.g., "QB,RB,WR")
-        season: NFL season year
+        sources: Comma-separated source names, list, or None for ALL sources (default: ALL)
+        positions: Comma-separated positions or list (default: ALL 9 positions)
+        season: NFL season year (default: current year)
         week: Week number (0 for season-long projections)
         out_dir: Output directory for Parquet files
         weights_csv: Path to site weights CSV
@@ -58,14 +170,13 @@ def load_projections(
         FileNotFoundError: If R script not found
 
     """
-    # Convert lists to comma-separated strings if needed
-    if isinstance(sources, list):
-        sources = ",".join(sources)
-    if isinstance(positions, list):
-        positions = ",".join(positions)
+    # Normalize inputs using helper functions
+    sources = _normalize_sources(sources)
+    positions = _normalize_positions(positions)
+    season = season if season is not None else _get_current_season()
 
-    # Find repo root and R script
-    repo_root = Path(__file__).parent.parent.parent.parent
+    # Find R script
+    repo_root = _get_repo_root()
     r_script = repo_root / "scripts/R/ffanalytics_run.R"
 
     if not r_script.exists():
@@ -103,35 +214,7 @@ def load_projections(
         )
 
         # Parse JSON manifest from stdout (last line)
-        lines = result.stdout.strip().split("\n")
-        manifest_line = None
-        for line in reversed(lines):
-            if line.startswith("{"):
-                manifest_line = line
-                break
-
-        if manifest_line:
-            try:
-                manifest = json.loads(manifest_line)
-            except json.JSONDecodeError as e:
-                # R script ran but didn't output valid JSON
-                manifest = {
-                    "dataset": "ffanalytics_projections",
-                    "season": season,
-                    "week": week,
-                    "status": "partial_success",
-                    "error": f"Could not parse manifest: {e}",
-                }
-        else:
-            # Fallback: construct minimal manifest
-            manifest = {
-                "dataset": "ffanalytics_projections",
-                "season": season,
-                "week": week,
-                "sources": sources,
-                "positions": positions,
-                "status": "success",
-            }
+        manifest = _parse_manifest_from_stdout(result.stdout, season, week, sources)
 
         # Add stdout/stderr for debugging
         manifest["stdout"] = result.stdout
@@ -211,10 +294,10 @@ def load_projections_multi_week(
     season: int,
     weeks: list[int],
     sources: str | list[str] | None = None,
-    positions: str | list[str] = "QB,RB,WR,TE,K,DST,DL,LB,DB",  # ALL 9 positions by default
-    out_dir: str = "data/raw/ffanalytics",
-    weights_csv: str = "config/projections/ffanalytics_projection_weights_mapped.csv",
-    player_xref: str = "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+    positions: str | list[str] = DEFAULT_POSITIONS,
+    out_dir: str = DEFAULT_OUT_DIR,
+    weights_csv: str = DEFAULT_WEIGHTS_CSV,
+    player_xref: str = DEFAULT_PLAYER_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Load projections for multiple weeks (e.g., rest-of-season) in a single snapshot.
@@ -278,11 +361,10 @@ def load_projections_multi_week(
         ImportError: If polars not available for combining dataframes
 
     """
-    # Default to ALL configured sources if none specified
-    if sources is None:
-        sources = (
-            "FantasyPros,NumberFire,FantasySharks,ESPN,FFToday,CBS,NFL,RTSports,Walterfootball"
-        )
+    # Normalize inputs
+    sources = _normalize_sources(sources)
+    positions = _normalize_positions(positions)
+
     if pl is None:
         raise ImportError("polars is required for multi-week loading. Install with: uv add polars")
 
@@ -374,3 +456,171 @@ def load_projections_multi_week(
         print(f"   {len(failed_weeks)} weeks failed: {[w for w, _ in failed_weeks]}")
 
     return manifest
+
+
+def _get_current_week(season: int, duckdb_path: str | None = None) -> int:
+    """Determine current fantasy week from dim_schedule.
+
+    Returns the week after the last completed week (games before today).
+    If dim_schedule unavailable or no weeks completed, returns 1.
+
+    Args:
+        season: NFL season year
+        duckdb_path: Path to DuckDB database (default: dbt/ff_analytics/target/dev.duckdb)
+
+    Returns:
+        int: Current fantasy week number (1-17)
+
+    """
+    if duckdb is None:
+        print("⚠️  DuckDB not available, defaulting to week 1")
+        return 1
+
+    if duckdb_path is None:
+        # Default to dbt project database
+        repo_root = _get_repo_root()
+        duckdb_path = str(repo_root / "dbt" / "ff_analytics" / "target" / "dev.duckdb")
+
+    try:
+        conn = duckdb.connect(duckdb_path, read_only=True)
+        result = conn.execute(
+            """
+            SELECT MAX(week) as max_completed_week
+            FROM dim_schedule
+            WHERE season = ?
+              AND CAST(game_date AS DATE) < CURRENT_DATE
+            """,
+            [season],
+        ).fetchone()
+        conn.close()
+
+        if result and result[0] is not None:
+            max_completed = result[0]
+            current_week = max_completed + 1
+            print(f"📅 Detected: Week {max_completed} completed, loading from week {current_week}")
+            return current_week
+        else:
+            print(f"⚠️  No completed weeks found for season {season}, defaulting to week 1")
+            return 1
+
+    except Exception as e:
+        print(f"⚠️  Could not query dim_schedule: {e}, defaulting to week 1")
+        return 1
+
+
+def load_projections_ros(
+    season: int | None = None,
+    start_week: int | None = None,
+    end_week: int = FANTASY_SEASON_END_WEEK,
+    sources: str | list[str] | None = None,
+    positions: str | list[str] = DEFAULT_POSITIONS,
+    out_dir: str = DEFAULT_OUT_DIR,
+    weights_csv: str = DEFAULT_WEIGHTS_CSV,
+    player_xref: str = DEFAULT_PLAYER_XREF,
+    duckdb_path: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Load rest-of-season projections with auto-detection of current week.
+
+    This is the PRODUCTION-READY function for automated workflows (GitHub Actions).
+    It automatically determines the current week from dim_schedule and scrapes
+    remaining weeks through week 17 (fantasy playoff cutoff).
+
+    **Why week 17 and not 18?**
+    Week 18 is excluded from fantasy leagues because NFL teams often rest starters
+    when playoff seeding is locked in, making projections unreliable.
+
+    **Auto-detection logic:**
+    1. Query dim_schedule to find max completed week (games before today)
+    2. Current week = completed week + 1
+    3. Load weeks [current_week ... 17]
+    4. If dim_schedule unavailable, defaults to start_week=1 or user-provided value
+
+    **Usage examples:**
+    ```python
+    # Fully automatic (recommended for GH Actions)
+    from src.ingest.ffanalytics.loader import load_projections_ros
+    load_projections_ros()  # Auto-detects season, current week, loads through week 17
+
+    # Manual override for specific season
+    load_projections_ros(season=2025)  # Auto-detect current week for 2025
+
+    # Manual override for testing
+    load_projections_ros(season=2025, start_week=10, end_week=12)  # Weeks 10-12 only
+
+    # Custom sources/positions (e.g., FASA offensive-only)
+    load_projections_ros(
+        sources="FantasyPros,ESPN,NFL",
+        positions="QB,RB,WR,TE"  # No K, DST, IDP
+    )
+    ```
+
+    **GitHub Actions integration:**
+    ```yaml
+    - name: Load ROS projections
+      run: |
+        uv run python -c "from src.ingest.ffanalytics.loader import load_projections_ros;
+        load_projections_ros()"
+    ```
+
+    Args:
+        season: NFL season year (default: current year)
+        start_week: Starting week (default: auto-detect from dim_schedule)
+        end_week: Ending week (default: 17, fantasy playoff cutoff)
+        sources: Comma-separated source names, list, or None for ALL sources
+        positions: Comma-separated positions (default: ALL 9 - QB,RB,WR,TE,K,DST,DL,LB,DB)
+        out_dir: Output directory for Parquet files
+        weights_csv: Path to site weights CSV
+        player_xref: Path to player ID crosswalk seed
+        duckdb_path: Path to DuckDB database for week detection (default: dbt target)
+        **kwargs: Additional arguments passed to load_projections_multi_week
+
+    Returns:
+        dict: Manifest with combined output paths, row counts, and metadata
+
+    Raises:
+        RuntimeError: If scraping fails
+        ValueError: If start_week > end_week
+
+    """
+    # Normalize inputs
+    season = season if season is not None else _get_current_season()
+    if season == _get_current_season() and season is None:
+        print(f"📅 Season not specified, defaulting to {season}")
+
+    # Auto-detect current week if not specified
+    if start_week is None:
+        start_week = _get_current_week(season, duckdb_path)
+
+    # Validate week range
+    if start_week > end_week:
+        raise ValueError(f"start_week ({start_week}) cannot be greater than end_week ({end_week})")
+
+    if start_week > FANTASY_SEASON_END_WEEK:
+        print(f"⚠️  start_week ({start_week}) is beyond fantasy season (week {FANTASY_SEASON_END_WEEK}), nothing to load")
+        return {
+            "dataset": "ffanalytics_projections",
+            "season": season,
+            "status": "skipped",
+            "reason": f"start_week beyond fantasy season cutoff (week {FANTASY_SEASON_END_WEEK})",
+        }
+
+    # Build week list (inclusive)
+    weeks = list(range(start_week, end_week + 1))
+
+    print(f"\n🏈 Loading ROS projections for season {season}")
+    print(f"   Weeks: {start_week}-{end_week} ({len(weeks)} weeks)")
+    print(f"   Sources: {sources if sources else 'ALL configured sources'}")
+    print(f"   Positions: {positions}")
+
+    # Delegate to multi-week loader
+    return load_projections_multi_week(
+        season=season,
+        weeks=weeks,
+        sources=sources,
+        positions=positions,
+        out_dir=out_dir,
+        weights_csv=weights_csv,
+        player_xref=player_xref,
+        **kwargs,
+    )

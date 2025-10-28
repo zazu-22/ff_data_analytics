@@ -3,7 +3,7 @@
 /*
 Player dimension - conformed dimension for all player-based analysis.
 
-Grain: One row per player (mfl_id as canonical player_id)
+Grain: One row per player (player_id as canonical identifier)
 Source: dim_player_id_xref seed (nflverse ff_playerids with 19 provider ID mappings)
 
 SCD Type 1 (overwrite): team (current team assignment)
@@ -11,11 +11,15 @@ SCD Type 0 (immutable): draft_year, birthdate
 
 Attributes include display name, position, team, and all provider ID mappings
 for cross-platform integration.
+
+Key Design Decision: player_id (sequential surrogate key) is the canonical identifier
+used throughout the pipeline. mfl_id remains available as an attribute for provider
+integration but is NOT the primary key.
 */
 
 select
-  -- Primary key (canonical player identifier per ADR-010)
-  mfl_id as player_id,
+  -- Primary key (canonical player identifier - sequential from crosswalk)
+  player_id,
 
   -- Display attributes
   name as display_name,

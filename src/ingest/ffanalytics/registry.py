@@ -1,16 +1,41 @@
 """FFanalytics dataset registry.
 
 Maps logical dataset names to loader functions and metadata.
+
+Production loaders:
+    - projections_ros: Auto-detect current week + load through week 17 (recommended for automation)
+    - projections_multi_week: Manual multi-week with explicit week list
+    - projections: Single-week (legacy/manual use)
 """
 
 DATASETS = {
-    "projections": {
-        "loader": "load_projections",
-        "description": "Fantasy football projections with weighted consensus from multiple sources",
+    "projections_ros": {
+        "loader": "load_projections_ros",
+        "description": "Rest-of-season projections with auto-detection (weeks current->17). PRODUCTION DEFAULT for GitHub Actions.",
         "r_required": True,
-        "python_available": False,  # Pure R implementation
+        "python_available": False,
         "output_format": "parquet",
         "incremental_key": "asof_date",
+        "usage": "load_projections_ros() - fully automatic, no args needed",
+        "recommended": True,
+    },
+    "projections_multi_week": {
+        "loader": "load_projections_multi_week",
+        "description": "Multi-week projections with explicit week list",
+        "r_required": True,
+        "python_available": False,
+        "output_format": "parquet",
+        "incremental_key": "asof_date",
+        "usage": "load_projections_multi_week(season=2025, weeks=[9,10,11])",
+    },
+    "projections": {
+        "loader": "load_projections",
+        "description": "Single-week fantasy football projections (legacy/manual use)",
+        "r_required": True,
+        "python_available": False,
+        "output_format": "parquet",
+        "incremental_key": "asof_date",
+        "usage": "load_projections(season=2025, week=9)",
     }
 }
 

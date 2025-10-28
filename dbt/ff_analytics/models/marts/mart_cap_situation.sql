@@ -31,6 +31,7 @@ franchise_dim as (
   select
     franchise_id,
     franchise_name,
+    owner_name,
     division
   from {{ ref('dim_franchise') }}
   where is_current_owner
@@ -39,6 +40,7 @@ franchise_dim as (
 select
   fd.franchise_id,
   fd.franchise_name,
+  fd.owner_name,
   fd.division,
   cr.season,
 

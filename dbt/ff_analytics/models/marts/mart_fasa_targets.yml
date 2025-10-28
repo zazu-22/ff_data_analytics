@@ -81,13 +81,13 @@ models:
         description: "Receptions / targets (season)"
 
       - name: target_share_l4
-        description: "Team target share (last 4 games)"
+        description: "Team target share (last 4 games) - calculated as rec_attempt / rec_attempt_team"
 
-      - name: snap_share_l4
-        description: "Team snap share (last 4 games)"
+      - name: rush_share_l4
+        description: "Team rush share (last 4 games) - calculated as rush_attempt / rush_attempt_team"
 
-      - name: air_yards_share_l4
-        description: "Team air yards share (last 4 games)"
+      - name: opportunity_share_l4
+        description: "Combined opportunity share (last 4 games) - weighted 60% target_share + 40% rush_share"
 
       - name: projected_ppg_ros
         description: "Projected fantasy points per game (rest of season)"

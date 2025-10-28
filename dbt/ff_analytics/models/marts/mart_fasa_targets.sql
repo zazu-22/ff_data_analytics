@@ -60,25 +60,34 @@ projections AS (
 ),
 
 opportunity AS (
-    -- Usage metrics from ff_opportunity
+    -- Calculate opportunity shares from ff_opportunity attempt metrics
+    -- rec_attempt / rec_attempt_team = target share
+    -- rush_attempt / rush_attempt_team = rush share
     SELECT
         player_key,
         AVG(CASE WHEN game_recency <= 4 THEN target_share END) AS target_share_l4,
-        AVG(CASE WHEN game_recency <= 4 THEN snap_share END) AS snap_share_l4,
-        AVG(CASE WHEN game_recency <= 4 THEN air_yards_share END) AS air_yards_share_l4
+        AVG(CASE WHEN game_recency <= 4 THEN rush_share END) AS rush_share_l4,
+        -- Combined opportunity share (weighted average for RB/WR/TE)
+        AVG(CASE WHEN game_recency <= 4 THEN
+            COALESCE(target_share, 0) * 0.6 + COALESCE(rush_share, 0) * 0.4
+        END) AS opportunity_share_l4
     FROM (
         SELECT
             player_key,
             season,
             week,
-            MAX(CASE WHEN stat_name = 'target_share' THEN stat_value END) AS target_share,
-            MAX(CASE WHEN stat_name = 'snap_share' THEN stat_value END) AS snap_share,
-            MAX(CASE WHEN stat_name = 'air_yards_share' THEN stat_value END) AS air_yards_share,
+            -- Calculate target share (receiving opportunity)
+            MAX(CASE WHEN stat_name = 'rec_attempt' THEN stat_value END) /
+                NULLIF(MAX(CASE WHEN stat_name = 'rec_attempt_team' THEN stat_value END), 0) AS target_share,
+            -- Calculate rush share (rushing opportunity)
+            MAX(CASE WHEN stat_name = 'rush_attempt' THEN stat_value END) /
+                NULLIF(MAX(CASE WHEN stat_name = 'rush_attempt_team' THEN stat_value END), 0) AS rush_share,
             ROW_NUMBER() OVER (PARTITION BY player_key ORDER BY season DESC, week DESC) AS game_recency
         FROM {{ ref('fact_player_stats') }}
         WHERE stat_kind = 'actual'
             AND measure_domain = 'real_world'
             AND season = YEAR(CURRENT_DATE)
+            AND stat_name IN ('rec_attempt', 'rec_attempt_team', 'rush_attempt', 'rush_attempt_team')
         GROUP BY player_key, season, week
     )
     WHERE game_recency <= 4
@@ -135,10 +144,10 @@ SELECT
     rs.ypr,
     rs.catch_rate,
 
-    -- Opportunity
+    -- Opportunity (calculated from ff_opportunity attempt metrics)
     opp.target_share_l4,
-    opp.snap_share_l4,
-    opp.air_yards_share_l4,
+    opp.rush_share_l4,
+    opp.opportunity_share_l4,  -- Combined metric (target 60% + rush 40%)
 
     -- Projections
     proj.projected_ppg_ros,
@@ -152,24 +161,36 @@ SELECT
     ktc.ktc_trend_4wk,
 
     -- Value Composite (0-100 score)
+    -- Weights: Projections 40%, Opportunity 25%, Efficiency 20%, Market 15%
+    -- Note: Each component normalized to 0-1 scale before applying weight
     (
-        0.40 * (proj.projected_ppg_ros / NULLIF(pb.max_projected_ppg, 0)) +
-        0.25 * (COALESCE(opp.snap_share_l4, 0) + COALESCE(opp.target_share_l4, 0)) / 2 +
+        -- Projections: Normalize by position max (0-1 scale)
+        0.40 * COALESCE(proj.projected_ppg_ros / NULLIF(pb.max_projected_ppg, 0), 0) +
+
+        -- Opportunity: Normalize by capping at 25% team share (0-1 scale)
+        -- A player getting 25%+ of team opportunities = full 25 points
+        0.25 * LEAST(COALESCE(opp.opportunity_share_l4, 0) / 0.25, 1.0) +
+
+        -- Efficiency: Binary scoring based on thresholds (0-1 scale)
         0.20 * (CASE
-            WHEN rs.ypc > 4.5 THEN 0.5
-            WHEN rs.ypr > 11.0 THEN 0.5
-            ELSE 0.2
+            WHEN rs.ypc > 4.5 THEN 1.0
+            WHEN rs.ypr > 11.0 THEN 1.0
+            WHEN rs.catch_rate > 0.70 THEN 0.8
+            ELSE 0.3
         END) +
-        0.15 * (1 - COALESCE(ktc.ktc_rank_at_position, 999) / 100.0)
+
+        -- Market: Invert rank so lower rank = higher score (0-1 scale)
+        -- Top 20 at position = full 15 points, rank 100+ = 0 points
+        0.15 * GREATEST(1.0 - (COALESCE(ktc.ktc_rank_at_position, 100) / 100.0), 0)
     ) * 100 AS value_score,
 
     -- Points above replacement
     proj.projected_ppg_ros - pb.replacement_ppg AS points_above_replacement,
 
-    -- Breakout indicator (usage trending up + efficiency)
+    -- Breakout indicator (high opportunity share + trending performance + efficiency)
     CASE
-        WHEN opp.snap_share_l4 > 0.5
-            AND rs.fantasy_ppg_last_4 > rs.fantasy_ppg_last_8
+        WHEN opp.opportunity_share_l4 > 0.20  -- Getting 20%+ of team's opportunities
+            AND rs.fantasy_ppg_last_4 > COALESCE(rs.fantasy_ppg_last_8, 0)
             AND (rs.ypc > 4.5 OR rs.ypr > 10.0)
         THEN TRUE
         ELSE FALSE
@@ -196,10 +217,10 @@ SELECT
         ELSE NULL
     END AS suggested_bid_2yr,
 
-    -- Bid confidence
+    -- Bid confidence (based on recent performance + opportunity + projections)
     CASE
         WHEN rs.fantasy_ppg_last_4 IS NOT NULL
-            AND opp.snap_share_l4 > 0.5
+            AND opp.opportunity_share_l4 > 0.15  -- Getting 15%+ of team opportunities
             AND proj.projected_ppg_ros > pb.replacement_ppg
         THEN 'HIGH'
         WHEN proj.projected_ppg_ros > pb.replacement_ppg
