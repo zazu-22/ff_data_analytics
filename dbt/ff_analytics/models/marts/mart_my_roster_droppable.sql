@@ -52,10 +52,13 @@ performance AS (
 projections AS (
     SELECT
         player_id,
-        AVG(projected_fantasy_points) AS projected_ppg_ros
+        AVG(projected_fantasy_points) AS projected_ppg_ros,
+        SUM(projected_fantasy_points) AS projected_total_ros,
+        COUNT(*) AS weeks_remaining
     FROM {{ ref('mart_fantasy_projections') }}
     WHERE season = YEAR(CURRENT_DATE)
-        AND week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE CAST(game_date AS DATE) < CURRENT_DATE)
+        AND week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE)
+        AND horizon = 'weekly'
     GROUP BY player_id
 ),
 

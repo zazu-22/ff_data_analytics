@@ -51,9 +51,9 @@ with base as (
 
     -- Receiving stats
     cast(null as double) as targets,  -- Not in FFanalytics output
-    cast(null as double) as receptions,  -- Not in FFanalytics output
-    cast(null as double) as receiving_yards,  -- Not in FFanalytics output
-    cast(null as double) as receiving_tds,  -- Not in FFanalytics output
+    rec as receptions,
+    rec_yds as receiving_yards,
+    rec_tds as receiving_tds,
 
     -- Turnovers
     fumbles_lost
