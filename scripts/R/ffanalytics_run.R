@@ -17,8 +17,8 @@ option_list <- list(
   make_option(c("--sources"), type="character",
               default="CBS,ESPN,FantasyData,FantasyPros,FantasySharks,FFToday,FleaFlicker,NumberFire,FantasyFootballNerd,NFL,RTSports,Walterfootball",
               help="Comma-separated list of sources (or 'all' for all available)"),
-  make_option(c("--positions"), type="character", default="QB,RB,WR,TE,K,DST",
-              help="Comma-separated list of positions"),
+  make_option(c("--positions"), type="character", default="QB,RB,WR,TE,K,DST,DL,LB,DB",
+              help="Comma-separated list of positions (all 9: QB,RB,WR,TE,K,DST,DL,LB,DB)"),
   make_option(c("--season"), type="integer", default=2024,
               help="Season year"),
   make_option(c("--week"), type="integer", default=0,
@@ -161,27 +161,104 @@ mapping_stats <- list()
 if(nrow(df) > 0) {
   cat("\n--- Weighted Consensus Aggregation ---\n")
 
-  # Load site weights
-  weights <- tryCatch({
-    read.csv(opt$weights_csv, stringsAsFactors = FALSE)
+  # Load site weights: ffanalytics research-backed defaults + optional custom overrides
+  # ffanalytics default_weights (from package source - v1.5.0)
+  # These are based on historical accuracy analysis
+  default_wts <- c(
+    CBS = 0.344,
+    Yahoo = 0.400,
+    ESPN = 0.329,
+    NFL = 0.329,
+    FFToday = 0.379,
+    NumberFire = 0.322,
+    FantasyPros = 0.000,  # Excluded by ffanalytics (consensus aggregator)
+    FantasySharks = 0.327,
+    FantasyFootballNerd = 0.000,  # Excluded by ffanalytics
+    Walterfootball = 0.281,
+    RTSports = 0.330,
+    FantasyData = 0.428,
+    Fleaflicker = 0.428
+  )
+
+  weights <- data.frame(
+    site_id = names(default_wts),
+    weight = as.numeric(default_wts),
+    stringsAsFactors = FALSE
+  )
+  weights$site_id_lower <- tolower(weights$site_id)
+  cat(sprintf("Using ffanalytics default_weights (%d sources)\n", nrow(weights)))
+
+  # Load custom overrides if available
+  custom_weights <- tryCatch({
+    cw <- read.csv(opt$weights_csv, stringsAsFactors = FALSE)
+    cw$site_id_lower <- tolower(cw$site_id)
+    cat(sprintf("Loaded custom weight overrides from %s (%d sources)\n", opt$weights_csv, nrow(cw)))
+    cw
   }, error = function(e) {
-    cat(sprintf("Warning: Could not load weights from %s\n", opt$weights_csv))
-    cat("Using equal weights for all sources.\n")
-    data.frame(
-      site_id = successful_sources,
-      weight = rep(1.0 / length(successful_sources), length(successful_sources))
-    )
+    NULL  # No custom weights available
   })
 
-  # Normalize site names: lowercase for matching
-  weights$site_id_lower <- tolower(weights$site_id)
+  # Apply custom overrides where specified
+  if(!is.null(custom_weights)) {
+    if(nrow(weights) > 0) {
+      # We have defaults - merge custom as overrides
+      weights <- weights %>%
+        left_join(custom_weights %>% select(site_id_lower, custom_weight = weight),
+                  by = "site_id_lower") %>%
+        mutate(
+          weight_original = weight,  # Keep original for logging
+          weight = coalesce(custom_weight, weight)
+        ) %>%
+        select(site_id, site_id_lower, weight, weight_original)
+
+      # Log which sources have custom overrides
+      overridden <- weights %>%
+        filter(weight != weight_original)
+
+      if(nrow(overridden) > 0) {
+        cat(sprintf("  Custom overrides applied to: %s\n",
+                    paste(overridden$site_id, collapse=", ")))
+      }
+
+      weights <- weights %>% select(-weight_original)
+    } else {
+      # No defaults - use custom weights as primary
+      weights <- custom_weights %>% select(site_id, site_id_lower, weight)
+    }
+  }
+
+  cat(sprintf("Final weight configuration: %d sources\n", nrow(weights)))
+
+  # Fallback for any successful sources without weights: equal weight
+  if(nrow(weights) == 0) {
+    cat("No weights configured - using equal weights for all successful sources\n")
+    weights <- data.frame(
+      site_id = successful_sources,
+      weight = rep(1.0 / length(successful_sources), length(successful_sources)),
+      stringsAsFactors = FALSE
+    )
+    weights$site_id_lower <- tolower(weights$site_id)
+  }
+
+  # Normalize df source names for matching (weights already normalized above)
   df$data_src_lower <- tolower(df$data_src)
 
   # Join weights to projections
   df_weighted <- df %>%
     left_join(weights %>% select(site_id_lower, weight),
               by = c("data_src_lower" = "site_id_lower")) %>%
-    mutate(weight = ifelse(is.na(weight), 0, weight))
+    mutate(weight = ifelse(is.na(weight), 0, weight))  # Fallback for truly unknown sources
+
+  # Warn if any sources have zero weight
+  zero_weight_sources <- df_weighted %>%
+    filter(weight == 0) %>%
+    pull(data_src) %>%
+    unique()
+
+  if(length(zero_weight_sources) > 0) {
+    cat(sprintf("  WARNING: %d sources have zero weight and will be excluded: %s\n",
+                length(zero_weight_sources), paste(zero_weight_sources, collapse=", ")))
+  }
 
   # Identify stat columns (numeric columns excluding metadata)
   metadata_cols <- c("player", "pos", "team", "data_src", "season", "week",
