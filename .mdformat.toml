@@ -6,7 +6,7 @@
 # Changing them alters the default behavior.
 #
 wrap = "keep"      # options: {"keep", "no", INTEGER}
-number = false     # options: {false, true}
+number = true      # options: {false, true} - Use consecutive numbering (1. 2. 3.) instead of all 1.
 end_of_line = "lf" # options: {"lf", "crlf", "keep"}
 validate = true    # options: {false, true}
 #

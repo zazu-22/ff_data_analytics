@@ -17,20 +17,25 @@ exclude: |
   )
 
 repos:
+  # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.4
     hooks:
       - id: ruff
+        name: ruff (Python src/scripts/tools/tests)
         files: ^(src/|scripts/|tools/|tests/).*\.py$
         args: ["--fix", "--unsafe-fixes", "--config=pyproject.toml"]
       - id: ruff-format
+        name: ruff-format (Python src/scripts/tools/tests)
         files: ^(src/|scripts/|tools/|tests/).*\.py$
         args: ["--config=pyproject.toml"]
 
+  # Notebooks: Use nbQA to apply ruff to notebooks
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.8.5
     hooks:
       - id: nbqa-ruff
+        name: nbqa-ruff (Jupyter notebooks)
         additional_dependencies: [ruff==0.6.4]  # Pin to match main ruff version
         args:
           - "--fix"
@@ -40,17 +45,46 @@ repos:
         files: ^notebooks/.*\.ipynb$
         exclude: ^notebooks/.*_executed\.ipynb$
 
+  # Notebooks: Strip outputs before commit (prevent bloat)
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
+    hooks:
+      - id: nbstripout
+        name: nbstripout (strip notebook outputs)
+        files: ^notebooks/.*\.ipynb$
+        exclude: ^notebooks/.*_executed\.ipynb$
+
+  # Type checking with mypy (standard/mature)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: mypy (type checking)
+        files: ^(src/|tools/).*\.py$
+        additional_dependencies:
+          - types-requests
+          - pandas-stubs
+          - types-PyYAML
+        args:
+          - --ignore-missing-imports
+          - --no-strict-optional
+
+  # Markdown formatting
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0
     hooks:
       - id: mdformat
+        name: mdformat (Markdown files)
         additional_dependencies: [mdformat-gfm]
+        args: ["--number"]  # Use consecutive numbering (1. 2. 3.) instead of all 1.
         files: .*(\.md|\.mdx)$
 
+  # YAML linting
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
       - id: yamllint
+        name: yamllint (YAML files)
         args: [--format, parsable, --strict]
         files: \.(yaml|yml)$
         exclude: |
@@ -60,35 +94,31 @@ repos:
             dbt/.*
           )$
 
+  # General file cleanup
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: pretty-format-json
+        name: pretty-format-json
         args: ["--autofix", "--no-sort-keys"]
-        exclude: \.ipynb$
+        exclude: \.ipynb$  # Let nbstripout handle notebook formatting
       - id: end-of-file-fixer
+        name: end-of-file-fixer
       - id: trailing-whitespace
+        name: trailing-whitespace
+      - id: check-added-large-files
+        name: check-added-large-files
+        args: ['--maxkb=1000']  # Prevent large files (>1MB)
+      - id: check-merge-conflict
+        name: check-merge-conflict
 
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
-    hooks:
-      - id: nbstripout
-        files: ^notebooks/.*\.ipynb$
-
+  # SQL linting and formatting
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.1.1
     hooks:
+      # Lint on every commit (fast check)
       - id: sqlfluff-lint
-        files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
-        additional_dependencies:
-          [
-            "dbt-core>=1.8.0",
-            "dbt-duckdb>=1.8.0",
-            "sqlfluff-templater-dbt>=3.1.1",
-          ]
-      - id: sqlfluff-fix
-        name: sqlfluff-fix (manual)
-        stages: [manual]
+        name: sqlfluff-lint (dbt SQL)
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
         additional_dependencies:
           [
@@ -98,17 +128,32 @@ repos:
           ]
         args: [--config, pyproject.toml]
 
+      # Auto-fix on commit (align with Makefile behavior)
+      - id: sqlfluff-fix
+        name: sqlfluff-fix (dbt SQL auto-fix)
+        files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
+        additional_dependencies:
+          [
+            "dbt-core>=1.8.0",
+            "dbt-duckdb>=1.8.0",
+            "sqlfluff-templater-dbt>=3.1.1",
+          ]
+        args: [--config, pyproject.toml]  # Removed deprecated --force flag
+
+  # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.3
     hooks:
       - id: actionlint
+        name: actionlint (GitHub Actions)
         files: ^\.github/workflows/.*\.ya?ml$
         exclude: ^\.github/workflows/ingest_google_sheets\.yml$
 
+  # Local custom checks
   - repo: local
     hooks:
       - id: check-data-layout
-        name: Check data directory layout
+        name: check-data-layout (data directory structure)
         entry: python tests/test_conventions_data_layout.py
         language: system
         files: ^data/.*
