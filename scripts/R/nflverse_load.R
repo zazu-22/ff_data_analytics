@@ -6,44 +6,73 @@
 suppressPackageStartupMessages({
   library(jsonlite)
   library(optparse)
-  library(arrow)        # for write_parquet
+  library(arrow) # for write_parquet
   library(lubridate)
   library(nflreadr)
 })
 
 option_list <- list(
-  make_option(c("--dataset"), type="character", help="Dataset key (players, weekly, season, injuries, depth_charts, schedule, teams)"),
-  make_option(c("--seasons"), type="character", default=NULL, help="Comma-separated seasons"),
-  make_option(c("--weeks"), type="character", default=NULL, help="Comma-separated weeks"),
-  make_option(c("--out_dir"), type="character", default="gs://ff-analytics/raw/nflverse", help="Output root")
+  make_option(c("--dataset"),
+    type = "character",
+    help = paste(
+      "Dataset key (players, weekly, season, injuries,",
+      "depth_charts, schedule, teams)"
+    )
+  ),
+  make_option(c("--seasons"),
+    type = "character",
+    default = NULL,
+    help = "Comma-separated seasons"
+  ),
+  make_option(c("--weeks"),
+    type = "character",
+    default = NULL,
+    help = "Comma-separated weeks"
+  ),
+  make_option(c("--out_dir"),
+    type = "character",
+    default = "gs://ff-analytics/raw/nflverse",
+    help = "Output root"
+  )
 )
-opt <- parse_args(OptionParser(option_list=option_list))
+opt <- parse_args(OptionParser(option_list = option_list))
 
 if (is.null(opt$dataset)) {
   stop("Missing --dataset")
 }
 
 seasons <- if (!is.null(opt$seasons)) as.integer(unlist(strsplit(opt$seasons, ","))) else NULL
-weeks   <- if (!is.null(opt$weeks))   as.integer(unlist(strsplit(opt$weeks, ",")))   else NULL
+weeks <- if (!is.null(opt$weeks)) as.integer(unlist(strsplit(opt$weeks, ","))) else NULL
 
 dataset <- opt$dataset
 
 # Helper to write parquet with meta
 write_with_meta <- function(df, dataset, out_dir) {
   dt <- format(Sys.time(), "%Y-%m-%d")
-  dir.create(file.path(out_dir, dataset, paste0("dt=", dt)), recursive = TRUE, showWarnings = FALSE)
-  parquet_file <- file.path(out_dir, dataset, paste0("dt=", dt), paste0(dataset, "_", substr(digest::digest(Sys.time()), 1, 8), ".parquet"))
+  partition_dir <- file.path(out_dir, dataset, paste0("dt=", dt))
+  dir.create(partition_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Generate unique parquet filename
+  parquet_file <- file.path(
+    partition_dir,
+    paste0(dataset, "_", substr(digest::digest(Sys.time()), 1, 8), ".parquet")
+  )
   arrow::write_parquet(df, parquet_file)
+
   meta <- list(
     dataset = dataset,
-    asof_datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz="UTC"),
+    asof_datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
     loader_path = "r:nflreadr",
     source_name = "nflverse",
     source_version = as.character(utils::packageVersion("nflreadr")),
     output_parquet = parquet_file
   )
-  writeLines(jsonlite::toJSON(meta, auto_unbox = TRUE, pretty = TRUE), file.path(out_dir, dataset, paste0("dt=", dt), "_meta.json"))
-  return(meta)
+
+  # Write metadata sidecar
+  meta_json <- jsonlite::toJSON(meta, auto_unbox = TRUE, pretty = TRUE)
+  writeLines(meta_json, file.path(partition_dir, "_meta.json"))
+
+  meta
 }
 
 df <- NULL
