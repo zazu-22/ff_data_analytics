@@ -152,6 +152,12 @@ repos:
   # Local custom checks
   - repo: local
     hooks:
+      - id: styler
+        name: styler (R code formatting)
+        entry: Rscript -e "styler::style_file(commandArgs(trailingOnly=TRUE))"
+        language: system
+        files: ^scripts/R/.*\.R$
+        pass_filenames: true
       - id: check-data-layout
         name: check-data-layout (data directory structure)
         entry: python tests/test_conventions_data_layout.py
