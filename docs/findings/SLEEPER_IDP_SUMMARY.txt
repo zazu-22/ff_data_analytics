@@ -1,0 +1,152 @@
+================================================================================
+           SLEEPER API IDP PROJECTION INVESTIGATION SUMMARY
+================================================================================
+
+OBJECTIVE: Test Sleeper API's actual IDP projection capabilities
+
+DATE: October 29, 2025
+
+================================================================================
+                             FINAL VERDICT
+================================================================================
+
+  ❌ NOT VIABLE for IDP Projections
+  ✅ VIABLE for IDP Historical Stats
+
+================================================================================
+                            KEY FINDINGS
+================================================================================
+
+✅ WORKING - Historical Stats Endpoint
+   URL: /v1/stats/nfl/regular/{season}/{week}
+   • 974+ defensive players per week
+   • 67 IDP stat fields (tackles, sacks, INTs, etc.)
+   • High quality data
+   • Free access
+
+❌ NOT WORKING - Projection Endpoints
+   URL: /v1/projections/nfl/{season}/{week}
+   • Returns 6,957 empty arrays
+   • No projection data for any player
+   • Unusable for fantasy analysis
+
+================================================================================
+                          DATA QUALITY METRICS
+================================================================================
+
+Coverage (Week 1 2024):
+  Total players:        2,310
+  Defensive players:      974  (42.2%)
+    - Linebackers:        285  (29.3%)
+    - DB/Safeties:        283  (29.1%)
+    - Cornerbacks:        148  (15.2%)
+    - Defensive Ends:     130  (13.3%)
+    - Defensive Tackles:  128  (13.1%)
+
+Data Completeness (50-player sample):
+  Players with IDP data:   40  (80.0%)
+  Players with tackles:    20  (40.0%)
+
+Elite Players Found:     8/10  (All major IDP stars)
+
+================================================================================
+                         SAMPLE IDP STATS
+================================================================================
+
+Top Tacklers (Week 1 2024):
+  1. T.J. Edwards     (LB-CHI)  15 tkl (10 solo, 5 ast, 1 FR, 2 TFL)
+  2. Zack Baun        (LB-PHI)  15 tkl (11 solo, 4 ast, 2 sacks)
+  3. Nick Cross       (DB-IND)  14 tkl (8 solo, 6 ast)
+
+Elite Player Sample - Micah Parsons (LB-DAL):
+  Player ID:     7640
+  Week 1 2024:   4 tkl, 1 sack, 5 QB hits, 1 PD, 1 TFL
+  Data Quality:  ✅ Complete
+
+================================================================================
+                     COMPARISON TO OTHER SOURCES
+================================================================================
+
+Source              Projections   Historical   Cost      Quality
+------------------------------------------------------------------
+Sleeper API         ❌ NO         ✅ YES       Free      Good
+ESPN IDP            ✅ YES        ✅ YES       Free      Fair
+FantasyPros IDP     ✅ YES        ✅ YES       Paid      Excellent
+PFF                 ✅ YES        ✅ YES       Expensive Outstanding
+
+================================================================================
+                          RECOMMENDATION
+================================================================================
+
+DO NOT integrate Sleeper API for IDP projections.
+
+Consider Sleeper for:
+  ✅ Historical IDP stats analysis
+  ✅ Backtesting fantasy models
+  ✅ Player performance tracking
+  ✅ Training data for custom projection models
+
+For IDP projections, use:
+  • ESPN IDP Rankings (free)
+  • FantasyPros IDP API (paid)
+  • Custom model built on Sleeper historical data
+
+================================================================================
+                         INVESTIGATION FILES
+================================================================================
+
+Documentation:
+  • SLEEPER_IDP_INVESTIGATION_REPORT.md    (Full report with examples)
+  • SLEEPER_IDP_QUICK_REFERENCE.md         (Quick reference guide)
+  • SLEEPER_IDP_SUMMARY.txt                (This file)
+  • sleeper_api_sample_responses.json      (JSON sample data)
+
+Test Scripts:
+  • test_sleeper_idp_projections.py        (Initial testing)
+  • test_sleeper_api_exploration.py        (Endpoint discovery)
+  • test_sleeper_idp_deep_dive.py          (Comprehensive data analysis)
+  • test_sleeper_player_lookup.py          (Player verification)
+
+All scripts are functional and can be re-run for verification.
+
+================================================================================
+                         NEXT STEPS
+================================================================================
+
+1. ❌ Do NOT build Sleeper IDP projection integration
+2. ✅ Evaluate ESPN or FantasyPros as projection sources
+3. ✅ Consider custom projection model using Sleeper historical stats
+4. ✅ Document decision in project architecture docs
+
+================================================================================
+                         QUESTIONS ANSWERED
+================================================================================
+
+Q: Does Sleeper API provide IDP projections?
+A: NO - Only historical stats, not projections.
+
+Q: What IDP data is available from Sleeper?
+A: Actual game stats: tackles, sacks, INTs, FFs, PDs, etc.
+
+Q: How many defensive players are covered?
+A: ~974 per week across all defensive positions.
+
+Q: Is the data quality good?
+A: YES for historical stats. 80% of players have data.
+
+Q: Should we integrate Sleeper for IDP?
+A: NO for projections. Consider for historical analysis only.
+
+Q: What are the exact IDP stat fields available?
+A: See SLEEPER_IDP_INVESTIGATION_REPORT.md for complete list of 67 fields.
+
+Q: Can I see sample API responses?
+A: Yes, see sleeper_api_sample_responses.json for real response data.
+
+================================================================================
+
+Investigation completed: October 29, 2025
+Investigator: Claude Code
+Status: ✅ COMPLETE
+
+================================================================================
