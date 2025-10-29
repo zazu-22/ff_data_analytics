@@ -1,24 +1,26 @@
 # ADR-010: mfl_id as Canonical Player Identity
 
-**Status:** Accepted
+**Status:** Superseded by ADR-011
 **Date:** 2025-09-30
+**Superseded Date:** 2025-10-29
 **Decision Makers:** Jason Shaffer, Development Team
 **Supersedes:** Implicit decision to use gsis_id as canonical player_id
-**Related:** ADR-009 (Single Consolidated Fact Table)
+**Superseded By:** ADR-011 (Sequential Surrogate Key for player_id)
+**Related:** ADR-009 (Single Consolidated Fact Table), ADR-011, ADR-012
 
 ## Context
 
 The Fantasy Football Analytics platform integrates data from multiple providers, each using different player identifiers:
 
-| Provider | ID Field | Example | Coverage |
+| Provider     | ID Field         | Example      | Coverage               |
 | ------------ | ---------------- | ------------ | ---------------------- |
-| NFLverse | `gsis_id` | `00-0036550` | NFL players |
-| Sleeper | `sleeper_id` | `8136` | Fantasy platforms |
-| KeepTradeCut | `ktc_id` | `123` | Dynasty trade markets |
-| ESPN | `espn_id` | `4360939` | Fantasy platforms |
-| Yahoo | `yahoo_id` | `31854` | Fantasy platforms |
-| FantasyPros | `fantasypros_id` | `23456` | Projection aggregators |
-| ... | ... | ... | 19 total providers |
+| NFLverse     | `gsis_id`        | `00-0036550` | NFL players            |
+| Sleeper      | `sleeper_id`     | `8136`       | Fantasy platforms      |
+| KeepTradeCut | `ktc_id`         | `123`        | Dynasty trade markets  |
+| ESPN         | `espn_id`        | `4360939`    | Fantasy platforms      |
+| Yahoo        | `yahoo_id`       | `31854`      | Fantasy platforms      |
+| FantasyPros  | `fantasypros_id` | `23456`      | Projection aggregators |
+| ...          | ...              | ...          | 19 total providers     |
 
 ### Problem Statement
 
@@ -27,9 +29,9 @@ The Fantasy Football Analytics platform integrates data from multiple providers,
 **Issues discovered:**
 
 1. `gsis_id` is an **NFL-specific identifier**, not fantasy-platform-agnostic
-1. Using a provider-specific ID as canonical creates coupling (what if we drop nflverse?)
-1. `load_player_stats` returns `player_id` field which is **actually gsis_id** under the hood
-1. **`load_ff_playerids` exists** specifically to provide a crosswalk with a platform-neutral ID
+2. Using a provider-specific ID as canonical creates coupling (what if we drop nflverse?)
+3. `load_player_stats` returns `player_id` field which is **actually gsis_id** under the hood
+4. **`load_ff_playerids` exists** specifically to provide a crosswalk with a platform-neutral ID
 
 ### Constraints
 
@@ -220,16 +222,16 @@ LIMIT 1;
 ### Positive
 
 1. **Future-proof:** Can add new providers without changing canonical ID
-1. **Explicit joins:** All staging models explicitly map provider ID → mfl_id
-1. **Comprehensive coverage:** 19 provider IDs in single crosswalk
-1. **Name resolution:** Built-in support for fuzzy matching via merge_name
-1. **Alignment with nflverse:** Uses their recommended crosswalk pattern
+2. **Explicit joins:** All staging models explicitly map provider ID → mfl_id
+3. **Comprehensive coverage:** 19 provider IDs in single crosswalk
+4. **Name resolution:** Built-in support for fuzzy matching via merge_name
+5. **Alignment with nflverse:** Uses their recommended crosswalk pattern
 
 ### Negative
 
 1. **Additional indirection:** All provider integrations require crosswalk join
-1. **Dependency on nflverse:** mfl_id is maintained by nflverse community
-1. **Existing code impact:** Must update refined_data_model_plan_v4 SQL snippets
+2. **Dependency on nflverse:** mfl_id is maintained by nflverse community
+3. **Existing code impact:** Must update refined_data_model_plan_v4 SQL snippets
 
 ### Migration Required
 
@@ -302,8 +304,8 @@ uv run python tools/generate_seed_from_sample.py \
 For each staging model that references players:
 
 1. Add join to `dim_player_id_xref`
-1. Map provider ID → mfl_id
-1. Test for unmapped players (should be rare)
+2. Map provider ID → mfl_id
+3. Test for unmapped players (should be rare)
 
 ### Phase 4: Update Tests
 

@@ -47,6 +47,11 @@ option_list <- list(
     type = "character",
     default = "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
     help = "Path to player ID crosswalk seed"
+  ),
+  make_option(c("--position_xref"),
+    type = "character",
+    default = "dbt/ff_analytics/seeds/dim_position_translation.csv",
+    help = "Path to position translation seed"
   )
 )
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -341,10 +346,33 @@ if (nrow(df) > 0) {
     }
   )
 
+  # Load position translation mapping (fantasy pos → NFL pos)
+  position_xref <- tryCatch(
+    {
+      read.csv(opt$position_xref, stringsAsFactors = FALSE)
+    },
+    error = function(e) {
+      cat(sprintf("Warning: Could not load position xref from %s\n", opt$position_xref))
+      cat("Proceeding without position-aware matching.\n")
+      NULL
+    }
+  )
+
   if (!is.null(player_xref)) {
     # Create normalized name for matching
+    # Handle "Last, First" format from FantasySharks and other sources
     consensus_df <- consensus_df %>%
-      mutate(player_normalized = tolower(trimws(player)))
+      mutate(player_normalized = ifelse(
+        grepl(",", player),
+        # Convert "Last, First" → "First Last"
+        paste(
+          trimws(sub(".*,\\s*", "", player)),
+          trimws(sub(",.*", "", player))
+        ),
+        # Keep "First Last" as-is
+        player
+      )) %>%
+      mutate(player_normalized = tolower(trimws(player_normalized)))
 
     player_xref <- player_xref %>%
       mutate(
@@ -352,31 +380,74 @@ if (nrow(df) > 0) {
         merge_name_normalized = tolower(trimws(merge_name))
       )
 
-    # Try exact match on name first
-    xref_name_match <- player_xref %>%
-      select(name_normalized, mfl_id, position) %>%
-      rename(mfl_id_name = mfl_id, position_name = position)
+    # Position-aware matching: join with position translation to allow
+    # fantasy positions (DL, LB, DB) to match NFL positions (DE, DT, CB, S, etc.)
+    if (!is.null(position_xref)) {
+      # Expand projections to include compatible NFL positions
+      consensus_with_pos <- consensus_df %>%
+        left_join(position_xref,
+          by = c("pos" = "fantasy_position")
+        ) %>%
+        # If no translation exists (e.g., QB, RB), use original position
+        mutate(nfl_position = coalesce(nfl_position, pos))
 
-    # Try merge_name as fallback
-    xref_merge_match <- player_xref %>%
-      filter(!duplicated(merge_name_normalized)) %>%
-      select(merge_name_normalized, mfl_id, position) %>%
-      rename(mfl_id_merge = mfl_id, position_merge = position)
+      # Try exact match on name + position first (highest priority)
+      xref_exact_match <- player_xref %>%
+        select(name_normalized, position, player_id) %>%
+        rename(player_id_exact = player_id, position_exact = position)
 
-    # Join both and coalesce
-    consensus_df <- consensus_df %>%
-      left_join(xref_name_match,
-        by = c("player_normalized" = "name_normalized")
-      ) %>%
-      left_join(xref_merge_match,
-        by = c("player_normalized" = "merge_name_normalized")
-      ) %>%
-      mutate(
-        player_id = coalesce(mfl_id_name, mfl_id_merge),
-        # Use xref position if available, otherwise keep original
-        position_final = coalesce(position_name, position_merge, pos)
-      ) %>%
-      select(-c(mfl_id_name, mfl_id_merge, position_name, position_merge, player_normalized))
+      # Try merge_name + position as fallback
+      xref_merge_match <- player_xref %>%
+        filter(!duplicated(paste(merge_name_normalized, position))) %>%
+        select(merge_name_normalized, position, player_id) %>%
+        rename(player_id_merge = player_id, position_merge = position)
+
+      # Join with position-aware matching
+      consensus_df <- consensus_with_pos %>%
+        left_join(xref_exact_match,
+          by = c("player_normalized" = "name_normalized", "nfl_position" = "position")
+        ) %>%
+        left_join(xref_merge_match,
+          by = c("player_normalized" = "merge_name_normalized", "nfl_position" = "position")
+        ) %>%
+        # Group by original projection record and pick best match
+        group_by(player, season, week, pos, team) %>%
+        arrange(desc(match_priority), desc(!is.na(player_id_exact))) %>%
+        slice(1) %>%
+        ungroup() %>%
+        mutate(
+          player_id = coalesce(player_id_exact, player_id_merge),
+          # Use NFL position from crosswalk if matched, else original
+          position_final = coalesce(position_exact, position_merge, pos)
+        ) %>%
+        select(-c(
+          player_id_exact, player_id_merge, position_exact, position_merge,
+          player_normalized, nfl_position, match_priority
+        ))
+    } else {
+      # Fallback to name-only matching if position translation not available
+      xref_name_match <- player_xref %>%
+        select(name_normalized, player_id, position) %>%
+        rename(player_id_name = player_id, position_name = position)
+
+      xref_merge_match <- player_xref %>%
+        filter(!duplicated(merge_name_normalized)) %>%
+        select(merge_name_normalized, player_id, position) %>%
+        rename(player_id_merge = player_id, position_merge = position)
+
+      consensus_df <- consensus_df %>%
+        left_join(xref_name_match,
+          by = c("player_normalized" = "name_normalized")
+        ) %>%
+        left_join(xref_merge_match,
+          by = c("player_normalized" = "merge_name_normalized")
+        ) %>%
+        mutate(
+          player_id = coalesce(player_id_name, player_id_merge),
+          position_final = coalesce(position_name, position_merge, pos)
+        ) %>%
+        select(-c(player_id_name, player_id_merge, position_name, position_merge, player_normalized))
+    }
 
     # Mapping statistics
     mapped_count <- sum(!is.na(consensus_df$player_id))

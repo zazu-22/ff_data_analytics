@@ -5,13 +5,13 @@ models:
     description: "Staged FFanalytics consensus projections with player ID mapping"
     columns:
       - name: player_id
-        description: "Canonical player ID (mfl_id) mapped by R runner"
+        description: "Canonical player ID (sequential surrogate 1-N) mapped by R runner"
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
-                field: mfl_id
+                field: player_id
       - name: season
         description: "NFL season year"
         data_tests:

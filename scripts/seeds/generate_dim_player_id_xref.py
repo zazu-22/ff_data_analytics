@@ -36,15 +36,15 @@ def generate_dim_player_id_xref(
 
     """
     # Load raw nflverse player IDs
-    df = pl.read_parquet(raw_path)
+    raw_df = pl.read_parquet(raw_path)
 
     if verbose:
-        print(f"Loaded {df.height:,} rows from {raw_path}")
+        print(f"Loaded {raw_df.height:,} rows from {raw_path}")
 
     # Filter out team placeholder entries
     # These are entries with only mfl_id and no other platform IDs
     # They represent team names (e.g., "Buffalo Bills" DT/OT) used in MFL
-    df_filtered = df.filter(
+    df_filtered = raw_df.filter(
         pl.col("gsis_id").is_not_null()
         | pl.col("sleeper_id").is_not_null()
         | pl.col("espn_id").is_not_null()
@@ -53,7 +53,7 @@ def generate_dim_player_id_xref(
     )
 
     if verbose:
-        removed = df.height - df_filtered.height
+        removed = raw_df.height - df_filtered.height
         print(f"Filtered out {removed:,} team placeholder entries")
         print(f"Remaining: {df_filtered.height:,} valid player entries")
 
@@ -62,8 +62,27 @@ def generate_dim_player_id_xref(
         pl.int_range(1, df_filtered.height + 1).alias("player_id")
     )
 
-    # Select columns matching dbt seed schema (27 columns total)
-    # Order matches original seed: player_id + 26 nflverse columns
+    # Add "Last, First" name variant for matching with FantasySharks projections
+    # FantasySharks uses "Last, First" format while crosswalk uses "First Last"
+    df_with_id = df_with_id.with_columns(
+        pl.when(pl.col("name").str.contains(" "))
+        .then(
+            # Convert "First Last" → "Last, First"
+            # Split on last space, reverse order, join with ", "
+            pl.concat_str(
+                [
+                    pl.col("name").str.split(" ").list.last(),
+                    pl.lit(", "),
+                    pl.col("name").str.split(" ").list.slice(0, -1).list.join(" "),
+                ]
+            )
+        )
+        .otherwise(pl.col("name"))  # Single-word names unchanged
+        .alias("name_last_first")
+    )
+
+    # Select columns matching dbt seed schema (28 columns total now)
+    # Order: player_id + 26 nflverse columns + name_last_first
     seed_columns = [
         "player_id",
         "mfl_id",
@@ -88,6 +107,7 @@ def generate_dim_player_id_xref(
         "nfl_id",
         "name",
         "merge_name",
+        "name_last_first",
         "position",
         "team",
         "birthdate",

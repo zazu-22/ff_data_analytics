@@ -20,9 +20,13 @@ models:
             severity: warn  # Warn for now since we have limited test data
     columns:
       - name: player_id
-        description: "Canonical player ID (mfl_id)"
+        description: "Canonical player ID (sequential surrogate from dim_player_id_xref)"
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
       - name: stat_name
         description: "Name of statistical measure"
         data_tests:

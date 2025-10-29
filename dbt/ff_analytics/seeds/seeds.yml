@@ -2,27 +2,31 @@ version: 2
 
 seeds:
   - name: dim_player_id_xref
-    description: "Player ID crosswalk mapping 20 provider IDs to canonical mfl_id"
+    description: "Player ID crosswalk mapping 20 provider IDs to canonical player_id (sequential surrogate key)"
     config:
       column_types:
         player_id: BIGINT
         mfl_id: BIGINT
     columns:
       - name: player_id
-        description: "Canonical player ID (same as mfl_id)"
+        description: "Canonical player ID (sequential surrogate key 1-N)"
         data_tests:
           - not_null
           - unique
       - name: mfl_id
-        description: "MyFantasyLeague player ID (canonical)"
+        description: "MyFantasyLeague player ID (external ID from nflverse)"
         data_tests:
           - not_null
       - name: gsis_id
         description: "NFL GSIS ID"
       - name: name
-        description: "Player name"
+        description: "Player name in 'First Last' format"
         data_tests:
           - not_null
+      - name: merge_name
+        description: "Normalized name for fuzzy matching (lowercased, normalized)"
+      - name: name_last_first
+        description: "Player name in 'Last, First' format for FantasySharks projection matching"
 
   - name: dim_timeframe
     description: "Maps TRANSACTIONS timeframe strings to structured season/week/period"
@@ -301,3 +305,30 @@ seeds:
         description: "Can use IDP-only bench slots"
         data_tests:
           - not_null
+
+  - name: dim_position_translation
+    description: "Maps fantasy-generic positions (DL, LB, DB) to NFL-specific positions (DE, DT, CB, S, etc.) for cross-dataset matching"
+    columns:
+      - name: fantasy_position
+        description: "Fantasy/projection position (e.g., DL, DB, LB)"
+        data_tests:
+          - not_null
+      - name: nfl_position
+        description: "NFL roster position (e.g., DE, DT, CB, S)"
+        data_tests:
+          - not_null
+      - name: position_type
+        description: "Position category (offense, defense, special_teams)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              arguments:
+                values: ['offense', 'defense', 'special_teams']
+      - name: match_priority
+        description: "Priority for matching (100 = exact, 95 = compatible)"
+        data_tests:
+          - not_null
+      - name: notes
+        description: "Explanation of mapping relationship"
