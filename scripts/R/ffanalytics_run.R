@@ -384,9 +384,11 @@ if (nrow(df) > 0) {
     # fantasy positions (DL, LB, DB) to match NFL positions (DE, DT, CB, S, etc.)
     if (!is.null(position_xref)) {
       # Expand projections to include compatible NFL positions
+      # Many-to-many is expected: DL → [DL, DE, DT], DB → [DB, CB, S], etc.
       consensus_with_pos <- consensus_df %>%
         left_join(position_xref,
-          by = c("pos" = "fantasy_position")
+          by = c("pos" = "fantasy_position"),
+          relationship = "many-to-many"
         ) %>%
         # If no translation exists (e.g., QB, RB), use original position
         mutate(nfl_position = coalesce(nfl_position, pos))
@@ -403,25 +405,29 @@ if (nrow(df) > 0) {
         rename(player_id_merge = player_id, position_merge = position)
 
       # Join with position-aware matching
+      # Many-to-many can occur when position expansion creates duplicates
       consensus_df <- consensus_with_pos %>%
         left_join(xref_exact_match,
-          by = c("player_normalized" = "name_normalized", "nfl_position" = "position")
+          by = c("player_normalized" = "name_normalized", "nfl_position" = "position_exact"),
+          relationship = "many-to-many"
         ) %>%
         left_join(xref_merge_match,
-          by = c("player_normalized" = "merge_name_normalized", "nfl_position" = "position")
+          by = c("player_normalized" = "merge_name_normalized", "nfl_position" = "position_merge"),
+          relationship = "many-to-many"
         ) %>%
         # Group by original projection record and pick best match
+        # Prioritize: 1) Finding ANY match, 2) Higher priority matches (exact > compatible)
         group_by(player, season, week, pos, team) %>%
-        arrange(desc(match_priority), desc(!is.na(player_id_exact))) %>%
+        arrange(desc(!is.na(player_id_exact)), desc(match_priority)) %>%
         slice(1) %>%
         ungroup() %>%
         mutate(
           player_id = coalesce(player_id_exact, player_id_merge),
-          # Use NFL position from crosswalk if matched, else original
-          position_final = coalesce(position_exact, position_merge, pos)
+          # Use the NFL position that was matched (nfl_position is always set from line 394)
+          position_final = nfl_position
         ) %>%
         select(-c(
-          player_id_exact, player_id_merge, position_exact, position_merge,
+          player_id_exact, player_id_merge,
           player_normalized, nfl_position, match_priority
         ))
     } else {

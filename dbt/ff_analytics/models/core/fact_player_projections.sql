@@ -56,7 +56,17 @@ with base as (
     receptions,
     receiving_yards,
     receiving_tds,
-    fumbles_lost
+    fumbles_lost,
+
+    -- IDP stats
+    idp_solo_tackles,
+    idp_assisted_tackles,
+    idp_sacks,
+    idp_passes_defended,
+    idp_interceptions,
+    idp_fumbles_forced,
+    idp_fumbles_recovered,
+    idp_touchdowns
 
   from {{ ref('stg_ffanalytics__projections') }}
 ),
@@ -337,6 +347,175 @@ unpivoted as (
     'projection' as stat_kind
   from base
   where fumbles_lost is not null
+
+  -- IDP stats
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_solo_tackles' as stat_name,
+    idp_solo_tackles as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_solo_tackles is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_assisted_tackles' as stat_name,
+    idp_assisted_tackles as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_assisted_tackles is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_sacks' as stat_name,
+    idp_sacks as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_sacks is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_passes_defended' as stat_name,
+    idp_passes_defended as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_passes_defended is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_interceptions' as stat_name,
+    idp_interceptions as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_interceptions is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_fumbles_forced' as stat_name,
+    idp_fumbles_forced as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_fumbles_forced is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_fumbles_recovered' as stat_name,
+    idp_fumbles_recovered as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_fumbles_recovered is not null
+
+  union all
+
+  select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+    'idp_touchdowns' as stat_name,
+    idp_touchdowns as stat_value,
+    'real_world' as measure_domain,
+    'projection' as stat_kind
+  from base
+  where idp_touchdowns is not null
 )
 
 select * from unpivoted

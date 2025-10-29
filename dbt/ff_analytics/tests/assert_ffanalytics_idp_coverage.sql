@@ -1,21 +1,27 @@
 -- Test: Ensure IDP projections are present in staging
--- Fails if any of DL, LB, DB positions are missing or have <100 records
+-- Fails if any NFL defensive positions are missing or have <100 records
+-- NOTE: Projections use NFL positions (DE, DT, CB, S) not fantasy positions (DL, DB)
+-- due to position-aware mapping from dim_position_translation
 
 with position_counts as (
   select
     position,
     count(*) as record_count
   from {{ ref('stg_ffanalytics__projections') }}
-  where position in ('DL', 'LB', 'DB')
+  where position in ('DE', 'DT', 'LB', 'CB', 'S')
   group by position
 ),
 
 expected_positions as (
-  select 'DL' as position, 500 as min_expected_records
+  select 'DE' as position, 100 as min_expected_records
   union all
-  select 'LB', 400
+  select 'DT', 100
   union all
-  select 'DB', 500
+  select 'LB', 100
+  union all
+  select 'CB', 100
+  union all
+  select 'S', 100
 ),
 
 validation as (

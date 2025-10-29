@@ -56,7 +56,17 @@ with base as (
     rec_tds as receiving_tds,
 
     -- Turnovers
-    fumbles_lost
+    fumbles_lost,
+
+    -- IDP (Individual Defensive Player) stats
+    idp_solo as idp_solo_tackles,
+    idp_asst as idp_assisted_tackles,
+    idp_sacks,
+    idp_pd as idp_passes_defended,
+    idp_int as idp_interceptions,
+    idp_fum_force as idp_fumbles_forced,
+    idp_fum_rec as idp_fumbles_recovered,
+    idp_td as idp_touchdowns
 
   from
     read_parquet(
@@ -108,7 +118,17 @@ normalized as (
     receptions,
     receiving_yards,
     receiving_tds,
-    fumbles_lost
+    fumbles_lost,
+
+    -- IDP stats
+    idp_solo_tackles,
+    idp_assisted_tackles,
+    idp_sacks,
+    idp_passes_defended,
+    idp_interceptions,
+    idp_fumbles_forced,
+    idp_fumbles_recovered,
+    idp_touchdowns
 
   from base
 )

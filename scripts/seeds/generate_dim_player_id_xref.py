@@ -64,18 +64,17 @@ def generate_dim_player_id_xref(
 
     # Add "Last, First" name variant for matching with FantasySharks projections
     # FantasySharks uses "Last, First" format while crosswalk uses "First Last"
+    # Split on first space only to handle multi-word names correctly
+    # "Patrick Mahomes II" → "Mahomes II, Patrick" (not "II, Patrick Mahomes")
     df_with_id = df_with_id.with_columns(
         pl.when(pl.col("name").str.contains(" "))
         .then(
-            # Convert "First Last" → "Last, First"
-            # Split on last space, reverse order, join with ", "
-            pl.concat_str(
-                [
-                    pl.col("name").str.split(" ").list.last(),
-                    pl.lit(", "),
-                    pl.col("name").str.split(" ").list.slice(0, -1).list.join(" "),
-                ]
-            )
+            # Split into exactly 2 parts: first name + rest
+            # field_0 = first name, field_1 = last name(s)
+            # Concatenate as: last, first
+            pl.col("name").str.splitn(" ", 2).struct.field("field_1")  # Last name(s) first
+            + pl.lit(", ")
+            + pl.col("name").str.splitn(" ", 2).struct.field("field_0")  # Then first name
         )
         .otherwise(pl.col("name"))  # Single-word names unchanged
         .alias("name_last_first")

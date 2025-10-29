@@ -20,7 +20,7 @@ models:
 
     config:
       materialized: external
-      location: "{{ env_var('EXTERNAL_ROOT') }}/marts/mart_fasa_targets/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
+      location: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}/marts/mart_fasa_targets/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
 
     columns:
       - name: player_key

@@ -3,8 +3,16 @@
 --
 -- Compares raw parquet record counts to staging model record counts
 -- Fails if staging has significantly fewer IDP records than raw
+--
+-- NOTE: Raw data uses fantasy positions (DL, DB, LB) but staging uses NFL positions
+-- (DE, DT, CB, S, LB) due to position-aware mapping from dim_position_translation
 
-with raw_counts as (
+with latest_snapshot as (
+  select max(dt) as latest_dt
+  from read_parquet('{{ var("external_root", "data/raw") }}/ffanalytics/projections/dt=*/projections_consensus_*.parquet')
+),
+
+raw_counts as (
   select
     case
       when pos in ('DL', 'LB', 'DB') then 'IDP'
@@ -14,14 +22,16 @@ with raw_counts as (
     count(*) as raw_record_count
   from read_parquet('{{ var("external_root", "data/raw") }}/ffanalytics/projections/dt=*/projections_consensus_*.parquet')
   where pos in ('QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB')
+    and dt = (select latest_dt from latest_snapshot)
   group by position_group
 ),
 
 staging_counts as (
   select
     case
-      when position in ('DL', 'LB', 'DB') then 'IDP'
-      when position in ('QB', 'RB', 'WR', 'TE', 'K') then 'Offensive'
+      -- NFL defensive positions from position-aware mapping
+      when position in ('DE', 'DT', 'LB', 'CB', 'S') then 'IDP'
+      when position in ('QB', 'RB', 'WR', 'TE', 'K', 'PK') then 'Offensive'
       else 'Other'
     end as position_group,
     count(*) as staging_record_count
