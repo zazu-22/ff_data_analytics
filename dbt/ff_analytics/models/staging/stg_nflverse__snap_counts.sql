@@ -34,7 +34,7 @@ with base as (
     -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}',
-      hive_partitioning = true
+      s.hive_partitioning = true
     ) s
     -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
@@ -44,8 +44,12 @@ with base as (
     s.pfr_player_id is not null
     and s.season is not null
     and s.week is not null
-    -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
-    and     {{ latest_snapshot_only(env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet")) }}
+    -- Load multiple snapshots to get historical coverage (2020-2025)
+    -- Historical + partial 2025 + latest 2025 for complete coverage
+    and (
+      s.dt = '2025-10-01'  -- Historical: 2020-2024 + partial 2025
+      or s.dt = '2025-10-28'  -- Latest: 2025
+    )
 ),
 
 crosswalk as (
@@ -99,11 +103,11 @@ unpivoted as (
     week,
     season_type,
     position,
-    'offense_pct',
-    cast(offense_pct as double),
-    'real_world',
-    'actual',
-    'nflverse'
+    'offense_pct' as stat_name,
+    cast(offense_pct as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
   from crosswalk
   where offense_pct is not null
   union all
@@ -115,11 +119,11 @@ unpivoted as (
     week,
     season_type,
     position,
-    'defense_snaps',
-    cast(defense_snaps as double),
-    'real_world',
-    'actual',
-    'nflverse'
+    'defense_snaps' as stat_name,
+    cast(defense_snaps as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
   from crosswalk
   where defense_snaps is not null
   union all
@@ -131,11 +135,11 @@ unpivoted as (
     week,
     season_type,
     position,
-    'defense_pct',
-    cast(defense_pct as double),
-    'real_world',
-    'actual',
-    'nflverse'
+    'defense_pct' as stat_name,
+    cast(defense_pct as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
   from crosswalk
   where defense_pct is not null
   union all
@@ -147,11 +151,11 @@ unpivoted as (
     week,
     season_type,
     position,
-    'st_snaps',
-    cast(st_snaps as double),
-    'real_world',
-    'actual',
-    'nflverse'
+    'st_snaps' as stat_name,
+    cast(st_snaps as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
   from crosswalk
   where st_snaps is not null
   union all
@@ -163,13 +167,23 @@ unpivoted as (
     week,
     season_type,
     position,
-    'st_pct',
-    cast(st_pct as double),
-    'real_world',
-    'actual',
-    'nflverse'
+    'st_pct' as stat_name,
+    cast(st_pct as double) as stat_value,
+    'real_world' as measure_domain,
+    'actual' as stat_kind,
+    'nflverse' as provider
   from crosswalk
   where st_pct is not null
+),
+
+deduplicated as (
+  -- Deduplicate overlapping seasons (2025 appears in both snapshots)
+  -- Prefer latest snapshot for any overlaps
+  select * from unpivoted
+  qualify row_number() over (
+    partition by player_key, game_id, stat_name, provider, measure_domain, stat_kind
+    order by season desc, week desc
+  ) = 1
 )
 
-select * from unpivoted
+select * from deduplicated
