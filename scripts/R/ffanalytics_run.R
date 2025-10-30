@@ -500,7 +500,7 @@ if (nrow(df) > 0) {
 # SAVE OUTPUTS
 # ============================================================
 
-dt <- format(Sys.time(), "%Y-%m-%d")
+dt <- format(Sys.time(), "%Y-%m-%d", tz = "UTC")
 out_path <- file.path(opt$out_dir, "projections", paste0("dt=", dt))
 dir.create(out_path, recursive = TRUE, showWarnings = FALSE)
 

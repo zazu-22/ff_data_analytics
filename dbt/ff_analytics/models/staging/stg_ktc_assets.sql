@@ -69,9 +69,9 @@ players_mapped as (
     p.positional_rank,
     p.market_scope,
     p.asof_date,
-    -- Map player_name → mfl_id using merge_name for fuzzy matching
+    -- Map player_name → canonical player_id via crosswalk (ADR-011)
     -- merge_name is normalized (lowercase, no punctuation) for better matching
-    coalesce(xref.mfl_id, -1) as player_id,
+    coalesce(xref.player_id, -1) as player_id,
     -- Player key for grain uniqueness
     -- Mapped players: player_key = mfl_id (as varchar)
     -- Unmapped players: player_key = player_name (preserves identity)
