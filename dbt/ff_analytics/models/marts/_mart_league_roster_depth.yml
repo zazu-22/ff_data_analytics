@@ -1,0 +1,31 @@
+models:
+  - name: mart_league_roster_depth
+    description: "All rostered players ranked by position with league benchmarks"
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - franchise_id
+              - player_key
+              - asof_date
+          config:
+            severity: error
+
+    columns:
+      - name: player_key
+        description: "FK to dim_player"
+        data_tests:
+          - not_null
+
+      - name: franchise_id
+        description: "FK to dim_franchise"
+        data_tests:
+          - not_null
+
+      - name: position
+        description: "Player position"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['QB', 'RB', 'WR', 'TE']
