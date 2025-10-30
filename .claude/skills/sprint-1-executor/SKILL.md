@@ -1,6 +1,6 @@
 ---
 name: sprint-1-executor
-description: Execute Sprint 1 tasks for FASA optimization and trade analytics. This skill should be used when the user requests execution of any Sprint 1 task (Tasks 1.1 through 3.2), including cap space parsing, Sleeper integration, FASA target marts, notebooks, valuation models, trade analysis, automation workflows, or documentation. Each task is atomic, standalone, and designed for independent execution with built-in validation.
+description: Execute Sprint 1 tasks for FASA optimization and trade analytics. This skill should be used when the user requests execution of any Sprint 1 task (Tasks 1.1-1.4, 11-13, 2.1-2.4, 3.1-3.2), including cap space parsing, Sleeper integration, FASA target marts, FA acquisition history, roster depth analysis, enhanced FASA targets, notebooks, valuation models, trade analysis, automation workflows, or documentation. Each task is atomic, standalone, and designed for independent execution with built-in validation. Current focus: Phase 2 FASA Intelligence (Tasks 11-13, 1.4).
 ---
 
 # Sprint 1 Executor
@@ -18,15 +18,22 @@ Use this skill proactively when:
 
 ## Sprint Overview
 
-**Sprint Goal:** Deliver actionable FASA bidding strategy for Wednesday 11:59 PM EST + trade analysis infrastructure
+**Sprint Goal:** Deliver actionable FASA bidding strategy for Week 9 + trade analysis infrastructure
+**Sprint End:** Wednesday 2025-10-29 11:59 PM EST
+**Current Status:** 🟡 Phase 2 In Progress (Phase 1 ✅ Complete)
 
 **Sprint Structure:**
 
-- **Phase 1:** Critical path for Wednesday FASA deadline
-  - Tasks 1.1-1.4: Cap space, Sleeper, FASA marts, strategy notebook
-- **Phase 2:** Trade intelligence
-  - Tasks 2.1-2.4: Valuation model, trade marts, analysis notebook, backfill
-- **Phase 3:** Automation & production
+- **Phase 1:** Foundation (FASA Critical Path) - ✅ COMPLETE
+  - Tasks 1.1-1.3: Cap space, Sleeper, FASA marts
+  - Bonus: IDP historical data (2020-2025)
+- **Phase 2:** FASA Intelligence Enhancements - 🟡 IN PROGRESS
+  - Tasks 11-13 (2.4-2.6): FA acquisition history, roster depth, enhanced FASA targets
+  - Task 1.4: FASA strategy notebook
+- **Phase 3:** Trade Intelligence - ⏸️ DEFERRED
+  - Task 2.1: Historical backfill (🟡 partially complete: 2020-2025 done, 2012-2019 deferred)
+  - Tasks 2.2-2.4: Valuation model, trade marts, analysis notebook (❌ blocked)
+- **Phase 4:** Automation & Production - ⏸️ FUTURE
   - Tasks 3.1-3.2: GitHub Actions workflows, documentation
 
 ## Task Execution Workflow
@@ -36,14 +43,25 @@ When user requests task execution:
 1. **Identify the task** - Determine which task (1.1 through 3.2) from user request
 
 2. **Load task file** - Read the corresponding task file from `references/`:
+
+   **Phase 1: Foundation (Complete ✅)**
    - Task 1.1: `references/01_task_cap_space_foundation.md`
    - Task 1.2: `references/02_task_sleeper_production_integration.md`
    - Task 1.3: `references/03_task_fasa_target_mart.md`
+
+   **Phase 2: FASA Intelligence (Current Focus 🟡)**
+   - Task 11 (2.4): `references/11_task_fa_acquisition_history.md`
+   - Task 12 (2.5): `references/12_task_league_roster_depth.md`
+   - Task 13 (2.6): `references/13_task_enhance_fasa_targets.md`
    - Task 1.4: `references/04_task_fasa_strategy_notebook.md`
-   - Task 2.1: `references/05_task_historical_backfill.md`
-   - Task 2.2: `references/06_task_baseline_valuation_model.md`
-   - Task 2.3: `references/07_task_trade_target_marts.md`
-   - Task 2.4: `references/08_task_trade_analysis_notebook.md`
+
+   **Phase 3: Trade Intelligence (Deferred ⏸️)**
+   - Task 2.1: `references/05_task_historical_backfill.md` (🟡 partial)
+   - Task 2.2: `references/06_task_baseline_valuation_model.md` (❌ blocked)
+   - Task 2.3: `references/07_task_trade_target_marts.md` (❌ blocked)
+   - Task 2.4: `references/08_task_trade_analysis_notebook.md` (❌ blocked)
+
+   **Phase 4: Automation (Future ⏸️)**
    - Task 3.1: `references/09_task_github_actions_workflows.md`
    - Task 3.2: `references/10_task_documentation_polish.md`
 
@@ -223,18 +241,34 @@ If blocked by dependencies:
 
 ## Task Dependencies Quick Reference
 
-**Critical Path (must be sequential):**
+**Phase 1: Foundation (✅ COMPLETE)**
 
-- Task 1.1 → Task 1.2 → Task 1.3 → Task 1.4 (Wednesday FASA ready)
+- Task 1.1 (Cap Space) → Task 1.2 (Sleeper) → Task 1.3 (FASA Mart) ✅
 
-**Trade Analysis (sequential - all required in order):**
+**Phase 2: FASA Intelligence (🟡 CURRENT FOCUS)**
 
-- Task 2.1 (Historical Backfill) → Task 2.2 (Valuation Model) → Task 2.3 (Trade Marts) → Task 2.4 (Trade Notebook)
-- **NOTE:** Task 2.1 must complete first (no background processing)
+- Task 1.3 (FASA Mart) ✅
+  - ⬇
+  - Tasks 11, 12, 13 can run in parallel ⬜
+    - Task 11 (FA Acquisition History)
+    - Task 12 (League Roster Depth)
+    - Task 13 (Enhance FASA Targets)
+  - ⬇
+  - Task 1.4 (FASA Strategy Notebook) 🟦
 
-**Automation (sequential):**
+**Phase 3: Trade Intelligence (⏸️ DEFERRED - blocked)**
 
-- Task 3.1 → Task 3.2 (after other phases)
+- Task 2.1 (Historical Backfill) 🟡 (2020-2025 complete, 2012-2019 deferred)
+  - ⬇
+  - Task 2.2 (Valuation Model) ❌ (blocked - needs full 2012-2024 backfill)
+  - ⬇
+  - Task 2.3 (Trade Marts) ❌ (blocked by 2.2)
+  - ⬇
+  - Task 2.4 (Trade Notebook) ❌ (blocked by 2.3)
+
+**Phase 4: Automation (⏸️ FUTURE)**
+
+- Task 3.1 (GitHub Actions) → Task 3.2 (Documentation) ⬜
 
 See `references/README.md` dependency diagram for full details.
 
