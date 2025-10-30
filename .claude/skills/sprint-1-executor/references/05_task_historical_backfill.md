@@ -30,6 +30,24 @@ make dbt-run --full-refresh
 - ✅ 2012-2024 data loaded
 - ✅ `fact_player_stats` contains historical data
 
+## Post-Backfill Validation
+
+After completing this task, validate data coverage improvements in dependent marts:
+
+**Expected Improvement: `mart_fa_acquisition_history`**
+- Current coverage: 76.2% of FASA transactions have performance context
+- Gap: 72/84 missing transactions (85%) are from 2019 signings (data starts 2020)
+- After backfill: Coverage should improve to ~90% with 2012-2019 data
+- Validation query:
+  ```sql
+  SELECT
+      COUNT(*) as total,
+      COUNT(fantasy_ppg_l4_games) as with_performance,
+      ROUND(100.0 * COUNT(fantasy_ppg_l4_games) / COUNT(*), 1) as pct_coverage
+  FROM main.mart_fa_acquisition_history;
+  ```
+- Target: >90% coverage (from current 76.2%)
+
 ## Commit
 
 ```

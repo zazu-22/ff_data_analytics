@@ -1,11 +1,11 @@
 {{ config(materialized='view') }}
 
 /*
-Stage nflverse ff_opportunity metrics with mfl_id crosswalk and long-form unpivot.
+Stage nflverse ff_opportunity metrics with player_id crosswalk and long-form unpivot.
 
 Source: data/raw/nflverse/ff_opportunity/ (load_ff_opportunity)
 Output grain: one row per player per game per stat (~40 selected stats)
-Crosswalk: player_id (gsis_id) → mfl_id via dim_player_id_xref
+Crosswalk: player_id (gsis_id) → player_id via dim_player_id_xref
 
 Includes:
 - Expected stats (*_exp): Predicted values based on opportunity
@@ -13,7 +13,7 @@ Includes:
 - Team shares (*_share, *_attempt): Player's proportion of team opportunity
 
 ADR-009: Feeds into consolidated fact_player_stats
-ADR-010: Uses mfl_id as canonical player_id
+ADR-011: Uses sequential surrogate player_id as canonical identifier
 */
 
 with base as (
@@ -70,7 +70,7 @@ with base as (
     -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}',
-      hive_partitioning = true
+      o.hive_partitioning = true
     ) o
     -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
@@ -85,27 +85,29 @@ with base as (
     and o.week is not null
     and o.game_id is not null
     -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
-    and         {{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
+    and                 {{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
+{{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
+{{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
 ),
 
 crosswalk as (
-  -- Map raw provider IDs to canonical mfl_id via ff_playerids crosswalk
-  -- Crosswalk source: nflverse ff_playerids dataset (12,133 players, 19 provider IDs)
+  -- Map raw provider IDs to canonical player_id via ff_playerids crosswalk
+  -- Crosswalk source: nflverse ff_playerids dataset (9,734 players, 20 provider IDs)
   -- Mapping coverage: 99.86% of identifiable ff_opportunity players map successfully
   select
     base.* exclude (position),
-    -- Map gsis_id → mfl_id (canonical player_id per ADR-010)
-    coalesce(xref.mfl_id, -1) as player_id,
+    -- Map gsis_id → player_id (canonical sequential surrogate per ADR-011)
+    coalesce(xref.player_id, -1) as player_id,
     -- Use position from crosswalk if raw data has null
     coalesce(base.position, xref.position) as position,
     -- Composite key for grain uniqueness (uses raw ID when unmapped)
     -- Prevents duplicate grain violations when multiple unmapped players in same game
-    -- Mapped players: player_key = mfl_id (as varchar)
+    -- Mapped players: player_key = player_id (as varchar)
     -- Unmapped players: player_key = gsis_id (preserves identity via raw provider ID)
     -- Unknown edge case: player_key = 'UNKNOWN_' || game_id (defensive fail-safe)
     case
-      when coalesce(xref.mfl_id, -1) != -1
-        then cast(xref.mfl_id as varchar)
+      when coalesce(xref.player_id, -1) != -1
+        then cast(xref.player_id as varchar)
       else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base

@@ -107,7 +107,7 @@ with base as (
     -- noqa: disable=references.qualification
     read_parquet(
       '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet',
-      w.hive_partitioning = true
+      hive_partitioning = true
     ) w
     -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
@@ -126,23 +126,23 @@ with base as (
     )
 ),
 crosswalk as (
-  -- Map raw provider IDs to canonical mfl_id via ff_playerids crosswalk
-  -- Crosswalk source: nflverse ff_playerids dataset (12,133 players, 19 provider IDs)
+  -- Map raw provider IDs to canonical player_id via ff_playerids crosswalk
+  -- Crosswalk source: nflverse ff_playerids dataset (9,734 players, 20 provider IDs)
   -- Mapping coverage: ~99.9% of identifiable weekly players map successfully
   select
     base.* exclude (position),
-    -- Map gsis_id → mfl_id (canonical player_id per ADR-010)
-    coalesce(xref.mfl_id, -1) as player_id,
+    -- Map gsis_id → player_id (canonical sequential surrogate per ADR-011)
+    coalesce(xref.player_id, -1) as player_id,
     -- Use position from crosswalk if raw data has null
     coalesce(base.position, xref.position) as position,
     -- Composite key for grain uniqueness (uses raw ID when unmapped)
     -- Prevents duplicate grain violations when multiple unmapped players in same game
-    -- Mapped players: player_key = mfl_id (as varchar)
+    -- Mapped players: player_key = player_id (as varchar)
     -- Unmapped players: player_key = gsis_id (preserves identity via raw provider ID)
     -- Unknown edge case: player_key = 'UNKNOWN_' || game_id (defensive fail-safe)
     case
-      when coalesce(xref.mfl_id, -1) != -1
-        then cast(xref.mfl_id as varchar)
+      when coalesce(xref.player_id, -1) != -1
+        then cast(xref.player_id as varchar)
       else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base

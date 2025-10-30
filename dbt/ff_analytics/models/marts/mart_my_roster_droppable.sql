@@ -1,139 +1,145 @@
 -- Grain: player_key, asof_date
 -- Purpose: Identify drop candidates on Jason's roster
 
-WITH my_roster AS (
-    SELECT DISTINCT
-        c.player_id AS player_key,
-        d.position
-    FROM {{ ref('stg_sheets__contracts_active') }} c
-    INNER JOIN {{ ref('dim_player') }} d ON c.player_id = d.player_id
-    WHERE c.gm_full_name = 'Jason Shaffer'
-        AND c.obligation_year = YEAR(CURRENT_DATE)
+with my_roster as (
+  select distinct
+    c.player_id as player_key,
+    d.position
+  from {{ ref('stg_sheets__contracts_active') }} c
+  inner join {{ ref('dim_player') }} d on c.player_id = d.player_id
+  where
+    c.gm_full_name = 'Jason Shaffer'
+    and c.obligation_year = YEAR(CURRENT_DATE)
 ),
 
-contracts AS (
-    SELECT
-        player_id AS player_key,
-        COUNT(DISTINCT obligation_year) AS years_remaining,
-        SUM(CASE WHEN obligation_year = YEAR(CURRENT_DATE) THEN cap_hit END) AS current_year_cap_hit,
-        SUM(CASE WHEN obligation_year > YEAR(CURRENT_DATE) THEN cap_hit END) AS future_years_cap_hit,
-        SUM(cap_hit) AS total_remaining
-    FROM {{ ref('stg_sheets__contracts_active') }}
-    WHERE gm_full_name = 'Jason Shaffer'
-    GROUP BY player_id
+contracts as (
+  select
+    player_id as player_key,
+    COUNT(distinct obligation_year) as years_remaining,
+    SUM(case when obligation_year = YEAR(CURRENT_DATE) then cap_hit end) as current_year_cap_hit,
+    SUM(case when obligation_year > YEAR(CURRENT_DATE) then cap_hit end) as future_years_cap_hit,
+    SUM(cap_hit) as total_remaining
+  from {{ ref('stg_sheets__contracts_active') }}
+  where gm_full_name = 'Jason Shaffer'
+  group by player_id
 ),
 
-dead_cap AS (
-    -- Calculate dead cap if cut now using dim_cut_liability_schedule
-    SELECT
-        c.player_key,
-        c.total_remaining * dl.dead_cap_pct AS dead_cap_if_cut_now
-    FROM contracts c
-    INNER JOIN {{ ref('dim_cut_liability_schedule') }} dl
-        ON c.years_remaining = dl.contract_year
+dead_cap as (
+  -- Calculate dead cap if cut now using dim_cut_liability_schedule
+  select
+    c.player_key,
+    c.total_remaining * dl.dead_cap_pct as dead_cap_if_cut_now
+  from contracts c
+  inner join {{ ref('dim_cut_liability_schedule') }} dl
+    on c.years_remaining = dl.contract_year
 ),
 
-performance AS (
-    SELECT
-        player_id AS player_key,
-        AVG(CASE WHEN game_recency <= 8 THEN fantasy_points END) AS fantasy_ppg_last_8
-    FROM (
-        SELECT
-            player_id,
-            fantasy_points,
-            ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY season DESC, week DESC) AS game_recency
-        FROM {{ ref('mart_fantasy_actuals_weekly') }}
-        WHERE season = YEAR(CURRENT_DATE)
+performance as (
+  select
+    player_id as player_key,
+    AVG(case when game_recency <= 8 then fantasy_points end) as fantasy_ppg_last_8
+  from (
+    select
+      player_id,
+      fantasy_points,
+      ROW_NUMBER() over (partition by player_id order by season desc, week desc) as game_recency
+    from {{ ref('mart_fantasy_actuals_weekly') }}
+    where season = YEAR(CURRENT_DATE)
+  )
+  where game_recency <= 8
+  group by player_id
+),
+
+projections as (
+  select
+    player_id,
+    AVG(projected_fantasy_points) as projected_ppg_ros,
+    SUM(projected_fantasy_points) as projected_total_ros,
+    COUNT(*) as weeks_remaining
+  from {{ ref('mart_fantasy_projections') }}
+  where
+    season = YEAR(CURRENT_DATE)
+    and week
+    > (
+      select MAX(week) from {{ ref('dim_schedule') }}
+      where season = YEAR(CURRENT_DATE) and CAST(game_date as DATE) < CURRENT_DATE
     )
-    WHERE game_recency <= 8
-    GROUP BY player_id
+    and horizon = 'weekly'
+  group by player_id
 ),
 
-projections AS (
-    SELECT
-        player_id,
-        AVG(projected_fantasy_points) AS projected_ppg_ros,
-        SUM(projected_fantasy_points) AS projected_total_ros,
-        COUNT(*) AS weeks_remaining
-    FROM {{ ref('mart_fantasy_projections') }}
-    WHERE season = YEAR(CURRENT_DATE)
-        AND week > (SELECT MAX(week) FROM {{ ref('dim_schedule') }} WHERE season = YEAR(CURRENT_DATE) AND CAST(game_date AS DATE) < CURRENT_DATE)
-        AND horizon = 'weekly'
-    GROUP BY player_id
-),
-
-position_depth AS (
-    -- Rank players at each position on my roster
-    SELECT
-        player_key,
-        ROW_NUMBER() OVER (PARTITION BY position ORDER BY projected_ppg_ros DESC) AS position_depth_rank
-    FROM my_roster
-    LEFT JOIN projections ON my_roster.player_key = projections.player_id
+position_depth as (
+  -- Rank players at each position on my roster
+  select
+    player_key,
+    ROW_NUMBER() over (partition by position order by projected_ppg_ros desc) as position_depth_rank
+  from my_roster
+  left join projections on my_roster.player_key = projections.player_id
 )
 
-SELECT
-    -- Identity
-    r.player_key,
-    dim.display_name AS player_name,
-    r.position,
+select
+  -- Identity
+  r.player_key,
+  dim.display_name as player_name,
+  r.position,
 
-    -- Contract
-    c.years_remaining,
-    c.current_year_cap_hit,
-    c.future_years_cap_hit,
-    c.total_remaining,
-    dc.dead_cap_if_cut_now,
-    c.current_year_cap_hit - dc.dead_cap_if_cut_now AS cap_space_freed,
+  -- Contract
+  c.years_remaining,
+  c.current_year_cap_hit,
+  c.future_years_cap_hit,
+  c.total_remaining,
+  dc.dead_cap_if_cut_now,
+  c.current_year_cap_hit - dc.dead_cap_if_cut_now as cap_space_freed,
 
-    -- Performance
-    perf.fantasy_ppg_last_8,
-    proj.projected_ppg_ros,
+  -- Performance
+  perf.fantasy_ppg_last_8,
+  proj.projected_ppg_ros,
 
-    -- Value Assessment
-    proj.projected_ppg_ros / NULLIF(c.current_year_cap_hit, 0) AS points_per_dollar,
-    proj.projected_ppg_ros - (
-        SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY projected_ppg_ros)
-        FROM {{ ref('mart_fasa_targets') }}
-        WHERE position = r.position
-    ) AS replacement_surplus,
+  -- Value Assessment
+  proj.projected_ppg_ros / NULLIF(c.current_year_cap_hit, 0) as points_per_dollar,
+  proj.projected_ppg_ros - (
+    select PERCENTILE_CONT(0.5) within group (order by projected_ppg_ros)
+    from {{ ref('mart_fasa_targets') }}
+    where position = r.position
+  ) as replacement_surplus,
 
-    -- Droppable score (0-100, higher = more droppable)
-    (
-        CASE WHEN proj.projected_ppg_ros < 5 THEN 30 ELSE 0 END +  -- Low production
-        CASE WHEN c.current_year_cap_hit > 10 THEN 30 ELSE 0 END +  -- High cap hit
-        CASE WHEN dc.dead_cap_if_cut_now < 5 THEN 20 ELSE 0 END +   -- Low dead cap
-        CASE WHEN pd.position_depth_rank > 3 THEN 20 ELSE 0 END     -- Roster depth
-    ) AS droppable_score,
+  -- Droppable score (0-100, higher = more droppable)
+  (
+    case when proj.projected_ppg_ros < 5 then 30 else 0 end  -- Low production
+    + case when c.current_year_cap_hit > 10 then 30 else 0 end  -- High cap hit
+    + case when dc.dead_cap_if_cut_now < 5 then 20 else 0 end   -- Low dead cap
+    + case when pd.position_depth_rank > 3 then 20 else 0 end     -- Roster depth
+  ) as droppable_score,
 
-    -- Opportunity cost
-    (c.current_year_cap_hit - dc.dead_cap_if_cut_now) - (proj.projected_ppg_ros / 10) AS opportunity_cost,
+  -- Opportunity cost
+  (c.current_year_cap_hit - dc.dead_cap_if_cut_now) - (proj.projected_ppg_ros / 10) as opportunity_cost,
 
-    -- Roster Context
-    pd.position_depth_rank,
-    CASE
-        WHEN pd.position_depth_rank <= 2 THEN 'STARTER'
-        WHEN pd.position_depth_rank = 3 THEN 'FLEX'
-        ELSE 'BENCH'
-    END AS roster_tier,
-    c.years_remaining AS weeks_until_contract_expires,
+  -- Roster Context
+  pd.position_depth_rank,
+  case
+    when pd.position_depth_rank <= 2 then 'STARTER'
+    when pd.position_depth_rank = 3 then 'FLEX'
+    else 'BENCH'
+  end as roster_tier,
+  c.years_remaining as weeks_until_contract_expires,
 
-    -- Recommendation
-    CASE
-        WHEN droppable_score >= 80 THEN 'DROP_FOR_CAP'
-        WHEN droppable_score >= 60 AND proj.projected_ppg_ros < 8 THEN 'CONSIDER'
-        WHEN droppable_score >= 40 THEN 'DROP_FOR_UPSIDE'
-        ELSE 'KEEP'
-    END AS drop_recommendation,
+  -- Recommendation
+  case
+    when droppable_score >= 80 then 'DROP_FOR_CAP'
+    when droppable_score >= 60 and proj.projected_ppg_ros < 8 then 'CONSIDER'
+    when droppable_score >= 40 then 'DROP_FOR_UPSIDE'
+    else 'KEEP'
+  end as drop_recommendation,
 
-    -- Metadata
-    CURRENT_DATE AS asof_date
+  -- Metadata
+  CURRENT_DATE as asof_date
 
-FROM my_roster r
-LEFT JOIN contracts c USING (player_key)
-LEFT JOIN dead_cap dc USING (player_key)
-LEFT JOIN performance perf USING (player_key)
-LEFT JOIN projections proj ON r.player_key = proj.player_id
-LEFT JOIN position_depth pd USING (player_key)
-LEFT JOIN {{ ref('dim_player') }} dim ON r.player_key = dim.player_id
+from my_roster r
+left join contracts c on r.player_key = c.player_key
+left join dead_cap dc using (player_key)
+left join performance perf using (player_key)
+left join projections proj on r.player_key = proj.player_id
+left join position_depth pd using (player_key)
+left join {{ ref('dim_player') }} dim on r.player_key = dim.player_id
 
-ORDER BY droppable_score DESC
+order by droppable_score desc

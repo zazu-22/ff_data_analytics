@@ -22,7 +22,7 @@ player_xref as (
 select
   -- Identity (map sleeper_id → mfl_id)
   coalesce(cast(xref.mfl_id as VARCHAR), 'sleeper_' || fa.sleeper_player_id) as player_key,
-  xref.mfl_id as mfl_id,  -- Use actual MFL ID, not internal player_id
+  xref.mfl_id,  -- Use actual MFL ID, not internal player_id
   fa.sleeper_player_id,
 
   -- Demographics
@@ -42,7 +42,7 @@ select
   'sleeper' as source_platform,
 
   -- Mapping flag
-  coalesce(xref.player_id is not NULL, false) as is_mapped_to_mfl_id
+  coalesce(xref.player_id is not NULL, FALSE) as is_mapped_to_mfl_id
 
 from fa_raw fa
 left join player_xref xref

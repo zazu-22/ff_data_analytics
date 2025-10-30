@@ -24,12 +24,12 @@ models:
           - unique
 
       - name: mfl_id
-        description: MFL player ID (canonical player_id, null if unmapped)
+        description: MFL player ID (external provider ID, null if unmapped)
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
-                field: player_id
+                field: mfl_id
               config:
                 where: "mfl_id IS NOT NULL"
 

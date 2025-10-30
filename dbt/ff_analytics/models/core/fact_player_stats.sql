@@ -22,7 +22,7 @@ Sources:
 Total: ~88 stat types
 
 ADR-009: Single consolidated fact table avoids fact-to-fact joins
-ADR-010: Uses mfl_id as canonical player_id
+ADR-011: Uses sequential surrogate player_id as canonical identifier
 
 Composite key: (player_id, game_id, stat_name, provider, measure_domain, stat_kind)
 */

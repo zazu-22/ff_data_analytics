@@ -12,20 +12,20 @@ models:
       **Grain**: One row per player per game per stat per provider
       **Sources**: nflverse (player_stats, snap_counts, ff_opportunity)
       **Seasons**: 2023-2025 (2.7M rows, 109 stat types)
-      **Architecture**: ADR-009 (single consolidated fact table), ADR-010 (mfl_id canonical identity)
+      **Architecture**: ADR-009 (single consolidated fact table), ADR-011 (sequential surrogate player_id)
 
     columns:
       - name: player_id
         description: |
-          Canonical player identifier (mfl_id from dim_player_id_xref).
-          Maps to 19 fantasy platform provider IDs.
+          Canonical player identifier (sequential surrogate from dim_player_id_xref per ADR-011).
+          Maps to 20 fantasy platform provider IDs via mfl_id attribute.
           Value of -1 indicates unmapped player (no crosswalk match).
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
-                field: mfl_id
+                field: player_id
               config:
                 where: "player_id != -1"  # Allow unmapped players
 

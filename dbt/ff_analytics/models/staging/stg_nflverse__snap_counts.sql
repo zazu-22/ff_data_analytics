@@ -1,14 +1,14 @@
 {{ config(materialized='view') }}
 
 /*
-Stage nflverse snap counts with mfl_id crosswalk and long-form unpivot.
+Stage nflverse snap counts with player_id crosswalk and long-form unpivot.
 
 Source: data/raw/nflverse/snap_counts/ (load_snap_counts)
 Output grain: one row per player per game per snap stat (6 stats)
-Crosswalk: pfr_player_id → mfl_id via dim_player_id_xref
+Crosswalk: pfr_player_id → player_id via dim_player_id_xref
 
 ADR-009: Feeds into consolidated fact_player_stats
-ADR-010: Uses mfl_id as canonical player_id
+ADR-011: Uses sequential surrogate player_id as canonical identifier
 */
 
 with base as (
@@ -53,23 +53,23 @@ with base as (
 ),
 
 crosswalk as (
-  -- Map raw provider IDs to canonical mfl_id via ff_playerids crosswalk
-  -- Crosswalk source: nflverse ff_playerids dataset (12,133 players, 19 provider IDs)
+  -- Map raw provider IDs to canonical player_id via ff_playerids crosswalk
+  -- Crosswalk source: nflverse ff_playerids dataset (9,734 players, 20 provider IDs)
   -- Mapping coverage: ~81.8% of snap_counts players map (18.2% unmapped, mostly linemen)
   select
     base.* exclude (position),
-    -- Map pfr_player_id → mfl_id (canonical player_id per ADR-010)
-    coalesce(xref.mfl_id, -1) as player_id,
+    -- Map pfr_player_id → player_id (canonical sequential surrogate per ADR-011)
+    coalesce(xref.player_id, -1) as player_id,
     -- Use position from crosswalk if raw data has null
     coalesce(base.position, xref.position) as position,
     -- Composite key for grain uniqueness (uses raw ID when unmapped)
     -- Prevents duplicate grain violations when multiple unmapped players in same game
-    -- Mapped players: player_key = mfl_id (as varchar)
+    -- Mapped players: player_key = player_id (as varchar)
     -- Unmapped players: player_key = pfr_id (preserves identity via raw provider ID)
     -- Unknown edge case: player_key = 'UNKNOWN_' || game_id (defensive fail-safe)
     case
-      when coalesce(xref.mfl_id, -1) != -1
-        then cast(xref.mfl_id as varchar)
+      when coalesce(xref.player_id, -1) != -1
+        then cast(xref.player_id as varchar)
       else coalesce(base.pfr_player_id, 'UNKNOWN_' || base.game_id)
     end as player_key
   from base
