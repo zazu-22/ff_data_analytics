@@ -35,7 +35,7 @@ ______________________________________________________________________
 | Task     | File                                                                     | Priority | Duration | Status         |
 | -------- | ------------------------------------------------------------------------ | -------- | -------- | -------------- |
 | 2.4 (11) | [11_task_fa_acquisition_history.md](./11_task_fa_acquisition_history.md) | HIGH     | 6h       | ✅ Complete    |
-| 2.5 (12) | [12_task_league_roster_depth.md](./12_task_league_roster_depth.md)       | HIGH     | 4h       | ⬜ Not Started |
+| 2.5 (12) | [12_task_league_roster_depth.md](./12_task_league_roster_depth.md)       | HIGH     | 4h       | ✅ Complete    |
 | 2.6 (13) | [13_task_enhance_fasa_targets.md](./13_task_enhance_fasa_targets.md)     | HIGH     | 4h       | ⬜ Not Started |
 | 1.4      | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md) | CRITICAL | 4h       | 🟦 In Progress |
 
@@ -177,7 +177,7 @@ Update task status here and in `00_SPRINT_PLAN.md`:
 ### Phase 2: FASA Intelligence Enhancements (CURRENT FOCUS)
 
 - ✅ Task 11 (2.4): FA Acquisition History Analysis
-- ⬜ Task 12 (2.5): League Roster Depth Analysis
+- ✅ Task 12 (2.5): League Roster Depth Analysis
 - ⬜ Task 13 (2.6): Enhance FASA Targets with Market Intelligence
 - 🟦 Task 1.4: FASA Strategy Notebook (in progress, awaiting enhancements)
 
@@ -247,7 +247,7 @@ ______________________________________________________________________
 ✅ **Phase 2: FASA Intelligence (IN PROGRESS)**
 
 - [x] FA acquisition history mart built (Task 11)
-- [ ] League roster depth analysis complete (Task 12)
+- [x] League roster depth analysis complete (Task 12)
 - [ ] FASA targets enhanced with market intelligence (Task 13)
 - [ ] FASA notebook runs with enhanced recommendations (Task 1.4)
 - [ ] Bid recommendations incorporate market data and league context
