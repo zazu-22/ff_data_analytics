@@ -260,18 +260,39 @@ market_context as (
   select
     fa.player_id,
 
-    -- Model value (our internal valuation)
+    -- Model value (our internal valuation - raw fantasy points)
     dv.dynasty_3yr_value as model_value,
 
-    -- Market value (KTC consensus)
+    -- Market value (KTC consensus - 0-10,000 scale)
     mv.ktc_value as market_value,
 
-    -- Value gap percentage
-    case
-      when mv.ktc_value > 0
-        then
-          ((dv.dynasty_3yr_value - mv.ktc_value) / mv.ktc_value * 100)
-    end as value_gap_pct
+    -- Normalize to percentiles (0-100 scale) for apples-to-apples comparison
+    -- IMPORTANT: Calculate percentiles ONLY among FAs with KTC data for meaningful comparison
+    -- Model percentile: Where does our dynasty value rank among FAs with KTC data?
+    PERCENT_RANK() over (
+      partition by case when mv.ktc_value is not null then 1 end
+      order by dv.dynasty_3yr_value
+    ) * 100 as model_percentile,
+
+    -- Market percentile: Where does KTC value rank among FAs with KTC data?
+    PERCENT_RANK() over (
+      partition by case when mv.ktc_value is not null then 1 end
+      order by mv.ktc_value
+    ) * 100 as market_percentile,
+
+    -- Value gap: Difference in percentile ranks
+    -- Positive gap = Model values higher than market (BUY signal)
+    -- Negative gap = Market values higher than model (SELL signal)
+    (
+      PERCENT_RANK() over (
+        partition by case when mv.ktc_value is not null then 1 end
+        order by dv.dynasty_3yr_value
+      )
+      - PERCENT_RANK() over (
+        partition by case when mv.ktc_value is not null then 1 end
+        order by mv.ktc_value
+      )
+    ) * 100 as value_gap_pct
 
   from fa_pool fa
   left join dynasty_valuation dv on fa.player_id = dv.player_id
@@ -283,6 +304,8 @@ market_signals as (
     mc.player_id,
     mc.model_value,
     mc.market_value,
+    mc.model_percentile,
+    mc.market_percentile,
     mc.value_gap_pct,
 
     -- Market efficiency signal
@@ -636,6 +659,8 @@ select
 
   ms.model_value,
   ms.market_value,
+  ms.model_percentile,
+  ms.market_percentile,
   ms.value_gap_pct,
   ms.market_efficiency_signal,
   ms.market_inefficiency_flag,

@@ -212,13 +212,19 @@ models:
       # ========================================================================
 
       - name: model_value
-        description: "Internal model valuation (dynasty_3yr_value)"
+        description: "Internal model valuation (dynasty_3yr_value in fantasy points)"
 
       - name: market_value
-        description: "External market valuation (KTC consensus)"
+        description: "External market valuation (KTC consensus on 0-10,000 scale)"
+
+      - name: model_percentile
+        description: "Model value percentile rank within FA pool (0-100, higher=better)"
+
+      - name: market_percentile
+        description: "Market value percentile rank within FA pool (0-100, higher=better)"
 
       - name: value_gap_pct
-        description: "Value gap percentage ((model - market) / market * 100)"
+        description: "Percentile gap (model_pct - market_pct). Positive=undervalued by market (BUY), Negative=overvalued (SELL)"
 
       - name: market_efficiency_signal
         description: "Market trading signal based on value gap"
