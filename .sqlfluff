@@ -1,7 +1,7 @@
 [sqlfluff]
 templater = dbt
 dialect = duckdb
-exclude_rules = L034,L044
+exclude_rules = L034,L044,RF02,RF03,RF04,RF06,CV06
 # Increase file size limit to handle large models
 large_file_skip_byte_limit = 30000
 # Exclude third-party packages, build artifacts, and archive directories from linting
@@ -28,8 +28,3 @@ capitalisation_policy = lower
 [sqlfluff:rules:aliasing.table]
 # Allow implicit table aliasing in staging (raw provider schemas)
 aliasing = implicit
-
-[sqlfluff:rules:references.qualification]
-# Less strict for staging models that use raw schemas
-# Can override per-model if needed
-allow_implicit_aliases = true

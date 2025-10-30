@@ -85,9 +85,15 @@ with base as (
     and o.week is not null
     and o.game_id is not null
     -- Keep only latest snapshot (idempotent reads across multiple dt partitions)
-    and                 {{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
-{{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
-{{ latest_snapshot_only(env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet")) }}
+    and
+    {{
+      latest_snapshot_only(
+        env_var(
+          "RAW_NFLVERSE_FF_OPPORTUNITY_GLOB",
+          "data/raw/nflverse/ff_opportunity/dt=*/*.parquet"
+        )
+      )
+    }}
 ),
 
 crosswalk as (

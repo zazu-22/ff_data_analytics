@@ -34,7 +34,7 @@ with base as (
     -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_SNAP_COUNTS_GLOB", "data/raw/nflverse/snap_counts/dt=*/*.parquet") }}',
-      s.hive_partitioning = true
+      hive_partitioning = true
     ) s
     -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
