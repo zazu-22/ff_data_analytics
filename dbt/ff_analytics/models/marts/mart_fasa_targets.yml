@@ -3,30 +3,42 @@ version: 2
 models:
   - name: mart_fasa_targets
     description: |
-      Score and rank every free agent for FASA bidding decisions.
+      Dynasty market intelligence platform for FASA bidding decisions.
 
-      Combines recent performance, rest-of-season projections, opportunity metrics,
-      and market values into a composite value_score (0-100). Provides bid
-      recommendations and confidence levels for FASA planning.
+      Transforms tactical FAAB into comprehensive dynasty strategy by integrating:
+      1. Aging curve adjustments (position-specific peak windows, 3yr discounted value)
+      2. Market efficiency scoring (model vs market gaps, buy/sell signals)
+      3. Sustainability analysis (TDOE regression detection, sticky vs fluky metrics)
+      4. League context & VoR (true replacement level vs rostered players)
+      5. Enhanced bid recommendations (market-adjusted, contender/rebuilder strategies)
 
-      **Grain:** player_key, asof_date
+      **Grain:** player_id, asof_date
 
       **Refresh:** Daily (after Sleeper FA pool refresh)
 
       **Key Business Logic:**
-      - value_score = 40% projections + 25% opportunity + 20% efficiency + 15% market
-      - Bid recommendations vary by position ($1 per 10 pts for RB, 12 for WR, etc.)
-      - Confidence based on recent performance + snap share + replacement level
+      - Enhanced value score: 25% dynasty value + 20% aging + 20% market + 15% sustainability + 10% VoR + 10% recent
+      - Dynasty 3yr value uses position-specific discount rates (RB:17.5%, WR:10%, QB:6.5%, TE:12.5%)
+      - Market signals: STRONG_BUY (gap >25%), BUY (10-25%), HOLD (-10 to 10%), SELL (-10 to -25%), STRONG_SELL (<-25%)
+      - TDOE regression: |TDOE| >= 3.0 flags 86-93% reversion probability
+      - True VoR: vs median rostered RB2/WR3/TE1, not just FA pool
+
+      **Research Foundation:** 25,000+ words, 50+ citations (docs/analytics_references/fasa_targets_research.md)
+
+      **Legacy Compatibility:** Original value_score and bid_confidence preserved for comparison
 
     config:
       materialized: external
       location: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}/marts/mart_fasa_targets/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
 
     columns:
-      - name: player_key
-        description: "Canonical player identifier (MFL ID)"
+      - name: player_id
+        description: "Canonical player identifier (sequential surrogate, ADR-011)"
         data_tests:
           - not_null
+
+      - name: player_key
+        description: "Sleeper player ID (for reference)"
 
       - name: player_name
         description: "Player display name"
@@ -154,11 +166,169 @@ models:
       - name: current_week
         description: "Most recent completed NFL week"
 
+      # ========================================================================
+      # PHASE 1: AGING CURVE & DYNASTY VALUATION
+      # ========================================================================
+
+      - name: age_at_snapshot
+        description: "Player age at snapshot date (calculated from birthdate)"
+
+      - name: position_peak_age_min
+        description: "Position-specific peak age minimum (RB:23, WR:26, QB:28, TE:25)"
+
+      - name: position_peak_age_max
+        description: "Position-specific peak age maximum (RB:26, WR:30, QB:33, TE:27)"
+
+      - name: age_peak_window_flag
+        description: "TRUE if player is within position-specific peak age window"
+
+      - name: years_to_peak
+        description: "Years until peak window (negative if past peak)"
+
+      - name: age_decline_risk_score
+        description: "Age decline risk (0.0=no risk, 1.0=extreme risk, >0.5=high risk)"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "(age_decline_risk_score >= 0.0 AND age_decline_risk_score <= 1.0) OR age_decline_risk_score IS NULL"
+
+      - name: projected_points_year1
+        description: "Projected points Year 1 (ROS this season)"
+
+      - name: projected_points_year2
+        description: "Projected points Year 2 (17 games with aging decline)"
+
+      - name: projected_points_year3
+        description: "Projected points Year 3 (17 games with compounded aging decline)"
+
+      - name: dynasty_3yr_value
+        description: "Dynasty 3-year value (sum of discounted future points)"
+
+      - name: dynasty_discount_rate
+        description: "Position-specific annual decline rate (RB:17.5%, WR:10%, QB:6.5%, TE:12.5%)"
+
+      # ========================================================================
+      # PHASE 2: MARKET EFFICIENCY SCORING
+      # ========================================================================
+
+      - name: model_value
+        description: "Internal model valuation (dynasty_3yr_value)"
+
+      - name: market_value
+        description: "External market valuation (KTC consensus)"
+
+      - name: value_gap_pct
+        description: "Value gap percentage ((model - market) / market * 100)"
+
+      - name: market_efficiency_signal
+        description: "Market trading signal based on value gap"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'STRONG_SELL', 'UNKNOWN']
+
+      - name: market_inefficiency_flag
+        description: "TRUE if |value_gap_pct| > 25% (actionable arbitrage opportunity)"
+
+      # ========================================================================
+      # PHASE 3: SUSTAINABILITY ANALYSIS
+      # ========================================================================
+
+      - name: expected_tds_season
+        description: "Expected TDs based on opportunity share and team context"
+
+      - name: actual_tds_season
+        description: "Actual TDs scored this season"
+
+      - name: tdoe
+        description: "Touchdowns Over Expected (actual - expected, regression signal)"
+
+      - name: td_regression_risk_flag
+        description: "TRUE if |TDOE| >= 3.0 (strong regression signal, 86-93% revert)"
+
+      - name: td_regression_direction
+        description: "Direction of expected TD regression"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['POSITIVE', 'NEGATIVE', 'NEUTRAL']
+
+      - name: target_share_pct
+        description: "Team target share percentage (last 4 games, r²=0.60 sticky)"
+
+      - name: opportunity_share_pct
+        description: "Combined opportunity share percentage (last 4 games, r²=0.55 sticky)"
+
+      - name: td_rate_pct
+        description: "TD rate percentage (TDs per target, r²=0.25 fluky)"
+
+      - name: sustainability_score
+        description: "Production sustainability score (0.0-1.0, higher=sticky metrics)"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "(sustainability_score >= 0.0 AND sustainability_score <= 1.0) OR sustainability_score IS NULL"
+
+      # ========================================================================
+      # PHASE 4: LEAGUE CONTEXT & VoR
+      # ========================================================================
+
+      - name: league_replacement_level_ppg
+        description: "League replacement level PPG (median RB2/WR3/TE1)"
+
+      - name: league_median_starter_ppg
+        description: "League median starter PPG (median RB1-2/WR1-3)"
+
+      - name: pts_above_league_replacement
+        description: "True VoR (vs median rostered player, not FA pool)"
+
+      - name: pts_vs_median_starter
+        description: "Points vs median starter at position"
+
+      - name: hypothetical_league_rank
+        description: "Hypothetical league rank if rostered (1=best)"
+
+      - name: total_league_rostered_at_pos
+        description: "Total players rostered at position (context for rank)"
+
+      - name: hypothetical_percentile
+        description: "Hypothetical percentile ranking if rostered (100=best)"
+
+      # ========================================================================
+      # PHASE 5: ENHANCED SCORING & BIDS
+      # ========================================================================
+
+      - name: enhanced_value_score_v2
+        description: "Enhanced value score (0-100): 25% dynasty + 20% aging + 20% market + 15% sustainability + 10% VoR + 10% recent"
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "(enhanced_value_score_v2 >= 0 AND enhanced_value_score_v2 <= 100) OR enhanced_value_score_v2 IS NULL"
+
+      - name: bid_confidence_v3
+        description: "Enhanced bid confidence (VERY_HIGH, HIGH, MEDIUM, LOW)"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
+
+      - name: suggested_bid_dynasty_3yr
+        description: "Suggested bid based on 3-year dynasty value (dynasty_3yr_value / 50)"
+
+      - name: suggested_bid_market_adjusted
+        description: "Market-adjusted bid (30% premium for STRONG_BUY, 20% discount for SELL)"
+
+      - name: suggested_bid_contender
+        description: "Contender-adjusted bid (20% premium for peak age, 30% discount for decline risk)"
+
+      - name: suggested_bid_rebuilder
+        description: "Rebuilder-adjusted bid (30% premium for youth <25, 50% discount for age >27)"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
-              - player_key
+              - player_id
               - asof_date
       - dbt_utils.expression_is_true:
           arguments:
