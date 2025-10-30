@@ -20,34 +20,44 @@ ______________________________________________________________________
 
 ## Task Index
 
-### Phase 1: Critical Path for Wednesday FASA (0-24 hours)
+### Phase 1: Foundation (FASA Critical Path)
 
-| Task | File | Priority | Duration | Status |
-|------|------|----------|----------|--------|
-| 1.1 | [01_task_cap_space_foundation.md](./01_task_cap_space_foundation.md) | CRITICAL | 4h | ✅ Complete |
-| 1.2 | [02_task_sleeper_production_integration.md](./02_task_sleeper_production_integration.md) | CRITICAL | 8h | ✅ Complete |
-| 1.3 | [03_task_fasa_target_mart.md](./03_task_fasa_target_mart.md) | CRITICAL | 8h | ✅ Complete |
-| 1.4 | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md) | CRITICAL | 4h | ⬜ Not Started |
+| Task | File                                                                                     | Priority | Duration | Status      |
+| ---- | ---------------------------------------------------------------------------------------- | -------- | -------- | ----------- |
+| 1.1  | [01_task_cap_space_foundation.md](./01_task_cap_space_foundation.md)                     | CRITICAL | 4h       | ✅ Complete |
+| 1.2  | [02_task_sleeper_production_integration.md](./02_task_sleeper_production_integration.md) | CRITICAL | 8h       | ✅ Complete |
+| 1.3  | [03_task_fasa_target_mart.md](./03_task_fasa_target_mart.md)                             | CRITICAL | 8h       | ✅ Complete |
 
-**Milestone:** FASA notebook ready for Wednesday bids (24 hours before deadline)
+**Milestone:** Basic FASA infrastructure ready
 
-### Phase 2: Trade Intelligence (24-48 hours)
+### Phase 2: FASA Intelligence Enhancements
 
-| Task | File | Priority | Duration | Status |
-|------|------|----------|----------|--------|
-| 2.1 | [05_task_historical_backfill.md](./05_task_historical_backfill.md) | HIGH | 8h | ⬜ Not Started |
-| 2.2 | [06_task_baseline_valuation_model.md](./06_task_baseline_valuation_model.md) | HIGH | 8h | ⬜ Not Started |
-| 2.3 | [07_task_trade_target_marts.md](./07_task_trade_target_marts.md) | HIGH | 8h | ⬜ Not Started |
-| 2.4 | [08_task_trade_analysis_notebook.md](./08_task_trade_analysis_notebook.md) | MEDIUM | 4h | ⬜ Not Started |
+| Task     | File                                                                     | Priority | Duration | Status         |
+| -------- | ------------------------------------------------------------------------ | -------- | -------- | -------------- |
+| 2.4 (11) | [11_task_fa_acquisition_history.md](./11_task_fa_acquisition_history.md) | HIGH     | 6h       | ⬜ Not Started |
+| 2.5 (12) | [12_task_league_roster_depth.md](./12_task_league_roster_depth.md)       | HIGH     | 4h       | ⬜ Not Started |
+| 2.6 (13) | [13_task_enhance_fasa_targets.md](./13_task_enhance_fasa_targets.md)     | HIGH     | 4h       | ⬜ Not Started |
+| 1.4      | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md) | CRITICAL | 4h       | 🟦 In Progress |
 
-**Milestone:** Trade analysis toolkit operational
+**Milestone:** Enhanced FASA notebook with market intelligence ready
 
-### Phase 3: Automation & Production (48-60 hours)
+### Phase 3: Trade Intelligence (Deferred)
 
-| Task | File | Priority | Duration | Status |
-|------|------|----------|----------|--------|
-| 3.1 | [09_task_github_actions_workflows.md](./09_task_github_actions_workflows.md) | HIGH | 6h | ⬜ Not Started |
-| 3.2 | [10_task_documentation_polish.md](./10_task_documentation_polish.md) | MEDIUM | 6h | ⬜ Not Started |
+| Task | File                                                                         | Priority | Duration | Status                                                             |
+| ---- | ---------------------------------------------------------------------------- | -------- | -------- | ------------------------------------------------------------------ |
+| 2.1  | [05_task_historical_backfill.md](./05_task_historical_backfill.md)           | MEDIUM   | 8h       | 🟡 Partial (2020-2025 complete, 2012-2019 deferred to later phase) |
+| 2.2  | [06_task_baseline_valuation_model.md](./06_task_baseline_valuation_model.md) | MEDIUM   | 8h       | ❌ Blocked by 2.1                                                  |
+| 2.3  | [07_task_trade_target_marts.md](./07_task_trade_target_marts.md)             | MEDIUM   | 8h       | ❌ Blocked by 2.2                                                  |
+| 2.4  | [08_task_trade_analysis_notebook.md](./08_task_trade_analysis_notebook.md)   | MEDIUM   | 4h       | ❌ Blocked by 2.3                                                  |
+
+**Milestone:** Trade analysis toolkit (deferred to future sprint)
+
+### Phase 4: Automation & Production (Future)
+
+| Task | File                                                                         | Priority | Duration | Status         |
+| ---- | ---------------------------------------------------------------------------- | -------- | -------- | -------------- |
+| 3.1  | [09_task_github_actions_workflows.md](./09_task_github_actions_workflows.md) | LOW      | 6h       | ⬜ Not Started |
+| 3.2  | [10_task_documentation_polish.md](./10_task_documentation_polish.md)         | LOW      | 6h       | ⬜ Not Started |
 
 **Milestone:** Daily automated refreshes operational
 
@@ -58,11 +68,11 @@ ______________________________________________________________________
 ### For Human Developers
 
 1. **Read the task file** - Contains all context, code, and validation steps
-1. **Check dependencies** - Ensure prerequisite tasks are complete
-1. **Implement the task** - Follow the technical specifications
-1. **Validate** - Run the validation commands in the task file
-1. **Commit** - Use the suggested commit message
-1. **Update status** - Mark task as complete in this README and in `00_SPRINT_PLAN.md`
+2. **Check dependencies** - Ensure prerequisite tasks are complete
+3. **Implement the task** - Follow the technical specifications
+4. **Validate** - Run the validation commands in the task file
+5. **Commit** - Use the suggested commit message
+6. **Update status** - Mark task as complete in this README and in `00_SPRINT_PLAN.md`
 
 ### For LLM Coding Agents (Claude Code, etc.)
 
@@ -95,38 +105,53 @@ ______________________________________________________________________
 ## Dependencies Between Tasks
 
 ```text
+PHASE 1: Foundation
 Task 1.1 (Cap Space)
   ⬇
 Task 1.2 (Sleeper) ──────┐
   ⬇                       ⬇
 Task 1.3 (FASA Mart) ←────┘
   ⬇
+✅ Basic Infrastructure Ready
+
+PHASE 2: FASA Enhancements
+Task 1.3 (FASA Mart)
+  ⬇
+Task 11 (FA Acquisition History) ──┐
+  ⬇                                  ⬇
+Task 12 (League Roster Depth) ──────┤
+  ⬇                                  ⬇
+Task 13 (Enhance FASA Targets) ←────┘
+  ⬇
 Task 1.4 (FASA Notebook)
   ⬇
-✅ Wednesday FASA Ready
+✅ Enhanced FASA Ready
 
-Task 2.1 (Historical Backfill) ──┐ [REQUIRED FIRST]
+PHASE 3: Trade Intelligence (DEFERRED)
+Task 2.1 (Historical Backfill) ──┐ [PARTIAL - 2020-2025 complete]
   ⬇                               ⬇
-Task 2.2 (Valuation Model) ←──────┘
+Task 2.2 (Valuation Model) ←──────┘ [BLOCKED - needs 2012-2019 data]
   ⬇
 Task 2.3 (Trade Marts)
   ⬇
 Task 2.4 (Trade Notebook)
   ⬇
-✅ Trade Analysis Ready
+🔄 Trade Analysis (Future Sprint)
 
+PHASE 4: Automation (FUTURE)
 Task 3.1 (GitHub Actions) ──┐
   ⬇                          ⬇
 Task 3.2 (Documentation) ←───┘
   ⬇
-✅ Production Ready
+🔄 Production Ready (Future Sprint)
 ```
 
 **Key:**
 
 - Arrows show hard dependencies (must wait for completion)
-- Task 2.1 (Historical Backfill) must complete before Task 2.2 (Valuation Model)
-- All Phase 2 tasks are now sequential (no background processing)
+- Tasks 11, 12, 13 can run in parallel after Task 1.3
+- Task 2.1 partially complete (2020-2025), remainder deferred
+- Phase 3 & 4 deferred to future sprints
 
 ______________________________________________________________________
 
@@ -139,26 +164,34 @@ Update task status here and in `00_SPRINT_PLAN.md`:
 - ⬜ Not Started
 - 🟦 In Progress
 - ✅ Complete
+- 🟡 Partial
 - ❌ Blocked
 
-### Phase 1 Progress (Critical: Must complete in 24 hours)
+### Phase 1: Foundation (COMPLETE ✅)
 
 - ✅ Task 1.1: Cap Space Foundation
 - ✅ Task 1.2: Sleeper Production Integration
-- ✅ Task 1.3: FASA Target Mart
-- ⬜ Task 1.4: FASA Strategy Notebook
+- ✅ Task 1.3: FASA Target Mart (basic version)
+- ✅ IDP Historical Data (2020-2025 defensive stats + snap counts) - *bonus infrastructure work*
 
-### Phase 2 Progress
+### Phase 2: FASA Intelligence Enhancements (CURRENT FOCUS)
 
-- ⬜ Task 2.1: Historical Backfill (REQUIRED FIRST)
-- ⬜ Task 2.2: Baseline Valuation Model
-- ⬜ Task 2.3: Trade Target Marts
-- ⬜ Task 2.4: Trade Analysis Notebook
+- ⬜ Task 11 (2.4): FA Acquisition History Analysis
+- ⬜ Task 12 (2.5): League Roster Depth Analysis
+- ⬜ Task 13 (2.6): Enhance FASA Targets with Market Intelligence
+- 🟦 Task 1.4: FASA Strategy Notebook (in progress, awaiting enhancements)
 
-### Phase 3 Progress
+### Phase 3: Trade Intelligence (DEFERRED)
 
-- ⬜ Task 3.1: GitHub Actions Workflows
-- ⬜ Task 3.2: Documentation & Polish
+- 🟡 Task 2.1: Historical Backfill (2020-2025 ✅, 2012-2019 deferred to future sprint)
+- ❌ Task 2.2: Baseline Valuation Model (blocked - needs full 2012-2024 backfill)
+- ❌ Task 2.3: Trade Target Marts (blocked by 2.2)
+- ❌ Task 2.4: Trade Analysis Notebook (blocked by 2.3)
+
+### Phase 4: Automation & Production (FUTURE)
+
+- ⬜ Task 3.1: GitHub Actions Workflows (deferred)
+- ⬜ Task 3.2: Documentation & Polish (deferred)
 
 ______________________________________________________________________
 
@@ -193,31 +226,41 @@ dbt show --select [MODEL_NAME]
 ### Common Gotchas
 
 1. **DuckDB path resolution:** Always set `EXTERNAL_ROOT` before running dbt
-1. **dbt source freshness:** Not enabled yet (files, not tables)
-1. **Player ID mapping:** Some players won't map (expected ~5% unmapped)
-1. **Manual cap adjustments:** Reconciliation differences are expected
-1. **Test failures:** Check logs carefully - often data quality issues, not code bugs
+2. **dbt source freshness:** Not enabled yet (files, not tables)
+3. **Player ID mapping:** Some players won't map (expected ~5% unmapped)
+4. **Manual cap adjustments:** Reconciliation differences are expected
+5. **Test failures:** Check logs carefully - often data quality issues, not code bugs
 
 ______________________________________________________________________
 
 ## Success Criteria
 
-Sprint is complete when:
+**Current Sprint Focus:**
 
-✅ **Primary Goal (Wednesday FASA):**
+✅ **Phase 1: Foundation (COMPLETE)**
 
-- [ ] FASA notebook runs without errors
-- [ ] Top 10 RBs + 15 WRs + 8 TEs identified with bid recommendations
-- [ ] Drop scenarios calculated
-- [ ] Delivered by Tuesday 11:59 PM EST
+- [x] Cap space data ingested and staged
+- [x] Sleeper rosters loaded
+- [x] Basic FASA targets mart created
+- [x] IDP historical data loaded (2020-2025)
 
-✅ **Secondary Goal (Trade Analysis):**
+✅ **Phase 2: FASA Intelligence (IN PROGRESS)**
 
-- [ ] Trade analysis notebook runs without errors
-- [ ] Buy-low and sell-high candidates identified
-- [ ] Valuation model trained (MAE < 5.0, R² > 0.50)
+- [ ] FA acquisition history mart built (Task 11)
+- [ ] League roster depth analysis complete (Task 12)
+- [ ] FASA targets enhanced with market intelligence (Task 13)
+- [ ] FASA notebook runs with enhanced recommendations (Task 1.4)
+- [ ] Bid recommendations incorporate market data and league context
 
-✅ **Tertiary Goal (Production):**
+**Deferred to Future Sprints:**
+
+⏸️ **Phase 3: Trade Intelligence**
+
+- [ ] Full historical backfill (2012-2019) - *partially complete: 2020-2025 done*
+- [ ] Valuation model trained
+- [ ] Trade analysis notebook operational
+
+⏸️ **Phase 4: Automation**
 
 - [ ] Daily automated refreshes operational
 - [ ] All dbt tests passing (>95%)
@@ -232,17 +275,17 @@ ______________________________________________________________________
 When completing a task:
 
 1. Update status in this README (⬜ → ✅)
-1. Update status in `00_SPRINT_PLAN.md` Progress Tracking section
-1. Commit with suggested commit message from task file
+2. Update status in `00_SPRINT_PLAN.md` Progress Tracking section
+3. Commit with suggested commit message from task file
 
 ### Reporting Blockers
 
 If blocked on a task:
 
 1. Update status to ❌ Blocked
-1. Document blocker in task file
-1. Note dependencies or missing prerequisites
-1. Escalate if critical path is affected
+2. Document blocker in task file
+3. Note dependencies or missing prerequisites
+4. Escalate if critical path is affected
 
 ______________________________________________________________________
 
@@ -251,14 +294,14 @@ ______________________________________________________________________
 Each task file contains:
 
 1. **Header** - Sprint, phase, duration, priority
-1. **Objective** - What and why
-1. **Context** - Current state, dependencies
-1. **Files to Create/Modify** - Complete code listings
-1. **Implementation Steps** - Step-by-step guide
-1. **Success Criteria** - Definition of done
-1. **Validation Commands** - Exact commands to test
-1. **Commit Message** - Suggested conventional commit format
-1. **Notes** - Gotchas, tips, future considerations
+2. **Objective** - What and why
+3. **Context** - Current state, dependencies
+4. **Files to Create/Modify** - Complete code listings
+5. **Implementation Steps** - Step-by-step guide
+6. **Success Criteria** - Definition of done
+7. **Validation Commands** - Exact commands to test
+8. **Commit Message** - Suggested conventional commit format
+9. **Notes** - Gotchas, tips, future considerations
 
 ______________________________________________________________________
 
