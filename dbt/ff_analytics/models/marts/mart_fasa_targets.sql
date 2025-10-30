@@ -20,6 +20,15 @@ with fa_pool as (
     on
       fa.sleeper_player_id = CAST(dp.sleeper_id as VARCHAR)  -- Primary join
       or (fa.mfl_id = dp.mfl_id and fa.mfl_id is not null)  -- Backstop
+  -- Dedup: prioritize sleeper_id matches over mfl_id matches
+  qualify ROW_NUMBER() over (
+    partition by fa.player_key
+    order by
+      case
+        when fa.sleeper_player_id = CAST(dp.sleeper_id as VARCHAR) then 1
+        else 2
+      end
+  ) = 1
 ),
 
 recent_stats as (
@@ -375,25 +384,20 @@ sustainability as (
 
 league_context as (
   -- Use pre-calculated replacement levels from league roster depth mart
-  select distinct
-    -- Replacement level (already calculated in mart)
-    MAX(case when lrd.position = 'RB' then lrd.replacement_level_ppg end) over () as rb_replacement_ppg,
-    MAX(case when lrd.position = 'WR' then lrd.replacement_level_ppg end) over () as wr_replacement_ppg,
-    MAX(case when lrd.position = 'TE' then lrd.replacement_level_ppg end) over () as te_replacement_ppg,
-
-    -- Median starter (already calculated in mart)
-    MAX(case when lrd.position = 'RB' then lrd.median_starter_ppg end) over () as rb_median_starter_ppg,
-    MAX(case when lrd.position = 'WR' then lrd.median_starter_ppg end) over () as wr_median_starter_ppg,
-
-    -- Total rostered at position
-    MAX(case when lrd.position = 'RB' then lrd.total_rostered_at_position end) over () as rb_total_rostered,
-    MAX(case when lrd.position = 'WR' then lrd.total_rostered_at_position end) over () as wr_total_rostered,
-    MAX(case when lrd.position = 'TE' then lrd.total_rostered_at_position end) over () as te_total_rostered
-
+  -- Aggregate to single row to avoid Cartesian product
+  select
+    MAX(case when lrd.position = 'RB' then lrd.replacement_level_ppg end) as rb_replacement_ppg,
+    MAX(case when lrd.position = 'WR' then lrd.replacement_level_ppg end) as wr_replacement_ppg,
+    MAX(case when lrd.position = 'TE' then lrd.replacement_level_ppg end) as te_replacement_ppg,
+    MAX(case when lrd.position = 'RB' then lrd.median_starter_ppg end) as rb_median_starter_ppg,
+    MAX(case when lrd.position = 'WR' then lrd.median_starter_ppg end) as wr_median_starter_ppg,
+    MAX(case when lrd.position = 'RB' then lrd.total_rostered_at_position end) as rb_total_rostered,
+    MAX(case when lrd.position = 'WR' then lrd.total_rostered_at_position end) as wr_total_rostered,
+    MAX(case when lrd.position = 'TE' then lrd.total_rostered_at_position end) as te_total_rostered
   from {{ ref('mart_league_roster_depth') }} lrd
 ),
 
-league_vor as (
+league_vor_base as (
   select
     fa.player_id,
     fa.position,
@@ -441,15 +445,20 @@ league_vor as (
       when 'RB' then lc.rb_total_rostered
       when 'WR' then lc.wr_total_rostered
       when 'TE' then lc.te_total_rostered
-    end as total_league_rostered_at_pos,
-
-    -- Percentile
-    (1 - (CAST(hypothetical_league_rank as DECIMAL) / total_league_rostered_at_pos)) * 100
-      as hypothetical_percentile
+    end as total_league_rostered_at_pos
 
   from fa_pool fa
   left join projections proj on fa.player_id = proj.player_id
   cross join league_context lc
+),
+
+league_vor as (
+  select
+    *,
+    -- Percentile (calculated after hypothetical_league_rank is materialized)
+    (1 - (CAST(hypothetical_league_rank as DECIMAL) / NULLIF(total_league_rostered_at_pos, 0))) * 100
+      as hypothetical_percentile
+  from league_vor_base
 ),
 
 -- ============================================================================

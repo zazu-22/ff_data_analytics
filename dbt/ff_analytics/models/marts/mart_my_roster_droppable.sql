@@ -136,10 +136,10 @@ select
 
 from my_roster r
 left join contracts c on r.player_key = c.player_key
-left join dead_cap dc using (player_key)
-left join performance perf using (player_key)
+left join dead_cap dc on r.player_key = dc.player_key
+left join performance perf on r.player_key = perf.player_key
 left join projections proj on r.player_key = proj.player_id
-left join position_depth pd using (player_key)
+left join position_depth pd on r.player_key = pd.player_key
 left join {{ ref('dim_player') }} dim on r.player_key = dim.player_id
 
 order by droppable_score desc

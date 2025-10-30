@@ -70,7 +70,7 @@ with base as (
     -- noqa: disable=references.qualification
     read_parquet(
       '{{ env_var("RAW_NFLVERSE_FF_OPPORTUNITY_GLOB", "data/raw/nflverse/ff_opportunity/dt=*/*.parquet") }}',
-      o.hive_partitioning = true
+      hive_partitioning = true
     ) o
     -- noqa: enable=references.qualification
   -- Data quality filters: Exclude records missing required identifiers
