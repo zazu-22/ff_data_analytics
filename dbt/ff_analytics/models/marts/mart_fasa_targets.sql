@@ -82,15 +82,13 @@ recent_stats as (
 ),
 
 projections as (
-  -- Rest of season projections (join through dim_player to get player_id)
-  -- NOTE: proj.player_id is actually mfl_id from ffanalytics staging
+  -- Rest of season projections (player_id is already canonical in mart layer)
   select
-    dp.player_id,
+    proj.player_id,  -- Already canonical player_id (ADR-011)
     SUM(proj.projected_fantasy_points) as projected_total_ros,
     AVG(proj.projected_fantasy_points) as projected_ppg_ros,
     COUNT(*) as weeks_remaining
   from {{ ref('mart_fantasy_projections') }} proj
-  inner join {{ ref('dim_player') }} dp on proj.player_id = dp.mfl_id  -- Join on mfl_id, get player_id
   where
     proj.season = YEAR(CURRENT_DATE)
     and proj.week
@@ -99,8 +97,7 @@ projections as (
       where season = YEAR(CURRENT_DATE) and CAST(game_date as DATE) < CURRENT_DATE
     )
     and proj.horizon = 'weekly'
-    and dp.mfl_id is not null
-  group by dp.player_id
+  group by proj.player_id
 ),
 
 opportunity as (
