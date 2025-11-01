@@ -32,14 +32,15 @@ ______________________________________________________________________
 
 ### Phase 2: FASA Intelligence Enhancements
 
-| Task     | File                                                                     | Priority | Duration | Status         |
-| -------- | ------------------------------------------------------------------------ | -------- | -------- | -------------- |
-| 2.4 (11) | [11_task_fa_acquisition_history.md](./11_task_fa_acquisition_history.md) | HIGH     | 6h       | ✅ Complete    |
-| 2.5 (12) | [12_task_league_roster_depth.md](./12_task_league_roster_depth.md)       | HIGH     | 4h       | ✅ Complete    |
-| 2.6 (13) | [13_task_enhance_fasa_targets.md](./13_task_enhance_fasa_targets.md)     | HIGH     | 4h       | ⬜ Not Started |
-| 1.4      | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md) | CRITICAL | 4h       | 🟦 In Progress |
+| Task     | File                                                                                     | Priority | Duration | Status         |
+| -------- | ---------------------------------------------------------------------------------------- | -------- | -------- | -------------- |
+| 2.4 (11) | [11_task_fa_acquisition_history.md](./11_task_fa_acquisition_history.md)                 | HIGH     | 6h       | ✅ Complete    |
+| 2.5 (12) | [12_task_league_roster_depth.md](./12_task_league_roster_depth.md)                       | HIGH     | 4h       | ✅ Complete    |
+| 2.6 (13) | [13_task_enhance_fasa_targets.md](./13_task_enhance_fasa_targets.md)                     | HIGH     | 4h       | ✅ Complete    |
+| 2.7 (14) | [14_task_roster_aware_fasa_intelligence.md](./14_task_roster_aware_fasa_intelligence.md) | HIGH     | 4-6h     | ⬜ Not Started |
+| 1.4      | [04_task_fasa_strategy_notebook.md](./04_task_fasa_strategy_notebook.md)                 | CRITICAL | 4h       | 🟦 In Progress |
 
-**Milestone:** Enhanced FASA notebook with market intelligence ready
+**Milestone:** Enhanced FASA notebook with roster-aware market intelligence ready
 
 ### Phase 3: Trade Intelligence (Deferred)
 
@@ -122,6 +123,10 @@ Task 11 (FA Acquisition History) ──┐
 Task 12 (League Roster Depth) ──────┤
   ⬇                                  ⬇
 Task 13 (Enhance FASA Targets) ←────┘
+  ⬇
+Task 14 (Roster-Aware Intelligence) ──┐
+  ⬇                                    ⬇
+  ├─────────────────────────────────→ mart_my_roster_droppable
   ⬇
 Task 1.4 (FASA Notebook)
   ⬇
