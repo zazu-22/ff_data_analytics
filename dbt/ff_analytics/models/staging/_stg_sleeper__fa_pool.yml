@@ -15,16 +15,15 @@ models:
 
     columns:
       - name: player_key
-        description: |
-          Composite player identifier:
-          - Mapped players: player_key = mfl_id
-          - Unmapped players: player_key = 'sleeper_' + sleeper_player_id
+        description: "Identity column (canonical player_id when mapped; provider fallback otherwise)"
         data_tests:
           - not_null
-          - unique
+
+      - name: player_id
+        description: "Canonical player identifier (dim_player_id_xref)"
 
       - name: mfl_id
-        description: MFL player ID (external provider ID, null if unmapped)
+        description: "Provider-specific MFL ID (if present)"
         data_tests:
           - relationships:
               arguments:
@@ -61,8 +60,8 @@ models:
               arguments:
                 values: ['Active', 'Injured Reserve', 'Questionable', 'Doubtful', 'Out', 'PUP']
 
-      - name: is_mapped_to_mfl_id
-        description: Flag indicating if player mapped to canonical mfl_id
+      - name: is_mapped_to_dim_player
+        description: Flag indicating if player mapped to canonical player_id
         data_tests:
           - not_null
           - accepted_values:

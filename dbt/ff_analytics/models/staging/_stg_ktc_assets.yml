@@ -9,6 +9,7 @@ models:
       **Source**: data/raw/ktc/{players,picks}/ (KTC dynasty rankings scraper)
       **Key Transformations**:
       - Player name → mfl_id crosswalk (fuzzy matching via merge_name)
+      - Apply nickname/alias corrections from dim_name_alias for KTC-specific names
       - UNION players and picks into unified asset table
       - Player_key composite identifier for grain uniqueness
 
@@ -19,6 +20,14 @@ models:
       **Data Attribution**:
       Market values sourced from KeepTradeCut (https://keeptradecut.com/dynasty-rankings)
       per their content usage guidelines.
+
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "player_id != -1"
+          config:
+            severity: warn
+            where: "asset_type = 'player'"
 
     columns:
       - name: player_key

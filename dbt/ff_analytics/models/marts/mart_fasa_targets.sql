@@ -53,7 +53,15 @@ recent_stats as (
     -- Efficiency
     SUM(rushing_yards) / NULLIF(SUM(carries), 0) as ypc,
     SUM(receiving_yards) / NULLIF(SUM(receptions), 0) as ypr,
-    SUM(receptions) / NULLIF(SUM(targets), 0) as catch_rate
+    SUM(receptions) / NULLIF(SUM(targets), 0) as catch_rate,
+
+    -- IDP production aggregates (last 4 games)
+    SUM(case when game_recency <= 4 then def_tackles_solo end) as idp_tackles_solo_l4,
+    SUM(case when game_recency <= 4 then def_tackles_with_assist end) as idp_tackles_assist_l4,
+    SUM(case when game_recency <= 4 then def_sacks end) as idp_sacks_l4,
+    SUM(case when game_recency <= 4 then def_interceptions end) as idp_interceptions_l4,
+    SUM(case when game_recency <= 4 then def_fumbles_forced end) as idp_forced_fumbles_l4,
+    SUM(case when game_recency <= 4 then def_tds end) as idp_tds_l4
 
   from (
     select
@@ -68,6 +76,12 @@ recent_stats as (
       rushing_yards,
       receiving_yards,
       receptions,
+      COALESCE(def_tackles_solo, 0) as def_tackles_solo,
+      COALESCE(def_tackles_with_assist, 0) as def_tackles_with_assist,
+      COALESCE(def_sacks, 0) as def_sacks,
+      COALESCE(def_interceptions, 0) as def_interceptions,
+      COALESCE(def_fumbles_forced, 0) as def_fumbles_forced,
+      COALESCE(def_tds, 0) as def_tds,
       ROW_NUMBER() over (partition by player_id order by season desc, week desc) as game_recency
     from {{ ref('mart_fantasy_actuals_weekly') }}
     where
@@ -137,6 +151,49 @@ opportunity as (
   group by player_id
 ),
 
+idp_snap_opportunity as (
+  -- Defensive snap opportunity (IDP analogue to offensive opportunity_share)
+  select
+    player_id,
+    AVG(case when game_recency <= 4 then defense_snaps end) as idp_defense_snaps_l4,
+    AVG(case when game_recency <= 4 then defense_pct end) as idp_defense_snap_pct_l4,
+    AVG(case when game_recency <= 4 then st_snaps end) as idp_special_teams_snaps_l4,
+    AVG(case when game_recency <= 4 then st_pct end) as idp_special_teams_snap_pct_l4
+  from (
+    select
+      player_id,
+      season,
+      week,
+      defense_snaps,
+      defense_pct,
+      st_snaps,
+      st_pct,
+      ROW_NUMBER() over (
+        partition by player_id
+        order by season desc, week desc
+      ) as game_recency
+    from (
+      select
+        player_id,
+        season,
+        week,
+        season_type,
+        MAX(case when stat_name = 'defense_snaps' then stat_value end) as defense_snaps,
+        MAX(case when stat_name = 'defense_pct' then stat_value end) as defense_pct,
+        MAX(case when stat_name = 'st_snaps' then stat_value end) as st_snaps,
+        MAX(case when stat_name = 'st_pct' then stat_value end) as st_pct
+      from {{ ref('stg_nflverse__snap_counts') }}
+      where stat_name in ('defense_snaps', 'defense_pct', 'st_snaps', 'st_pct')
+      group by player_id, season, week, season_type
+    ) snaps
+    where season = YEAR(CURRENT_DATE)
+      and player_id != -1
+      and season_type = 'REG'
+  )
+  where game_recency <= 8
+  group by player_id
+),
+
 market_values as (
   -- KTC valuations
   select
@@ -152,15 +209,36 @@ market_values as (
   qualify ROW_NUMBER() over (partition by player_id order by asof_date desc) = 1
 ),
 
-position_baselines as (
-  -- Calculate replacement level (25th percentile at position)
+position_baselines_offense as (
+  -- Calculate replacement level (25th percentile at offensive positions)
   select
     position,
     PERCENTILE_CONT(0.25) within group (order by projected_ppg_ros) as replacement_ppg,
     MAX(projected_ppg_ros) as max_projected_ppg
   from projections p
-  inner join fa_pool fa on p.player_id = fa.player_id
+    inner join fa_pool fa on p.player_id = fa.player_id
   group by position
+),
+
+position_baselines_idp as (
+  -- Approximate replacement levels for IDP positions using recent fantasy output
+  select
+    fa.position,
+    PERCENTILE_CONT(0.25) within group (
+      order by rs.fantasy_ppg_last_4
+    ) as replacement_ppg,
+    MAX(rs.fantasy_ppg_last_4) as max_projected_ppg
+  from fa_pool fa
+    left join recent_stats rs on fa.player_id = rs.player_id
+  where fa.position in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
+    and rs.fantasy_ppg_last_4 is not null
+  group by fa.position
+),
+
+position_baselines as (
+  select * from position_baselines_offense
+  union all
+  select * from position_baselines_idp
 ),
 
 -- ============================================================================
@@ -261,7 +339,11 @@ market_context as (
     fa.player_id,
 
     -- Model value (our internal valuation - raw fantasy points)
-    dv.dynasty_3yr_value as model_value,
+    case
+      when fa.position in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
+        then COALESCE(dv.dynasty_3yr_value, rs.fantasy_ppg_last_4 * 17)
+      else dv.dynasty_3yr_value
+    end as model_value,
 
     -- Market value (KTC consensus - 0-10,000 scale)
     mv.ktc_value as market_value,
@@ -297,6 +379,7 @@ market_context as (
   from fa_pool fa
   left join dynasty_valuation dv on fa.player_id = dv.player_id
   left join market_values mv on fa.player_id = mv.player_id
+  left join recent_stats rs on fa.player_id = rs.player_id
 ),
 
 market_signals as (
@@ -322,6 +405,69 @@ market_signals as (
     ABS(mc.value_gap_pct) > 25 as market_inefficiency_flag
 
   from market_context mc
+),
+
+idp_value_signals as (
+  select
+    fa.player_id,
+    COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0) as idp_tackles_l4,
+    COALESCE(rs.idp_sacks_l4, 0) as idp_sacks_l4,
+    COALESCE(rs.idp_interceptions_l4, 0) as idp_interceptions_l4,
+    COALESCE(rs.idp_forced_fumbles_l4, 0) as idp_forced_fumbles_l4,
+    COALESCE(rs.idp_tds_l4, 0) as idp_tds_l4,
+    iso.idp_defense_snaps_l4,
+    iso.idp_defense_snap_pct_l4,
+    iso.idp_special_teams_snaps_l4,
+    iso.idp_special_teams_snap_pct_l4,
+    case
+      when iso.idp_defense_snaps_l4 > 0
+        then (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) / iso.idp_defense_snaps_l4
+    end as idp_tackles_per_snap_l4,
+    case
+      when iso.idp_defense_snaps_l4 > 0
+        then (
+          COALESCE(rs.idp_sacks_l4, 0)
+          + COALESCE(rs.idp_interceptions_l4, 0)
+          + COALESCE(rs.idp_forced_fumbles_l4, 0)
+        ) / iso.idp_defense_snaps_l4
+    end as idp_impact_play_rate_l4,
+    case
+      when iso.idp_defense_snap_pct_l4 >= 0.85 then 1.0
+      when iso.idp_defense_snap_pct_l4 >= 0.70 then 0.8
+      when iso.idp_defense_snap_pct_l4 >= 0.50 then 0.6
+      when iso.idp_defense_snap_pct_l4 >= 0.30 then 0.3
+      else 0.0
+    end as idp_opportunity_score,
+    case
+      when (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) >= 24 then 1.0
+      when (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) >= 18 then 0.8
+      when (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) >= 12 then 0.6
+      when (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) >= 8 then 0.4
+      when (COALESCE(rs.idp_tackles_solo_l4, 0) + COALESCE(rs.idp_tackles_assist_l4, 0)) >= 4 then 0.2
+      else 0.0
+    end as idp_production_score,
+    case
+      when (
+        COALESCE(rs.idp_sacks_l4, 0)
+        + COALESCE(rs.idp_interceptions_l4, 0)
+        + COALESCE(rs.idp_forced_fumbles_l4, 0)
+      ) >= 4 then 1.0
+      when (
+        COALESCE(rs.idp_sacks_l4, 0)
+        + COALESCE(rs.idp_interceptions_l4, 0)
+        + COALESCE(rs.idp_forced_fumbles_l4, 0)
+      ) >= 2 then 0.7
+      when (
+        COALESCE(rs.idp_sacks_l4, 0)
+        + COALESCE(rs.idp_interceptions_l4, 0)
+        + COALESCE(rs.idp_forced_fumbles_l4, 0)
+      ) >= 1 then 0.4
+      else 0.0
+    end as idp_playmaking_score
+  from fa_pool fa
+    left join recent_stats rs on fa.player_id = rs.player_id
+    left join idp_snap_opportunity iso on fa.player_id = iso.player_id
+  where fa.position in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
 ),
 
 -- ============================================================================
@@ -530,6 +676,15 @@ enhanced_value_score as (
         when rs.fantasy_ppg_last_4 > 5 then 4
         else 0
       end
+
+      -- IDP opportunity/production (up to 40% combined weight for defensive players)
+      + case
+        when fa.position in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB') then
+          COALESCE(ivs.idp_opportunity_score, 0) * 15
+          + COALESCE(ivs.idp_production_score, 0) * 15
+          + COALESCE(ivs.idp_playmaking_score, 0) * 10
+        else 0
+      end
     )) as enhanced_value_score_v2,
 
     -- Bid confidence
@@ -557,6 +712,7 @@ enhanced_value_score as (
   left join sustainability sus on fa.player_id = sus.player_id
   left join league_vor lv on fa.player_id = lv.player_id
   left join recent_stats rs on fa.player_id = rs.player_id
+  left join idp_value_signals ivs on fa.player_id = ivs.player_id
 ),
 
 market_adjusted_bids as (
@@ -625,6 +781,20 @@ select
   opp.target_share_l4,
   opp.rush_share_l4,
   opp.opportunity_share_l4,  -- Combined metric (target 60% + rush 40%)
+
+  -- IDP Opportunity & Production (null for offensive players)
+  iv.idp_defense_snap_pct_l4,
+  iv.idp_defense_snaps_l4,
+  iv.idp_special_teams_snap_pct_l4,
+  iv.idp_special_teams_snaps_l4,
+  iv.idp_tackles_l4,
+  iv.idp_sacks_l4,
+  (COALESCE(iv.idp_interceptions_l4, 0) + COALESCE(iv.idp_forced_fumbles_l4, 0)) as idp_turnovers_l4,
+  iv.idp_tackles_per_snap_l4,
+  iv.idp_impact_play_rate_l4,
+  iv.idp_opportunity_score,
+  iv.idp_production_score,
+  iv.idp_playmaking_score,
 
   -- Projections
   proj.projected_ppg_ros,
@@ -772,7 +942,7 @@ select
 
 from fa_pool fa
 left join recent_stats rs on fa.player_id = rs.player_id
-inner join projections proj on fa.player_id = proj.player_id  -- Only FAs with projections
+left join projections proj on fa.player_id = proj.player_id
 left join opportunity opp on fa.player_id = opp.player_id
 left join market_values ktc on fa.player_id = ktc.player_id
 left join position_baselines pb on fa.position = pb.position
@@ -782,5 +952,17 @@ left join sustainability sus on fa.player_id = sus.player_id
 left join league_vor lv on fa.player_id = lv.player_id
 left join enhanced_value_score evs on fa.player_id = evs.player_id
 left join market_adjusted_bids mab on fa.player_id = mab.player_id
+left join idp_value_signals iv on fa.player_id = iv.player_id
 
-where fa.position in ('QB', 'RB', 'WR', 'TE')  -- Focus on offensive skill positions for FASA
+where fa.position in (
+    'QB', 'RB', 'WR', 'TE', -- Offensive skill positions
+    'DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB' -- IDP positions
+  )
+  and not exists (
+    select 1
+    from {{ ref('mart_contract_snapshot_current') }} c
+    where c.player_id = fa.player_id
+      and c.obligation_year = YEAR(CURRENT_DATE)
+  )
+  and fa.player_id is not null
+  and fa.player_id != -1

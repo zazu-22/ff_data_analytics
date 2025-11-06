@@ -47,7 +47,7 @@ per their content usage guidelines.
 
 select
   -- Composite grain key
-  player_key,              -- Identity key (mfl_id for mapped players, name for unmapped)
+  player_key,              -- Identity key (canonical player_id when mapped, provider fallback otherwise)
   market_scope,            -- dynasty_1qb or dynasty_superflex
   asof_date,               -- Snapshot date
 

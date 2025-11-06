@@ -5,7 +5,7 @@ models:
     description: |
       Dynasty market intelligence platform for FASA bidding decisions.
 
-      Transforms tactical FAAB into comprehensive dynasty strategy by integrating:
+      Transforms tactical FAAB into comprehensive dynasty strategy, by integrating:
       1. Aging curve adjustments (position-specific peak windows, 3yr discounted value)
       2. Market efficiency scoring (model vs market gaps, buy/sell signals)
       3. Sustainability analysis (TDOE regression detection, sticky vs fluky metrics)
