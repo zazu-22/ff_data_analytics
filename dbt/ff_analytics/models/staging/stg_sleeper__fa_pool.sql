@@ -6,7 +6,13 @@
 ) }}
 
 with fa_raw as (
-  select * from read_parquet('{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet')
+  select * from
+    read_parquet(
+      '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
+      hive_partitioning = true
+    )
+  -- Get only the latest snapshot per player (dt partition)
+  qualify row_number() over (partition by sleeper_player_id order by dt desc) = 1
 ),
 
 player_xref as (
@@ -42,7 +48,7 @@ select
   'sleeper' as source_platform,
 
   -- Mapping flag
-  coalesce(xref.player_id is not NULL, FALSE) as is_mapped_to_mfl_id
+  coalesce(xref.player_id is not null, false) as is_mapped_to_mfl_id
 
 from fa_raw fa
 left join player_xref xref

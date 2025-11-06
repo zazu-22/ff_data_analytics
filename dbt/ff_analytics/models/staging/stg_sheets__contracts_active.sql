@@ -24,6 +24,7 @@ with base as (
   select
     -- Franchise/owner
     gm as gm_full_name,
+    gm_tab,
 
     -- Player identifiers
     player as player_name,
@@ -74,24 +75,13 @@ with_franchise as (
     base.cap_hit,
     base.snapshot_date,
 
-    -- Extract last name or key identifier for franchise matching
-    case
-      when base.gm_full_name like 'Nick McCreary' then 'McCreary'
-      when base.gm_full_name like 'Nick Piper' then 'Piper'
-      else split_part(base.gm_full_name, ' ', 1)  -- First name for others
-    end as owner_key,
-
     fran.franchise_id,
     fran.franchise_name,
     fran.owner_name
 
   from base
   left join {{ ref('dim_franchise') }} fran
-    on case
-      when base.gm_full_name like 'Nick McCreary' then 'McCreary'
-      when base.gm_full_name like 'Nick Piper' then 'Piper'
-      else split_part(base.gm_full_name, ' ', 1)
-    end = fran.owner_name
+    on base.gm_tab = fran.gm_tab  -- Clean join on tab name
     -- Temporal join: contract year should fall within franchise owner tenure
     and base.obligation_year between fran.season_start and fran.season_end
 ),

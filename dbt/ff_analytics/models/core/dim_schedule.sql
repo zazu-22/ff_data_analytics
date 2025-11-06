@@ -48,6 +48,10 @@ select
   stadium,
   stadium_id
 
-from read_parquet(
-  '{{ env_var("RAW_NFLVERSE_SCHEDULE_GLOB", "data/raw/nflverse/schedule/dt=*/*.parquet") }}'
-)
+from
+  read_parquet(
+    '{{ env_var("RAW_NFLVERSE_SCHEDULE_GLOB", "data/raw/nflverse/schedule/dt=*/*.parquet") }}',
+    hive_partitioning = true
+  )
+-- Get only the latest snapshot per game (dt partition)
+qualify row_number() over (partition by game_id order by dt desc) = 1

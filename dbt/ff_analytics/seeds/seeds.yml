@@ -57,6 +57,10 @@ seeds:
         description: "Owner during this period"
         data_tests:
           - not_null
+      - name: gm_tab
+        description: "Google Sheet tab name (matches gm_tab in raw commissioner data)"
+        data_tests:
+          - not_null
       - name: season_start
         description: "First season of ownership"
         data_tests:

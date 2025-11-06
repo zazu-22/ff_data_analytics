@@ -7,19 +7,18 @@
 ) }}
 
 with cap_raw as (
-  select
-    *,
-    -- Extract first name from full GM name (e.g., "Jason Shaffer" → "Jason")
-    SPLIT_PART(gm, ' ', 1) as gm_first_name
+  select *
   from {{ source('sheets_raw', 'cap_space') }}
+  -- Get only the latest snapshot per franchise/season (dt partition)
+  qualify row_number() over (partition by gm_tab, season order by dt desc) = 1
 ),
 
 franchise_xref as (
   select
     franchise_id,
-    owner_name,
+    gm_tab,
     season_start,
-    COALESCE(season_end, 9999) as season_end
+    coalesce(season_end, 9999) as season_end
   from {{ ref('dim_franchise') }}
 )
 
@@ -30,10 +29,10 @@ select
   cr.dead_cap_space::int as dead_cap_space,
   cr.traded_cap_space::int as traded_cap_space,
   250 as base_cap,
-  CURRENT_DATE as asof_date
+  current_date as asof_date
 
 from cap_raw cr
 inner join franchise_xref fx
   on
-    cr.gm_first_name = fx.owner_name
+    cr.gm_tab = fx.gm_tab  -- Clean join on tab name!
     and cr.season between fx.season_start and fx.season_end

@@ -238,11 +238,12 @@ def _parse_blocks(rows: list[list[str]]) -> tuple[pl.DataFrame, pl.DataFrame, pl
     return roster_df, cuts_df, picks_df
 
 
-def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
+def parse_cap_space(rows: list[list[str]], gm_name: str, tab_name: str) -> pl.DataFrame:
     """Parse cap space section from GM roster tab (row 3).
 
     Input: Raw CSV rows with row 3 format (all three sections in same row):
-        Row 3: Available Cap Space,,$80,$80,$158,$183,$250,,,,,,Dead Cap Space,,$26,$13,$6,$0,$0,,Traded Cap Space,$7,$0,$0,$0,$0...
+        Row 3: Available Cap Space,,$80,$80,$158,$183,$250,,,,,,
+               Dead Cap Space,,$26,$13,$6,$0,$0,,Traded Cap Space,$7,$0,$0,$0,$0...
 
     Column structure:
         - Available Cap Space: columns 2-6 (years 2025-2029)
@@ -250,12 +251,13 @@ def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
         - Traded Cap Space: columns 21-25 (years 2025-2029)
 
     Output: Long-form DataFrame
-        Columns: gm, season, available_cap_space, dead_cap_space, traded_cap_space
+        Columns: gm, gm_tab, season, available_cap_space, dead_cap_space, traded_cap_space
         Rows: One per (gm, season) - typically 5 rows (2025-2029)
 
     Args:
         rows: Raw CSV rows from GM tab
-        gm_name: GM display name
+        gm_name: GM display name (full name from sheet)
+        tab_name: Tab/directory name (short identifier)
 
     Returns:
         DataFrame with cap space by season
@@ -263,7 +265,7 @@ def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
     """
     # Find cap space row (row 3, contains "Available Cap Space")
     cap_space_row = None
-    for i, row in enumerate(rows[:10]):  # Cap space is in first 10 rows
+    for _i, row in enumerate(rows[:10]):  # Cap space is in first 10 rows
         if not row:
             continue
         if "available cap space" in row[0].strip().lower():
@@ -275,6 +277,7 @@ def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
         return pl.DataFrame(
             schema={
                 "gm": pl.Utf8,
+                "gm_tab": pl.Utf8,
                 "season": pl.Int32,
                 "available_cap_space": pl.Int32,
                 "dead_cap_space": pl.Int32,
@@ -312,6 +315,7 @@ def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
         cap_data.append(
             {
                 "gm": gm_name,
+                "gm_tab": tab_name,
                 "season": season,
                 "available_cap_space": int(available_clean),
                 "dead_cap_space": int(dead_clean),
@@ -325,17 +329,25 @@ def parse_cap_space(rows: list[list[str]], gm_name: str) -> pl.DataFrame:
 def parse_gm_tab(csv_path: Path) -> ParsedGM:
     """Parse a single GM CSV tab and return normalized DataFrames for that GM."""
     rows = _read_csv_rows(csv_path)
-    gm = _extract_gm_name(rows) or csv_path.parent.name
+    tab_name = csv_path.parent.name  # Tab/directory name (short identifier)
+    gm_full_name = _extract_gm_name(rows) or tab_name  # Full name from sheet, fallback to tab
     roster, cuts, picks = _parse_blocks(rows)
-    cap_space = parse_cap_space(rows, gm)
+    cap_space = parse_cap_space(rows, gm_full_name, tab_name)
 
-    # Add GM column and basic cleaning
+    # Add GM columns (both full name and tab identifier) and basic cleaning
     roster = roster.with_columns(
-        gm=pl.lit(gm),
-    )[["gm", *roster.columns]]
-    cuts = cuts.with_columns(gm=pl.lit(gm))[["gm", *cuts.columns]]
-    picks = picks.with_columns(gm=pl.lit(gm))[["gm", *picks.columns]]
-    return ParsedGM(gm=gm, roster=roster, cuts=cuts, picks=picks, cap_space=cap_space)
+        gm=pl.lit(gm_full_name),
+        gm_tab=pl.lit(tab_name),
+    )[["gm", "gm_tab", *roster.columns]]
+    cuts = cuts.with_columns(
+        gm=pl.lit(gm_full_name),
+        gm_tab=pl.lit(tab_name),
+    )[["gm", "gm_tab", *cuts.columns]]
+    picks = picks.with_columns(
+        gm=pl.lit(gm_full_name),
+        gm_tab=pl.lit(tab_name),
+    )[["gm", "gm_tab", *picks.columns]]
+    return ParsedGM(gm=gm_full_name, roster=roster, cuts=cuts, picks=picks, cap_space=cap_space)
 
 
 def parse_commissioner_dir(in_dir: Path) -> list[ParsedGM]:
@@ -706,11 +718,11 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
     return df.hstack(contract_parsed)
 
 
-def _apply_name_aliases(df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
+def _apply_name_aliases(player_df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
     """Apply name alias corrections from seed file."""
     alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
     if not alias_path.exists():
-        return df
+        return player_df
 
     alias_seed = pl.read_csv(alias_path)
     alias_has_position = "position" in alias_seed.columns
@@ -720,13 +732,13 @@ def _apply_name_aliases(df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
         if "treat_as_position" in alias_seed.columns:
             alias_cols.append("treat_as_position")
 
-        df = df.join(
+        player_df = player_df.join(
             alias_seed.select(alias_cols),
             left_on="Player",
             right_on="alias_name",
             how="left",
         )
-        df = df.with_columns(
+        player_df = player_df.with_columns(
             pl.when(
                 pl.col("canonical_name").is_null()
                 | pl.col("position").is_null()
@@ -737,19 +749,19 @@ def _apply_name_aliases(df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
             .alias("Player")
         )
 
-        if "treat_as_position" in df.columns:
-            df = df.with_columns(
+        if "treat_as_position" in player_df.columns:
+            player_df = player_df.with_columns(
                 pl.when(pl.col("treat_as_position").is_not_null())
                 .then(pl.col("treat_as_position"))
                 .otherwise(pl.col("Position"))
                 .alias("Position")
             )
-            df = df.drop(["canonical_name", "position", "treat_as_position"])
+            player_df = player_df.drop(["canonical_name", "position", "treat_as_position"])
         else:
-            df = df.drop(["canonical_name", "position"])
+            player_df = player_df.drop(["canonical_name", "position"])
     else:
-        df = (
-            df.join(
+        player_df = (
+            player_df.join(
                 alias_seed.select(["alias_name", "canonical_name"]),
                 left_on="Player",
                 right_on="alias_name",
@@ -758,7 +770,7 @@ def _apply_name_aliases(df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
             .with_columns(pl.coalesce([pl.col("canonical_name"), pl.col("Player")]).alias("Player"))
             .drop("canonical_name")
         )
-    return df
+    return player_df
 
 
 def _score_and_select_best_match(
@@ -909,9 +921,9 @@ def _fuzzy_match_no_position(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFra
     return df_with_idx.join(df_fuzzy_ids, on="_row_idx_fuzzy", how="left").drop("_row_idx_fuzzy")
 
 
-def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
+def _partial_match(player_df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
     """Perform partial name matching for difficult cases."""
-    df = df.with_columns(
+    player_df = player_df.with_columns(
         pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")]).alias(
             "player_id_prelim"
         )
@@ -919,7 +931,7 @@ def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
 
     unmapped_mask = (pl.col("player_id_prelim").is_null()) & (pl.col("asset_type") == "player")
 
-    df = df.with_columns(
+    player_df = player_df.with_columns(
         pl.when(unmapped_mask)
         .then(pl.col("Player").str.split(" ").list.first())
         .alias("first_name_token"),
@@ -928,9 +940,9 @@ def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
         .alias("last_name_token"),
     )
 
-    df_unmapped_for_partial = df.filter(unmapped_mask)
+    df_unmapped_for_partial = player_df.filter(unmapped_mask)
 
-    partial_matches = []
+    partial_matches: list[int | None] = []
     for row in df_unmapped_for_partial.iter_rows(named=True):
         if not row["first_name_token"] or not row["last_name_token"]:
             partial_matches.append(None)
@@ -949,13 +961,13 @@ def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
     df_partial = df_unmapped_for_partial.with_columns(
         pl.Series("player_id_partial", partial_matches)
     )
-    df_unmapped = df.filter(~unmapped_mask).with_columns(
+    df_unmapped = player_df.filter(~unmapped_mask).with_columns(
         pl.lit(None).cast(pl.Int64).alias("player_id_partial")
     )
 
-    df = pl.concat([df_unmapped, df_partial], how="diagonal")
+    player_df = pl.concat([df_unmapped, df_partial], how="diagonal")
 
-    return df.with_columns(
+    return player_df.with_columns(
         pl.coalesce(
             [pl.col("player_id_exact"), pl.col("player_id_fuzzy"), pl.col("player_id_partial")]
         )
@@ -974,7 +986,7 @@ def _partial_match(df: pl.DataFrame, xref: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
+def _map_player_names(player_df: pl.DataFrame) -> pl.DataFrame:
     """Map player names to player_id using crosswalk and alias seeds.
 
     Enhanced with position-aware disambiguation: when fuzzy matching finds multiple
@@ -982,7 +994,7 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
     the Position column (if present) is used to select the correct match.
 
     Args:
-        df: DataFrame with Player and asset_type columns, optionally Position
+        player_df: DataFrame with Player and asset_type columns, optionally Position
 
     Returns:
         DataFrame with added player_id column (-1 for unmapped)
@@ -993,38 +1005,42 @@ def _map_player_names(df: pl.DataFrame) -> pl.DataFrame:
         raise FileNotFoundError(f"dim_player_id_xref seed not found at {xref_path}")
 
     xref = pl.read_csv(xref_path)
-    has_position = "Position" in df.columns
+    has_position = "Position" in player_df.columns
 
     # Apply name aliases
-    df = _apply_name_aliases(df, has_position)
+    player_df = _apply_name_aliases(player_df, has_position)
 
     # Exact match
-    df = (
-        _exact_match_with_position(df, xref) if has_position else _exact_match_no_position(df, xref)
+    player_df = (
+        _exact_match_with_position(player_df, xref)
+        if has_position
+        else _exact_match_no_position(player_df, xref)
     )
 
     # Fuzzy match
-    df = df.with_columns(
+    player_df = player_df.with_columns(
         pl.when(pl.col("player_id_exact").is_null() & (pl.col("asset_type") == "player"))
         .then(pl.col("Player").map_elements(_normalize_player_name, return_dtype=pl.String))
         .alias("player_normalized")
     )
 
-    df = (
-        _fuzzy_match_with_position(df, xref) if has_position else _fuzzy_match_no_position(df, xref)
+    player_df = (
+        _fuzzy_match_with_position(player_df, xref)
+        if has_position
+        else _fuzzy_match_no_position(player_df, xref)
     )
 
     # Partial match (position only) or final coalesce
     if has_position:
-        df = _partial_match(df, xref)
+        player_df = _partial_match(player_df, xref)
     else:
-        df = df.with_columns(
+        player_df = player_df.with_columns(
             pl.coalesce([pl.col("player_id_exact"), pl.col("player_id_fuzzy")])
             .fill_null(-1)
             .alias("player_id")
         ).drop(["player_id_exact", "player_id_fuzzy", "player_normalized"])
 
-    return df
+    return player_df
 
 
 def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
@@ -1038,7 +1054,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
 
     """
     # Load raw transactions
-    df = pl.read_csv(csv_path)
+    transactions_df = pl.read_csv(csv_path)
 
     # Join to dim_timeframe for period_type classification
     timeframe_seed_path = Path("dbt/ff_analytics/seeds/dim_timeframe.csv")
@@ -1046,7 +1062,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
         raise FileNotFoundError(f"dim_timeframe seed not found at {timeframe_seed_path}")
 
     timeframe_seed = pl.read_csv(timeframe_seed_path)
-    df = df.join(
+    transactions_df = transactions_df.join(
         timeframe_seed.select(
             ["timeframe_string", "season", "period_type", "week", "sort_sequence"]
         ),
@@ -1056,7 +1072,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Derive transaction_type_refined using helper
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         pl.struct(["period_type", "Type", "RFA Matched", "From", "To"])
         .map_elements(
             lambda x: _derive_transaction_type(
@@ -1068,7 +1084,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Infer asset_type using helper
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         pl.struct(["Player", "Position"])
         .map_elements(
             lambda x: _infer_asset_type(x["Player"], x["Position"]),
@@ -1078,10 +1094,10 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Parse contract fields using helper
-    df = _parse_contract_fields(df)
+    transactions_df = _parse_contract_fields(transactions_df)
 
     # Handle cap_space amounts (use Split column instead of Contract)
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         pl.when(pl.col("asset_type") == "cap_space")
         .then(pl.col("Split").cast(pl.Int32, strict=False))
         .otherwise(pl.col("total"))
@@ -1089,10 +1105,10 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Map player names to player_id using helper
-    df = _map_player_names(df)
+    transactions_df = _map_player_names(transactions_df)
 
     # Map pick references to pick_id using helper
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         pl.struct(["Player", "Pick"])
         .map_elements(
             lambda x: _parse_pick_id(x["Player"], x["Pick"]),
@@ -1102,7 +1118,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Clean transaction_id (Sort column)
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         pl.col("Sort")
         .str.replace_all(",", "")
         .str.replace_all('"', "")
@@ -1111,7 +1127,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Handle duplicate transaction_ids
-    df = df.with_columns(
+    transactions_df = transactions_df.with_columns(
         (
             pl.col("transaction_id").cast(pl.String)
             + "_"
@@ -1120,7 +1136,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # Select final columns
-    transactions = df.select(
+    transactions = transactions_df.select(
         [
             "transaction_id_unique",
             "transaction_id",
@@ -1152,11 +1168,11 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # QA tables
-    unmapped_players = df.filter(
+    unmapped_players = transactions_df.filter(
         (pl.col("asset_type") == "player") & (pl.col("player_id") == -1)
     ).select(["Player", "Position", "Time Frame", "From", "To"])
 
-    unmapped_picks = df.filter(
+    unmapped_picks = transactions_df.filter(
         (pl.col("asset_type") == "pick") & (pl.col("pick_id").is_null())
     ).select(["Player", "Pick", "Time Frame", "From", "To"])
 
@@ -1244,7 +1260,7 @@ def _to_long_roster(roster_all: pl.DataFrame) -> pl.DataFrame:
     value_cols = [c for c in roster_all.columns if c.startswith("y20")]
     out = (
         roster_all.unpivot(
-            index=["gm", "roster_slot", "player", "total", "rfa", "fr"],
+            index=["gm", "gm_tab", "roster_slot", "player", "total", "rfa", "fr"],
             on=value_cols,
             variable_name="year_str",
             value_name="amount_str",
@@ -1272,7 +1288,7 @@ def _to_long_cuts(cuts_all: pl.DataFrame) -> pl.DataFrame:
     value_cols = [c for c in cuts_all.columns if c.startswith("y20")]
     out = (
         cuts_all.unpivot(
-            index=["gm", "player", "position", "total"],
+            index=["gm", "gm_tab", "player", "position", "total"],
             on=value_cols,
             variable_name="year_str",
             value_name="amount_str",
@@ -1290,26 +1306,22 @@ def _to_long_cuts(cuts_all: pl.DataFrame) -> pl.DataFrame:
     return out
 
 
-def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
-    if picks_all.is_empty():
-        return picks_all, pl.DataFrame()
-    # picks_all: gm, owner, y2026..y2030, trade_conditions
-    year_cols = [c for c in picks_all.columns if c.startswith("y20")]
-    base = picks_all.select(["gm", "owner", *year_cols, "trade_conditions"])
-    # Unpivot to long and interpret values as rounds
-    long = base.unpivot(
-        index=["gm", "owner", "trade_conditions"],
-        on=year_cols,
-        variable_name="year_str",
-        value_name="round_str",
-    ).with_columns(
-        year=pl.col("year_str").str.replace("y", "").cast(pl.Int32),
-        round=pl.col("round_str").cast(pl.Int32, strict=False),
-    )
-    # Keep only actual picks where round is present (1..5)
-    long = long.filter(pl.col("round").is_not_null())
+def _alias_tokens(value: str | None) -> set[str]:
+    """Extract alias tokens from a name value."""
+    if not value:
+        return set()
+    base = value.lower().strip()
+    if not base:
+        return set()
+    tokens = {base}
+    clean = base.replace(".", " ").replace("-", " ")
+    tokens.update(part for part in clean.split() if part)
+    return tokens
 
-    picks = long.with_columns(
+
+def _add_source_type_columns(picks_df: pl.DataFrame) -> pl.DataFrame:
+    """Add source_type and related columns to picks DataFrame."""
+    picks_df = picks_df.with_columns(
         owner_clean=pl.col("owner").fill_null("").cast(pl.Utf8).str.strip_chars(),
         owner_lower=pl.col("owner")
         .fill_null("")
@@ -1319,7 +1331,7 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         gm_clean=pl.col("gm").fill_null("").cast(pl.Utf8).str.strip_chars(),
     )
 
-    picks = picks.with_columns(
+    picks_df = picks_df.with_columns(
         gm_lower=pl.col("gm_clean").str.to_lowercase(),
         gm_tokens=pl.col("gm_clean")
         .str.replace_all(r"[^\w\s]", " ")
@@ -1327,12 +1339,12 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         .str.split(" "),
     )
 
-    picks = picks.with_columns(
+    picks_df = picks_df.with_columns(
         owner_matches=pl.col("gm_tokens").list.contains(pl.col("owner_lower"))
         | (pl.col("owner_lower") == pl.col("gm_lower"))
     )
 
-    picks = picks.with_columns(
+    picks_df = picks_df.with_columns(
         source_type=pl.when(pl.col("owner_lower").str.starts_with("traded to"))
         .then(pl.lit("trade_out"))
         .when(pl.col("owner_matches"))
@@ -1345,7 +1357,7 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         .otherwise(pl.lit(None)),
     )
 
-    picks = picks.with_columns(
+    picks_df = picks_df.with_columns(
         acquired_from=pl.when(pl.col("source_type") == "acquired")
         .then(pl.col("owner_clean"))
         .otherwise(pl.lit(None)),
@@ -1361,12 +1373,17 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         .otherwise(pl.lit(None)),
     )
 
-    picks = picks.with_columns(
+    return picks_df
+
+
+def _add_condition_flag(picks_df: pl.DataFrame) -> pl.DataFrame:
+    """Add condition_flag column based on trade_conditions."""
+    picks_df = picks_df.with_columns(
         condition_text=pl.col("trade_conditions").fill_null("").cast(pl.Utf8).str.strip_chars(),
     )
 
     condition_lower = pl.col("condition_text").str.to_lowercase()
-    picks = picks.with_columns(
+    picks_df = picks_df.with_columns(
         condition_flag=(
             condition_lower.is_in(list(_FALSE_CONDITION_MARKERS)).not_()
             & (
@@ -1380,7 +1397,12 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         )
     )
 
-    picks = picks.with_columns(
+    return picks_df
+
+
+def _add_gm_name_columns(picks_df: pl.DataFrame) -> pl.DataFrame:
+    """Add GM name normalization columns."""
+    picks_df = picks_df.with_columns(
         gm_first=pl.col("gm_clean")
         .str.replace_all(r"[^\w\s]", " ")
         .str.strip_chars()
@@ -1404,62 +1426,97 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
         .str.to_lowercase(),
     )
 
-    # Symmetric pending propagation: ensure outbound trades inherit counterpart contingencies
-    def _alias_tokens(value: str | None) -> set[str]:
-        if not value:
-            return set()
-        base = value.lower().strip()
-        if not base:
-            return set()
-        tokens = {base}
-        clean = base.replace(".", " ").replace("-", " ")
-        tokens.update(part for part in clean.split() if part)
-        return tokens
+    return picks_df
 
-    records = picks.to_dicts()
-    if records:
-        from collections import defaultdict
 
-        acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]] = defaultdict(
-            list
+def _build_acquired_lookup(
+    records: list[dict],
+) -> dict[tuple[int, int], list[tuple[set[str], set[str], bool]]]:
+    """Build lookup dictionary for acquired picks."""
+    from collections import defaultdict
+
+    acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]] = defaultdict(
+        list
+    )
+    for rec in records:
+        if rec.get("source_type") != "acquired":
+            continue
+        year = rec["year"]
+        rnd = rec["round"]
+        gm_aliases = _alias_tokens(rec.get("gm_clean"))
+        gm_aliases.update(_alias_tokens(rec.get("gm_first")))
+        gm_aliases.update(_alias_tokens(rec.get("gm_last")))
+        from_aliases = _alias_tokens(rec.get("acquisition_note_lower"))
+        acquired_lookup[(year, rnd)].append(
+            (gm_aliases, from_aliases, bool(rec.get("condition_flag")))
         )
-        for rec in records:
-            if rec.get("source_type") != "acquired":
+    return acquired_lookup
+
+
+def _update_trade_out_flags(
+    records: list[dict],
+    acquired_lookup: dict[tuple[int, int], list[tuple[set[str], set[str], bool]]],
+) -> None:
+    """Update condition flags for trade_out records based on acquired lookup."""
+    for rec in records:
+        if rec.get("source_type") != "trade_out" or rec.get("condition_flag"):
+            continue
+        year = rec["year"]
+        rnd = rec["round"]
+        recipient_aliases = _alias_tokens(rec.get("trade_recipient_lower"))
+        gm_aliases = _alias_tokens(rec.get("gm_clean"))
+        gm_aliases.update(_alias_tokens(rec.get("gm_first")))
+        gm_aliases.update(_alias_tokens(rec.get("gm_last")))
+
+        partner_pending = False
+        for to_aliases, from_aliases, pending_flag in acquired_lookup.get((year, rnd), []):
+            if not pending_flag:
                 continue
-            year = rec["year"]
-            rnd = rec["round"]
-            gm_aliases = _alias_tokens(rec.get("gm_clean"))
-            gm_aliases.update(_alias_tokens(rec.get("gm_first")))
-            gm_aliases.update(_alias_tokens(rec.get("gm_last")))
-            from_aliases = _alias_tokens(rec.get("acquisition_note_lower"))
-            acquired_lookup[(year, rnd)].append(
-                (gm_aliases, from_aliases, bool(rec.get("condition_flag")))
-            )
-
-        for rec in records:
-            if rec.get("source_type") != "trade_out" or rec.get("condition_flag"):
+            if recipient_aliases and not (recipient_aliases & to_aliases):
                 continue
-            year = rec["year"]
-            rnd = rec["round"]
-            recipient_aliases = _alias_tokens(rec.get("trade_recipient_lower"))
-            gm_aliases = _alias_tokens(rec.get("gm_clean"))
-            gm_aliases.update(_alias_tokens(rec.get("gm_first")))
-            gm_aliases.update(_alias_tokens(rec.get("gm_last")))
+            if not gm_aliases & from_aliases:
+                continue
+            partner_pending = True
+            break
+        if partner_pending:
+            rec["condition_flag"] = True
 
-            partner_pending = False
-            for to_aliases, from_aliases, pending_flag in acquired_lookup.get((year, rnd), []):
-                if not pending_flag:
-                    continue
-                if recipient_aliases and not (recipient_aliases & to_aliases):
-                    continue
-                if not gm_aliases & from_aliases:
-                    continue
-                partner_pending = True
-                break
-            if partner_pending:
-                rec["condition_flag"] = True
 
-        picks = pl.DataFrame(records)
+def _propagate_pending_flags(picks_df: pl.DataFrame) -> pl.DataFrame:
+    """Propagate pending flags symmetrically between trade partners."""
+    records = picks_df.to_dicts()
+    if not records:
+        return picks_df
+
+    acquired_lookup = _build_acquired_lookup(records)
+    _update_trade_out_flags(records, acquired_lookup)
+
+    return pl.DataFrame(records)
+
+
+def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
+    if picks_all.is_empty():
+        return picks_all, pl.DataFrame()
+    # picks_all: gm, gm_tab, owner, y2026..y2030, trade_conditions
+    year_cols = [c for c in picks_all.columns if c.startswith("y20")]
+    base = picks_all.select(["gm", "gm_tab", "owner", *year_cols, "trade_conditions"])
+    # Unpivot to long and interpret values as rounds
+    long = base.unpivot(
+        index=["gm", "gm_tab", "owner", "trade_conditions"],
+        on=year_cols,
+        variable_name="year_str",
+        value_name="round_str",
+    ).with_columns(
+        year=pl.col("year_str").str.replace("y", "").cast(pl.Int32),
+        round=pl.col("round_str").cast(pl.Int32, strict=False),
+    )
+    # Keep only actual picks where round is present (1..5)
+    long = long.filter(pl.col("round").is_not_null())
+
+    picks = _add_source_type_columns(long)
+    picks = _add_condition_flag(picks)
+    picks = _add_gm_name_columns(picks)
+    picks = _propagate_pending_flags(picks)
 
     picks_tbl = picks.select(
         [

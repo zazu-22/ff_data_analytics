@@ -86,7 +86,7 @@ models:
           - relationships:
               arguments:
                 to: ref('dim_player_id_xref')
-                field: mfl_id
+                field: player_id
               config:
                 where: "asset_type = 'player' and player_id != -1"
 

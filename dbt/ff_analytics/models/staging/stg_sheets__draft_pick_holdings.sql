@@ -31,28 +31,18 @@ with raw as (
   )
 ),
 
-with_owner_keys as (
-  select
-    *,
-    case
-      when gm like 'Nick McCreary%' then 'McCreary'
-      when gm like 'Nick Piper%' then 'Piper'
-      else split_part(gm, ' ', 1)
-    end as owner_key
-  from raw
-),
-
 with_franchise as (
   select
-    wok.*,
+    raw.*,
     fran.franchise_id,
     fran.franchise_name,
     fran.owner_name
-  from with_owner_keys wok
+  from raw
   left join {{ ref('dim_franchise') }} fran
     on
-      wok.owner_key = fran.owner_name
-      and wok.year between fran.season_start and fran.season_end
+      -- Note: draft_picks doesn't have gm_tab in raw data, still uses gm matching
+      split_part(raw.gm, ' ', 1) = fran.owner_name
+      and raw.year between fran.season_start and fran.season_end
 ),
 
 classified as (
@@ -83,18 +73,10 @@ enriched as (
       when c.acquisition_note_lower like 'comp%' then true
       else false
     end as is_comp_pick,
-    case
-      when c.trade_recipient is null then null
-      when c.trade_recipient like 'Nick McCreary%' then 'McCreary'
-      when c.trade_recipient like 'Nick Piper%' then 'Piper'
-      else split_part(c.trade_recipient, ' ', 1)
-    end as trade_recipient_key,
-    case
-      when c.acquisition_note is null or c.acquisition_note = '' then c.owner_key
-      when c.acquisition_note like 'Nick McCreary%' then 'McCreary'
-      when c.acquisition_note like 'Nick Piper%' then 'Piper'
-      else split_part(c.acquisition_note, ' ', 1)
-    end as acquisition_owner_key
+    -- Note: trade_recipient and acquisition_note contain franchise names from raw data
+    -- These will need franchise mapping at query time if needed
+    c.trade_recipient as trade_recipient_key,
+    coalesce(nullif(c.acquisition_note, ''), split_part(c.gm, ' ', 1)) as acquisition_owner_key
   from classified c
 )
 
@@ -103,7 +85,6 @@ select
   year,
   round,
   gm as gm_full_name,
-  owner_key,
   franchise_id,
   franchise_name,
   owner_name as franchise_owner_name,

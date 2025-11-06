@@ -1,21 +1,21 @@
-franchise_id,franchise_name,division,established_season,owner_name,season_start,season_end,is_current_owner
-F001,Franchise 001,Lauren Noble Division,2012,Jon,2012,2012,false
-F001,Franchise 001,Lauren Noble Division,2012,Alec,2013,2024,false
-F001,Franchise 001,Lauren Noble Division,2012,Jason,2025,9999,true
-F002,Franchise 002,Skyline Chili Division,2012,Blaise,2012,2013,false
-F002,Franchise 002,Skyline Chili Division,2012,McCrystal,2014,2019,false
-F002,Franchise 002,Skyline Chili Division,2012,Schnese,2020,2024,false
-F002,Franchise 002,Skyline Chili Division,2012,Eric,2025,9999,true
-F003,Franchise 003,Kenston Middle School Alumni,2012,Andy,2012,9999,true
-F004,Franchise 004,Kenston Middle School Alumni,2012,Chip,2012,9999,true
-F005,Franchise 005,Kenston Middle School Alumni,2012,Adam,2012,2014,false
-F005,Franchise 005,Kenston Middle School Alumni,2012,McCreary,2015,9999,true
-F006,Franchise 006,Lauren Noble Division,2012,James,2012,9999,true
-F007,Franchise 007,Skyline Chili Division,2012,Joe,2012,9999,true
-F008,Franchise 008,Skyline Chili Division,2012,JP,2012,9999,true
-F009,Franchise 009,Lauren Noble Division,2012,Kevin,2012,9999,true
-F010,Franchise 010,Skyline Chili Division,2012,Joe V,2012,2014,false
-F010,Franchise 010,Skyline Chili Division,2012,Gordon,2015,9999,true
-F011,Franchise 011,Lauren Noble Division,2012,Drew,2012,2015,false
-F011,Franchise 011,Lauren Noble Division,2012,Piper,2016,9999,true
-F012,Franchise 012,Kenston Middle School Alumni,2012,TJ,2012,9999,true
+franchise_id,franchise_name,division,established_season,owner_name,gm_tab,season_start,season_end,is_current_owner
+F001,Franchise 001,Lauren Noble Division,2012,Jon,Jon,2012,2012,false
+F001,Franchise 001,Lauren Noble Division,2012,Alec,Alec,2013,2024,false
+F001,Franchise 001,Lauren Noble Division,2012,Jason,Jason,2025,9999,true
+F002,Franchise 002,Skyline Chili Division,2012,Blaise,Blaise,2012,2013,false
+F002,Franchise 002,Skyline Chili Division,2012,McCrystal,McCrystal,2014,2019,false
+F002,Franchise 002,Skyline Chili Division,2012,Schnese,Schnese,2020,2024,false
+F002,Franchise 002,Skyline Chili Division,2012,Eric,Eric,2025,9999,true
+F003,Franchise 003,Kenston Middle School Alumni,2012,Andy,Andy,2012,9999,true
+F004,Franchise 004,Kenston Middle School Alumni,2012,Chip,Chip,2012,9999,true
+F005,Franchise 005,Kenston Middle School Alumni,2012,Adam,Adam,2012,2014,false
+F005,Franchise 005,Kenston Middle School Alumni,2012,McCreary,McCreary,2015,9999,true
+F006,Franchise 006,Lauren Noble Division,2012,James,James,2012,9999,true
+F007,Franchise 007,Skyline Chili Division,2012,Joe,Joe,2012,9999,true
+F008,Franchise 008,Skyline Chili Division,2012,JP,JP,2012,9999,true
+F009,Franchise 009,Lauren Noble Division,2012,Kevin,Kevin,2012,9999,true
+F010,Franchise 010,Skyline Chili Division,2012,Joe V,Joe V,2012,2014,false
+F010,Franchise 010,Skyline Chili Division,2012,Gordon,Gordon,2015,9999,true
+F011,Franchise 011,Lauren Noble Division,2012,Drew,Drew,2012,2015,false
+F011,Franchise 011,Lauren Noble Division,2012,Piper,Piper,2016,9999,true
+F012,Franchise 012,Kenston Middle School Alumni,2012,TJ,TJ,2012,9999,true
