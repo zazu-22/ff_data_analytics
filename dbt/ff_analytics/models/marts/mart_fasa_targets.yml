@@ -51,7 +51,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: ['QB', 'RB', 'WR', 'TE']
+                values: ["QB", "RB", "WR", "TE"]
 
       - name: nfl_team
         description: "Current NFL team abbreviation"
@@ -146,7 +146,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: ['HIGH', 'MEDIUM', 'LOW']
+                values: ["HIGH", "MEDIUM", "LOW"]
 
       - name: priority_rank_overall
         description: "Overall priority rank (1 = highest value)"
@@ -188,9 +188,11 @@ models:
       - name: age_decline_risk_score
         description: "Age decline risk (0.0=no risk, 1.0=extreme risk, >0.5=high risk)"
         data_tests:
-          - dbt_utils.expression_is_true:
+          - dbt_utils.accepted_range:
               arguments:
-                expression: "(age_decline_risk_score >= 0.0 AND age_decline_risk_score <= 1.0) OR age_decline_risk_score IS NULL"
+                min_value: 0.0
+                max_value: 1.0
+                inclusive: true
 
       - name: projected_points_year1
         description: "Projected points Year 1 (ROS this season)"
@@ -231,7 +233,15 @@ models:
         data_tests:
           - accepted_values:
               arguments:
-                values: ['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'STRONG_SELL', 'UNKNOWN']
+                values:
+                  [
+                    "STRONG_BUY",
+                    "BUY",
+                    "HOLD",
+                    "SELL",
+                    "STRONG_SELL",
+                    "UNKNOWN",
+                  ]
 
       - name: market_inefficiency_flag
         description: "TRUE if |value_gap_pct| > 25% (actionable arbitrage opportunity)"
@@ -257,7 +267,7 @@ models:
         data_tests:
           - accepted_values:
               arguments:
-                values: ['POSITIVE', 'NEGATIVE', 'NEUTRAL']
+                values: ["POSITIVE", "NEGATIVE", "NEUTRAL"]
 
       - name: target_share_pct
         description: "Team target share percentage (last 4 games, r²=0.60 sticky)"
@@ -271,9 +281,11 @@ models:
       - name: sustainability_score
         description: "Production sustainability score (0.0-1.0, higher=sticky metrics)"
         data_tests:
-          - dbt_utils.expression_is_true:
+          - dbt_utils.accepted_range:
               arguments:
-                expression: "(sustainability_score >= 0.0 AND sustainability_score <= 1.0) OR sustainability_score IS NULL"
+                min_value: 0.0
+                max_value: 1.0
+                inclusive: true
 
       # ========================================================================
       # PHASE 4: LEAGUE CONTEXT & VoR
@@ -307,16 +319,18 @@ models:
       - name: enhanced_value_score_v2
         description: "Enhanced value score (0-100): 25% dynasty + 20% aging + 20% market + 15% sustainability + 10% VoR + 10% recent"
         data_tests:
-          - dbt_utils.expression_is_true:
+          - dbt_utils.accepted_range:
               arguments:
-                expression: "(enhanced_value_score_v2 >= 0 AND enhanced_value_score_v2 <= 100) OR enhanced_value_score_v2 IS NULL"
+                min_value: 0
+                max_value: 100
+                inclusive: true
 
       - name: bid_confidence_v3
         description: "Enhanced bid confidence (VERY_HIGH, HIGH, MEDIUM, LOW)"
         data_tests:
           - accepted_values:
               arguments:
-                values: ['VERY_HIGH', 'HIGH', 'MEDIUM', 'LOW']
+                values: ["VERY_HIGH", "HIGH", "MEDIUM", "LOW"]
 
       - name: suggested_bid_dynasty_3yr
         description: "Suggested bid based on 3-year dynasty value (dynasty_3yr_value / 50)"

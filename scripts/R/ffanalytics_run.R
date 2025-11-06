@@ -13,6 +13,127 @@ suppressPackageStartupMessages({
   library(stringr)
 })
 
+# ------------------------------------------------------------
+# Helper functions for consensus normalization
+# ------------------------------------------------------------
+
+normalize_player_name <- function(name_vec) {
+  if (is.null(name_vec) || length(name_vec) == 0) {
+    return(character())
+  }
+
+  normalized <- ifelse(
+    is.na(name_vec),
+    NA_character_,
+    ifelse(
+      grepl(",", name_vec),
+      paste(
+        trimws(sub(".*,\\s*", "", name_vec)),
+        trimws(sub(",.*", "", name_vec))
+      ),
+      name_vec
+    )
+  )
+
+  normalized <- str_to_lower(str_squish(normalized))
+  normalized
+}
+
+team_alias_map <- c(
+  "ARI" = "ARI",
+  "ARZ" = "ARI",
+  "AZ" = "ARI",
+  "ATL" = "ATL",
+  "BAL" = "BAL",
+  "BUF" = "BUF",
+  "CAR" = "CAR",
+  "CHI" = "CHI",
+  "CIN" = "CIN",
+  "CLE" = "CLE",
+  "DAL" = "DAL",
+  "DEN" = "DEN",
+  "DET" = "DET",
+  "GB" = "GBP",
+  "GBP" = "GBP",
+  "GNB" = "GBP",
+  "HOU" = "HOU",
+  "IND" = "IND",
+  "JAC" = "JAX",
+  "JAX" = "JAX",
+  "KC" = "KAN",
+  "KAN" = "KAN",
+  "KCC" = "KAN",
+  "LA" = "LAR",
+  "LAR" = "LAR",
+  "LAC" = "LAC",
+  "MIA" = "MIA",
+  "MIN" = "MIN",
+  "NE" = "NEP",
+  "NEP" = "NEP",
+  "NWE" = "NEP",
+  "NO" = "NOS",
+  "NOS" = "NOS",
+  "NOR" = "NOS",
+  "NYG" = "NYG",
+  "NYJ" = "NYJ",
+  "OAK" = "LVR",
+  "LV" = "LVR",
+  "LVR" = "LVR",
+  "PHI" = "PHI",
+  "PIT" = "PIT",
+  "SD" = "LAC",
+  "SDC" = "LAC",
+  "SEA" = "SEA",
+  "SF" = "SFO",
+  "SFO" = "SFO",
+  "SFX" = "SFO",
+  "STL" = "LAR",
+  "TB" = "TBB",
+  "TBB" = "TBB",
+  "TAM" = "TBB",
+  "TEN" = "TEN",
+  "WAS" = "WAS",
+  "WSH" = "WAS"
+)
+
+normalize_team_abbrev <- function(team_vec) {
+  if (is.null(team_vec) || length(team_vec) == 0) {
+    return(character())
+  }
+
+  cleaned <- str_to_upper(str_squish(team_vec))
+  cleaned[cleaned == ""] <- NA_character_
+
+  mapped <- ifelse(
+    !is.na(cleaned) & cleaned %in% names(team_alias_map),
+    team_alias_map[cleaned],
+    cleaned
+  )
+
+  unname(mapped)
+}
+
+pick_consensus_value <- function(values, weights) {
+  if (length(values) == 0) {
+    return(NA_character_)
+  }
+
+  valid <- !is.na(values) & !is.na(weights)
+
+  if (any(valid)) {
+    vals <- values[valid]
+    wts <- weights[valid]
+    return(vals[which.max(wts)])
+  }
+
+  fallback <- values[!is.na(values)]
+  if (length(fallback) == 0) {
+    return(NA_character_)
+  }
+
+  fallback[[1]]
+}
+
 option_list <- list(
   make_option(c("--sources"),
     type = "character",
@@ -281,7 +402,11 @@ if (nrow(df) > 0) {
     left_join(weights %>% select(site_id_lower, weight),
       by = c("data_src_lower" = "site_id_lower")
     ) %>%
-    mutate(weight = ifelse(is.na(weight), 0, weight)) # Fallback for truly unknown sources
+    mutate(weight = ifelse(is.na(weight), 0, weight)) %>% # Fallback for truly unknown sources
+    mutate(
+      player_normalized = normalize_player_name(player),
+      team_normalized = normalize_team_abbrev(team)
+    )
 
   # Warn if any sources have zero weight
   zero_weight_sources <- df_weighted %>%
@@ -299,7 +424,7 @@ if (nrow(df) > 0) {
   # Identify stat columns (numeric columns excluding metadata)
   metadata_cols <- c(
     "player", "pos", "team", "data_src", "season", "week",
-    "data_src_lower", "weight"
+    "data_src_lower", "weight", "player_normalized", "team_normalized"
   )
   stat_cols <- setdiff(
     names(df_weighted)[sapply(df_weighted, is.numeric)],
@@ -311,7 +436,8 @@ if (nrow(df) > 0) {
   # Calculate weighted consensus per player per stat
   consensus_df <- df_weighted %>%
     filter(weight > 0) %>% # Only use sources with weights
-    group_by(player, pos, team, season, week) %>%
+    filter(!is.na(player_normalized)) %>%
+    group_by(player_normalized, pos, season, week) %>%
     summarise(
       across(
         all_of(stat_cols),
@@ -319,12 +445,18 @@ if (nrow(df) > 0) {
       ),
       source_count = n(),
       total_weight = sum(weight),
+      team_consensus = pick_consensus_value(team_normalized, weight),
+      player_variant = pick_consensus_value(player, weight),
       .groups = "drop"
     ) %>%
     mutate(
+      player = coalesce(player_variant, str_to_title(player_normalized)),
       provider = "ffanalytics_consensus",
-      asof_date = as.character(Sys.Date())
-    )
+      asof_date = as.character(Sys.Date()),
+      team_consensus = team_consensus,
+      team = team_consensus
+    ) %>%
+    select(-player_variant)
 
   cat(sprintf("Consensus projections: %d players\n", nrow(consensus_df)))
 
@@ -359,20 +491,14 @@ if (nrow(df) > 0) {
   )
 
   if (!is.null(player_xref)) {
-    # Create normalized name for matching
-    # Handle "Last, First" format from FantasySharks and other sources
-    consensus_df <- consensus_df %>%
-      mutate(player_normalized = ifelse(
-        grepl(",", player),
-        # Convert "Last, First" → "First Last"
-        paste(
-          trimws(sub(".*,\\s*", "", player)),
-          trimws(sub(",.*", "", player))
-        ),
-        # Keep "First Last" as-is
-        player
-      )) %>%
-      mutate(player_normalized = tolower(trimws(player_normalized)))
+    # Ensure normalized name column exists for downstream matching
+    if (!("player_normalized" %in% colnames(consensus_df))) {
+      consensus_df <- consensus_df %>%
+        mutate(player_normalized = normalize_player_name(player))
+    } else {
+      consensus_df <- consensus_df %>%
+        mutate(player_normalized = str_to_lower(str_squish(player_normalized)))
+    }
 
     player_xref <- player_xref %>%
       mutate(
@@ -415,10 +541,17 @@ if (nrow(df) > 0) {
           by = c("player_normalized" = "merge_name_normalized", "nfl_position" = "position_merge"),
           relationship = "many-to-many"
         ) %>%
+        mutate(
+          match_priority = case_when(
+            !is.na(player_id_exact) ~ 2L,
+            !is.na(player_id_merge) ~ 1L,
+            TRUE ~ 0L
+          )
+        ) %>%
         # Group by original projection record and pick best match
         # Prioritize: 1) Finding ANY match, 2) Higher priority matches (exact > compatible)
         group_by(player, season, week, pos, team) %>%
-        arrange(desc(!is.na(player_id_exact)), desc(match_priority)) %>%
+        arrange(desc(match_priority), desc(!is.na(player_id_merge))) %>%
         slice(1) %>%
         ungroup() %>%
         mutate(
@@ -455,6 +588,19 @@ if (nrow(df) > 0) {
         select(-c(player_id_name, player_id_merge, position_name, position_merge, player_normalized))
     }
 
+    # Attach canonical team from crosswalk when available
+    team_lookup <- player_xref %>%
+      select(player_id, team_canonical = team) %>%
+      distinct()
+
+    consensus_df <- consensus_df %>%
+      mutate(team_consensus = coalesce(team_consensus, team)) %>%
+      left_join(team_lookup, by = "player_id") %>%
+      mutate(
+        team_canonical = coalesce(team_canonical, team_consensus, team),
+        team = team_canonical
+      )
+
     # Mapping statistics
     mapped_count <- sum(!is.na(consensus_df$player_id))
     total_count <- nrow(consensus_df)
@@ -482,6 +628,13 @@ if (nrow(df) > 0) {
       mapped_players = 0,
       mapping_coverage = 0
     )
+
+    consensus_df <- consensus_df %>%
+      mutate(
+        team_consensus = coalesce(team_consensus, team),
+        team_canonical = coalesce(team_consensus, team),
+        team = team_canonical
+      )
   }
 
   # ============================================================
