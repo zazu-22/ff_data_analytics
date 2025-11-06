@@ -37,7 +37,7 @@ staging_counts as (
       else 'Other'
     end as position_group,
     count(*) as staging_record_count
-  from { { ref('stg_ffanalytics__projections') } }
+  from {{ ref('stg_ffanalytics__projections') }}
   group by position_group
 ),
 comparison as (

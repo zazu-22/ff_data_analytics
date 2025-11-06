@@ -1,14 +1,14 @@
 -- Ensure Sleeper roster snapshot matches commissioner contract snapshot for current season
 with sleeper_roster as (
   select distinct player_id
-  from { { ref('stg_sleeper__rosters') } }
+  from {{ ref('stg_sleeper__rosters') }}
   where player_id is not null
 ),
 commissioner_cut as (
   select distinct player_id,
     franchise_id,
     obligation_year
-  from { { ref('stg_sheets__contracts_cut') } }
+  from {{ ref('stg_sheets__contracts_cut') }}
   where player_id is not null
     and player_id != -1
     and franchise_id is not null
@@ -16,13 +16,13 @@ commissioner_cut as (
 commissioner_active as (
   select distinct player_id,
     franchise_id
-  from { { ref('stg_sheets__contracts_active') } }
+  from {{ ref('stg_sheets__contracts_active') }}
   where player_id is not null
     and player_id != -1
 ),
 commissioner_roster as (
   select distinct c.player_id
-  from { { ref('mart_contract_snapshot_current') } } c
+  from {{ ref('mart_contract_snapshot_current') }} c
   where c.obligation_year = year(current_date)
     and (
       not exists (

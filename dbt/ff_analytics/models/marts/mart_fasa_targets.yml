@@ -22,6 +22,7 @@ models:
       - Market signals: STRONG_BUY (gap >25%), BUY (10-25%), HOLD (-10 to 10%), SELL (-10 to -25%), STRONG_SELL (<-25%)
       - TDOE regression: |TDOE| >= 3.0 flags 86-93% reversion probability
       - True VoR: vs median rostered RB2/WR3/TE1, not just FA pool
+      - IDP coverage: defensive snap share + playmaking scores for DL/DE/DT/LB/DB/S/CB free agents
 
       **Research Foundation:** 25,000+ words, 50+ citations (docs/analytics_references/fasa_targets_research.md)
 
@@ -51,7 +52,20 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: ["QB", "RB", "WR", "TE"]
+                values:
+                  [
+                    "QB",
+                    "RB",
+                    "WR",
+                    "TE",
+                    "DL",
+                    "DE",
+                    "DT",
+                    "LB",
+                    "DB",
+                    "S",
+                    "CB",
+                  ]
 
       - name: nfl_team
         description: "Current NFL team abbreviation"
@@ -100,6 +114,42 @@ models:
 
       - name: opportunity_share_l4
         description: "Combined opportunity share (last 4 games) - weighted 60% target_share + 40% rush_share"
+
+      - name: idp_defense_snap_pct_l4
+        description: "Average defensive snap share over the last 4 games (IDP only)"
+
+      - name: idp_defense_snaps_l4
+        description: "Average defensive snaps per game over the last 4 games (IDP only)"
+
+      - name: idp_special_teams_snap_pct_l4
+        description: "Average special teams snap share over the last 4 games (IDP only)"
+
+      - name: idp_special_teams_snaps_l4
+        description: "Average special teams snaps per game over the last 4 games (IDP only)"
+
+      - name: idp_tackles_l4
+        description: "Total tackles (solo + assist) recorded over the last 4 games (IDP only)"
+
+      - name: idp_sacks_l4
+        description: "Total sacks recorded over the last 4 games (IDP only)"
+
+      - name: idp_turnovers_l4
+        description: "Impact plays (interceptions + forced fumbles) over the last 4 games (IDP only)"
+
+      - name: idp_tackles_per_snap_l4
+        description: "Tackles per defensive snap across the last 4 games (IDP only)"
+
+      - name: idp_impact_play_rate_l4
+        description: "Impact plays per defensive snap across the last 4 games (IDP only)"
+
+      - name: idp_opportunity_score
+        description: "Scaled 0-1 score reflecting defensive snap share (IDP only)"
+
+      - name: idp_production_score
+        description: "Scaled 0-1 score reflecting recent tackle volume (IDP only)"
+
+      - name: idp_playmaking_score
+        description: "Scaled 0-1 score reflecting sacks/turnovers recency (IDP only)"
 
       - name: projected_ppg_ros
         description: "Projected fantasy points per game (rest of season)"
@@ -174,10 +224,10 @@ models:
         description: "Player age at snapshot date (calculated from birthdate)"
 
       - name: position_peak_age_min
-        description: "Position-specific peak age minimum (RB:23, WR:26, QB:28, TE:25)"
+        description: "Position-specific peak age minimum (RB:23, WR:26, QB:28, TE:25, LB:25, DL/DE/DT:26, DB/S/CB:26)"
 
       - name: position_peak_age_max
-        description: "Position-specific peak age maximum (RB:26, WR:30, QB:33, TE:27)"
+        description: "Position-specific peak age maximum (RB:26, WR:30, QB:33, TE:27, LB:28, DL/DE/DT:29, DB/S/CB:29)"
 
       - name: age_peak_window_flag
         description: "TRUE if player is within position-specific peak age window"

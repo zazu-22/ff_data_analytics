@@ -2,26 +2,26 @@ with commissioner_sources as (
   select distinct gm as gm_name,
     gm_tab,
     'contracts_active' as source
-  from { { source('sheets_raw', 'contracts_active') } }
+  from {{ source('sheets_raw', 'contracts_active') }}
   union
   select distinct gm,
     gm_tab,
     'contracts_cut'
-  from { { source('sheets_raw', 'contracts_cut') } }
+  from {{ source('sheets_raw', 'contracts_cut') }}
   union
   select distinct gm,
     gm_tab,
     'cap_space'
-  from { { source('sheets_raw', 'cap_space') } }
+  from {{ source('sheets_raw', 'cap_space') }}
   union
   select distinct gm,
     gm_tab,
     'draft_picks'
-  from { { source('sheets_raw', 'draft_picks') } }
+  from {{ source('sheets_raw', 'draft_picks') }}
 ),
 mapped_franchises as (
   select distinct gm_tab
-  from { { ref('dim_franchise') } }
+  from {{ ref('dim_franchise') }}
   where is_current_owner = true
 ),
 unmapped as (
