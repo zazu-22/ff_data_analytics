@@ -1,13 +1,21 @@
--- Grain: player_id, asof_date
+-- Grain: sleeper_player_id, asof_date (one row per Sleeper FA per snapshot date)
 -- Purpose: Score every FA for FASA with bid recommendations
 -- Enhanced with dynasty market intelligence (aging curves, market efficiency, sustainability, league VoR)
+--
+-- NOTE: Uses sleeper_player_id as grain (not player_id) because:
+-- - Sleeper API is the source of truth for FA pool
+-- - Some players have duplicate entries in dim_player_id_xref with different player_ids
+-- - Dedup logic in fa_pool CTE ensures one row per sleeper_player_id
 
 with fa_pool as (
+  -- Use canonical player_id from stg_sleeper__fa_pool
+  -- NOTE: stg_sleeper__fa_pool may have duplicates when dim_player_id_xref has duplicate sleeper_ids
+  -- Dedup here to ensure one row per sleeper_player_id (the true grain from Sleeper API)
   select
-    dp.player_id,  -- Canonical sequential surrogate (ADR-011)
-    fa.player_key,  -- Sleeper player ID (for reference)
+    fa.player_id,  -- Canonical sequential surrogate (ADR-011)
+    fa.player_key,  -- Canonical player_id as varchar (for grain/joins)
     fa.mfl_id,
-    fa.sleeper_player_id,
+    fa.sleeper_player_id,  -- Sleeper API source ID (for reference/debugging)
     fa.player_name,
     fa.position,
     fa.nfl_team,
@@ -16,18 +24,10 @@ with fa_pool as (
     fa.injury_status,
     fa.asof_date
   from {{ ref('stg_sleeper__fa_pool') }} fa
-  left join {{ ref('dim_player') }} dp
-    on
-      fa.sleeper_player_id = CAST(dp.sleeper_id as VARCHAR)  -- Primary join
-      or (fa.mfl_id = dp.mfl_id and fa.mfl_id is not null)  -- Backstop
-  -- Dedup: prioritize sleeper_id matches over mfl_id matches
-  qualify ROW_NUMBER() over (
-    partition by fa.player_key
-    order by
-      case
-        when fa.sleeper_player_id = CAST(dp.sleeper_id as VARCHAR) then 1
-        else 2
-      end
+  -- Dedup by sleeper_player_id (true grain), preferring higher player_id as tiebreaker
+  qualify row_number() over (
+    partition by fa.sleeper_player_id
+    order by fa.player_id desc nulls last
   ) = 1
 ),
 
@@ -754,7 +754,8 @@ market_adjusted_bids as (
 select
   -- Identity
   fa.player_id,  -- Canonical sequential surrogate (ADR-011)
-  fa.player_key,  -- Sleeper ID for reference
+  fa.player_key,  -- Canonical player_id as varchar (for grain/joins)
+  fa.sleeper_player_id,  -- Sleeper API source ID (for reference/debugging)
   fa.player_name,
   fa.position,
   fa.nfl_team,
