@@ -5,10 +5,12 @@ Usage:
     python scripts/ingest/load_nflverse.py --seasons 2025 --datasets weekly --out data/raw/nflverse
 
     # Load multiple datasets for current season
-    python scripts/ingest/load_nflverse.py --seasons 2025 --datasets weekly,snap_counts,ff_opportunity --out data/raw/nflverse
+    python scripts/ingest/load_nflverse.py --seasons 2025 \
+        --datasets weekly,snap_counts,ff_opportunity --out data/raw/nflverse
 
     # Load historical backfill (2012-2024)
-    python scripts/ingest/load_nflverse.py --seasons 2012-2024 --datasets weekly,snap_counts,ff_opportunity --out data/raw/nflverse
+    python scripts/ingest/load_nflverse.py --seasons 2012-2024 \
+        --datasets weekly,snap_counts,ff_opportunity --out data/raw/nflverse
 
     # Load to GCS
     python scripts/ingest/load_nflverse.py --seasons 2025 --datasets weekly --out gs://ff-analytics/raw/nflverse
@@ -19,7 +21,6 @@ Outputs:
 """
 
 import argparse
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -45,6 +46,7 @@ def parse_seasons(seasons_arg: str) -> list[int]:
         [2020, 2021, 2022]
         >>> parse_seasons("2020-2024")
         [2020, 2021, 2022, 2023, 2024]
+
     """
     if "-" in seasons_arg and "," not in seasons_arg:
         # Range format: 2020-2024
@@ -65,33 +67,28 @@ def load_nflverse_runner(seasons: list[int], datasets: list[str], out_dir: str) 
 
     Returns:
         Manifest dict with load results
+
     """
     manifest = {
         "loaded_at": datetime.now().isoformat(),
         "seasons": seasons,
         "datasets_requested": datasets,
-        "results": []
+        "results": [],
     }
 
     for dataset in datasets:
         if dataset not in REGISTRY:
             print(f"⚠️  Unknown dataset: {dataset} (skipping)")
             print(f"   Available: {', '.join(REGISTRY.keys())}")
-            manifest["results"].append({
-                "dataset": dataset,
-                "status": "error",
-                "error": f"Unknown dataset: {dataset}"
-            })
+            manifest["results"].append(
+                {"dataset": dataset, "status": "error", "error": f"Unknown dataset: {dataset}"}
+            )
             continue
 
         for season in seasons:
             print(f"Loading {dataset} for {season} season...")
             try:
-                result = load_nflverse(
-                    dataset=dataset,
-                    seasons=[season],
-                    out_dir=out_dir
-                )
+                result = load_nflverse(dataset=dataset, seasons=[season], out_dir=out_dir)
 
                 # Extract key info from result
                 status_info = {
@@ -100,7 +97,7 @@ def load_nflverse_runner(seasons: list[int], datasets: list[str], out_dir: str) 
                     "status": "success",
                     "partition_dir": result.get("partition_dir"),
                     "parquet_file": result.get("parquet_file"),
-                    "loader_path": result.get("meta", {}).get("loader_path", "unknown")
+                    "loader_path": result.get("meta", {}).get("loader_path", "unknown"),
                 }
 
                 manifest["results"].append(status_info)
@@ -111,7 +108,7 @@ def load_nflverse_runner(seasons: list[int], datasets: list[str], out_dir: str) 
                     "dataset": dataset,
                     "season": season,
                     "status": "error",
-                    "error": str(e)
+                    "error": str(e),
                 }
                 manifest["results"].append(error_info)
                 print(f"❌ Failed to load {dataset} ({season}): {e}")
@@ -120,6 +117,7 @@ def load_nflverse_runner(seasons: list[int], datasets: list[str], out_dir: str) 
 
 
 def main():
+    """Load NFLverse datasets (weekly stats, snap counts, ff_opportunity, etc.)."""
     parser = argparse.ArgumentParser(
         description="Load NFLverse datasets (weekly stats, snap counts, ff_opportunity, etc.)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -129,30 +127,30 @@ Examples:
   python scripts/ingest/load_nflverse.py --seasons 2025 --datasets weekly
 
   # Multiple datasets for current season
-  python scripts/ingest/load_nflverse.py --seasons 2025 --datasets weekly,snap_counts,ff_opportunity
+  python scripts/ingest/load_nflverse.py --seasons 2025 \
+      --datasets weekly,snap_counts,ff_opportunity
 
   # Historical backfill (range syntax)
-  python scripts/ingest/load_nflverse.py --seasons 2012-2024 --datasets weekly,snap_counts,ff_opportunity
+  python scripts/ingest/load_nflverse.py --seasons 2012-2024 \
+      --datasets weekly,snap_counts,ff_opportunity
 
 Available datasets:
-  %(datasets)s
-""" % {"datasets": "\n  ".join(f"- {k}: {v.notes}" for k, v in REGISTRY.items())}
+  {datasets}
+""".format(datasets="\n  ".join(f"- {k}: {v.notes}" for k, v in REGISTRY.items())),
     )
 
     parser.add_argument(
         "--seasons",
         required=True,
-        help="Seasons to load (comma-separated: 2020,2021 or range: 2020-2024)"
+        help="Seasons to load (comma-separated: 2020,2021 or range: 2020-2024)",
     )
     parser.add_argument(
         "--datasets",
         required=True,
-        help=f"Datasets to load (comma-separated). Available: {', '.join(REGISTRY.keys())}"
+        help=f"Datasets to load (comma-separated). Available: {', '.join(REGISTRY.keys())}",
     )
     parser.add_argument(
-        "--out",
-        default="data/raw/nflverse",
-        help="Output directory (default: data/raw/nflverse)"
+        "--out", default="data/raw/nflverse", help="Output directory (default: data/raw/nflverse)"
     )
 
     args = parser.parse_args()
@@ -197,9 +195,9 @@ Available datasets:
     print("Loaded datasets:")
     for result in manifest["results"]:
         if result["status"] == "success":
-            dataset = result['dataset']
-            season = result['season']
-            path = result.get('partition_dir', 'unknown')
+            dataset = result["dataset"]
+            season = result["season"]
+            path = result.get("partition_dir", "unknown")
             print(f"  - {dataset} ({season}) → {path}")
 
 

@@ -130,7 +130,8 @@ def load_sleeper(league_id: str, out_dir: str) -> dict:
         },
     )
     print(
-        f"✅ Calculated FA pool: {len(fa_pool_df)} players available ({len(rostered_player_ids)} rostered)"
+        f"✅ Calculated FA pool: {len(fa_pool_df)} players available "
+        f"({len(rostered_player_ids)} rostered)"
     )
 
     # 4. Load users
@@ -145,6 +146,7 @@ def load_sleeper(league_id: str, out_dir: str) -> dict:
 
 
 def main():
+    """Load Sleeper league data (rosters, players, FA pool)."""
     parser = argparse.ArgumentParser(
         description="Load Sleeper league data (rosters, players, FA pool)"
     )

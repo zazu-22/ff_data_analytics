@@ -161,16 +161,19 @@ def export_worksheet(worksheet, owner_name: str) -> pd.DataFrame:
             return pd.DataFrame()
 
         # Convert to DataFrame (first row as headers)
-        df = pd.DataFrame(values[1:], columns=values[0])
+        worksheet_df = pd.DataFrame(values[1:], columns=values[0])
 
         # Clean up empty columns
-        df = df.loc[:, (df != "").any(axis=0)]
+        worksheet_df = worksheet_df.loc[:, (worksheet_df != "").any(axis=0)]
 
         # Clean up empty rows
-        df = df[df.astype(bool).any(axis=1)]
+        worksheet_df = worksheet_df[worksheet_df.astype(bool).any(axis=1)]
 
-        logger.info(f"  ✓ Exported {len(df)} rows × {len(df.columns)} columns from {owner_name}")
-        return df
+        logger.info(
+            f"  ✓ Exported {len(worksheet_df)} rows × {len(worksheet_df.columns)} columns "
+            f"from {owner_name}"
+        )
+        return worksheet_df
 
     except Exception as e:
         logger.error(f"  ✗ Failed to export {owner_name}: {e}")
@@ -285,9 +288,11 @@ def main():
         success_count = 0
         for tab_name in tabs_to_export:
             worksheet = all_worksheets[tab_name]
-            df = export_worksheet(worksheet, tab_name)
+            worksheet_df = export_worksheet(worksheet, tab_name)
 
-            if not df.empty and upload_to_gcs(df, args.bucket, tab_name, gcs_client):
+            if not worksheet_df.empty and upload_to_gcs(
+                worksheet_df, args.bucket, tab_name, gcs_client
+            ):
                 success_count += 1
 
         logger.info("=" * 60)

@@ -36,7 +36,9 @@ except ImportError:
 # ============================================================================
 
 # All 9 sources configured in ffanalytics_projection_weights_mapped.csv
-DEFAULT_SOURCES = "FantasyPros,NumberFire,FantasySharks,ESPN,FFToday,CBS,NFL,RTSports,Walterfootball"
+DEFAULT_SOURCES = (
+    "FantasyPros,NumberFire,FantasySharks,ESPN,FFToday,CBS,NFL,RTSports,Walterfootball"
+)
 
 # All 9 positions supported by ffanalytics package
 DEFAULT_POSITIONS = "QB,RB,WR,TE,K,DST,DL,LB,DB"
@@ -53,6 +55,7 @@ FANTASY_SEASON_END_WEEK = 17  # Week 18 excluded (teams rest starters)
 # ============================================================================
 # Helper Functions - Extract common patterns
 # ============================================================================
+
 
 def _get_repo_root() -> Path:
     """Get repository root directory (4 levels up from this file)."""
@@ -93,6 +96,7 @@ def _parse_manifest_from_stdout(
 
     Returns:
         dict: Parsed manifest or fallback minimal manifest
+
     """
     # Parse JSON manifest from stdout (last line starting with "{")
     lines = stdout.strip().split("\n")
@@ -128,6 +132,7 @@ def _parse_manifest_from_stdout(
 # ============================================================================
 # Main Loader Functions
 # ============================================================================
+
 
 def load_projections(
     sources: str | list[str] | None = None,
@@ -270,12 +275,22 @@ def _scrape_week_projections(
         # CRITICAL: Files must be week-specific to avoid overwriting
         # Format: projections_consensus_season2025_week9_2025-10-28.parquet
         consensus_file = (
-            staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_season{season}_week{week}_{dt}.parquet"
+            staging_dir
+            / "projections"
+            / f"dt={dt}"
+            / f"projections_consensus_season{season}_week{week}_{dt}.parquet"
         )
-        raw_file = staging_dir / "projections" / f"dt={dt}" / f"projections_raw_season{season}_week{week}_{dt}.parquet"
+        raw_file = (
+            staging_dir
+            / "projections"
+            / f"dt={dt}"
+            / f"projections_raw_season{season}_week{week}_{dt}.parquet"
+        )
 
         # Rename the generic files to week-specific names immediately after load
-        generic_consensus = staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_{dt}.parquet"
+        generic_consensus = (
+            staging_dir / "projections" / f"dt={dt}" / f"projections_consensus_{dt}.parquet"
+        )
         generic_raw = staging_dir / "projections" / f"dt={dt}" / f"projections_raw_{dt}.parquet"
 
         if generic_consensus.exists():
@@ -606,7 +621,10 @@ def load_projections_ros(
         raise ValueError(f"start_week ({start_week}) cannot be greater than end_week ({end_week})")
 
     if start_week > FANTASY_SEASON_END_WEEK:
-        print(f"⚠️  start_week ({start_week}) is beyond fantasy season (week {FANTASY_SEASON_END_WEEK}), nothing to load")
+        print(
+            f"⚠️  start_week ({start_week}) is beyond fantasy season "
+            f"(week {FANTASY_SEASON_END_WEEK}), nothing to load"
+        )
         return {
             "dataset": "ffanalytics_projections",
             "season": season,
