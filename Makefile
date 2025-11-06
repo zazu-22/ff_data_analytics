@@ -4,21 +4,26 @@
 
 help:
 	@echo "Available targets:"
-	@echo "  ingest-sheets     Ingest league sheets locally"
-	@echo "  dbt-seed          Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
-	@echo "  dbt-run           Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
-	@echo "  dbt-test          Run dbt tests locally (use 'make dbt-test ARGS=<dbt test args>')"
-	@echo "  lintcheck              Run linter checks	"
-	@echo "  lintfix           Run linter auto-fixes"
-	@echo "  typecheck         Run type checks"
-	@echo "  typeinfer         Automatically add type annotations; use 'make typeinfer ARGS=<file or directory>'"
-	@echo "  sqlcheck          Run sqlfluff checks on dbt models"
-	@echo "  sqlfix            Run sqlfluff auto-fixes on dbt models"
-	@echo "  pre-commit        Run pre-commit hooks"
+	@echo "  ingest-sheets        Ingest league sheets locally"
+	@echo "  ingest-sleeper-players  Ingest Sleeper player database (for crosswalk validation)"
+	@echo "  dbt-seed             Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
+	@echo "  dbt-run              Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
+	@echo "  dbt-test             Run dbt tests locally (use 'make dbt-test ARGS=<dbt test args>')"
+	@echo "  lintcheck            Run linter checks	"
+	@echo "  lintfix              Run linter auto-fixes"
+	@echo "  typecheck            Run type checks"
+	@echo "  typeinfer            Automatically add type annotations; use 'make typeinfer ARGS=<file or directory>'"
+	@echo "  sqlcheck             Run sqlfluff checks on dbt models"
+	@echo "  sqlfix               Run sqlfluff auto-fixes on dbt models"
+	@echo "  pre-commit           Run pre-commit hooks"
 
 ingest-sheets:
 	@echo "Ingesting league sheets locally"
 	uv run python scripts/ingest/ingest_commissioner_sheet.py
+
+ingest-sleeper-players:
+	@echo "Ingesting Sleeper player database"
+	uv run python -m src.ingest.sleeper.loader players
 
 dbt-seed:
 	@echo "Seeding dbt sources"

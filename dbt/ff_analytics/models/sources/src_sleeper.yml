@@ -35,7 +35,16 @@ sources:
           Full NFL player database from Sleeper (~5MB).
 
           Grain: sleeper_player_id (one row per player)
-          Refresh: Daily (cached 1hr in loader)
+          Refresh: Weekly (cached 1hr in loader)
+
+          Usage: Used for crosswalk validation in dim_player_id_xref seed generation
+          to resolve sleeper_id duplicates from nflverse ff_playerids.
+
+        loaded_at_field: dt
+
+        freshness:
+          warn_after: {count: 30, period: day}
+          error_after: {count: 60, period: day}
 
         external_location: "data/raw/sleeper/players/dt=*/players_*.parquet"
 
@@ -53,12 +62,14 @@ sources:
 
       - name: fa_pool
         description: |
-          Free agent pool (calculated as all_players - rostered_players).
+          Fantasy-relevant players from Sleeper API (filtered by position only).
 
-          Grain: sleeper_player_id (one row per FA)
+          Grain: sleeper_player_id (one row per player)
           Refresh: Daily
 
-          Calculation: Players with status Active/IR/Q/D/O and NOT on any roster.
+          Note: This is a simplified extraction - filters to fantasy-relevant positions.
+          Does NOT account for status or roster membership. For actual league FA pool,
+          see stg_sleeper__fa_pool which applies additional filtering.
 
         external_location: "data/raw/sleeper/fa_pool/dt=*/fa_pool_*.parquet"
 
