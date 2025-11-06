@@ -15,6 +15,7 @@ Highlights:
 with raw as (
   select
     gm,
+    gm_tab,
     year,
     round,
     source_type,
@@ -40,8 +41,7 @@ with_franchise as (
   from raw
   left join {{ ref('dim_franchise') }} fran
     on
-      -- Note: draft_picks doesn't have gm_tab in raw data, still uses gm matching
-      split_part(raw.gm, ' ', 1) = fran.owner_name
+      raw.gm_tab = fran.gm_tab
       and raw.year between fran.season_start and fran.season_end
 ),
 
@@ -85,6 +85,7 @@ select
   year,
   round,
   gm as gm_full_name,
+  gm_tab,
   franchise_id,
   franchise_name,
   owner_name as franchise_owner_name,

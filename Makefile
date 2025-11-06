@@ -1,6 +1,6 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix validate-franchise-mapping
 
 help:
 	@echo "Available targets:"
@@ -46,6 +46,19 @@ dbt-test:
 		EXTERNAL_ROOT="$$PWD/data/raw" \
 		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
 		dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
+
+validate-franchise-mapping:
+	@echo "Validating franchise mapping..."
+	@mkdir -p dbt/ff_analytics/target
+	@mkdir -p .uv-cache
+	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
+		EXTERNAL_ROOT="$$PWD/data/raw" \
+		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+		dbt test \
+			--select tag:franchise_mapping \
+			--project-dir dbt/ff_analytics \
+			--profiles-dir dbt/ff_analytics
+	@echo "✅ Franchise mapping validation complete"
 
 lintcheck:
 	@echo "=========================================="

@@ -27,3 +27,7 @@ models:
   dbt_utils:
     integration_tests:
       +enabled: false
+
+tests:
+  +severity: error
+  +tags: ["data_quality", "franchise_mapping"]

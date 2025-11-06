@@ -31,6 +31,22 @@ player_id=12345, franchise_id=F001, snapshot_date=2024-09-15, obligation_year=20
 player_id=12345, franchise_id=F001, snapshot_date=2024-09-15, obligation_year=2026 → Snapshot 2
 */
 
+with base as (
+  select *
+  from {{ ref('stg_sheets__contracts_active') }}
+),
+
+with_gm_tab as (
+  select
+    b.*,
+    fran.gm_tab
+  from base b
+  left join {{ ref('dim_franchise') }} fran
+    on
+      b.franchise_id = fran.franchise_id
+      and b.obligation_year between fran.season_start and fran.season_end
+)
+
 select
   -- Grain columns (composite natural key)
   player_id,
@@ -47,6 +63,7 @@ select
   franchise_name,
   owner_name,
   gm_full_name,
+  gm_tab,
 
   -- Year-specific measures
   cap_hit,                          -- Annual obligation for this year
@@ -68,5 +85,5 @@ select
   -- Metadata
   current_timestamp as loaded_at
 
-from {{ ref('stg_sheets__contracts_active') }}
+from with_gm_tab
 order by snapshot_date desc, player_name asc, obligation_year asc

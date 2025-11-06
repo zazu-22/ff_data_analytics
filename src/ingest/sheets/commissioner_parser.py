@@ -1521,6 +1521,7 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
     picks_tbl = picks.select(
         [
             "gm",
+            "gm_tab",
             "year",
             "round",
             "source_type",
@@ -1535,6 +1536,7 @@ def _to_picks_tables(picks_all: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFram
     conds = picks.filter(pl.col("condition_flag")).select(
         [
             "gm",
+            "gm_tab",
             "year",
             "round",
             pl.col("condition_text").alias("condition_text"),

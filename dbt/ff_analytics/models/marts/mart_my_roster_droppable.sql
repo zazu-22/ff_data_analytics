@@ -1,14 +1,22 @@
 -- Grain: player_key, asof_date
 -- Purpose: Identify drop candidates on Jason's roster
 
-with my_roster as (
+with my_franchise as (
+  select franchise_id
+  from {{ ref('dim_franchise') }}
+  where
+    gm_tab = 'Jason'
+    and is_current_owner = true
+),
+
+my_roster as (
   select distinct
     c.player_id as player_key,
     d.position
   from {{ ref('stg_sheets__contracts_active') }} c
   inner join {{ ref('dim_player') }} d on c.player_id = d.player_id
   where
-    c.gm_full_name = 'Jason Shaffer'
+    c.franchise_id in (select franchise_id from my_franchise)
     and c.obligation_year = YEAR(CURRENT_DATE)
 ),
 
@@ -20,7 +28,7 @@ contracts as (
     SUM(case when obligation_year > YEAR(CURRENT_DATE) then cap_hit end) as future_years_cap_hit,
     SUM(cap_hit) as total_remaining
   from {{ ref('stg_sheets__contracts_active') }}
-  where gm_full_name = 'Jason Shaffer'
+  where franchise_id in (select franchise_id from my_franchise)
   group by player_id
 ),
 

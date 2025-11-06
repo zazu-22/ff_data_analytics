@@ -7,6 +7,10 @@ sources:
     tables:
       - name: transactions
         external_location: "data/raw/commissioner/transactions/dt=*/transactions.parquet"
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: dt
         description: |
           League transaction history from TRANSACTIONS tab.
 
@@ -202,8 +206,36 @@ sources:
               Values: Trade, Cut, Signing, Draft, FA, Waivers, Extension, Franchise, Amnesty
               Refined into transaction_type_refined using dim_timeframe context.
 
+      - name: contracts_active
+        external_location: "data/raw/commissioner/contracts_active/dt=*/contracts_active.parquet"
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: dt
+        description: |
+          Active roster obligations exported from individual Commissioner tabs (contracts section).
+
+          **Grain**: Wide row per roster slot per franchise tab (one row per GM tab)
+          **Source**: Commissioner Google Sheet franchise tabs
+          **Ingest**: scripts/ingest/ingest_commissioner_sheet.py (parse_commissioner_dir)
+          **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/contracts_active/dt=YYYY-MM-DD/
+          **Files**: contracts_active.parquet, _meta.json
+
+          **Notes**:
+          - Includes gm_tab column aligned to Google Sheet tab name for franchise mapping
+          - Columns y20## represent cap hits per season (wide format from source sheet)
+          - Downstream staging (stg_sheets__contracts_active) unpivots to long-form obligations
+
+        meta:
+          owner: "@jason"
+          external_location: "data/raw/commissioner/contracts_active/dt=*/*.parquet"
+
       - name: contracts_cut
         external_location: "data/raw/commissioner/contracts_cut/dt=*/contracts_cut.parquet"
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: dt
         description: |
           Dead cap obligations from past player cuts (Commissioner's source of truth).
 
@@ -268,6 +300,10 @@ sources:
 
       - name: cap_space
         external_location: "data/raw/commissioner/cap_space/dt=*/cap_space.parquet"
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: dt
         description: |
           Cap space data from roster tabs (row 3: Available, Dead, Traded)
 
@@ -322,3 +358,26 @@ sources:
             description: "Net cap space traded (positive = acquired, negative = sent, whole dollars)."
             data_tests:
               - not_null
+
+      - name: draft_picks
+        external_location: "data/raw/commissioner/draft_picks/dt=*/draft_picks.parquet"
+        freshness:
+          warn_after: {count: 2, period: day}
+          error_after: {count: 7, period: day}
+        loaded_at_field: dt
+        description: |
+          Draft pick ownership matrix exported from Commissioner franchise tabs (draft section).
+
+          **Grain**: Wide row per franchise tab with columns y20## representing round ownership per season
+          **Source**: Commissioner Google Sheet franchise tabs (draft pick grid)
+          **Ingest**: scripts/ingest/ingest_commissioner_sheet.py (parse_commissioner_dir)
+          **Load Pattern**: Idempotent batch snapshot to data/raw/commissioner/draft_picks/dt=YYYY-MM-DD/
+          **Files**: draft_picks.parquet, _meta.json
+
+          **Notes**:
+          - Includes gm_tab column aligned to Google Sheet tab name for franchise mapping
+          - Downstream staging (stg_sheets__draft_pick_holdings) unpivots to normalize pick ownership
+
+        meta:
+          owner: "@jason"
+          external_location: "data/raw/commissioner/draft_picks/dt=*/*.parquet"
