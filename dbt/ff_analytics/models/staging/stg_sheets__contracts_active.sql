@@ -197,7 +197,7 @@ with_player_id as (
     wd.*,
 
     -- Cascading player_id resolution:
-    -- 1. Crosswalk (authoritative mfl_id from nflverse)
+    -- 1. Crosswalk (canonical player_id from dim_player_id_xref)
     -- 2. Transaction history (fallback only, may have stale IDs)
     case
       when wd.is_defense then null
@@ -260,11 +260,11 @@ final as (
     gm_full_name,
 
     -- Player dimension
-    player_id,  -- mfl_id from crosswalk (-1 if unmapped)
+    player_id,  -- canonical player_id from crosswalk/transactions (-1 if unmapped)
 
     -- Player key logic (same pattern as stg_sheets__transactions):
     -- - Defenses: player_key = 'DEF_' || team_abbr
-    -- - Mapped players: player_key = player_id (mfl_id as varchar)
+    -- - Mapped players: player_key = cast(player_id as varchar)
     -- - Empty players: player_key = 'EMPTY_' || roster_slot || '_' || row_number (for weekly pickup placeholders)
     -- - Unmapped players: player_key = player_name (preserves identity via raw name)
     case

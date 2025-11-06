@@ -188,7 +188,7 @@ with_player_key as (
     wf.*,
 
     -- Player key logic:
-    -- - Mapped players: player_key = player_id (mfl_id as varchar)
+    -- - Mapped players: player_key = cast(player_id as varchar)
     -- - Unmapped players: player_key = player_name (preserves identity via raw name)
     -- - Non-players: player_key = transaction_id_unique (defensive fail-safe for picks/cap)
     case

@@ -178,7 +178,7 @@ with_player_id as (
 
     -- Cascading player_id resolution:
     -- 1. Transaction history (authoritative, position-aware)
-    -- 2. Crosswalk with position filtering
+    -- 2. Crosswalk with position filtering (canonical player_id)
     coalesce(txn.player_id, xwalk.player_id) as player_id,
 
     xwalk.mfl_id,
@@ -203,10 +203,10 @@ final as (
     gm_full_name,
 
     -- Player dimension
-    player_id,  -- mfl_id from crosswalk (-1 if unmapped)
+    player_id,  -- canonical player_id from crosswalk/transactions (-1 if unmapped)
 
     -- Player key logic (same pattern as stg_sheets__transactions):
-    -- - Mapped players: player_key = player_id (mfl_id as varchar)
+    -- - Mapped players: player_key = cast(player_id as varchar)
     -- - Unmapped players: player_key = player_name (preserves identity via raw name)
     case
       when coalesce(player_id, -1) != -1

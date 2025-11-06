@@ -9,7 +9,7 @@ models:
       Source: Sleeper API (calculated FA pool)
 
       Key transformations:
-      - Map sleeper_id → mfl_id via dim_player_id_xref
+      - Map sleeper_id → canonical player_id via dim_player_id_xref (with provider fallbacks)
       - Filter to fantasy-relevant positions
       - Add player_key composite identifier
 
