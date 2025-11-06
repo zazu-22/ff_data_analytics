@@ -59,6 +59,8 @@ sources:
             description: Current NFL team
           - name: status
             description: NFL roster status (Active, Injured Reserve, etc.)
+          - name: birth_date
+            description: Player birthdate (used for duplicate resolution in crosswalk)
 
       - name: fa_pool
         description: |

@@ -5,8 +5,8 @@ models:
     description: |
       Player dimension - conformed dimension for all player-based analysis.
 
-      **Grain**: One row per player (mfl_id as canonical player_id)
-      **Source**: dim_player_id_xref seed (nflverse ff_playerids with 19 provider ID mappings)
+      **Grain**: One row per player (player_id as canonical sequential surrogate key)
+      **Source**: dim_player_id_xref staging model (stg_nflverse__ff_playerids with deduplication logic)
 
       **SCD Type 1** (overwrite): current_team
       **SCD Type 0** (immutable): draft_year, birthdate
@@ -16,8 +16,8 @@ models:
     columns:
       - name: player_id
         description: |
-          Canonical player identifier (mfl_id).
-          Primary key for player dimension.
+          Canonical player identifier (sequential surrogate key 1-N).
+          Primary key for player dimension. Source: dim_player_id_xref staging model.
         data_tests:
           - unique
           - not_null

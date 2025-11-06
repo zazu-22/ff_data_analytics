@@ -1,32 +1,10 @@
 version: 2
 
 seeds:
-  - name: dim_player_id_xref
-    description: "Player ID crosswalk mapping 20 provider IDs to canonical player_id (sequential surrogate key)"
-    config:
-      column_types:
-        player_id: BIGINT
-        mfl_id: BIGINT
-    columns:
-      - name: player_id
-        description: "Canonical player ID (sequential surrogate key 1-N)"
-        data_tests:
-          - not_null
-          - unique
-      - name: mfl_id
-        description: "MyFantasyLeague player ID (external ID from nflverse)"
-        data_tests:
-          - not_null
-      - name: gsis_id
-        description: "NFL GSIS ID"
-      - name: name
-        description: "Player name in 'First Last' format"
-        data_tests:
-          - not_null
-      - name: merge_name
-        description: "Normalized name for fuzzy matching (lowercased, normalized)"
-      - name: name_last_first
-        description: "Player name in 'Last, First' format for FantasySharks projection matching"
+  # NOTE: dim_player_id_xref has been migrated to a staging model (stg_nflverse__ff_playerids)
+  # See: dbt/ff_analytics/models/core/dim_player_id_xref.sql (backward compatibility alias)
+  # Migration date: 2025-11-06
+  # Reason: Eliminates CSV parsing issues, ensures always-fresh data, aligns with architecture intent
 
   - name: dim_timeframe
     description: "Maps TRANSACTIONS timeframe strings to structured season/week/period"

@@ -4,7 +4,7 @@
 Player dimension - conformed dimension for all player-based analysis.
 
 Grain: One row per player (player_id as canonical identifier)
-Source: dim_player_id_xref seed (nflverse ff_playerids with 19 provider ID mappings)
+Source: dim_player_id_xref staging model (stg_nflverse__ff_playerids with deduplication logic)
 
 SCD Type 1 (overwrite): team (current team assignment)
 SCD Type 0 (immutable): draft_year, birthdate

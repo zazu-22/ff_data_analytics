@@ -7,7 +7,7 @@ Use `stg_<provider>__<dataset>.sql` (double underscore between provider and data
 - **Keep raw sources aligned with provider schemas** in external storage (`data/raw/`)
 - **Apply minimal, consistent normalization** in staging for downstream stability
 - **Staging models perform**:
-  - Provider ID → canonical ID mapping via crosswalk seeds
+  - Provider ID → canonical ID mapping via crosswalk (dim_player_id_xref staging model)
   - NULL filtering (document percentages in comments)
   - Long-form unpivots (wide → tall for fact tables)
   - Data quality filters
