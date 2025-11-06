@@ -114,7 +114,7 @@ def deduplicate_sleeper_ids(
         how="left",
     )
 
-    # Mark all records in duplicate sets, then distinguish kept vs removed
+    # Mark records with incorrect sleeper_id mappings
     df_with_sleeper = df_with_sleeper.with_columns(
         pl.when(
             # In duplicate set AND birthdate doesn't match Sleeper
@@ -122,7 +122,7 @@ def deduplicate_sleeper_ids(
             & pl.col("sleeper_birth_date").is_not_null()
             & (pl.col("birthdate") != pl.col("sleeper_birth_date"))
         )
-        .then(pl.lit("removed_sleeper_duplicate"))
+        .then(pl.lit("cleared_sleeper_duplicate"))
         .when(
             # In duplicate set AND birthdate DOES match Sleeper (the winner!)
             pl.col("sleeper_id").is_in(dup_sleeper_ids.to_series())
@@ -134,14 +134,17 @@ def deduplicate_sleeper_ids(
         .alias("xref_correction_status")
     )
 
-    # Remove duplicates
-    df_cleaned = df_with_sleeper.filter(
-        pl.col("xref_correction_status") != "removed_sleeper_duplicate"
+    # NULL out incorrect sleeper_id (but keep the player!)
+    df_cleaned = df_with_sleeper.with_columns(
+        pl.when(pl.col("xref_correction_status") == "cleared_sleeper_duplicate")
+        .then(pl.lit(None))
+        .otherwise(pl.col("sleeper_id"))
+        .alias("sleeper_id")
     ).drop(["sleeper_birth_date", "sleeper_position"])
 
-    removed = len(df) - len(df_cleaned)
+    cleared = (df_cleaned["xref_correction_status"] == "cleared_sleeper_duplicate").sum()
     if verbose:
-        print(f"  ❌ Removed {removed} records (birthdate mismatch with Sleeper API)")
+        print(f"  🔧 Cleared {cleared} incorrect sleeper_id mappings (players preserved)")
 
     return df_cleaned
 
@@ -194,17 +197,18 @@ def deduplicate_provider_ids(
         .alias("_rank")
     )
 
-    # Mark all records in duplicate sets (both kept and removed)
+    # Mark all records in duplicate sets (both kept and cleared)
+    cleared_status = status_value.replace("removed", "cleared")
     kept_status = status_value.replace("removed", "kept").replace("duplicate", "newer")
 
     df_with_rank = df_with_rank.with_columns(
         pl.when(
-            # In duplicate set AND rank > 1 (older player - remove)
+            # In duplicate set AND rank > 1 (older player - clear the ID)
             pl.col(id_column).is_in(dup_ids.to_series()) & (pl.col("_rank") > 1)
         )
-        .then(pl.lit(status_value))
+        .then(pl.lit(cleared_status))
         .when(
-            # In duplicate set AND rank == 1 (newer player - keep)
+            # In duplicate set AND rank == 1 (newer player - keep the ID)
             pl.col(id_column).is_in(dup_ids.to_series()) & (pl.col("_rank") == 1)
         )
         .then(pl.lit(kept_status))
@@ -212,12 +216,17 @@ def deduplicate_provider_ids(
         .alias("xref_correction_status")
     )
 
-    # Remove duplicates
-    df_cleaned = df_with_rank.filter(pl.col("_rank") == 1).drop("_rank")
+    # NULL out the provider ID for older players (but keep the player!)
+    df_cleaned = df_with_rank.with_columns(
+        pl.when(pl.col("xref_correction_status") == cleared_status)
+        .then(pl.lit(None))
+        .otherwise(pl.col(id_column))
+        .alias(id_column)
+    ).drop("_rank")
 
-    removed = len(df) - len(df_cleaned)
+    cleared = (df_cleaned["xref_correction_status"] == cleared_status).sum()
     if verbose:
-        print(f"  ❌ Removed {removed} records (kept newer player by draft_year)")
+        print(f"  🔧 Cleared {cleared} incorrect {id_column} mappings (players preserved)")
 
     return df_cleaned
 
