@@ -34,11 +34,14 @@ make dbt-seed   # dbt seed with proper env setup
 make sqlfix     # Auto-fix SQL style issues
 
 # Run manually from repo root without make
-mkdir -p .uv-cache
-UV_CACHE_DIR="$(pwd)/.uv-cache" uv run env \
+# NOTE: No UV_CACHE_DIR needed - uv uses ~/.cache/uv by default (shared across projects)
+uv run env \
     EXTERNAL_ROOT="$(pwd)/data/raw" \
     DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
     dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics
+
+# IMPORTANT: When running dbt commands in Bash tool, use $(pwd) NOT $PWD
+# $PWD doesn't expand correctly in the Bash tool environment, causing "/.uv-cache" errors
 
 # Query database directly with DuckDB CLI (from repo root)
 duckdb dbt/ff_analytics/target/dev.duckdb

@@ -23,37 +23,33 @@ ingest-sheets:
 dbt-seed:
 	@echo "Seeding dbt sources"
 	@mkdir -p dbt/ff_analytics/target
-	@mkdir -p .uv-cache
-	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
-		EXTERNAL_ROOT="$$PWD/data/raw" \
-		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+	uv run env \
+		EXTERNAL_ROOT="$$(pwd)/data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
 		dbt seed --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 dbt-run:
 	@echo "Running dbt (ensure dbt-duckdb is installed)"
 	@mkdir -p dbt/ff_analytics/target
-	@mkdir -p .uv-cache
-	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
-		EXTERNAL_ROOT="$$PWD/data/raw" \
-		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+	uv run env \
+		EXTERNAL_ROOT="$$(pwd)/data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
 		dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 dbt-test:
 	@echo "Testing dbt models"
 	@mkdir -p dbt/ff_analytics/target
-	@mkdir -p .uv-cache
-	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
-		EXTERNAL_ROOT="$$PWD/data/raw" \
-		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+	uv run env \
+		EXTERNAL_ROOT="$$(pwd)/data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
 		dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics $(ARGS)
 
 validate-franchise-mapping:
 	@echo "Validating franchise mapping..."
 	@mkdir -p dbt/ff_analytics/target
-	@mkdir -p .uv-cache
-	UV_CACHE_DIR="$$PWD/.uv-cache" uv run env \
-		EXTERNAL_ROOT="$$PWD/data/raw" \
-		DBT_DUCKDB_PATH="$$PWD/dbt/ff_analytics/target/dev.duckdb" \
+	uv run env \
+		EXTERNAL_ROOT="$$(pwd)/data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
 		dbt test \
 			--select tag:franchise_mapping \
 			--project-dir dbt/ff_analytics \
