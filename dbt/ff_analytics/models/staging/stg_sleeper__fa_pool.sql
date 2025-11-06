@@ -5,14 +5,24 @@
     materialized='view'
 ) }}
 
-with fa_raw as (
-  select * from
-    read_parquet(
-      '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
-      hive_partitioning = true
-    )
-  -- Get only the latest snapshot per player (dt partition)
-  qualify row_number() over (partition by sleeper_player_id order by dt desc) = 1
+with latest_snapshot as (
+  -- Get the most recent snapshot date
+  select max(dt) as latest_dt
+  from read_parquet(
+    '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
+    hive_partitioning = true
+  )
+),
+
+fa_raw as (
+  -- Read only players from the latest snapshot
+  select fa.*
+  from read_parquet(
+    '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
+    hive_partitioning = true
+  ) fa
+  cross join latest_snapshot
+  where fa.dt = latest_snapshot.latest_dt
 ),
 
 player_xref as (
