@@ -10,6 +10,7 @@ models:
       
       - Filters team placeholder entries (prevents join explosions)
       - Resolves sleeper_id duplicates via Sleeper API birthdate matching
+      - Attempts fallback matching for cleared sleeper_ids using name/position/birthdate from Sleeper players database
       - Resolves gsis_id/mfl_id duplicates by keeping newer players (higher draft_year)
       - Assigns deterministic sequential player_id (1-N)
       - Tracks all corrections in xref_correction_status
@@ -17,6 +18,11 @@ models:
       **Deduplication Philosophy**: All player records are preserved. Only duplicate provider
       IDs are cleared (using sentinel values: -1 for numeric IDs, 'DUPLICATE_CLEARED' for VARCHAR).
       This assumes duplicate IDs are data quality issues from the provider, not duplicate players.
+      
+      **Fallback Matching**: When sleeper_id duplicates are cleared due to birthdate mismatches,
+      the model attempts to find the correct sleeper_id by matching on name, position, and birthdate
+      from the Sleeper players database. This recovers sleeper_ids that were incorrectly mapped
+      but can be corrected with high confidence.
       
       **Grain**: One row per player (after filtering and deduplication)
       **Source**: nflverse ff_playerids dataset (~9,734 valid players after filtering)
@@ -50,6 +56,9 @@ models:
         description: |
           Sleeper platform player ID.
           Sentinel value -1 indicates ID was cleared due to duplicate (player record preserved).
+          May be corrected via fallback matching if valid match found in Sleeper players database.
+        data_tests:
+          - not_null
 
       - name: espn_id
         description: ESPN player ID
@@ -129,14 +138,27 @@ models:
 
       - name: xref_correction_status
         description: |
-          Correction status tracking for duplicate resolution.
+          Correction status tracking for duplicate resolution and fallback matching.
           
           Values:
           - 'original': No corrections applied
           - 'cleared_sleeper_duplicate': sleeper_id cleared due to birthdate mismatch
+          - 'corrected_sleeper_id': sleeper_id corrected via fallback matching from Sleeper players database
           - 'kept_sleeper_verified': sleeper_id kept after birthdate verification
           - 'cleared_gsis_duplicate': gsis_id cleared (older player in duplicate set)
           - 'kept_gsis_newer': gsis_id kept (newer player in duplicate set)
           - 'cleared_mfl_duplicate': mfl_id cleared (older player in duplicate set)
           - 'kept_mfl_newer': mfl_id kept (newer player in duplicate set)
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - original
+                  - cleared_sleeper_duplicate
+                  - corrected_sleeper_id
+                  - kept_sleeper_verified
+                  - cleared_gsis_duplicate
+                  - kept_gsis_newer
+                  - cleared_mfl_duplicate
+                  - kept_mfl_newer
 
