@@ -1,16 +1,16 @@
 -- Ensure fallback matching maintains data integrity
 --
--- Purpose: Validate that fallback matching for sleeper_id duplicates doesn't create
--- new duplicates or incorrect mappings. This test ensures:
--- 1. Corrected sleeper_ids don't create duplicate mappings
--- 2. Corrected sleeper_ids exist in Sleeper players database
+-- Purpose: Validate that fallback matching for sleeper_id (both added and corrected)
+-- doesn't create new duplicates or incorrect mappings. This test ensures:
+-- 1. Added/corrected sleeper_ids don't create duplicate mappings
+-- 2. Added/corrected sleeper_ids exist in Sleeper players database
 -- 3. Status values match actual ID states (sentinel vs real ID)
 --
 -- Expected: Zero violations
 -- If violations exist: Fallback matching logic needs review
 
 with fallback_duplicates as (
-  -- Check that corrected sleeper_ids don't create duplicates
+  -- Check that added/corrected sleeper_ids don't create duplicates
   select
     'fallback_created_duplicate' as violation_type,
     cast(sleeper_id as varchar) as id_value,
@@ -20,13 +20,13 @@ with fallback_duplicates as (
   from {{ ref('stg_nflverse__ff_playerids') }}
   where sleeper_id != -1
     and sleeper_id is not null
-    and xref_correction_status = 'corrected_sleeper_id'
+    and xref_correction_status in ('added_sleeper_id', 'corrected_sleeper_id')
   group by sleeper_id
   having count(*) > 1
 ),
 
 fallback_invalid_ids as (
-  -- Check that corrected sleeper_ids exist in Sleeper players database
+  -- Check that added/corrected sleeper_ids exist in Sleeper players database
   select
     'fallback_id_not_in_sleeper_db' as violation_type,
     cast(x.sleeper_id as varchar) as id_value,
@@ -39,7 +39,7 @@ fallback_invalid_ids as (
     hive_partitioning = true
   ) sp
     on x.sleeper_id = try_cast(sp.sleeper_player_id as integer)
-  where x.xref_correction_status = 'corrected_sleeper_id'
+  where x.xref_correction_status in ('added_sleeper_id', 'corrected_sleeper_id')
     and sp.sleeper_player_id is null
 ),
 
@@ -51,15 +51,15 @@ status_id_mismatch as (
     cast(player_id as varchar) as player_id_col,
     cast(player_id as varchar) as player_ids,
     case
-      when sleeper_id = -1 and xref_correction_status = 'corrected_sleeper_id'
-        then 'corrected_sleeper_id but sleeper_id is sentinel'
+      when sleeper_id = -1 and xref_correction_status in ('added_sleeper_id', 'corrected_sleeper_id')
+        then 'added/corrected status but sleeper_id is sentinel'
       when sleeper_id != -1 and sleeper_id is not null and xref_correction_status = 'cleared_sleeper_duplicate'
         then 'cleared_sleeper_duplicate but sleeper_id is not sentinel'
       else null
     end as player_names
   from {{ ref('stg_nflverse__ff_playerids') }}
   where (
-    (sleeper_id = -1 and xref_correction_status = 'corrected_sleeper_id')
+    (sleeper_id = -1 and xref_correction_status in ('added_sleeper_id', 'corrected_sleeper_id'))
     or (sleeper_id != -1 and sleeper_id is not null and xref_correction_status = 'cleared_sleeper_duplicate')
   )
 )

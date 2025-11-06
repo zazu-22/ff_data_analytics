@@ -11,7 +11,7 @@ Process:
 2. Filter out team placeholder entries (those with only mfl_id, no other provider IDs)
 3. Join with Sleeper players for birthdate validation
 4. Deduplicate sleeper_id duplicates (match birthdate with Sleeper API, clear mismatches)
-5. Attempt fallback matching for cleared sleeper_ids (match on name/position/birthdate from Sleeper DB)
+5. Attempt fallback matching for missing/cleared sleeper_ids (match on name/position, birthdate optional)
 6. Deduplicate gsis_id duplicates (keep player with higher draft_year)
 7. Deduplicate mfl_id duplicates (keep player with higher draft_year)
 8. Assign sequential player_id (deterministic ordering)
@@ -27,15 +27,17 @@ Deduplication Philosophy:
 - This assumes duplicate IDs are data quality issues from the provider, not duplicate players
 
 Fallback Matching:
-When sleeper_id duplicates are cleared due to birthdate mismatches, the model attempts
-to find the correct sleeper_id by matching on:
-- Name: Exact match on name or merge_name (normalized, lowercase)
-- Position: Exact match on position
-- Birthdate: Match on birthdate from nflverse (since Sleeper birthdate didn't match)
+When sleeper_id duplicates are cleared due to birthdate mismatches, or when players have
+NULL sleeper_id in raw data, the model attempts to find the correct sleeper_id by matching on:
+- Name: Exact match on name or merge_name (normalized, lowercase) - REQUIRED
+- Position: Exact match on position - REQUIRED
+- Birthdate: Match on birthdate from nflverse - OPTIONAL (scoring bonus, not required)
 - Exclusions: Candidate sleeper_id must not already be used in xref or in duplicate set
 
-If a match is found, sleeper_id is corrected and status set to 'corrected_sleeper_id'.
-If no match, sleeper_id remains -1 and status is 'cleared_sleeper_duplicate'.
+If a match is found:
+- For players with NULL sleeper_id: sleeper_id assigned, status = 'added_sleeper_id'
+- For players with sleeper_id = -1: sleeper_id corrected, status = 'corrected_sleeper_id'
+If no match, sleeper_id remains unchanged and status unchanged.
 
 Grain: One row per player (after filtering and deduplication)
 Source: nflverse ff_playerids dataset (~9,734 valid players after filtering)
@@ -166,13 +168,17 @@ sleeper_deduped as (
     from with_sleeper_validation
 ),
 
--- Fallback matching: Attempt to find correct sleeper_id for cleared duplicates
--- Match on name, position, and birthdate from Sleeper players database
+-- Fallback matching: Attempt to find sleeper_id for players missing it or with cleared duplicates
+-- Match on name, position, and optionally birthdate from Sleeper players database
 --
 -- Matching Criteria:
--- - Name: Exact match on name or merge_name (normalized, lowercase, trimmed)
--- - Position: Exact match on position
--- - Birthdate: Match on birthdate from nflverse (since Sleeper birthdate didn't match)
+-- - Name: Exact match on name or merge_name (normalized, lowercase, trimmed) - REQUIRED
+-- - Position: Exact match on position - REQUIRED
+-- - Birthdate: Match on birthdate from nflverse - OPTIONAL (scoring bonus, not required)
+--
+-- Scope:
+-- - Players with sleeper_id = -1 (cleared duplicates that need correction)
+-- - Players with sleeper_id IS NULL (missing from raw data, need assignment)
 --
 -- Exclusions:
 -- - Candidate sleeper_id must not already be used in xref (check sleeper_deduped)
@@ -180,12 +186,15 @@ sleeper_deduped as (
 --
 -- Match Selection:
 -- - Prefer exact name match (name) over normalized match (merge_name)
+-- - Prefer matches with birthdate when available (higher confidence)
 -- - Use deterministic tiebreaker (sleeper_player_id) if multiple matches
--- - One match per cleared sleeper_id (partition by mfl_id, gsis_id, name, birthdate)
+-- - One match per player (partition by mfl_id, gsis_id, name, birthdate)
+-- - Minimum score: 110 points (name + position required)
 --
 -- Result:
--- - If match found: sleeper_id corrected, status = 'corrected_sleeper_id'
--- - If no match: sleeper_id remains -1, status = 'cleared_sleeper_duplicate'
+-- - If match found and original sleeper_id was NULL: sleeper_id assigned, status = 'added_sleeper_id'
+-- - If match found and original sleeper_id was -1: sleeper_id corrected, status = 'corrected_sleeper_id'
+-- - If no match: sleeper_id remains unchanged, status unchanged
 sleeper_fallback_candidates as (
     select
         sd.*,
@@ -208,17 +217,15 @@ sleeper_fallback_candidates as (
         end as birthdate_match_score
     from sleeper_deduped sd
     cross join sleeper_players sp
-    where sd.sleeper_id = -1  -- Only attempt fallback for cleared sleeper_ids
-      and sd.birthdate is not null  -- Require birthdate for matching
-      -- Name matching (exact or normalized)
+    where (sd.sleeper_id = -1 OR sd.sleeper_id IS NULL)  -- Cleared duplicates OR missing
+      -- Name matching (exact or normalized) - REQUIRED
       and (
           lower(trim(sd.name)) = lower(trim(sp.full_name))
           or lower(trim(sd.merge_name)) = lower(trim(sp.full_name))
       )
-      -- Position matching
+      -- Position matching - REQUIRED
       and sd.position = sp.sleeper_position
-      -- Birthdate matching (use nflverse birthdate since Sleeper didn't match)
-      and sd.birthdate = sp.sleeper_birth_date
+      -- Birthdate matching is OPTIONAL (scoring bonus only, not required)
       -- Exclude candidates already used in xref (check current state)
       and try_cast(sp.sleeper_player_id as integer) not in (
           select sleeper_id
@@ -234,12 +241,14 @@ sleeper_fallback_candidates as (
 ),
 
 -- Select best match per player using deterministic tiebreakers
+-- Require minimum score of 110 (name + position match)
 sleeper_fallback_matched as (
     select
         * exclude (candidate_sleeper_id, sleeper_full_name, sleeper_position, name_match_score, position_match_score, birthdate_match_score),
         candidate_sleeper_id as matched_sleeper_id,
         name_match_score + position_match_score + birthdate_match_score as total_match_score
     from sleeper_fallback_candidates
+    where name_match_score + position_match_score >= 110  -- Require name + position match
     qualify row_number() over (
         partition by mfl_id, gsis_id, name, birthdate
         order by
@@ -249,6 +258,7 @@ sleeper_fallback_matched as (
 ),
 
 -- Apply fallback matches: update sleeper_id and status for matched players
+-- Distinguish between added (was NULL) vs corrected (was -1)
 sleeper_with_fallback as (
     select
         sd.* exclude (sleeper_id, xref_correction_status),
@@ -258,7 +268,9 @@ sleeper_with_fallback as (
             else sd.sleeper_id
         end as sleeper_id,
         case
-            when fm.matched_sleeper_id is not null
+            when fm.matched_sleeper_id is not null and sd.sleeper_id IS NULL
+            then 'added_sleeper_id'
+            when fm.matched_sleeper_id is not null and sd.sleeper_id = -1
             then 'corrected_sleeper_id'
             else sd.xref_correction_status
         end as xref_correction_status
@@ -478,6 +490,7 @@ validate_at_least_one_id as (
 ),
 
 -- Assign sequential player_id (deterministic ordering for stability)
+-- Note: Data quality validations are performed via dbt tests, not inline filters
 with_player_id as (
     select
         *,
@@ -485,10 +498,6 @@ with_player_id as (
             order by mfl_id, gsis_id, name
         ) as player_id
     from with_name_variant
-    -- Fail if any validation violations exist
-    where not exists (select 1 from validate_no_duplicate_ids)
-      and not exists (select 1 from validate_sentinel_usage)
-      and not exists (select 1 from validate_at_least_one_id)
 )
 
 -- Select final columns matching seed schema (29 columns total)
