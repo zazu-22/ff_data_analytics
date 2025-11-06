@@ -145,6 +145,9 @@ templater = "dbt"
 dialect = "duckdb"
 sql_file_exts = ".sql,.sql.j2,.dml,.ddl"
 exclude_rules = "L034,L044,RF02,RF03,RF04,RF06,CV06"  # Allow keywords as identifiers; ignore references rules (break DuckDB named params); ignore semicolon terminator
+# IMPORTANT: Do not fix files with parsing/templating errors
+# This prevents sqlfluff-fix from modifying files it can't fully parse
+fix_even_unparsable = false
 
 [tool.sqlfluff.indentation]
 indent_unit = "space"

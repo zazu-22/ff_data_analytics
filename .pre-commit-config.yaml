@@ -130,8 +130,9 @@ repos:
         args: [--config, pyproject.toml]
 
       # Auto-fix on commit (align with Makefile behavior)
-      # Note: sqlfluff-fix will skip files with parsing errors and exit successfully
-      # This prevents it from reverting files when it cannot fix them
+      # IMPORTANT: sqlfluff-fix will skip files with parsing errors by default
+      # The --ignore parsing flag ensures it exits successfully even when skipping
+      # This prevents it from failing or reverting files when it cannot fix them
       - id: sqlfluff-fix
         name: sqlfluff-fix (dbt SQL auto-fix)
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
@@ -144,6 +145,7 @@ repos:
         args: [--config, pyproject.toml, --ignore, parsing] # Ignore parsing errors (sqlfluff-fix skips them anyway)
         # Note: sqlfluff-fix by default skips files with parsing errors and exits successfully
         # The --ignore parsing flag ensures it doesn't fail when encountering parsing errors
+        # Files with parsing errors will NOT be modified by sqlfluff-fix
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
