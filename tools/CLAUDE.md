@@ -77,6 +77,49 @@ uv run python tools/parse_commissioner_local.py \
 
 ______________________________________________________________________
 
+### analyze_snapshot_coverage.py
+
+**Purpose**: Analyze snapshot coverage for any data source to understand data freshness, coverage, and entity counts
+
+**Usage**:
+
+```bash
+# Analyze nflverse (default)
+PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py
+
+# Analyze a different source
+PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py --source data/raw/sleeper
+
+# Analyze specific datasets only
+PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py --datasets weekly snap_counts
+
+# Custom output directory and filename
+PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py \
+  --out-dir data/review \
+  --out-name custom_report
+```
+
+**Outputs**:
+
+- JSON: `{out_dir}/{out_name}.json` - Detailed metrics per snapshot
+- Markdown: `{out_dir}/{out_name}_report.md` - Human-readable coverage report
+
+**Key Features**:
+
+- Works with any data source (nflverse, sleeper, commissioner, etc.)
+- Analyzes Parquet files in date-partitioned directories (`dt=YYYY-MM-DD`)
+- Reports season/week coverage, entity counts, and snapshot overlaps
+- Helps identify stale data, missing snapshots, and coverage gaps
+
+**When to use**:
+
+- Auditing data freshness and completeness
+- Understanding what data exists in snapshots
+- Identifying which snapshots dbt models should use
+- Debugging data coverage issues
+
+______________________________________________________________________
+
 ### ffa_score_projections.py
 
 **Purpose**: Apply scoring rules to FFAnalytics projections
