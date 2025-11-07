@@ -7,9 +7,9 @@ large_file_skip_byte_limit = 30000
 # IMPORTANT: Do not fix files with parsing/templating errors
 # This prevents sqlfluff-fix from modifying files it can't fully parse
 fix_even_unparsable = false
-# Exclude third-party packages, build artifacts, and archive directories from linting
-exclude_dirs = .venv,target,dbt_packages,_archive
-exclude = **/.venv/**,**/target/**,**/dbt_packages/**,dbt/ff_analytics/analyses/_archive/**
+# Exclude third-party packages, build artifacts, archive directories, and test files from linting
+exclude_dirs = .venv,target,dbt_packages,_archive,tests
+exclude = **/.venv/**,**/target/**,**/dbt_packages/**,dbt/ff_analytics/analyses/_archive/**,**/tests/**
 # Reduce noise from dbt macro warnings
 warnings_file_skip = **/.venv/**,**/target/**,**/dbt_packages/**
 

@@ -121,6 +121,7 @@ repos:
       - id: sqlfluff-lint
         name: sqlfluff-lint (dbt SQL)
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
+        exclude: ^dbt/ff_analytics/tests/.*\.sql$
         additional_dependencies:
           [
             "dbt-core>=1.8.0",

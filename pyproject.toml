@@ -148,6 +148,8 @@ exclude_rules = "L034,L044,RF02,RF03,RF04,RF06,CV06"  # Allow keywords as identi
 # IMPORTANT: Do not fix files with parsing/templating errors
 # This prevents sqlfluff-fix from modifying files it can't fully parse
 fix_even_unparsable = false
+# Exclude test files from linting (dbt templater compilation issues with test config blocks)
+exclude = ["**/tests/**"]
 
 [tool.sqlfluff.indentation]
 indent_unit = "space"
