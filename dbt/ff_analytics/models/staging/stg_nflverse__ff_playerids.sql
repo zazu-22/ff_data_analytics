@@ -10,8 +10,8 @@ Process:
 1. Load raw nflverse ff_playerids data
 2. Filter out team placeholder entries (those with only mfl_id, no other provider IDs)
 3. Join with Sleeper players for birthdate validation
-4. Deduplicate sleeper_id duplicates (match birthdate with Sleeper API, clear mismatches)
-5. Attempt fallback matching for missing/cleared sleeper_ids (match on name/position, birthdate optional)
+4. Deduplicate sleeper_id duplicates (match birthdate with Sleeper API, clear mismatches and all but one even if birthdates match)
+5. Attempt fallback matching for missing/cleared sleeper_ids (match on name/position with normalization, birthdate optional)
 6. Deduplicate gsis_id duplicates (keep player with higher draft_year)
 7. Deduplicate mfl_id duplicates (keep player with higher draft_year)
 8. Assign sequential player_id (deterministic ordering)
@@ -29,15 +29,24 @@ Deduplication Philosophy:
 Fallback Matching:
 When sleeper_id duplicates are cleared due to birthdate mismatches, or when players have
 NULL sleeper_id in raw data, the model attempts to find the correct sleeper_id by matching on:
-- Name: Exact match on name or merge_name (normalized, lowercase) - REQUIRED
-- Position: Exact match on position - REQUIRED
-- Birthdate: Match on birthdate from nflverse - OPTIONAL (scoring bonus, not required)
+- Name: Exact match on name or merge_name (normalized, lowercase) - REQUIRED (both score 100)
+- Position: Exact match OR position family match - REQUIRED
+  - Exact match: 10 points
+  - Family match: 5 points (Safety: S↔SS/FS/DB, Kicker: PK↔K, Punter: PN↔P, DefensiveLine: DL↔DE/DT/NT, Linebacker: LB↔OLB/ILB, OffensiveLine: OL↔G/OT/C/OG/T, DefensiveBack: DB↔CB/SS/FS/S)
+- Birthdate: Match on birthdate from nflverse - OPTIONAL (20 bonus points, strongly preferred but not required)
 - Exclusions: Candidate sleeper_id must not already be used in xref or in duplicate set
+- Invalid entries filtered: Sleeper players with 'Invalid' or 'Duplicate' in name are excluded
+
+Position normalization uses canonical position families for bidirectional matching, ensuring
+symmetric matching between xref and Sleeper position formats.
 
 If a match is found:
 - For players with NULL sleeper_id: sleeper_id assigned, status = 'added_sleeper_id'
 - For players with sleeper_id = -1: sleeper_id corrected, status = 'corrected_sleeper_id'
 If no match, sleeper_id remains unchanged and status unchanged.
+
+Uniqueness is strictly maintained: if multiple players match to the same sleeper_id, only
+the best match (by score, then deterministic tiebreaker) is kept.
 
 Grain: One row per player (after filtering and deduplication)
 Source: nflverse ff_playerids dataset (~9,734 valid players after filtering)
@@ -109,9 +118,106 @@ sleeper_players as (
             where sleeper_player_id is not null
               -- Filter out team entries (non-numeric IDs like "HOU", "NE")
               and try_cast(sleeper_player_id as integer) is not null
+              -- Filter out invalid/placeholder entries
+              and full_name not like '%Invalid%'
+              and full_name not like '%Duplicate%'
         )
     )
     where _rn = 1
+),
+
+-- Canonical position families for bidirectional matching
+-- Maps both xref and Sleeper positions to the same families
+-- Only includes families where we have evidence of legitimate mismatches
+-- Each family includes mappings in BOTH directions (xref→Sleeper and Sleeper→xref)
+position_families as (
+    -- Safety: S (xref) ↔ SS, FS, DB (Sleeper)
+    select 'Safety' as position_family, 'S' as xref_position, 'SS' as sleeper_position
+    union all select 'Safety', 'S', 'FS'
+    union all select 'Safety', 'S', 'DB'
+    -- Reverse: SS, FS, DB (xref) ↔ S (Sleeper)
+    union all select 'Safety', 'SS', 'S'
+    union all select 'Safety', 'FS', 'S'
+    union all select 'Safety', 'DB', 'S'
+    
+    -- Kicker: PK (xref) ↔ K (Sleeper)
+    union all select 'Kicker', 'PK', 'K'
+    -- Reverse: K (xref) ↔ PK (Sleeper)
+    union all select 'Kicker', 'K', 'PK'
+    
+    -- Punter: PN (xref) ↔ P (Sleeper)
+    union all select 'Punter', 'PN', 'P'
+    -- Reverse: P (xref) ↔ PN (Sleeper)
+    union all select 'Punter', 'P', 'PN'
+    
+    -- Defensive Line: DL (xref) ↔ DE, DT, NT (Sleeper)
+    union all select 'DefensiveLine', 'DL', 'DE'
+    union all select 'DefensiveLine', 'DL', 'DT'
+    union all select 'DefensiveLine', 'DL', 'NT'
+    -- Reverse: DE, DT, NT (xref) ↔ DL (Sleeper)
+    union all select 'DefensiveLine', 'DE', 'DL'
+    union all select 'DefensiveLine', 'DT', 'DL'
+    union all select 'DefensiveLine', 'NT', 'DL'
+    
+    -- Linebacker: LB (xref) ↔ LB, OLB, ILB (Sleeper)
+    union all select 'Linebacker', 'LB', 'OLB'
+    union all select 'Linebacker', 'LB', 'ILB'
+    -- Reverse: OLB, ILB (xref) ↔ LB (Sleeper)
+    union all select 'Linebacker', 'OLB', 'LB'
+    union all select 'Linebacker', 'ILB', 'LB'
+    
+    -- Offensive Line: OL (xref) ↔ G, OT, C, OG, T (Sleeper)
+    union all select 'OffensiveLine', 'OL', 'G'
+    union all select 'OffensiveLine', 'OL', 'OT'
+    union all select 'OffensiveLine', 'OL', 'C'
+    union all select 'OffensiveLine', 'OL', 'OG'
+    union all select 'OffensiveLine', 'OL', 'T'
+    -- Reverse: G, OT, C, OG, T (xref) ↔ OL (Sleeper)
+    union all select 'OffensiveLine', 'G', 'OL'
+    union all select 'OffensiveLine', 'OT', 'OL'
+    union all select 'OffensiveLine', 'C', 'OL'
+    union all select 'OffensiveLine', 'OG', 'OL'
+    union all select 'OffensiveLine', 'T', 'OL'
+    
+    -- Defensive Back: DB (xref) ↔ CB, SS, FS, S (Sleeper)
+    union all select 'DefensiveBack', 'DB', 'CB'
+    union all select 'DefensiveBack', 'DB', 'SS'
+    union all select 'DefensiveBack', 'DB', 'FS'
+    union all select 'DefensiveBack', 'DB', 'S'
+    -- Reverse: CB, SS, FS, S (xref) ↔ DB (Sleeper)
+    union all select 'DefensiveBack', 'CB', 'DB'
+    union all select 'DefensiveBack', 'SS', 'DB'
+    union all select 'DefensiveBack', 'FS', 'DB'
+    union all select 'DefensiveBack', 'S', 'DB'
+    
+    -- Exact matches (for completeness, score higher)
+    union all select 'Exact', 'S', 'S'
+    union all select 'Exact', 'PK', 'PK'
+    union all select 'Exact', 'PN', 'PN'
+    union all select 'Exact', 'DL', 'DL'
+    union all select 'Exact', 'LB', 'LB'
+    union all select 'Exact', 'OL', 'OL'
+    union all select 'Exact', 'DB', 'DB'
+    -- Add all other positions as exact matches
+    union all select 'Exact', 'WR', 'WR'
+    union all select 'Exact', 'RB', 'RB'
+    union all select 'Exact', 'QB', 'QB'
+    union all select 'Exact', 'TE', 'TE'
+    union all select 'Exact', 'CB', 'CB'
+    union all select 'Exact', 'DE', 'DE'
+    union all select 'Exact', 'DT', 'DT'
+    union all select 'Exact', 'SS', 'SS'
+    union all select 'Exact', 'FS', 'FS'
+    union all select 'Exact', 'K', 'K'
+    union all select 'Exact', 'P', 'P'
+    union all select 'Exact', 'OLB', 'OLB'
+    union all select 'Exact', 'ILB', 'ILB'
+    union all select 'Exact', 'NT', 'NT'
+    union all select 'Exact', 'G', 'G'
+    union all select 'Exact', 'OT', 'OT'
+    union all select 'Exact', 'C', 'C'
+    union all select 'Exact', 'OG', 'OG'
+    union all select 'Exact', 'T', 'T'
 ),
 
 -- Initial status column (default: original)
@@ -133,6 +239,8 @@ sleeper_duplicates as (
 ),
 
 -- Join with Sleeper API for birthdate validation
+-- When duplicates exist, clear all but one (even if birthdates match)
+-- Use deterministic tiebreaker: keep player with higher draft_year, then name
 with_sleeper_validation as (
     select
         ws.* exclude (xref_correction_status),
@@ -147,7 +255,16 @@ with_sleeper_validation as (
                 and ws.birthdate = sp.sleeper_birth_date
             then 'kept_sleeper_verified'
             else ws.xref_correction_status
-        end as xref_correction_status
+        end as xref_correction_status,
+        -- Rank duplicates to keep only one (even if birthdates match)
+        case
+            when sd.sleeper_id is not null
+            then row_number() over (
+                partition by ws.sleeper_id
+                order by ws.draft_year desc nulls last, ws.name
+            )
+            else 1
+        end as _sleeper_rank
     from with_status ws
     left join sleeper_duplicates sd
         on ws.sleeper_id = sd.sleeper_id
@@ -157,24 +274,39 @@ with_sleeper_validation as (
 
 -- Clear incorrect sleeper_id mappings (but keep the player!)
 -- Use -1 as sentinel value for cleared numeric IDs (better observability than NULL)
+-- Clear duplicates even if birthdates match (keep only one per sleeper_id)
 sleeper_deduped as (
     select
-        * exclude (sleeper_birth_date, sleeper_id),
+        * exclude (sleeper_birth_date, sleeper_id, xref_correction_status, _sleeper_rank),
         case
             when xref_correction_status = 'cleared_sleeper_duplicate'
             then -1  -- Sentinel value: indicates ID was cleared due to duplicate
+            when _sleeper_rank > 1
+            then -1  -- Clear duplicates even if birthdate matches (keep only one)
             else sleeper_id
-        end as sleeper_id
+        end as sleeper_id,
+        case
+            when xref_correction_status = 'cleared_sleeper_duplicate'
+            then 'cleared_sleeper_duplicate'
+            when _sleeper_rank > 1
+            then 'cleared_sleeper_duplicate'  -- Mark as cleared even if birthdate matched
+            else xref_correction_status
+        end as xref_correction_status
     from with_sleeper_validation
 ),
 
 -- Fallback matching: Attempt to find sleeper_id for players missing it or with cleared duplicates
--- Match on name, position, and optionally birthdate from Sleeper players database
+-- Match on name, position (with normalization), and optionally birthdate from Sleeper players database
 --
 -- Matching Criteria:
 -- - Name: Exact match on name or merge_name (normalized, lowercase, trimmed) - REQUIRED
--- - Position: Exact match on position - REQUIRED
+-- - Position: Exact match OR position family match - REQUIRED
 -- - Birthdate: Match on birthdate from nflverse - OPTIONAL (scoring bonus, not required)
+--
+-- Position Normalization:
+-- - Uses canonical position families for bidirectional matching
+-- - Exact position match scores higher (10 points) than family match (5 points)
+-- - Families: Safety (S↔SS/FS/DB), Kicker (PK↔K), Punter (PN↔P), DefensiveLine (DL↔DE/DT/NT), Linebacker (LB↔OLB/ILB)
 --
 -- Scope:
 -- - Players with sleeper_id = -1 (cleared duplicates that need correction)
@@ -183,13 +315,15 @@ sleeper_deduped as (
 -- Exclusions:
 -- - Candidate sleeper_id must not already be used in xref (check sleeper_deduped)
 -- - Candidate sleeper_id must not be in the duplicate set being resolved
+-- - Invalid/placeholder entries filtered out (full_name not like '%Invalid%' or '%Duplicate%')
 --
 -- Match Selection:
--- - Prefer exact name match (name) over normalized match (merge_name)
--- - Prefer matches with birthdate when available (higher confidence)
--- - Use deterministic tiebreaker (sleeper_player_id) if multiple matches
+-- - Prefer exact name match (name) over normalized match (merge_name) - both score 100
+-- - Prefer exact position match (10) over family match (5)
+-- - Prefer matches with birthdate when available (20 bonus points)
+-- - Use deterministic tiebreaker (candidate_sleeper_id) if multiple matches
 -- - One match per player (partition by mfl_id, gsis_id, name, birthdate)
--- - Minimum score: 110 points (name + position required)
+-- - Minimum score: 110 (name + exact position) OR 105 (name + family position)
 --
 -- Result:
 -- - If match found and original sleeper_id was NULL: sleeper_id assigned, status = 'added_sleeper_id'
@@ -201,30 +335,38 @@ sleeper_fallback_candidates as (
         sp.sleeper_player_id as candidate_sleeper_id,
         sp.full_name as sleeper_full_name,
         sp.sleeper_position,
-        -- Match scoring: prefer exact name match, then position match, then birthdate match
+        pf.position_family,
+        -- Match scoring: prefer exact name match, then position match type, then birthdate match
         case
             when lower(trim(sd.name)) = lower(trim(sp.full_name)) then 100
-            when lower(trim(sd.merge_name)) = lower(trim(sp.full_name)) then 90
+            when lower(trim(sd.merge_name)) = lower(trim(sp.full_name)) then 100  -- Increased from 90
             else 0
         end as name_match_score,
         case
-            when sd.position = sp.sleeper_position then 10
+            when sd.position = sp.sleeper_position then 10  -- Exact position match
+            when pf.position_family is not null then 5  -- Position family match
             else 0
         end as position_match_score,
         case
-            when sd.birthdate = sp.sleeper_birth_date then 5
+            when sd.birthdate = sp.sleeper_birth_date then 20  -- Increased from 5, strongly preferred
             else 0
         end as birthdate_match_score
     from sleeper_deduped sd
     cross join sleeper_players sp
+    left join position_families pf
+        on sd.position = pf.xref_position
+        and sp.sleeper_position = pf.sleeper_position
     where (sd.sleeper_id = -1 OR sd.sleeper_id IS NULL)  -- Cleared duplicates OR missing
       -- Name matching (exact or normalized) - REQUIRED
       and (
           lower(trim(sd.name)) = lower(trim(sp.full_name))
           or lower(trim(sd.merge_name)) = lower(trim(sp.full_name))
       )
-      -- Position matching - REQUIRED
-      and sd.position = sp.sleeper_position
+      -- Position matching - REQUIRED (exact OR family match)
+      and (
+          sd.position = sp.sleeper_position
+          or pf.position_family is not null
+      )
       -- Birthdate matching is OPTIONAL (scoring bonus only, not required)
       -- Exclude candidates already used in xref (check current state)
       and try_cast(sp.sleeper_player_id as integer) not in (
@@ -241,19 +383,35 @@ sleeper_fallback_candidates as (
 ),
 
 -- Select best match per player using deterministic tiebreakers
--- Require minimum score of 110 (name + position match)
+-- Require minimum score: 110 (name + exact position) OR 105 (name + family position)
+-- CRITICAL: Ensure sleeper_id uniqueness - only one player can match to each sleeper_id
 sleeper_fallback_matched as (
     select
-        * exclude (candidate_sleeper_id, sleeper_full_name, sleeper_position, name_match_score, position_match_score, birthdate_match_score),
+        * exclude (candidate_sleeper_id, sleeper_full_name, sleeper_position, position_family, name_match_score, position_match_score, birthdate_match_score),
         candidate_sleeper_id as matched_sleeper_id,
         name_match_score + position_match_score + birthdate_match_score as total_match_score
     from sleeper_fallback_candidates
-    where name_match_score + position_match_score >= 110  -- Require name + position match
+    where name_match_score + position_match_score >= 105  -- Require name + position (exact or family)
     qualify row_number() over (
         partition by mfl_id, gsis_id, name, birthdate
         order by
             name_match_score + position_match_score + birthdate_match_score desc,
             candidate_sleeper_id  -- Deterministic tiebreaker
+    ) = 1
+),
+
+-- Ensure sleeper_id uniqueness: if multiple players matched to same sleeper_id, keep only the best match
+sleeper_fallback_deduped as (
+    select
+        * exclude (matched_sleeper_id, total_match_score),
+        matched_sleeper_id,
+        total_match_score
+    from sleeper_fallback_matched
+    qualify row_number() over (
+        partition by matched_sleeper_id
+        order by
+            total_match_score desc,
+            mfl_id, gsis_id, name  -- Deterministic tiebreaker for same score
     ) = 1
 ),
 
@@ -275,7 +433,7 @@ sleeper_with_fallback as (
             else sd.xref_correction_status
         end as xref_correction_status
     from sleeper_deduped sd
-    left join sleeper_fallback_matched fm
+    left join sleeper_fallback_deduped fm
         on sd.mfl_id = fm.mfl_id
         and sd.gsis_id = fm.gsis_id
         and sd.name = fm.name

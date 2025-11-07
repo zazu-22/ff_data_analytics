@@ -9,8 +9,8 @@ models:
       is always fresh from raw data. Performs comprehensive deduplication:
       
       - Filters team placeholder entries (prevents join explosions)
-      - Resolves sleeper_id duplicates via Sleeper API birthdate matching
-      - Attempts fallback matching for missing/cleared sleeper_ids (name+position required, birthdate optional)
+      - Resolves sleeper_id duplicates via Sleeper API birthdate matching (clears all but one even if birthdates match)
+      - Attempts fallback matching for missing/cleared sleeper_ids with position normalization (name+position required, birthdate optional)
       - Resolves gsis_id/mfl_id duplicates by keeping newer players (higher draft_year)
       - Assigns deterministic sequential player_id (1-N)
       - Tracks all corrections in xref_correction_status
@@ -21,9 +21,13 @@ models:
       
       **Fallback Matching**: When sleeper_id duplicates are cleared due to birthdate mismatches,
       or when players have NULL sleeper_id in raw data, the model attempts to find the correct
-      sleeper_id by matching on name, position, and optionally birthdate from the Sleeper players
-      database. Name and position matches are required; birthdate is optional (scoring bonus).
-      This recovers sleeper_ids that were incorrectly mapped or missing, improving crosswalk coverage.
+      sleeper_id by matching on name, position (with normalization), and optionally birthdate
+      from the Sleeper players database. Name and position matches are required; birthdate is
+      optional (20-point bonus). Position normalization uses canonical families (Safety: S↔SS/FS/DB,
+      Kicker: PK↔K, Punter: PN↔P, OffensiveLine: OL↔G/OT/C/OG/T, DefensiveBack: DB↔CB/SS/FS/S,
+      DefensiveLine: DL↔DE/DT/NT, Linebacker: LB↔OLB/ILB) for bidirectional matching. This recovers sleeper_ids
+      that were incorrectly mapped or missing, improving crosswalk coverage. Strict uniqueness
+      is maintained - if multiple players match to the same sleeper_id, only the best match is kept.
       
       **Grain**: One row per player (after filtering and deduplication)
       **Source**: nflverse ff_playerids dataset (~9,734 valid players after filtering)
