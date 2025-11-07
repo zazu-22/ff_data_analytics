@@ -250,7 +250,7 @@ aging_context as (
     fa.player_id,
     fa.position,
     dp.birthdate,
-    YEAR(CURRENT_DATE) - YEAR(dp.birthdate) as age_at_snapshot,
+    YEAR(CURRENT_DATE) - YEAR(CAST(dp.birthdate AS DATE)) as age_at_snapshot,
 
     -- Position-specific peak windows (from research)
     case fa.position
