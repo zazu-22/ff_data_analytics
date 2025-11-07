@@ -6,6 +6,8 @@
 
 ______________________________________________________________________
 
+**Implementation Tickets**: This checklist has been broken into 37 standalone tickets in the `tickets/` directory. Each ticket corresponds to a logical unit of work completable in one session. See `tickets/00-OVERVIEW.md` for tracking.
+
 **Status Legend**: `[ ]` pending, `[x]` complete, `[-]` in progress
 
 ______________________________________________________________________
@@ -47,20 +49,19 @@ ______________________________________________________________________
   - [ ] Replace `dt IN ('2025-10-01', '2025-10-28')` with macro call
   - [ ] Use `baseline_plus_latest` strategy with baseline var
   - [ ] Test compilation and execution
-- [ ] Verify `stg_nflverse__ff_opportunity` existing macro usage:
-  - [ ] Confirm uses `latest_snapshot_only()` correctly
-  - [ ] Test no regressions from new macro addition
+- [ ] Update `stg_nflverse__ff_opportunity` to use new macro:
+  - [ ] Replace direct `latest_snapshot_only()` call with `snapshot_selection_strategy` macro (latest_only strategy)
+  - [ ] Test compilation and execution for consistency
 
-### Sample Relocation
+### Sample Archival
 
-- [ ] Relocate NFLverse samples:
-  - [ ] Move `data/raw/nflverse/weekly/dt=2024-01-01/` → `data/raw/nflverse/_samples/weekly/dt=2024-01-01/`
-  - [ ] Move `data/raw/nflverse/weekly/weekly.csv` → `data/raw/nflverse/_samples/weekly.csv`
-  - [ ] Move `data/raw/nflverse/weekly/weekly.parquet` → `data/raw/nflverse/_samples/weekly.parquet`
-  - [ ] Move other sample artifacts to `_samples/` subdirectories
-- [ ] Update test fixtures in `tests/test_nflverse_samples_pk.py` for new paths
-- [ ] Update `tools/make_samples.py` to write to `_samples/` directories
-- [ ] Verify dbt globs don't match `_samples` (test with `dbt compile`)
+- [ ] Archive legacy NFLverse samples:
+  - [ ] Archive `data/raw/nflverse/weekly/dt=2024-01-01/` → `data/_archived_samples/2025-11-07/nflverse/weekly/dt=2024-01-01/`
+  - [ ] Archive root-level CSV/Parquet samples to `data/_archived_samples/2025-11-07/`
+  - [ ] Archive sheets samples similarly
+- [ ] Preserve sample generation tool (`tools/make_samples.py`) for new source exploration
+- [ ] Create archive README documenting what was archived and why
+- [ ] Verify dbt globs don't match archived samples (test with `dbt compile`)
 
 ### Performance Profiling
 
@@ -277,17 +278,30 @@ ______________________________________________________________________
 
 ### Prefect Flow Implementation
 
-#### Google Sheets Pipeline
+#### Google Sheets Pipeline (Split into Two Flows)
 
-- [ ] Create `src/flows/google_sheets_pipeline.py`
+**Copy Flow** (`copy_league_sheet_flow.py`):
+
+- [ ] Create `src/flows/copy_league_sheet_flow.py`
 - [ ] Define flow with tasks:
-  - [ ] Copy sheets from Google Sheets API
+  - [ ] Copy tabs from Commissioner sheet to working copy
+  - [ ] Validate copy completeness (all expected tabs copied)
+- [ ] Configure to run every 2-4 hours during season
+- [ ] Test locally with Prefect dev server
+
+**Parse Flow** (`parse_league_sheet_flow.py`):
+
+- [ ] Create `src/flows/parse_league_sheet_flow.py`
+- [ ] Define flow with tasks:
+  - [ ] Re-validate copy completeness before parsing
   - [ ] Parse with `src/ingest/sheets/commissioner_parser.py`
   - [ ] Write Parquet files
   - [ ] Write `_meta.json` manifests
 - [ ] Add governance tasks:
   - [ ] Validate row counts against expected ranges
   - [ ] Check for required columns (player_name, team, etc.)
+- [ ] Configure to run 15-30 minutes after copy flow completes
+- [ ] Test flow sequencing (copy → parse)
 - [ ] Test locally with Prefect dev server
 
 #### NFL Data Pipeline
