@@ -157,7 +157,7 @@ def validate_snapshot_coverage(source: str, dataset: str):
     """
     Cross-check:
     - Manifest row counts vs actual Parquet
-    - Season/week coverage gaps  
+    - Season/week coverage gaps
     - Player mapping coverage vs dim_player_id_xref
     - Compare to snapshot_registry expectations
     """
@@ -211,7 +211,7 @@ ______________________________________________________________________
 
 ## GCS Permissions Required
 - `storage.objects.create` (write Parquet)
-- `storage.objects.get` (DuckDB read)  
+- `storage.objects.get` (DuckDB read)
 - `storage.objects.list` (glob patterns)
 
 ## Service Account Setup
@@ -220,7 +220,7 @@ ______________________________________________________________________
 gcloud iam service-accounts create ff-analytics-ingestion \
     --display-name="FF Analytics Ingestion"
 
-# Grant GCS permissions  
+# Grant GCS permissions
 gcloud projects add-iam-policy-binding PROJECT_ID \
     --member="serviceAccount:ff-analytics-ingestion@PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/storage.objectAdmin"
@@ -424,17 +424,17 @@ ______________________________________________________________________
 sources:
   - name: nflverse
     description: "NFLverse datasets loaded via Python/R shim"
-    
+
     freshness:
       warn_after: {count: 7, period: day}
       error_after: {count: 14, period: day}
     loaded_at_field: dt  # Use partition date as freshness indicator
-    
+
     tables:
       - name: weekly
         description: "Weekly player stats (71 stat types)"
         identifier: "weekly/dt=*/*.parquet"
-        
+
         # Override source-level freshness for more frequent updates
         freshness:
           warn_after: {count: 3, period: day}
