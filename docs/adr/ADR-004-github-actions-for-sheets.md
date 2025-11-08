@@ -50,13 +50,13 @@ Use GitHub Actions as the primary orchestration platform for Commissioner Sheet 
    - Writes to `gs://ff-analytics/raw/commissioner/rosters/{owner}/dt={date}/`
    - Includes manual trigger for ad-hoc updates
 
-1. **Error handling**:
+2. **Error handling**:
 
    - Last-known-good (LKG) pattern if sheet is unavailable
    - Discord notifications on failure (optional)
    - Retry logic with exponential backoff
 
-1. **Testing strategy**:
+3. **Testing strategy**:
 
    - Use sample data for local development
    - Test workflow in separate branch before merging
@@ -65,9 +65,9 @@ Use GitHub Actions as the primary orchestration platform for Commissioner Sheet 
 ## Alternatives Considered
 
 1. **Google Colab**: Would work but requires manual execution or complex scheduling
-1. **GCP Cloud Functions**: More complex setup, unnecessary for MVP
-1. **Local proxy/VPN**: Unreliable, adds complexity
-1. **Manual exports**: Not sustainable for automated pipeline
+2. **GCP Cloud Functions**: More complex setup, unnecessary for MVP
+3. **Local proxy/VPN**: Unreliable, adds complexity
+4. **Manual exports**: Not sustainable for automated pipeline
 
 ## References
 

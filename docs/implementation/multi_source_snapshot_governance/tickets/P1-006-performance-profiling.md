@@ -78,13 +78,13 @@ The plan calls for using `union_by_name=true` to handle schema drift, which may 
 **Profiling Commands**:
 
 ```bash
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 
 # Profile player_stats
 uv run dbt run --select stg_nflverse__player_stats --profiles-dir .
 
 # Get query plan
-cat target/compiled/ff_analytics/models/staging/nflverse/stg_nflverse__player_stats.sql
+cat target/compiled/ff_data_transform/models/staging/nflverse/stg_nflverse__player_stats.sql
 
 # Run EXPLAIN in DuckDB
 duckdb target/dev.duckdb << EOF
@@ -174,7 +174,7 @@ select * from read_parquet(
 1. **Run profiling queries**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    time uv run dbt run --select stg_nflverse__player_stats
    time uv run dbt run --select stg_nflverse__snap_counts
    time uv run dbt run --select stg_nflverse__ff_opportunity
@@ -183,7 +183,7 @@ select * from read_parquet(
 2. **Check compiled SQL**:
 
    ```bash
-   cat target/compiled/ff_analytics/models/staging/nflverse/stg_nflverse__player_stats.sql
+   cat target/compiled/ff_data_transform/models/staging/nflverse/stg_nflverse__player_stats.sql
    # Verify UNION pattern is correct
    ```
 

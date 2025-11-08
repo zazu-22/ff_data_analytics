@@ -189,7 +189,7 @@ make dbt-run
 ## Adding New Tools
 
 1. Create `tools/<tool_name>.py`
-1. Add argparse CLI with `--help`
-1. Use `src/` modules for logic
-1. Document in this file
-1. Add Makefile target if commonly used
+2. Add argparse CLI with `--help`
+3. Use `src/` modules for logic
+4. Document in this file
+5. Add Makefile target if commonly used

@@ -16,7 +16,7 @@ This ticket creates the file structure and documents the schema. The next ticket
 
 ## Tasks
 
-- [ ] Create `dbt/ff_analytics/seeds/snapshot_registry.csv` file
+- [ ] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` file
 - [ ] Define column schema with header row
 - [ ] Add initial test entry to verify seed loads
 - [ ] Document column definitions in seed schema file
@@ -25,7 +25,7 @@ This ticket creates the file structure and documents the schema. The next ticket
 
 ## Acceptance Criteria
 
-- [ ] File exists at `dbt/ff_analytics/seeds/snapshot_registry.csv`
+- [ ] File exists at `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 - [ ] Header row with all required columns defined
 - [ ] At least one test entry for validation
 - [ ] `dbt seed` loads file without errors
@@ -33,7 +33,7 @@ This ticket creates the file structure and documents the schema. The next ticket
 
 ## Implementation Notes
 
-**File**: `dbt/ff_analytics/seeds/snapshot_registry.csv`
+**File**: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 
 **Column Schema** (from plan Design Decision #3):
 
@@ -71,7 +71,7 @@ nflverse,weekly,2025-10-27,historical,2020,2024,89145,Test entry - Historical ba
 
 **Schema Documentation**:
 
-Create or update `dbt/ff_analytics/seeds/schema.yml`:
+Create or update `dbt/ff_data_transform/seeds/schema.yml`:
 
 ```yaml
 version: 2
@@ -124,7 +124,7 @@ seeds:
 1. **Load seed**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt seed --select snapshot_registry
    ```
 

@@ -1,8 +1,4 @@
-______________________________________________________________________
-
-## title: Applying Kimball Dimensional Modeling to SPEC-1 date_time: 2025-09-29 21:09:54 UTC version: 1.1 status: reviewed author: Jason Shaffer audience: [data engineers, data analysts, data scientists] tags: [kimball, dimensional modeling, dbt, duckdb, external parquet]
-
-## Applying Kimball Dimensional Modeling to SPEC-1
+# Applying Kimball Dimensional Modeling to SPEC-1
 
 <!--toc:start-->
 
@@ -74,10 +70,10 @@ The grain is the binding contract for the high-level data model.
 > **Critical:** The grain is the most important decision in dimensional modeling. Get this wrong and everything downstream suffers.
 
 1. Grain is the binding contract for the high-level data model.
-1. Each fact table should have exactly one grain.
-1. Never mix grains in a single fact table, as this will make it difficult to maintain.
-1. Each grain should be self-contained.
-1. Pick one grain for a given set of data and don't mix grains within that set of data.
+2. Each fact table should have exactly one grain.
+3. Never mix grains in a single fact table, as this will make it difficult to maintain.
+4. Each grain should be self-contained.
+5. Pick one grain for a given set of data and don't mix grains within that set of data.
 
 ##### Examples from SPEC-1
 
@@ -155,9 +151,9 @@ FROM {{ ref('stg_nflverse__players') }}
 **Implementation approach:** Define your core conformed dimensions, and build dimension tables in `dbt/models/core/`. Reference these dimensions via `{{ ref('dim_player') }}` in all marts.
 
 1. Define dimensions once in collaboration with stakeholders; build seed tables (which staging models will reference)
-1. Build dimension tables in `dbt/models/core/`
-1. Reference via `{{ ref('dim_player') }}` in all marts
-1. Never duplicate dimension logic
+2. Build dimension tables in `dbt/models/core/`
+3. Reference via `{{ ref('dim_player') }}` in all marts
+4. Never duplicate dimension logic
 
 **Example - dim_player conformance:**
 
@@ -806,20 +802,20 @@ ______________________________________________________________________
 
 ### When to use each technique
 
-| Scenario | Recommended Technique | SPEC-1 Example |
+| Scenario                                    | Recommended Technique       | SPEC-1 Example                                   |
 | ------------------------------------------- | --------------------------- | ------------------------------------------------ |
-| Multiple source IDs for entities | Surrogate keys + crosswalk | `dim_player_id_xref` |
-| Attributes change over time (track history) | SCD Type 2 | `dim_scoring_rule` |
-| Attributes change (don't need history) | SCD Type 1 | `dim_player.current_team` |
-| Original value must never change | SCD Type 0 | `dim_player.draft_year` |
-| Multiple date roles in fact | Role-playing dimensions | Valuation date vs refresh date |
-| Transaction IDs with no attributes | Degenerate dimensions | Sleeper `transaction_id` |
-| Low-cardinality flags | Junk dimension | Transaction type flags |
-| Sparse fact table with many measures | Keep atomic, document nulls | Weekly stats (not all positions score all stats) |
-| Combining actuals + projections | Consolidated fact table | `fact_player_stats` with `stat_kind` |
-| Different grains | Separate fact tables | Weekly vs season-level stats |
-| Players with multiple positions | Bridge table | Position eligibility |
-| Heterogeneous products | Supertype/subtype | Players vs picks in `dim_asset` |
+| Multiple source IDs for entities            | Surrogate keys + crosswalk  | `dim_player_id_xref`                             |
+| Attributes change over time (track history) | SCD Type 2                  | `dim_scoring_rule`                               |
+| Attributes change (don't need history)      | SCD Type 1                  | `dim_player.current_team`                        |
+| Original value must never change            | SCD Type 0                  | `dim_player.draft_year`                          |
+| Multiple date roles in fact                 | Role-playing dimensions     | Valuation date vs refresh date                   |
+| Transaction IDs with no attributes          | Degenerate dimensions       | Sleeper `transaction_id`                         |
+| Low-cardinality flags                       | Junk dimension              | Transaction type flags                           |
+| Sparse fact table with many measures        | Keep atomic, document nulls | Weekly stats (not all positions score all stats) |
+| Combining actuals + projections             | Consolidated fact table     | `fact_player_stats` with `stat_kind`             |
+| Different grains                            | Separate fact tables        | Weekly vs season-level stats                     |
+| Players with multiple positions             | Bridge table                | Position eligibility                             |
+| Heterogeneous products                      | Supertype/subtype           | Players vs picks in `dim_asset`                  |
 
 ______________________________________________________________________
 
@@ -841,6 +837,6 @@ _SPEC-1 alignment:_
 _Next steps:_
 
 1. Review the Enterprise Data Warehouse Bus Matrix approach (p. 11)
-1. Create your own matrix with business processes as rows, dimensions as columns
-1. Use matrix to sequence implementation (one row/process at a time)
-1. Reference this guide during collaborative modeling workshops
+2. Create your own matrix with business processes as rows, dimensions as columns
+3. Use matrix to sequence implementation (one row/process at a time)
+4. Reference this guide during collaborative modeling workshops

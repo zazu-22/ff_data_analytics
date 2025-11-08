@@ -25,8 +25,8 @@ All data loaders currently write to local filesystem paths that mirror the event
 This allows us to:
 
 1. Develop and test the pipeline locally without GCS costs
-1. Validate the partitioning structure before deployment
-1. Use the same code paths for local and cloud environments
+2. Validate the partitioning structure before deployment
+3. Use the same code paths for local and cloud environments
 
 ## Future State (Production via GitHub Actions)
 
@@ -49,8 +49,8 @@ This allows us to:
 
 - Create `scripts/ingest/upload_to_gcs.py` that:
   1. Runs the local loader
-  1. Uploads results to GCS using `google-cloud-storage` library
-  1. Cleans up local files
+  2. Uploads results to GCS using `google-cloud-storage` library
+  3. Cleans up local files
 - GitHub Actions calls this wrapper script
 
 ### Option 3: Direct GCS Support in Loaders
@@ -76,9 +76,9 @@ This allows us to:
 ## Implementation Timeline
 
 1. **Phase 1 (Current)**: Local development with GCS-like structure
-1. **Phase 2**: Add environment variable support (Option 1)
-1. **Phase 3**: Add GCS libraries to requirements when CI/CD is set up
-1. **Phase 4**: Test in GitHub Actions with actual GCS writes
+2. **Phase 2**: Add environment variable support (Option 1)
+3. **Phase 3**: Add GCS libraries to requirements when CI/CD is set up
+4. **Phase 4**: Test in GitHub Actions with actual GCS writes
 
 ## Configuration in GitHub Actions
 
@@ -103,15 +103,15 @@ steps:
 ### Positive
 
 1. **No code changes needed** when moving from local to cloud
-1. **Same testing locally and in CI** - just different output paths
-1. **Cost control** - only write to GCS when explicitly configured
-1. **Gradual migration** - can test GCS writes selectively
+2. **Same testing locally and in CI** - just different output paths
+3. **Cost control** - only write to GCS when explicitly configured
+4. **Gradual migration** - can test GCS writes selectively
 
 ### Negative
 
 1. **Additional configuration** - GitHub Actions needs environment variables
-1. **Deferred complexity** - GCS client libraries added later
-1. **Path handling** - Must ensure consistent path separators across platforms
+2. **Deferred complexity** - GCS client libraries added later
+3. **Path handling** - Must ensure consistent path separators across platforms
 
 ## References
 

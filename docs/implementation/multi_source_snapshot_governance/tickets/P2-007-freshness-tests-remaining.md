@@ -21,14 +21,14 @@ These sources are grouped together because they share similar operational charac
 
 ### Add ktc Freshness Tests
 
-- [ ] Create or update `dbt/ff_analytics/models/sources/src_ktc.yml`
+- [ ] Create or update `dbt/ff_data_transform/models/sources/src_ktc.yml`
 - [ ] Set `loaded_at_field: dt` at source level
 - [ ] Configure freshness: warn_after 5 days, error_after 14 days
 - [ ] Test with `dbt source freshness --select source:ktc`
 
 ### Add ffanalytics Freshness Tests
 
-- [ ] Create or update `dbt/ff_analytics/models/sources/src_ffanalytics.yml`
+- [ ] Create or update `dbt/ff_data_transform/models/sources/src_ffanalytics.yml`
 - [ ] Set `loaded_at_field: dt` at source level
 - [ ] Configure freshness: warn_after 2 days, error_after 7 days
 - [ ] Test with `dbt source freshness --select source:ffanalytics`
@@ -57,7 +57,7 @@ These sources are grouped together because they share similar operational charac
 
 **Note**: Frequently updated sources (sheets, sleeper, nflverse) are covered in P2-006.
 
-**File: `dbt/ff_analytics/models/sources/src_ktc.yml`**
+**File: `dbt/ff_data_transform/models/sources/src_ktc.yml`**
 
 ```yaml
 version: 2
@@ -84,7 +84,7 @@ sources:
           external_location: "data/raw/ktc/picks/dt=*/*.parquet"
 ```
 
-**File: `dbt/ff_analytics/models/sources/src_ffanalytics.yml`**
+**File: `dbt/ff_data_transform/models/sources/src_ffanalytics.yml`**
 
 ```yaml
 version: 2
@@ -115,7 +115,7 @@ sources:
 1. **Test ktc freshness**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt source freshness --select source:ktc
    ```
 
@@ -166,7 +166,7 @@ sources:
    # In .github/workflows/data-pipeline.yml
    - name: Check Data Freshness
      run: |
-       cd dbt/ff_analytics
+       cd dbt/ff_data_transform
        uv run dbt source freshness
        # Fails workflow if any source shows ERROR status
    ```

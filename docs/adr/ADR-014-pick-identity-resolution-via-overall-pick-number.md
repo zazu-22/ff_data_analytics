@@ -377,11 +377,11 @@ ______________________________________________________________________
 - **Investigation**: `docs/investigations/comp_pick_investigation_2025-11-07.md`
 - **Implementation**: `docs/investigations/dim_pick_implementation_summary_2025-11-07.md`
 - **Status**: `docs/investigations/dim_pick_status_2025-11-07.md`
-- **League Constitution**: `dbt/ff_analytics/seeds/league_constitution.csv` (Section XI)
+- **League Constitution**: `dbt/ff_data_transform/seeds/league_constitution.csv` (Section XI)
 - **Code**:
   - `src/ingest/sheets/commissioner_parser.py::_parse_pick_id()`
-  - `dbt/ff_analytics/models/core/dim_pick.sql`
-  - `dbt/ff_analytics/models/core/intermediate/int_pick_transaction_xref.sql`
+  - `dbt/ff_data_transform/models/core/dim_pick.sql`
+  - `dbt/ff_data_transform/models/core/intermediate/int_pick_transaction_xref.sql`
 
 ______________________________________________________________________
 

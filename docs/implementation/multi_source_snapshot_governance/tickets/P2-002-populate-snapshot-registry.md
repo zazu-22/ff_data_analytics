@@ -160,7 +160,7 @@ def scan_snapshots(raw_dir='data/raw'):
 1. **Load populated seed**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt seed --select snapshot_registry --full-refresh
    ```
 

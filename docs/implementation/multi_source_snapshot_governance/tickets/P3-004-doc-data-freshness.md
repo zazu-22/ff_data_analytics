@@ -70,7 +70,7 @@ This document describes data freshness monitoring as of November 2025.
 ### Check All Sources
 
 ```bash
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 uv run dbt source freshness
 ````
 
@@ -187,16 +187,16 @@ Freshness checks run in CI before dbt models:
 # .github/workflows/data-pipeline.yml
 - name: Check Data Freshness
   run: |
-    cd dbt/ff_analytics
+    cd dbt/ff_data_transform
     uv run dbt source freshness
     # Workflow fails if any ERROR status
 ```
 
 ## References
 
-- Source YAML configs: `dbt/ff_analytics/models/sources/src_*.yml`
+- Source YAML configs: `dbt/ff_data_transform/models/sources/src_*.yml`
 - Ingestion triggers: `docs/ops/ingestion_triggers_current_state.md`
-- Snapshot registry: `dbt/ff_analytics/seeds/snapshot_registry.csv`
+- Snapshot registry: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 
 ```
 
@@ -210,6 +210,6 @@ Freshness checks run in CI before dbt models:
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 3 Activity (lines 398-407), Freshness table (lines 186-192)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 3 Ops Docs (lines 225-231)
-- Source configs: `dbt/ff_analytics/models/sources/src_*.yml`
+- Source configs: `dbt/ff_data_transform/models/sources/src_*.yml`
 
 ```

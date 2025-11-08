@@ -17,7 +17,7 @@ A GCS lifecycle policy is a JSON file with this structure:
 ## Each Rule Has Two Parts
 
 1. **action**: What to do (SetStorageClass, Delete)
-1. **condition**: When to do it (age, matchesPrefix, etc.)
+2. **condition**: When to do it (age, matchesPrefix, etc.)
 
 ## Example Rules Explained
 
@@ -77,9 +77,9 @@ A GCS lifecycle policy is a JSON file with this structure:
 Based on the SPEC, you need:
 
 1. **raw/** - Immutable snapshots, accessed rarely → good for cold storage
-1. **mart/** - Analytics queries, accessed frequently → keep in Standard
-1. **stage/** - Intermediate data → maybe Nearline after 30 days
-1. **ops/** - Logs and metrics → delete old ones to save costs
+2. **mart/** - Analytics queries, accessed frequently → keep in Standard
+3. **stage/** - Intermediate data → maybe Nearline after 30 days
+4. **ops/** - Logs and metrics → delete old ones to save costs
 
 ## Complete Example for Your Project
 

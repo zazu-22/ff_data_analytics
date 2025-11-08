@@ -49,25 +49,25 @@ ______________________________________________________________________
    - Added `faad_award_sequence` calculation (1-indexed per season)
    - Ranks by `transaction_id` within season & transaction_type
 
-2. `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql`
+2. `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql`
 
    - Added `faad_award_sequence` column
 
-3. `dbt/ff_analytics/models/core/intermediate/int_pick_comp_registry.sql`
+3. `dbt/ff_data_transform/models/core/intermediate/int_pick_comp_registry.sql`
 
    - Passes through persisted sequence
 
-4. `dbt/ff_analytics/models/core/intermediate/int_pick_comp_sequenced.sql`
+4. `dbt/ff_data_transform/models/core/intermediate/int_pick_comp_sequenced.sql`
 
    - Changed ordering from `transaction_id` to `faad_award_sequence`
 
 **Files Created**:
 
-1. `dbt/ff_analytics/seeds/seed_faad_award_sequence_snapshot.csv` (453 rows)
+1. `dbt/ff_data_transform/seeds/seed_faad_award_sequence_snapshot.csv` (453 rows)
 
    - Baseline snapshot for immutability testing
 
-2. `dbt/ff_analytics/tests/assert_faad_sequence_immutable.sql`
+2. `dbt/ff_data_transform/tests/assert_faad_sequence_immutable.sql`
 
    - Compares current sequences to baseline
    - ERROR severity if sequences change
@@ -334,7 +334,7 @@ The `dim_player_id_xref` exists as both a seed and a model, causing dbt compilat
 
 - Remove the seed file (already done temporarily during implementation)
 - Update tests that reference the seed to use the model
-- Clear dbt cache: `rm -rf dbt/ff_analytics/target`
+- Clear dbt cache: `rm -rf dbt/ff_data_transform/target`
 
 #### Step 1: Load Seeds
 
@@ -343,8 +343,8 @@ The `dim_player_id_xref` exists as both a seed and a model, causing dbt compilat
 cd /Users/jason/code/ff_analytics
 
 # Load the FAAD sequence snapshot
-EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
-  uv run dbt seed --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics \
+EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
+  uv run dbt seed --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform \
   --select seed_faad_award_sequence_snapshot
 ```
 
@@ -352,8 +352,8 @@ EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/
 
 ```bash
 # Build all new intermediate models and updated dim_pick
-EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
-  uv run dbt run --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics \
+EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
+  uv run dbt run --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform \
   --select stg_sheets__transactions+ int_pick_draft_validation+ int_pick_comp_reconciliation+ \
           dim_pick_lifecycle_control+ dim_pick+ int_pick_transaction_xref+
 ```
@@ -362,8 +362,8 @@ EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/
 
 ```bash
 # Run pre-rebuild tests
-EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
-  uv run dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics \
+EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
+  uv run dbt test --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform \
   --select tag:pre_rebuild
 ```
 
@@ -373,7 +373,7 @@ Expected: Some tests may fail or warn (2024 R2 issue), providing diagnostic info
 
 ```bash
 # Query the reconciliation model to see discrepancies
-EXTERNAL_ROOT="$(pwd)/data/raw" uv run duckdb dbt/ff_analytics/target/dev.duckdb <<EOF
+EXTERNAL_ROOT="$(pwd)/data/raw" uv run duckdb dbt/ff_data_transform/target/dev.duckdb <<EOF
 SELECT
   season,
   round,
@@ -394,8 +394,8 @@ This will expose the 2024 R2 discrepancy in detail
 
 ```bash
 # Run all tests against rebuilt dim_pick
-EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_analytics/target/dev.duckdb" \
-  uv run dbt test --project-dir dbt/ff_analytics --profiles-dir dbt/ff_analytics \
+EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
+  uv run dbt test --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform \
   --select dim_pick int_pick_comp_reconciliation+
 ```
 

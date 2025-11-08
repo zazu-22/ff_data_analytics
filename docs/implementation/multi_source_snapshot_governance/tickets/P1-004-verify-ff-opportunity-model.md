@@ -43,7 +43,7 @@ This model tracks fantasy-relevant opportunities (targets, carries, red zone tou
 
 ## Implementation Notes
 
-**File**: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
+**File**: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
 
 **Change Pattern**:
 
@@ -89,7 +89,7 @@ While the existing `latest_snapshot_only()` helper works fine, updating to the n
 1. **Compilation test**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt compile --select stg_nflverse__ff_opportunity
    ```
 
@@ -115,7 +115,7 @@ While the existing `latest_snapshot_only()` helper works fine, updating to the n
 5. **Check macro resolution in compiled SQL**:
 
    ```bash
-   cat target/compiled/ff_analytics/models/staging/nflverse/stg_nflverse__ff_opportunity.sql
+   cat target/compiled/ff_data_transform/models/staging/nflverse/stg_nflverse__ff_opportunity.sql
    # Verify the dt filter looks correct
    ```
 
@@ -123,5 +123,5 @@ While the existing `latest_snapshot_only()` helper works fine, updating to the n
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - dbt Models section (lines 30-34)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 1 Staging Updates (lines 50-52)
-- Model file: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
-- Existing macro: `dbt/ff_analytics/macros/get_latest_snapshot.sql`
+- Model file: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
+- Existing macro: `dbt/ff_data_transform/macros/get_latest_snapshot.sql`

@@ -23,7 +23,7 @@ ______________________________________________________________________
 
 ### Existing dim_pick Seed
 
-- **Location**: `dbt/ff_analytics/seeds/dim_pick.csv`
+- **Location**: `dbt/ff_data_transform/seeds/dim_pick.csv`
 - **Structure**: 1,140 rows (19 years × 5 rounds × 12 picks)
 - **Schema**: `pick_id, season, round, overall_pick, pick_type, notes`
 - **Coverage**: 2012-2030 base picks only
@@ -768,5 +768,5 @@ ______________________________________________________________________
 
 - Investigation report: `docs/investigations/comp_pick_investigation_2025-11-07.md`
 - 2026 comp picks reference: `docs/investigations/2026_comp_picks_reference.md`
-- League constitution: `dbt/ff_analytics/seeds/league_constitution.csv`
+- League constitution: `dbt/ff_data_transform/seeds/league_constitution.csv`
 - Kimball modeling guide: `docs/spec/kimball_modeling_guidance/kimbal_modeling.md`

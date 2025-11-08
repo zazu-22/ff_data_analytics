@@ -18,6 +18,7 @@ ______________________________________________________________________
 **Problem:** Current `mart_fasa_targets` calculates replacement level as 25th percentile of FA pool only. This doesn't show how FA targets compare to starting lineups league-wide.
 
 **Example:**
+
 ```
 Current (FA-only baseline):
 - Zonovan Knight: 11.1 PPG, value_score = 74
@@ -45,7 +46,7 @@ ______________________________________________________________________
 
 ## Files to Create
 
-### 1. `dbt/ff_analytics/models/marts/mart_league_roster_depth.sql`
+### 1. `dbt/ff_data_transform/models/marts/mart_league_roster_depth.sql`
 
 **Purpose:** Rank all rostered players by position with league percentiles
 
@@ -197,8 +198,9 @@ LEFT JOIN position_benchmarks pb ON pr.position = pb.position
 ```
 
 **Tests:**
+
 ```yaml
-# dbt/ff_analytics/models/marts/_mart_league_roster_depth.yml
+# dbt/ff_data_transform/models/marts/_mart_league_roster_depth.yml
 models:
   - name: mart_league_roster_depth
     description: "All rostered players ranked by position with league benchmarks"
@@ -264,7 +266,7 @@ make dbt-run MODELS=mart_league_roster_depth
 make dbt-test MODELS=mart_league_roster_depth
 
 # Explore Jason's roster
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT player_name, position, team_depth_rank, league_rank_at_position,
        projected_ppg_ros, league_tier, roster_tier
 FROM main.mart_league_roster_depth
@@ -273,7 +275,7 @@ ORDER BY position, team_depth_rank;
 "
 
 # Position benchmarks
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT DISTINCT position,
        median_starter_ppg,
        median_flex_ppg,
@@ -306,4 +308,5 @@ ______________________________________________________________________
 ## Next Steps
 
 After this task completes:
+
 - **Task 2.6**: Enhance `mart_fasa_targets` to include league VoR context

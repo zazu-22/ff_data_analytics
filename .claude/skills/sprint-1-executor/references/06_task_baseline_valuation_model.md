@@ -30,7 +30,7 @@ ______________________________________________________________________
 
 ## Files to Create
 
-### 1. `dbt/ff_analytics/models/marts/mart_player_features_historical.sql`
+### 1. `dbt/ff_data_transform/models/marts/mart_player_features_historical.sql`
 
 **Full SQL:** See `00_SPRINT_PLAN.md` lines 1087-1183
 

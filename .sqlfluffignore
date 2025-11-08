@@ -1,19 +1,12 @@
 # SQLFluff ignore patterns
 # Files excluded from SQLFluff linting due to DuckDB-specific syntax
 # that SQLFluff cannot parse correctly
+target/
 
-# Staging models - use read_parquet() with named parameters
-# Pattern matches: stg_*__*.sql (double underscore) and stg_*.sql (all staging files)
-dbt/ff_analytics/models/staging/stg_*.sql
+# dbt <1.0.0
+dbt_modules/
 
-# Core models with DuckDB-specific functions
-dbt/ff_analytics/models/core/dim_player_contract_history.sql
-dbt/ff_analytics/models/core/fact_league_transactions.sql
-dbt/ff_analytics/models/core/intermediate/int_pick_*.sql
+# dbt >=1.0.0
+dbt_packages/
 
-# Mart models with DuckDB-specific functions
-dbt/ff_analytics/models/marts/mart_contract_snapshot_current.sql
-dbt/ff_analytics/models/marts/mart_real_world_actuals_weekly.sql
-
-# Test files - not dbt project nodes (validated separately via dbt test)
-dbt/ff_analytics/tests/*.sql
+macros/

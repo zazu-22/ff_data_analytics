@@ -83,7 +83,7 @@ This will regenerate transactions with the new pick fields (`pick_season`, `pick
 
 #### Step 2: Create int_pick_transaction_xref Model
 
-**File**: `dbt/ff_analytics/models/core/intermediate/int_pick_transaction_xref.sql`
+**File**: `dbt/ff_data_transform/models/core/intermediate/int_pick_transaction_xref.sql`
 
 ```sql
 -- Match transaction pick references to canonical dim_pick pick_ids
@@ -224,7 +224,7 @@ order by 3 desc
 
 #### Step 4: Update fact_league_transactions
 
-**File**: `dbt/ff_analytics/models/core/fact_league_transactions.sql`
+**File**: `dbt/ff_data_transform/models/core/fact_league_transactions.sql`
 
 Add join to pick xref and use canonical pick_id:
 
@@ -384,5 +384,5 @@ ______________________________________________________________________
 - **Investigation report**: `docs/investigations/comp_pick_investigation_2025-11-07.md`
 - **Implementation plan**: `docs/investigations/dim_pick_rebuild_plan_2025-11-07.md`
 - **2026 comp picks reference**: `docs/investigations/2026_comp_picks_reference.md`
-- **League constitution**: `dbt/ff_analytics/seeds/league_constitution.csv`
+- **League constitution**: `dbt/ff_data_transform/seeds/league_constitution.csv`
 - **Kimball modeling guide**: `docs/spec/kimball_modeling_guidance/kimbal_modeling.md`

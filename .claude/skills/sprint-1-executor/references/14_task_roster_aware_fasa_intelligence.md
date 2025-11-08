@@ -12,6 +12,7 @@
 **What:** Create `mart_fasa_roster_net_value` - a roster-aware FASA intelligence mart that integrates FA opportunities with drop candidate analysis to calculate **net value improvements**.
 
 **Why:** Current FASA targets analyze FAs in isolation without considering:
+
 - What you'd need to drop to acquire them
 - Net cap cost (bid - cap freed from drop)
 - Net VoR improvement to YOUR roster (not league average)
@@ -44,10 +45,12 @@
 ### Problem Example
 
 **Current analysis says:**
+
 - Marcus Mariota: STRONG_BUY, $3 bid, 106 dynasty value
 - Kalif Raymond: On your roster, $2 contract, 83 dynasty value
 
 **Missing analysis:**
+
 - Net VoR: +23 fantasy points (106 - 83)
 - Net Cap Cost: +$1 ($3 bid - $2 freed)
 - Value per Net Dollar: 23 pts / $1 = **23 pts/$** (excellent!)
@@ -56,12 +59,14 @@
 ### Why It Matters
 
 **Better Decision Making:**
+
 - Avoid bidding on marginal upgrades that waste cap
 - Identify cap-positive opportunities (save money while improving!)
 - Consider position scarcity on YOUR roster, not league average
 - Maximize value per net dollar spent
 
 **Research Foundation:**
+
 - "True VoR must be roster-specific" (4for4, JJ Zachariason)
 - "Replacement level is YOUR worst starter, not league average" (Evan Silva)
 - "Dynasty decisions require net present value thinking" (Rich Hribar)
@@ -72,9 +77,9 @@
 
 ### New Files
 
-```
-dbt/ff_analytics/models/marts/mart_fasa_roster_net_value.sql
-dbt/ff_analytics/models/marts/_mart_fasa_roster_net_value.yml
+```text
+dbt/ff_data_transform/models/marts/mart_fasa_roster_net_value.sql
+dbt/ff_data_transform/models/marts/_mart_fasa_roster_net_value.yml
 ```
 
 ### Dependencies Required
@@ -449,7 +454,7 @@ models:
 
 ### Step 3: Add to dbt Configuration
 
-**File:** `dbt/ff_analytics/dbt_project.yml`
+**File:** `dbt/ff_data_transform/dbt_project.yml`
 
 Ensure marts are configured with external materialization:
 
@@ -488,7 +493,7 @@ make dbt-test MODELS=mart_fasa_roster_net_value
 ### 3. Inspect top recommendations
 
 ```bash
-duckdb dbt/ff_analytics/target/dev.duckdb <<EOF
+duckdb dbt/ff_data_transform/target/dev.duckdb <<EOF
 SELECT
   fa_name,
   fa_position,
@@ -506,6 +511,7 @@ EOF
 ```
 
 **Expected:**
+
 - Actionable recommendations with net value calculations
 - Cap-positive opportunities (net_cap_cost < 0) ranked highly
 - Clear upgrade paths (net_dynasty_value_gain > 0)
@@ -513,7 +519,7 @@ EOF
 ### 4. Validate roster coverage
 
 ```bash
-duckdb dbt/ff_analytics/target/dev.duckdb <<EOF
+duckdb dbt/ff_data_transform/target/dev.duckdb <<EOF
 SELECT
   COUNT(DISTINCT fa_player_id) as unique_fas,
   COUNT(DISTINCT drop_player_id) as unique_drop_candidates,
@@ -525,6 +531,7 @@ EOF
 ```
 
 **Expected:**
+
 - Covers most FAs from mart_fasa_targets
 - Includes multiple drop candidates per FA
 - Some STRONG_ACQUIRE recommendations (cap-positive opportunities)
@@ -532,7 +539,7 @@ EOF
 ### 5. Check for cap-positive opportunities
 
 ```bash
-duckdb dbt/ff_analytics/target/dev.duckdb <<EOF
+duckdb dbt/ff_data_transform/target/dev.duckdb <<EOF
 SELECT
   fa_name,
   drop_name,
@@ -567,7 +574,7 @@ EOF
 
 ## Commit Message
 
-```
+```text
 feat: add roster-aware FASA intelligence mart
 
 Create mart_fasa_roster_net_value integrating FA opportunities with
@@ -611,6 +618,7 @@ The SQL template shows a temporary approach of reusing values from `mart_fasa_ta
 ### Position Scarcity
 
 Current implementation uses simple depth rank. Could be enhanced with:
+
 - League-wide positional scarcity multipliers
 - Starter requirements by position (2 RB, 3 WR, 1 TE, 1 FLEX)
 - Your team's specific positional needs vs league average
@@ -618,6 +626,7 @@ Current implementation uses simple depth rank. Could be enhanced with:
 ### Drop Candidate Selection
 
 Current logic considers all bench/droppable players. Could be refined to:
+
 - Exclude players with multi-year contracts (future value)
 - Weight recent performance trends (hot/cold streaks)
 - Consider injury status (don't drop injured players with potential)

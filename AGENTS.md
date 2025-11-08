@@ -18,7 +18,7 @@ Consult `docs/spec/SPEC-1_v_2.2.md` for architecture intent and the v2.3 checkli
 - `src/ingest/` - Provider loaders (Python-first) with registries and shared storage helpers. R fallbacks live under `scripts/R/`.
 - `src/ff_analytics_utils/` - Reusable helpers (e.g., storage, validation).
 - `tools/` - Developer utilities (`make_samples.py`, smoke tests).
-- `dbt/ff_analytics/` - DuckDB project with staging/core/mart layers plus seeds.
+- `dbt/ff_data_transform/` - DuckDB project with staging/core/mart layers plus seeds.
 - `config/` - Projection configs, scoring rules, environment toggles.
 - `docs/` - Spec, ADRs, analysis, architecture guidance.
 - `notebooks/` - Prototypes and exploratory analysis (named `topic_action.ipynb`).
@@ -31,9 +31,14 @@ Keep `PYTHONPATH=.` when running Python modules so `src/` packages resolve corre
 - **Environment setup**: `uv sync` (Python 3.13.6 via `.python-version`). Add packages with `uv add` / `uv add --dev`.
 - **Sample generation**: `uv run python tools/make_samples.py nflverse --datasets players weekly --seasons 2024 --out ./samples`.
 - **Run nflverse loader**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
-- **dbt**: `make dbt-run` / `make dbt-test` (wrapped in `uv run` to ensure adapters and env vars) — outputs land in `dbt/ff_analytics/target/dev.duckdb`.
+- **dbt**: `make dbt-run` / `make dbt-test` (wrapped in `uv run` to ensure adapters and env vars) — outputs land in `dbt/ff_data_transform/target/dev.duckdb`.
 - **Python tests**: `pytest -q` (fixtures in `samples/`). Ensure Sheets parsers and storage helpers stay covered.
-- **Formatting & lint**: `uv run pre-commit run --all-files` (ruff, mdformat, sqlfluff, yamllint, etc.).
+- **Formatting & lint**: `uv run pre-commit run --all-files` (ruff, mdformat, sqlfmt, sqlfluff, yamllint, dbt compile, dbt-opiner, etc.).
+  - **SQL formatting**: `make sqlfmt` formats all SQL files; `make sqlfmt-check` checks formatting
+  - **SQL linting**: `make sqlcheck` runs SQLFluff (selective, excludes DuckDB-specific syntax files via `.sqlfluffignore`); `make sqlfix` auto-fixes
+  - **SQL validation**: `make dbt-compile-check` validates SQL syntax using dbt compile
+  - **dbt best practices**: `make dbt-opiner-check` checks dbt project conventions (config: `.dbt-opiner.yaml`)
+  - **All SQL checks**: `make sql-all` runs format check + lint + compile + opiner
 
 Prefer `uv run <cmd>` to ensure the pinned environment and hooks (e.g., specifying `UV_CACHE_DIR` when needed).
 

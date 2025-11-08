@@ -3,7 +3,7 @@ name = "ff-analytics"
 version = "0.5.0"
 description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
-requires-python = ">=3.13.6"
+requires-python = ">=3.13"
 dependencies = [
     "altair>=5.5.0",
     "duckdb>=1.4.0",
@@ -35,7 +35,6 @@ dev = [
     "mypy>=1.11.0",
     "nbstripout>=0.7.1",
     "pandas-stubs>=2.0.0",
-    "pre-commit>=4.3.0",
     "pyrefly>=0.34.0",
     "pytest>=8.4.2",
     "pytest-cov>=5.0.0",
@@ -145,7 +144,7 @@ indent_unit = "space"
 templater = "dbt"
 dialect = "duckdb"
 sql_file_exts = ".sql,.sql.j2,.dml,.ddl"
-exclude_rules = "L034,L044,RF02,RF03,RF04,RF06,CV06"  # Allow keywords as identifiers; ignore references rules (break DuckDB named params); ignore semicolon terminator
+exclude_rules = "L034,L044,RF02,RF03,RF04,RF06,CV06,LT02,LT09"  # Allow keywords as identifiers; ignore references rules (break DuckDB named params); ignore semicolon terminator; let sqlfmt own indentation/layout
 # IMPORTANT: Do not fix files with parsing/templating errors
 # This prevents sqlfluff-fix from modifying files it can't fully parse
 fix_even_unparsable = false
@@ -162,8 +161,9 @@ exclude = [
 ]
 
 [tool.sqlfluff.indentation]
-indent_unit = "space"
-tab_space_size = 4  # Match sqlfmt's default 4-space indentation
+tab_space_size = 4
+indented_then = false
+indented_then_contents = false
 
 [tool.sqlfluff.layout.type.comma]
 line_position = "trailing"
@@ -178,8 +178,8 @@ capitalisation_policy = "lower"
 capitalisation_policy = "lower"
 
 [tool.sqlfluff.templater.dbt]
-project_dir = "dbt/ff_analytics"
-profiles_dir = "dbt/ff_analytics"
+project_dir = "dbt/ff_data_transform"
+profiles_dir = "dbt/ff_data_transform"
 profile = "ff_duckdb"
 target = "local"
 
@@ -238,6 +238,8 @@ markers = [
 # Mypy type checking configuration
 [tool.mypy]
 python_version = "3.13"
+mypy_path = "src"
+explicit_package_bases = true
 warn_unused_configs = true
 ignore_missing_imports = true  # Lenient for gradual typing
 files = ["src/", "tools/"]

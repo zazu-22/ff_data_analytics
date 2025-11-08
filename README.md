@@ -11,8 +11,8 @@
 - Kimball Dimensional Modeling Guide: docs/architecture/kimball_modeling_guidance/kimbal_modeling.md
 - Sample Generator Guide: docs/dev/how_to_use_the_sample_generator_tools_make_samples.md
 - Polars DataFrame Patterns: docs/dev/polars_dataframes.md
-- dbt Project Overview: dbt/ff_analytics/README.md
-- Staging Norms: dbt/ff_analytics/models/staging/README.md
+- dbt Project Overview: dbt/ff_data_transform/README.md
+- Staging Norms: dbt/ff_data_transform/models/staging/README.md
 - CI: .github/workflows/data-pipeline.yml, .github/workflows/ingest_google_sheets.yml
 - Projections Config: config/projections/ffanalytics_projections_config.yaml
 - Scoring Rules (Sleeper): config/scoring/sleeper_scoring_rules.yaml
@@ -31,7 +31,7 @@
 - `tools/` — developer utilities (sample generator)
 - `config/` — projections, scoring, env
 - `data/` — local dev data (raw/stage/mart/ops)
-- `dbt/ff_analytics/` — dbt project (duckdb + external Parquet)
+- `dbt/ff_data_transform/` — dbt project (duckdb + external Parquet)
 - `docs/` — spec, ADRs, dev guides, analytics
 
 ## Contributing

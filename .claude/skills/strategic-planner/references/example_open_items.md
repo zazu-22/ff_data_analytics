@@ -37,11 +37,11 @@
 
 **Priority**: HIGH
 
-- ☐ **Fix mart_contract_snapshot_history grain violation** (dbt/ff_analytics/models/marts/mart_contract_snapshot_history.sql)
+- ☐ **Fix mart_contract_snapshot_history grain violation** (dbt/ff_data_transform/models/marts/mart_contract_snapshot_history.sql)
   - **Issue**: 4 duplicate rows violate grain uniqueness test
   - **Grain**: `(player_key, franchise_id, snapshot_date, obligation_year)` should be unique
   - **Impact**: Contract analysis unreliable for affected rows
-  - **Location**: dbt/ff_analytics/models/marts/mart_contract_snapshot_history.sql
+  - **Location**: dbt/ff_data_transform/models/marts/mart_contract_snapshot_history.sql
 
 - ☐ **Resolve orphaned pick_id warnings** (~200 transactions)
   - **Issue**: `fact_league_transactions` still references compensatory or provisional picks not present in `dim_pick`
@@ -51,13 +51,14 @@
     - OR: Model compensatory picks dynamically from transactions, then union into dim_pick
     - OR: Relax FK test (currently warn-only) *and* document gaps
   - **Impact**: Low (queries succeed, but referential checks fail)
-  - **Location**: `dbt/ff_analytics/seeds/dim_pick.csv`, `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql`
+  - **Location**: `dbt/ff_data_transform/seeds/dim_pick.csv`, `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql`
 
 - ☐ **Commissioner sheet mismatch – Gordon → JP (2026 R1)**
   - **Issue**: `stg_sheets__draft_pick_holdings` shows a trade-out for Gordon’s 2026 1st to JP with no corresponding inbound row
   - **Root cause**: Commissioner sheet snapshot missing JP’s acquired entry (multiple trades logged 2024‑11‑11)
   - **Action**: Ask commissioner to confirm final holder, update sheet, rerun `make ingest-sheets`, and rerun orphan validation
   - **Validation query**:
+
     ```sql
     WITH latest_snapshot AS (
       SELECT max(snapshot_date) AS snapshot_date
@@ -89,6 +90,7 @@
         AND i.from_key = t.from_key
     );
     ```
+
   - **Impact**: Prevents full reconciliation of 2026 base picks until resolved
 
 ---
@@ -105,7 +107,7 @@
   - `stg_sleeper__rosters.sql` - Current roster state
   - `stg_sleeper__roster_players.sql` - Roster player details (long form)
   - **Blocker**: None (make_samples.py sleeper command works)
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 ### 3. Change Detection Models
 
@@ -115,13 +117,13 @@
   - `stg_sheets__roster_changelog.sql` - Hash-based SCD tracking for GM roster tabs
   - **Purpose**: Detect when rosters change between runs
   - **Pattern**: Row hash per GM tab per dt partition
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 - ☐ **Implement generic sheet change log**
   - `stg_sheets__change_log.sql` - Row hash per tab per dt
   - **Purpose**: Change detection for any commissioner sheet tab
   - **Pattern**: Generic change capture for all tabs
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 ### 4. Trade Analysis Marts
 
@@ -138,7 +140,7 @@
     - Apply transactions chronologically to build roster snapshots
     - Grain: one row per player per franchise per date
   - **Dependencies**: All complete (fact_league_transactions ✅, fact_asset_market_values ✅)
-  - **Location**: dbt/ff_analytics/models/marts/
+  - **Location**: dbt/ff_data_transform/models/marts/
 
 ---
 
@@ -218,19 +220,19 @@
   - **Columns**: run_id, started_at, ended_at, status, trigger, scope, error_class, retry_count
   - **Purpose**: Track all ingestion and dbt runs
   - **Grain**: one row per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_run_ledger.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_run_ledger.sql
 
 - ☐ **Implement ops.model_metrics**
   - **Columns**: run_id, model_name, row_count, bytes_written, duration_ms, error_rows
   - **Purpose**: Track dbt model performance over time
   - **Grain**: one row per model per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_model_metrics.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_model_metrics.sql
 
 - ☐ **Implement ops.data_quality**
   - **Columns**: run_id, model_name, check_name, status, observed_value, threshold
   - **Purpose**: Track dbt test results over time
   - **Grain**: one row per test per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_data_quality.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_data_quality.sql
 
 ### 8. Freshness Monitoring
 
@@ -244,7 +246,7 @@
     - ktc: warn_after 24h, error_after 48h
     - sheets: warn_after 12h, error_after 24h
   - **Implementation**: Add `freshness:` blocks to src_*.yml files
-  - **Location**: dbt/ff_analytics/models/sources/*.yml
+  - **Location**: dbt/ff_data_transform/models/sources/*.yml
 
 ### 9. Last Known Good (LKG) Fallback
 
@@ -270,7 +272,7 @@
   - **Tables**: TBD
   - **Pattern**: dbt test with ± thresholds (e.g., warn if row count changes >20%)
   - **Implementation**: Custom dbt test macro
-  - **Location**: dbt/ff_analytics/tests/generic/row_delta_threshold.sql
+  - **Location**: dbt/ff_data_transform/tests/generic/row_delta_threshold.sql
 
 ---
 
@@ -348,7 +350,7 @@
 3. **Seeds** - SPEC claims "6/8 done, 2 optional"
    - **Actual**: 12/13 done (only stat_dictionary.csv deferred)
    - **Added**: 5 league rules dimensions (dim_league_rules, dim_rookie_contract_scale, etc.)
-   - **Evidence**: dbt/ff_analytics/seeds/ contains 12 CSV files
+   - **Evidence**: dbt/ff_data_transform/seeds/ contains 12 CSV files
 
 4. **Test Coverage** - SPEC claims "147/149 tests passing (98.7%)"
    - **Actual**: 275/278 tests passing (98.9%) - significant expansion
@@ -363,12 +365,12 @@
 
 **Files Verified**:
 
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/seeds/` - 12 seeds
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/seeds/` - 12 seeds
 - `/Users/jason/code/ff_analytics/src/ingest/nflverse/registry.py` - 10 datasets
 - `/Users/jason/code/ff_analytics/src/ingest/ktc/registry.py` - Full implementation (not stub)
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/staging/` - 8 models
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/core/` - 9 models (4 facts, 5 dims)
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/marts/` - 7 marts
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/staging/` - 8 models
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/core/` - 9 models (4 facts, 5 dims)
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/marts/` - 7 marts
 - `/Users/jason/code/ff_analytics/.github/workflows/` - 2 workflows
 
 ---

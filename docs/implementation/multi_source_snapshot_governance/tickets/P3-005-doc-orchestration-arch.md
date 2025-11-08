@@ -164,7 +164,7 @@ Start
 
 **Characteristics**:
 - Data stored locally (`data/raw/`)
-- DuckDB database local (`dbt/ff_analytics/target/dev.duckdb`)
+- DuckDB database local (`dbt/ff_data_transform/target/dev.duckdb`)
 - No persistent Prefect server
 - Manual flow execution
 
@@ -214,7 +214,7 @@ jobs:
         run: uv run python tools/validate_manifests.py
 
       - name: Run dbt models
-        run: cd dbt/ff_analytics && uv run dbt run
+        run: cd dbt/ff_data_transform && uv run dbt run
 ```
 
 ### Future (Prefect Cloud)

@@ -17,7 +17,7 @@
     "mapping_coverage": 0.9508
   },
   "weights_file": "config/projections/ffanalytics_projection_weights_mapped.csv",
-  "player_xref_file": "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+  "player_xref_file": "dbt/ff_data_transform/seeds/dim_player_id_xref.csv",
   "output_files": {
     "raw": "samples/ffanalytics/projections/dt=2025-10-25/projections_raw_2025-10-25.parquet",
     "consensus": "samples/ffanalytics/projections/dt=2025-10-25/projections_consensus_2025-10-25.parquet"

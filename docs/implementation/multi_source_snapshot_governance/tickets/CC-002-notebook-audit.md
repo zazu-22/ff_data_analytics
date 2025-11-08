@@ -50,7 +50,7 @@ df = pl.read_parquet('data/raw/nflverse/weekly/dt=2025-10-27/*.parquet')
 
 # BETTER: Read dbt model output
 import duckdb
-conn = duckdb.connect('dbt/ff_analytics/target/dev.duckdb')
+conn = duckdb.connect('dbt/ff_data_transform/target/dev.duckdb')
 df = conn.execute('SELECT * FROM stg_nflverse__player_stats').pl()
 
 # BEST: Use dbt-generated views

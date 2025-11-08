@@ -16,7 +16,7 @@ The macro builds on the existing `latest_snapshot_only()` helper but extends it 
 
 ## Tasks
 
-- [ ] Create `dbt/ff_analytics/macros/snapshot_selection.sql`
+- [ ] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
 - [ ] Implement `snapshot_selection_strategy` macro with three strategies:
   - [ ] `latest_only` strategy - Select only most recent snapshot
   - [ ] `baseline_plus_latest` strategy - Select baseline + latest for continuity
@@ -27,14 +27,14 @@ The macro builds on the existing `latest_snapshot_only()` helper but extends it 
 
 ## Acceptance Criteria
 
-- [ ] Macro file exists at `dbt/ff_analytics/macros/snapshot_selection.sql`
+- [ ] Macro file exists at `dbt/ff_data_transform/macros/snapshot_selection.sql`
 - [ ] All three strategies implemented and documented
 - [ ] `dbt compile` succeeds with no errors
 - [ ] Macro accepts `source_glob`, `strategy`, and optional `baseline_dt` parameters
 
 ## Implementation Notes
 
-**File**: `dbt/ff_analytics/macros/snapshot_selection.sql`
+**File**: `dbt/ff_data_transform/macros/snapshot_selection.sql`
 
 ```sql
 {% macro snapshot_selection_strategy(source_glob, strategy='latest_only', baseline_dt=none) %}
@@ -71,14 +71,14 @@ The new `snapshot_selection_strategy` macro **calls** the existing `latest_snaps
 - Flexibility: Can use helper directly (simple) or macro (flexible)
 - No breaking changes: Gradual migration at model's own pace
 
-**Related Macro**: `dbt/ff_analytics/macros/get_latest_snapshot.sql` (existing helper to reference)
+**Related Macro**: `dbt/ff_data_transform/macros/get_latest_snapshot.sql` (existing helper to reference)
 
 ## Testing
 
 1. **Compilation test**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt compile
    ```
 
@@ -99,4 +99,4 @@ The new `snapshot_selection_strategy` macro **calls** the existing `latest_snaps
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Design Decision #1 (lines 48-89)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 1 Macro Implementation (lines 32-38)
-- Existing macro: `dbt/ff_analytics/macros/get_latest_snapshot.sql`
+- Existing macro: `dbt/ff_data_transform/macros/get_latest_snapshot.sql`

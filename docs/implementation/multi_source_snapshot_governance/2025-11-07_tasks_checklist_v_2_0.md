@@ -32,7 +32,7 @@ ______________________________________________________________________
 
 ### Macro Implementation
 
-- [ ] Create `dbt/ff_analytics/macros/snapshot_selection.sql`
+- [ ] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
 - [ ] Implement `snapshot_selection_strategy` macro with three strategies:
   - [ ] `latest_only` strategy
   - [ ] `baseline_plus_latest` strategy
@@ -88,7 +88,7 @@ ______________________________________________________________________
 
 ### Snapshot Registry Seed
 
-- [ ] Create `dbt/ff_analytics/seeds/snapshot_registry.csv` with columns:
+- [ ] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` with columns:
   - [ ] `source` (nflverse, sheets, ktc, ffanalytics, sleeper)
   - [ ] `dataset` (weekly, snap_counts, etc.)
   - [ ] `snapshot_date` (dt value)
@@ -146,7 +146,7 @@ ______________________________________________________________________
 
 - [ ] Add freshness tests for **nflverse**:
 
-  - [ ] Update `dbt/ff_analytics/models/sources/src_nflverse.yml`
+  - [ ] Update `dbt/ff_data_transform/models/sources/src_nflverse.yml`
   - [ ] Set `loaded_at_field: dt`
   - [ ] Set `warn_after: {count: 2, period: day}`
   - [ ] Set `error_after: {count: 7, period: day}`
@@ -154,7 +154,7 @@ ______________________________________________________________________
 
 - [ ] Add freshness tests for **sheets**:
 
-  - [ ] Update `dbt/ff_analytics/models/sources/src_sheets.yml` (or create if missing)
+  - [ ] Update `dbt/ff_data_transform/models/sources/src_sheets.yml` (or create if missing)
   - [ ] Set `loaded_at_field: dt`
   - [ ] Set `warn_after: {count: 1, period: day}`
   - [ ] Set `error_after: {count: 7, period: day}`
@@ -162,7 +162,7 @@ ______________________________________________________________________
 
 - [ ] Add freshness tests for **ktc**:
 
-  - [ ] Update `dbt/ff_analytics/models/sources/src_ktc.yml` (or create if missing)
+  - [ ] Update `dbt/ff_data_transform/models/sources/src_ktc.yml` (or create if missing)
   - [ ] Set `loaded_at_field: dt`
   - [ ] Set `warn_after: {count: 5, period: day}`
   - [ ] Set `error_after: {count: 14, period: day}`
@@ -170,7 +170,7 @@ ______________________________________________________________________
 
 - [ ] Add freshness tests for **ffanalytics**:
 
-  - [ ] Update `dbt/ff_analytics/models/sources/src_ffanalytics.yml` (or create if missing)
+  - [ ] Update `dbt/ff_data_transform/models/sources/src_ffanalytics.yml` (or create if missing)
   - [ ] Set `loaded_at_field: dt`
   - [ ] Set `warn_after: {count: 2, period: day}`
   - [ ] Set `error_after: {count: 7, period: day}`
@@ -178,7 +178,7 @@ ______________________________________________________________________
 
 - [ ] Add freshness tests for **sleeper**:
 
-  - [ ] Update `dbt/ff_analytics/models/sources/src_sleeper.yml` (or create if missing)
+  - [ ] Update `dbt/ff_data_transform/models/sources/src_sleeper.yml` (or create if missing)
   - [ ] Set `loaded_at_field: dt`
   - [ ] Set `warn_after: {count: 1, period: day}`
   - [ ] Set `error_after: {count: 7, period: day}`
@@ -260,7 +260,7 @@ ______________________________________________________________________
 
 - [ ] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy
 - [ ] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy
-- [ ] Update `dbt/ff_analytics/models/staging/README.md` (if exists) with snapshot governance overview
+- [ ] Update `dbt/ff_data_transform/models/staging/README.md` (if exists) with snapshot governance overview
 
 **Exit Criteria**: SPEC checklist accurate, ops docs answer current-state questions, dbt model docs explain governance.
 

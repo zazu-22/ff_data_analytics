@@ -65,7 +65,7 @@ Oluokun, Foyesade    | LB  | 5.5  | 4.1  | 0.1   | 0.4 | 0.1
 
 ______________________________________________________________________
 
-### 2. Staging Layer (`dbt/ff_analytics/models/staging/`)
+### 2. Staging Layer (`dbt/ff_data_transform/models/staging/`)
 
 **Status**: ❌ **ALL IDP DATA FILTERED OUT**
 
@@ -109,7 +109,7 @@ fumbles_lost                                        -- Turnovers
 
 ______________________________________________________________________
 
-### 3. Marts Layer (`dbt/ff_analytics/models/marts/`)
+### 3. Marts Layer (`dbt/ff_data_transform/models/marts/`)
 
 **Status**: ❌ **NO ACTUAL IDP DATA (FALSE POSITIVES ONLY)**
 
@@ -315,9 +315,9 @@ ______________________________________________________________________
 
 ### dbt Models
 
-- **Source Definition**: `dbt/ff_analytics/models/sources/src_ffanalytics.yml`
-- **Staging Model**: `dbt/ff_analytics/models/staging/stg_ffanalytics__projections.sql` (blocking filter at line 68)
-- **Mart Model**: `dbt/ff_analytics/models/marts/mart_fantasy_projections.sql` (incorrect comment at line 13)
+- **Source Definition**: `dbt/ff_data_transform/models/sources/src_ffanalytics.yml`
+- **Staging Model**: `dbt/ff_data_transform/models/staging/stg_ffanalytics__projections.sql` (blocking filter at line 68)
+- **Mart Model**: `dbt/ff_data_transform/models/marts/mart_fantasy_projections.sql` (incorrect comment at line 13)
 
 ### Python Ingestion
 
@@ -331,7 +331,7 @@ ______________________________________________________________________
 ### Data Paths
 
 - **Raw Data**: `data/raw/ffanalytics/projections/dt=2025-10-28/projections_consensus_2025-10-28.parquet`
-- **DuckDB**: `dbt/ff_analytics/target/dev.duckdb`
+- **DuckDB**: `dbt/ff_data_transform/target/dev.duckdb`
 - **Marts**: `main.mart_fantasy_projections` table
 
 ______________________________________________________________________

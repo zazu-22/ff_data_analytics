@@ -21,10 +21,10 @@ The refined data model plan v4.0 included commissioner sheets ingestion for **ro
 ### Transaction Types in Source Data
 
 1. **Trade**: Multi-row transactions (grouped by Sort ID) involving players, picks, cap space
-1. **Cut**: Player releases with dead cap implications
-1. **Waivers**: GM-to-GM waiver claims
-1. **Signing**: Free agent acquisitions from waiver wire
-1. **FAAD**: Annual free agent auction draft signings
+2. **Cut**: Player releases with dead cap implications
+3. **Waivers**: GM-to-GM waiver claims
+4. **Signing**: Free agent acquisitions from waiver wire
+5. **FAAD**: Annual free agent auction draft signings
 
 ### Constraints
 
@@ -74,7 +74,7 @@ fact_league_transactions(
 
 ### Integration Architecture
 
-```
+```text
 Commissioner Sheet TRANSACTIONS tab
     ↓ [raw copy via ADR-005]
 samples/sheets/TRANSACTIONS/TRANSACTIONS.csv
@@ -99,14 +99,14 @@ Trade analysis marts:
    - Window functions to show trade patterns over time
    - "Who is the most active trader?"
 
-1. **`mart_trade_valuations`** - Actual trades vs KTC market comparison
+2. **`mart_trade_valuations`** - Actual trades vs KTC market comparison
 
    - Join `fact_league_transactions` (asset_type=player) to `fact_asset_market_values`
    - Calculate trade value differential (market vs actual)
    - Identify value wins/losses per franchise
    - "Did I win or lose that trade based on market values?"
 
-1. **`mart_roster_timeline`** - Reconstruct roster state at any point in time
+3. **`mart_roster_timeline`** - Reconstruct roster state at any point in time
 
    - Window functions over transaction history ordered by transaction_date
    - Current roster = initial state + cumulative transactions
@@ -275,13 +275,13 @@ player_mapped AS (
 ### Key Files
 
 - `src/ingest/sheets/commissioner_parser.py` - Add `parse_transactions()` function
-- `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql` - Staging model
-- `dbt/ff_analytics/models/core/fact_league_transactions.sql` - Core fact
-- `dbt/ff_analytics/models/marts/mart_trade_history.sql` - Trade summaries
-- `dbt/ff_analytics/models/marts/mart_trade_valuations.sql` - Actual vs market
-- `dbt/ff_analytics/models/marts/mart_roster_timeline.sql` - Historical rosters
+- `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql` - Staging model
+- `dbt/ff_data_transform/models/core/fact_league_transactions.sql` - Core fact
+- `dbt/ff_data_transform/models/marts/mart_trade_history.sql` - Trade summaries
+- `dbt/ff_data_transform/models/marts/mart_trade_valuations.sql` - Actual vs market
+- `dbt/ff_data_transform/models/marts/mart_roster_timeline.sql` - Historical rosters
 
-## References
+## ImplementationReferences
 
 - **SPEC-1 v2.2**: Trade Valuation section - [`docs/spec/SPEC-1_v_2.2.md`](../spec/SPEC-1_v_2.2.md)
 - **Refined Data Model Plan v4.0**: v4.2 addendum - [`docs/spec/refined_data_model_plan_v4.md`](../spec/refined_data_model_plan_v4.md)
@@ -317,14 +317,14 @@ Successfully implemented full TRANSACTIONS data pipeline with 100% player mappin
    - 100% player name mapping via `dim_name_alias` seed (78 alias mappings)
    - Outputs: `transactions.parquet` (4,474 rows), `unmapped_players.parquet` (0 rows)
 
-1. **dbt Models**:
+2. **dbt Models**:
 
-   - `dbt/ff_analytics/models/sources/src_sheets.yml` - Source definition
-   - `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql` - Staging with validation
-   - `dbt/ff_analytics/models/core/fact_league_transactions.sql` - Core fact table
+   - `dbt/ff_data_transform/models/sources/src_sheets.yml` - Source definition
+   - `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql` - Staging with validation
+   - `dbt/ff_data_transform/models/core/fact_league_transactions.sql` - Core fact table
    - Full schema tests with grain enforcement and FK relationships
 
-1. **Documentation**:
+3. **Documentation**:
 
    - `docs/analysis/TRANSACTIONS_contract_validation_analysis.md` - Data quality findings
    - Updated `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` - Track B → 80% complete
@@ -344,7 +344,7 @@ This creates intentional length mismatches: `len(split_array) > contract_years`
 
 **Example - Breece Hall**:
 
-```
+```text
 2022 Rookie Draft:   Contract: 18/3, Split: 6-6-6 (base contract)
 2022 Extension:      Contract: 24/1, Split: 6-6-24 (full remaining!)
 ```
@@ -383,37 +383,37 @@ Following Kimball transaction fact table pattern:
 
 ### Data Quality Achievements
 
-| Metric | Target | Actual | Status |
+| Metric                          | Target     | Actual | Status      |
 | ------------------------------- | ---------- | ------ | ----------- |
-| Player mapping coverage | ≥95% | 100% | ✅ Exceeded |
-| Transaction type classification | 100% | 100% | ✅ Met |
-| Asset type inference | ≥98% | 98.3% | ✅ Met |
-| Grain uniqueness | 100% | 100% | ✅ Met |
-| FK relationships | 100% valid | 100% | ✅ Met |
+| Player mapping coverage         | ≥95%       | 100%   | ✅ Exceeded |
+| Transaction type classification | 100%       | 100%   | ✅ Met      |
+| Asset type inference            | ≥98%       | 98.3%  | ✅ Met      |
+| Grain uniqueness                | 100%       | 100%   | ✅ Met      |
+| FK relationships                | 100% valid | 100%   | ✅ Met      |
 
 ### Files Modified/Created
 
 **Created**:
 
-- `dbt/ff_analytics/seeds/dim_name_alias.csv` (78 mappings)
+- `dbt/ff_data_transform/seeds/dim_name_alias.csv` (78 mappings)
 - `src/ingest/sheets/commissioner_parser.py::parse_transactions()` (300+ lines, 6 helpers)
 - `tests/test_sheets_commissioner_parser.py` (41 tests, 39 passing, 2 skipped)
-- `dbt/ff_analytics/models/sources/src_sheets.yml`
-- `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql`
-- `dbt/ff_analytics/models/staging/schema.yml`
-- `dbt/ff_analytics/models/core/fact_league_transactions.sql`
+- `dbt/ff_data_transform/models/sources/src_sheets.yml`
+- `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql`
+- `dbt/ff_data_transform/models/staging/schema.yml`
+- `dbt/ff_data_transform/models/core/fact_league_transactions.sql`
 - `docs/analysis/TRANSACTIONS_contract_validation_analysis.md`
 
 **Modified**:
 
-- `dbt/ff_analytics/models/core/schema.yml` (added fact_league_transactions tests)
+- `dbt/ff_data_transform/models/core/schema.yml` (added fact_league_transactions tests)
 - `docs/spec/SPEC-1_v_2.2_implementation_checklist_v_1.md` (Track B updated)
 
 ### Next Steps (Phase 3)
 
 1. **Create `dim_player_contract_history`** - Derived clean contract state
-1. **Trade analysis marts** - `mart_trade_history`, `mart_trade_valuations`
-1. **Integration with KTC market values** - Actual trade values vs market pricing
+2. **Trade analysis marts** - `mart_trade_history`, `mart_trade_valuations`
+3. **Integration with KTC market values** - Actual trade values vs market pricing
 
 ### References
 

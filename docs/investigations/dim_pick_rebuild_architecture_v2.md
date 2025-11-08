@@ -32,7 +32,7 @@ WHERE season > 2024   -- Prospective
 
 ### Solution: dbt Project Variable
 
-**File**: `dbt/ff_analytics/dbt_project.yml`
+**File**: `dbt/ff_data_transform/dbt_project.yml`
 
 ```yaml
 vars:
@@ -61,7 +61,7 @@ WHERE season > {{ var('latest_completed_draft_season') }}
 
 ```bash
 # 1. Update the config (one-time edit)
-vim dbt/ff_analytics/dbt_project.yml
+vim dbt/ff_data_transform/dbt_project.yml
 # Change: latest_completed_draft_season: 2024 → 2025
 
 # 2. Rebuild dim_pick (no SQL changes needed!)
@@ -877,7 +877,7 @@ cat faad_2025.csv >> seeds/seed_faad_award_sequence_snapshot.csv
 dbt seed --select seed_faad_award_sequence_snapshot
 
 # 3. Update season boundary (ONLY edit needed!)
-vim dbt/ff_analytics/dbt_project.yml
+vim dbt/ff_data_transform/dbt_project.yml
 # Change: latest_completed_draft_season: 2024 → 2025
 
 # 4. Run quality gates

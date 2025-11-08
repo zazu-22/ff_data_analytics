@@ -2620,7 +2620,7 @@ ______________________________________________________________________
 
 - `/Users/jason/code/ff_analytics/docs/spec/kimball_modeling_guidance/kimbal_modeling.md` - Data modeling patterns
 - `/Users/jason/code/ff_analytics/CLAUDE.md` - Project overview and conventions
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/CLAUDE.md` - dbt modeling guidance
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/CLAUDE.md` - dbt modeling guidance
 
 **Keywords:** machine learning, sports analytics, feature engineering, player projections, NFL, NBA, fantasy football, XGBoost, SHAP, time-series validation, regularization, age curves
 

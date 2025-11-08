@@ -101,7 +101,7 @@ Candidate bindings: "pick_id", "Pick", "split_array", ...
 
 1. ✅ Removed old partition: `rm -rf data/raw/commissioner/transactions/dt=2025-11-06`
 2. ✅ Dropped view: `DROP VIEW stg_sheets__transactions`
-3. ✅ Cleared dbt artifacts: `rm -rf dbt/ff_analytics/target/*.msgpack`
+3. ✅ Cleared dbt artifacts: `rm -rf dbt/ff_data_transform/target/*.msgpack`
 4. ❌ Full target clear caused other issues (lost seed tables)
 
 **Solutions to Try**:
@@ -109,7 +109,7 @@ Candidate bindings: "pick_id", "Pick", "split_array", ...
 1. **Fresh DuckDB database** (RECOMMENDED):
 
    ```bash
-   rm dbt/ff_analytics/target/dev.duckdb
+   rm dbt/ff_data_transform/target/dev.duckdb
    make dbt-run  # Full rebuild
    ```
 
@@ -264,23 +264,23 @@ ______________________________________________________________________
 
 ### dbt Models
 
-- `dbt/ff_analytics/models/core/dim_pick.sql` - NEW
-- `dbt/ff_analytics/models/core/intermediate/int_pick_base.sql` - NEW
-- `dbt/ff_analytics/models/core/intermediate/int_pick_comp_registry.sql` - NEW
-- `dbt/ff_analytics/models/core/intermediate/int_pick_comp_sequenced.sql` - NEW
-- `dbt/ff_analytics/models/core/intermediate/int_pick_tbd.sql` - NEW
-- `dbt/ff_analytics/models/core/intermediate/int_pick_transaction_xref.sql` - NEW
-- `dbt/ff_analytics/models/core/_dim_pick.yml` - NEW
-- `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql` - MODIFIED
+- `dbt/ff_data_transform/models/core/dim_pick.sql` - NEW
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_base.sql` - NEW
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_comp_registry.sql` - NEW
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_comp_sequenced.sql` - NEW
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_tbd.sql` - NEW
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_transaction_xref.sql` - NEW
+- `dbt/ff_data_transform/models/core/_dim_pick.yml` - NEW
+- `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql` - MODIFIED
 
 ### dbt Configuration
 
-- `dbt/ff_analytics/dbt_project.yml` - Added seeds/\_archive exclusion
-- `dbt/ff_analytics/seeds/seeds.yml` - Removed dim_pick seed reference
+- `dbt/ff_data_transform/dbt_project.yml` - Added seeds/\_archive exclusion
+- `dbt/ff_data_transform/seeds/seeds.yml` - Removed dim_pick seed reference
 
 ### Seeds
 
-- `dbt/ff_analytics/seeds/dim_pick.csv` - ARCHIVED to seeds/\_archive/
+- `dbt/ff_data_transform/seeds/dim_pick.csv` - ARCHIVED to seeds/\_archive/
 
 ### Documentation
 
@@ -336,4 +336,4 @@ ______________________________________________________________________
 
 - **Investigation**: `docs/investigations/comp_pick_investigation_2025-11-07.md`
 - **Implementation plan**: `docs/investigations/dim_pick_rebuild_plan_2025-11-07.md`
-- **Constitution**: `dbt/ff_analytics/seeds/league_constitution.csv` (Section XI.M-N)
+- **Constitution**: `dbt/ff_data_transform/seeds/league_constitution.csv` (Section XI.M-N)

@@ -131,7 +131,7 @@ def detect_coverage_gaps(
 ```python
 def calculate_mapping_rate(
     snapshot_path: Path,
-    xref_path: str = 'dbt/ff_analytics/target/dev.duckdb'
+    xref_path: str = 'dbt/ff_data_transform/target/dev.duckdb'
 ) -> dict:
     """Calculate player mapping rate to dim_player_id_xref.
 
@@ -238,5 +238,5 @@ Player Mapping Rates:
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Design Decision #4 (lines 148-162)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 2 Validation (lines 117-123)
-- Crosswalk table: `dbt/ff_analytics/seeds/dim_player_id_xref.csv`
+- Crosswalk table: `dbt/ff_data_transform/seeds/dim_player_id_xref.csv`
 - Risk: Mapping gaps for offensive linemen (plan line 688)

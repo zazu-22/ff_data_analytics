@@ -86,7 +86,7 @@ and (
 **Recommendation:** Create a flexible `snapshot_selection_strategy` macro:
 
 ```sql
--- dbt/ff_analytics/macros/snapshot_selection.sql
+-- dbt/ff_data_transform/macros/snapshot_selection.sql
 {% macro snapshot_selection_strategy(source_glob, strategy='latest_only', baseline_dt=none) %}
   {% if strategy == 'latest_only' %}
     and {{ latest_snapshot_only(source_glob) }}
@@ -121,7 +121,7 @@ ______________________________________________________________________
 
 **Proposed:**
 
-> Define a shared snapshot selection macro + metadata model in dbt/ff_analytics/models/sources/
+> Define a shared snapshot selection macro + metadata model in dbt/ff_data_transform/models/sources/
 
 **Feedback:**
 
@@ -132,7 +132,7 @@ ______________________________________________________________________
 **Critical Addition:** Create a **snapshot registry seed**:
 
 ```csv
-# dbt/ff_analytics/seeds/snapshot_registry.csv
+# dbt/ff_data_transform/seeds/snapshot_registry.csv
 source,dataset,snapshot_date,status,coverage_start_season,coverage_end_season,row_count,notes
 nflverse,weekly,2025-11-05,current,2020,2025,97302,Complete 2020-2025
 nflverse,weekly,2025-10-27,historical,2020,2024,89145,Historical baseline
@@ -418,7 +418,7 @@ ______________________________________________________________________
 3. Simpler to implement (YAML config, no Python)
 4. Can test locally before orchestration changes
 
-**Example freshness test** (add to `dbt/ff_analytics/models/sources/src_nflverse.yml`):
+**Example freshness test** (add to `dbt/ff_data_transform/models/sources/src_nflverse.yml`):
 
 ```yaml
 sources:
@@ -593,7 +593,7 @@ ______________________________________________________________________
 **Example test:**
 
 ```sql
--- dbt/ff_analytics/tests/assert_snapshot_selection_consistency.sql
+-- dbt/ff_data_transform/tests/assert_snapshot_selection_consistency.sql
 -- Compare row counts before/after snapshot strategy change
 WITH old_logic AS (
   SELECT COUNT(*) as cnt FROM {{ ref('stg_nflverse__player_stats') }}
@@ -733,8 +733,8 @@ ______________________________________________________________________
 
 ### Files to Create
 
-01. `dbt/ff_analytics/macros/snapshot_selection.sql` - Flexible snapshot strategy macro
-02. `dbt/ff_analytics/seeds/snapshot_registry.csv` - Snapshot governance registry (optional)
+01. `dbt/ff_data_transform/macros/snapshot_selection.sql` - Flexible snapshot strategy macro
+02. `dbt/ff_data_transform/seeds/snapshot_registry.csv` - Snapshot governance registry (optional)
 03. `tools/validate_manifests.py` - Cross-source manifest validation
 04. `docs/ops/snapshot_management_current_state.md` - Current state reference
 05. `docs/ops/ingestion_triggers_current_state.md` - Orchestration current state
@@ -746,11 +746,11 @@ ______________________________________________________________________
 
 ### Files to Update
 
-1. `dbt/ff_analytics/models/staging/stg_nflverse__player_stats.sql` - Use snapshot macro
-2. `dbt/ff_analytics/models/staging/stg_nflverse__snap_counts.sql` - Use snapshot macro
-3. `dbt/ff_analytics/models/sources/src_nflverse.yml` - Add freshness tests
-4. `dbt/ff_analytics/models/sources/src_sheets.yml` - Add freshness tests
-5. `dbt/ff_analytics/models/sources/src_ktc.yml` - Add freshness tests
+1. `dbt/ff_data_transform/models/staging/stg_nflverse__player_stats.sql` - Use snapshot macro
+2. `dbt/ff_data_transform/models/staging/stg_nflverse__snap_counts.sql` - Use snapshot macro
+3. `dbt/ff_data_transform/models/sources/src_nflverse.yml` - Add freshness tests
+4. `dbt/ff_data_transform/models/sources/src_sheets.yml` - Add freshness tests
+5. `dbt/ff_data_transform/models/sources/src_ktc.yml` - Add freshness tests
 6. `docs/spec/SPEC-1_v_2.3_implementation_checklist_v_0.md` - Update with current state
 7. `src/ingest/nflverse/shim.py` - Add `_samples` guards
 8. `tests/test_nflverse_samples_pk.py` - Update sample paths if relocated

@@ -28,15 +28,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-try:
-    import polars as pl
-except Exception:
-    pl = None  # allow import when polars not installed (e.g., doc builds)
-
-
 from ingest.common.storage import write_parquet_any, write_text_sidecar
 
 from .registry import REGISTRY
+
+try:
+    import polars as pl
+except Exception:
+    pl = None  # type: ignore[assignment]  # Optional dependency - None when not installed (e.g., doc builds)
 
 
 def _utcnow_iso() -> str:

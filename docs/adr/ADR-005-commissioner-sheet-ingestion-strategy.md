@@ -28,10 +28,10 @@ The Commissioner Google Sheet (ID: `1jYAGKzPmaQnmvomLzARw9mL6-JbguwkFQWlOfN7VGNY
 Implement a **server-side copy strategy** that:
 
 1. Uses Google Sheets API's `copyTo()` method to duplicate worksheet tabs server-side
-1. Freezes formulas to values using batch operations
-1. Performs atomic rename/swap operations to maintain consistency
-1. Logs all operations to a Shared Drive for observability
-1. Implements intelligent skip logic based on source file modification times
+2. Freezes formulas to values using batch operations
+3. Performs atomic rename/swap operations to maintain consistency
+4. Logs all operations to a Shared Drive for observability
+5. Implements intelligent skip logic based on source file modification times
 
 ### Architecture Components
 
@@ -54,7 +54,7 @@ Downstream Pipeline (reads values successfully)
    - Destination sheet remains in regular Drive for compatibility
    - Separate log workbook tracks all ingestion activity
 
-1. **Copy Process** (per tab)
+2. **Copy Process** (per tab)
 
    - Server-side `copyTo()` - no data read required
    - Batch update to freeze formulas to values
@@ -62,14 +62,14 @@ Downstream Pipeline (reads values successfully)
    - Add developer metadata for lineage tracking
    - Warning-only protection on copied tabs
 
-1. **Skip Logic**
+3. **Skip Logic**
 
    - Track source file's `modifiedTime` via Drive API
    - Skip entire run if source unchanged since last success
    - Per-tab skip if already refreshed after source modification
    - Log all skips for observability
 
-1. **Error Handling**
+4. **Error Handling**
 
    - Fallback to destination sheet for logging if Shared Drive fails
    - Continue with unaffected tabs if individual tab fails
@@ -104,22 +104,22 @@ Downstream Pipeline (reads values successfully)
 
    - ❌ Failed due to timeouts on complex sheet
 
-1. **Manual Export Process**
+2. **Manual Export Process**
 
    - ❌ Not scalable for twice-daily updates
    - ❌ Introduces human error risk
 
-1. **Google Apps Script Proxy**
+3. **Google Apps Script Proxy**
 
    - ❌ Additional complexity with script deployment
    - ❌ Still subject to execution time limits
 
-1. **Browser Automation**
+4. **Browser Automation**
 
    - ❌ Fragile and resource-intensive
    - ❌ Difficult to run in CI/CD environment
 
-1. **Publish to Web + Scraping**
+5. **Publish to Web + Scraping**
 
    - ❌ Security concerns with public data
    - ❌ HTML parsing complexity

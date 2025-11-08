@@ -148,7 +148,7 @@ def validate_snapshot(
 @click.option('--sources', default='all', help='Comma-separated sources or "all"')
 @click.option('--fail-on-gaps', is_flag=True, help='Exit with code 1 if validation fails')
 @click.option('--output-format', type=click.Choice(['text', 'json']), default='text')
-@click.option('--registry', default='dbt/ff_analytics/seeds/snapshot_registry.csv',
+@click.option('--registry', default='dbt/ff_data_transform/seeds/snapshot_registry.csv',
               help='Path to snapshot registry')
 def main(sources, fail_on_gaps, output_format, registry):
     """Validate snapshot manifests against registry."""
@@ -273,5 +273,5 @@ if __name__ == '__main__':
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Design Decision #4 (lines 164-179)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 2 Validation (lines 128-142)
-- Registry: `dbt/ff_analytics/seeds/snapshot_registry.csv`
+- Registry: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 - Manifest spec: See existing `_meta.json` files in `data/raw/`

@@ -10,7 +10,7 @@ Fantasy Football Analytics data architecture project combining commissioner leag
 
 For detailed context on specific areas, see:
 
-- `dbt/ff_analytics/CLAUDE.md` - dbt modeling, testing, SQL style
+- `dbt/ff_data_transform/CLAUDE.md` - dbt modeling, testing, SQL style
 - `tools/CLAUDE.md` - CLI utilities and workflows
 - `scripts/CLAUDE.md` - Operational scripts by category
 - `src/ingest/CLAUDE.md` - Provider integration patterns
@@ -33,14 +33,14 @@ See `Makefile` for all targets: `make help`
 
 ## Key Components
 
-| Component | Location | Purpose |
-| --------------- | ------------------- | ----------------------------------------------------- |
-| **Ingest** | `src/ingest/` | Provider data loaders (see `src/ingest/CLAUDE.md`) |
-| **Tools** | `tools/` | CLI utilities (see `tools/CLAUDE.md`) |
-| **Scripts** | `scripts/` | Operational runners (see `scripts/CLAUDE.md`) |
-| **dbt Project** | `dbt/ff_analytics/` | Dimensional models (see `dbt/ff_analytics/CLAUDE.md`) |
-| **Config** | `config/` | Projections, scoring rules |
-| **Docs** | `docs/` | Specifications, architecture, guides |
+| Component       | Location                 | Purpose                                                    |
+| --------------- | ------------------------ | ---------------------------------------------------------- |
+| **Ingest**      | `src/ingest/`            | Provider data loaders (see `src/ingest/CLAUDE.md`)         |
+| **Tools**       | `tools/`                 | CLI utilities (see `tools/CLAUDE.md`)                      |
+| **Scripts**     | `scripts/`               | Operational runners (see `scripts/CLAUDE.md`)              |
+| **dbt Project** | `dbt/ff_data_transform/` | Dimensional models (see `dbt/ff_data_transform/CLAUDE.md`) |
+| **Config**      | `config/`                | Projections, scoring rules                                 |
+| **Docs**        | `docs/`                  | Specifications, architecture, guides                       |
 
 ## Data Layer Structure
 
@@ -52,13 +52,13 @@ See `Makefile` for all targets: `make help`
 
 ## Data Sources & Identity Resolution
 
-| Source | Purpose | Authority |
-| ------------------------- | -------------------------------- | -------------------- |
-| Commissioner Google Sheet | League roster/contracts/picks | Authoritative |
-| NFLverse/nflreadpy | NFL statistics | Primary stats source |
-| FF Analytics | Projections | Fantasy projections source |
-| Sleeper | League platform data | Integration |
-| KTC | Dynasty valuations (1QB default) | Market signals |
+| Source                    | Purpose                          | Authority                  |
+| ------------------------- | -------------------------------- | -------------------------- |
+| Commissioner Google Sheet | League roster/contracts/picks    | Authoritative              |
+| NFLverse/nflreadpy        | NFL statistics                   | Primary stats source       |
+| FF Analytics              | Projections                      | Fantasy projections source |
+| Sleeper                   | League platform data             | Integration                |
+| KTC                       | Dynasty valuations (1QB default) | Market signals             |
 
 **Entity Resolution**: Canonical player/team/franchise IDs via `dim_player_id_xref` crosswalk. See `docs/spec/kimball_modeling_guidance/kimbal_modeling.md` for patterns.
 

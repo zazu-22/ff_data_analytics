@@ -35,7 +35,7 @@ Implement **separate fact tables** for actuals and projections:
    - `stat_kind='actual'`, `measure_domain='real_world'`
    - No `horizon` column needed
 
-1. **`fact_player_projections`** - Weekly/season-long projections from FFanalytics
+2. **`fact_player_projections`** - Weekly/season-long projections from FFanalytics
 
    - Grain: one row per player per stat per horizon per asof_date
    - Required columns: `player_id`, `season`, `week` (nullable for season-long), `horizon`, `stat_name`, `asof_date`
@@ -177,9 +177,9 @@ fact_player_projections_season -- season projections
 
 ### Key Files
 
-- `dbt/ff_analytics/models/core/fact_player_stats.sql` - Per-game actuals
-- `dbt/ff_analytics/models/core/fact_player_projections.sql` - Weekly/season projections
-- `dbt/ff_analytics/models/marts/mart_projection_variance.sql` - Variance analysis
+- `dbt/ff_data_transform/models/core/fact_player_stats.sql` - Per-game actuals
+- `dbt/ff_data_transform/models/core/fact_player_projections.sql` - Weekly/season projections
+- `dbt/ff_data_transform/models/marts/mart_projection_variance.sql` - Variance analysis
 
 ## References
 

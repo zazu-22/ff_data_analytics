@@ -37,7 +37,7 @@ By switching to the macro-based approach with `baseline_plus_latest` strategy, w
 
 ## Implementation Notes
 
-**File**: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__player_stats.sql`
+**File**: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__player_stats.sql`
 
 **Change Pattern**:
 
@@ -91,7 +91,7 @@ This pattern:
 1. **Compilation test**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt compile --select stg_nflverse__player_stats
    ```
 
@@ -120,4 +120,4 @@ This pattern:
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Design Decision #1, Usage Example (lines 67-82)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 1 Staging Updates (lines 42-45)
-- Model file: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__player_stats.sql`
+- Model file: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__player_stats.sql`

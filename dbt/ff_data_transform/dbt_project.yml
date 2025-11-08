@@ -1,0 +1,49 @@
+name: ff_data_transform
+
+config-version: 2
+version: "1.0.0"
+
+require-dbt-version: [">=1.10.6", "<2.0.0"]
+
+profile: ff_duckdb
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+vars:
+  external_root: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}"
+
+  # Latest completed rookie draft season (v2 architecture)
+  # Update this ONCE when draft completes (no SQL changes needed)
+  # Historical: seasons with actual draft data (2012-2025)
+  # Prospective: seasons with only FAAD projections (2026+)
+  latest_completed_draft_season: 2025
+
+# Exclude archived seeds and models
+seeds:
+  ff_data_transform:
+    _archive:
+      +enabled: false
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  +materialized: table
+  # Model-specific configs are defined in individual model files
+  # Directory-level configs will be added as needed
+
+tests:
+  +severity: error
+  +tags: ["data_quality", "franchise_mapping"]
+
+# Required config for dbt_project_evaluator package
+dispatch:
+  - macro_namespace: dbt
+    search_order: ['dbt_project_evaluator', 'dbt']

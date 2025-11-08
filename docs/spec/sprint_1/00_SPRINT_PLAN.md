@@ -18,7 +18,7 @@ This sprint delivers a comprehensive analytics suite to support two critical use
    - Identify drop candidates if cap space needed
    - Calculate ROI for position upgrades
 
-1. **Trade Target Identification** (Ongoing value)
+2. **Trade Target Identification** (Ongoing value)
 
    - Identify undervalued players on other rosters (buy-low)
    - Identify overvalued players on my roster (sell-high)
@@ -68,8 +68,8 @@ ______________________________________________________________________
 
 - `src/ingest/sheets/commissioner_parser.py` - Add `parse_cap_space()` function
 - `data/raw/commissioner/cap_space/dt=YYYY-MM-DD/cap_space.parquet` (new)
-- `dbt/ff_analytics/models/staging/stg_sheets__cap_space.sql` (new)
-- `dbt/ff_analytics/models/core/mart_cap_situation.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.sql` (new)
+- `dbt/ff_data_transform/models/core/mart_cap_situation.sql` (new)
 
 **Technical Spec - `parse_cap_space()`:**
 
@@ -184,10 +184,10 @@ ______________________________________________________________________
 - `scripts/ingest/load_sleeper.py` (new - main loader)
 - `src/ingest/sleeper/client.py` (new - API client module)
 - `src/ingest/sleeper/registry.py` (new - dataset registry)
-- `dbt/ff_analytics/models/sources/src_sleeper.yml` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__rosters.sql` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__players.sql` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.sql` (new)
+- `dbt/ff_data_transform/models/sources/src_sleeper.yml` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__rosters.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__players.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql` (new)
 
 **Technical Spec - `src/ingest/sleeper/client.py`:**
 
@@ -485,8 +485,8 @@ ______________________________________________________________________
 
 **Files Created:**
 
-- `dbt/ff_analytics/models/marts/mart_fasa_targets.sql` (new)
-- `dbt/ff_analytics/models/marts/mart_my_roster_droppable.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_fasa_targets.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_my_roster_droppable.sql` (new)
 
 **Technical Spec - `mart_fasa_targets.sql`:**
 
@@ -969,11 +969,11 @@ plt.show()
 
 **RB Strategy (Position of Need):**
 
-| Tier | Player | Bid (1yr) | Bid (2yr) | Logic |
-|------|--------|-----------|-----------|-------|
-| RB1 | [Top RB from data] | $X | $Y | High value_score, snap share >60%, projected 12 PPG |
-| RB2 | [2nd RB] | $X-5 | $Y-5 | Fallback if RB1 bid fails |
-| RB3 | [3rd RB] | $X-10 | - | Value play if top 2 bids fail |
+| Tier | Player             | Bid (1yr) | Bid (2yr) | Logic                                               |
+| ---- | ------------------ | --------- | --------- | --------------------------------------------------- |
+| RB1  | [Top RB from data] | $X        | $Y        | High value_score, snap share >60%, projected 12 PPG |
+| RB2  | [2nd RB]           | $X-5      | $Y-5      | Fallback if RB1 bid fails                           |
+| RB3  | [3rd RB]           | $X-10     | -         | Value play if top 2 bids fail                       |
 
 **WR Strategy:**
 
@@ -986,8 +986,8 @@ plt.show()
 **Bidding Sequence:**
 
 1. Start with RB1 bid at $X/2yr
-1. If outbid, immediately move to RB2 at $Y/1yr
-1. Monitor WR bids; jump in if tier 1 WR goes below $Z
+2. If outbid, immediately move to RB2 at $Y/1yr
+3. Monitor WR bids; jump in if tier 1 WR goes below $Z
 
 ## 4. Drop Scenarios (if cap space needed)
 
@@ -1016,10 +1016,10 @@ display(drop_candidates[[
 
 **Scenario Analysis:**
 
-| If I drop | Cap Freed | Dead Cap | Net Benefit | Value Lost (PPG) | Worth It? |
-|-----------|-----------|----------|-------------|------------------|-----------|
-| Player A | $7 | $1 | $6 | 3.2 PPG | ✅ YES if RB1 projects >10 PPG |
-| Player B | $5 | $0 | $5 | 5.1 PPG | ⚠️ MARGINAL - depends on RB upside |
+| If I drop | Cap Freed | Dead Cap | Net Benefit | Value Lost (PPG) | Worth It?                          |
+| --------- | --------- | -------- | ----------- | ---------------- | ---------------------------------- |
+| Player A  | $7        | $1       | $6          | 3.2 PPG          | ✅ YES if RB1 projects >10 PPG     |
+| Player B  | $5        | $0       | $5          | 5.1 PPG          | ⚠️ MARGINAL - depends on RB upside |
 
 ## 5. Position Depth Analysis
 
@@ -1142,7 +1142,7 @@ ______________________________________________________________________
 **Files Created:**
 
 - `src/ff_analytics_utils/models/player_valuation.py` (new)
-- `dbt/ff_analytics/models/marts/mart_player_features_historical.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_player_features_historical.sql` (new)
 - `models/player_valuation_v1.pkl` (new - pickled model)
 
 **Technical Spec - `mart_player_features_historical.sql`:**
@@ -1471,8 +1471,8 @@ ______________________________________________________________________
 
 **Files Created:**
 
-- `dbt/ff_analytics/models/marts/mart_trade_targets.sql` (new)
-- `dbt/ff_analytics/models/marts/mart_my_trade_chips.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_trade_targets.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_my_trade_chips.sql` (new)
 
 **Technical Specs:** (Abbreviated - see full SQL in implementation phase)
 
@@ -1510,9 +1510,9 @@ ______________________________________________________________________
 **Structure:** (Abbreviated)
 
 1. Buy-Low Candidates (filter trade_signal='BUY_LOW')
-1. Sell-High Candidates (my overvalued players)
-1. Trade Partner Matrix (12x12 heatmap of needs alignment)
-1. Position Arbitrage (market inefficiencies)
+2. Sell-High Candidates (my overvalued players)
+3. Trade Partner Matrix (12x12 heatmap of needs alignment)
+4. Position Arbitrage (market inefficiencies)
 
 **Success Criteria:**
 
@@ -1731,7 +1731,7 @@ ______________________________________________________________________
 ### dbt Models
 
 _Note:_ All dbt models must be accompanied by a corresponding yml file. Use
-the `dbt/ff_analytics/models/` directory to store dbt models, and look to
+the `dbt/ff_data_transform/models/` directory to store dbt models, and look to
 good examples there for patterns and best practices.
 
 **Staging:**
@@ -1862,19 +1862,19 @@ ______________________________________________________________________
 ### Dependencies
 
 1. **Commissioner Sheet access** - Already working ✅
-1. **Sleeper API availability** - Public API, no auth required ✅
-1. **Historical nflverse data** - Available back to 2012 ✅
-1. **GitHub Actions** - Already set up for sheets ✅
+2. **Sleeper API availability** - Public API, no auth required ✅
+3. **Historical nflverse data** - Available back to 2012 ✅
+4. **GitHub Actions** - Already set up for sheets ✅
 
 ### Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| FASA notebook not ready by Wed | **HIGH** | Prioritize Phase 1 (24h buffer) |
-| Sleeper API rate limiting | Medium | Implement caching + backoff |
-| Model training takes longer | Low | Use simple linear regression first |
-| Backfill takes >8 hours | Low | Run in background, not blocking |
-| GitHub Actions fail | Low | Test locally first, fallback to manual |
+| Risk                           | Impact   | Mitigation                             |
+| ------------------------------ | -------- | -------------------------------------- |
+| FASA notebook not ready by Wed | **HIGH** | Prioritize Phase 1 (24h buffer)        |
+| Sleeper API rate limiting      | Medium   | Implement caching + backoff            |
+| Model training takes longer    | Low      | Use simple linear regression first     |
+| Backfill takes >8 hours        | Low      | Run in background, not blocking        |
+| GitHub Actions fail            | Low      | Test locally first, fallback to manual |
 
 ______________________________________________________________________
 

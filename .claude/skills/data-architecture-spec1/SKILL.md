@@ -175,7 +175,7 @@ group by 1, 2, 3
 **Every fact/dimension requires explicit grain:**
 
 ```yaml
-# dbt/ff_analytics/tests/singular/fact_player_stats_grain.yml
+# dbt/ff_data_transform/tests/singular/fact_player_stats_grain.yml
 tests:
   - name: fact_player_stats_grain_uniqueness
     description: "Validates grain: player_key + game_id + stat_name + provider + measure_domain + stat_kind"
@@ -219,7 +219,7 @@ This script generates SQL to check for duplicate grain keys. Run the generated S
 **Standard test template for staging models:**
 
 ```yaml
-# dbt/ff_analytics/models/staging/<provider>/schema.yml
+# dbt/ff_data_transform/models/staging/<provider>/schema.yml
 models:
   - name: stg_<provider>__<dataset>
     columns:
@@ -251,7 +251,7 @@ models:
           - not_null
 ```
 
-For complex grain tests, create a singular test in `dbt/ff_analytics/tests/singular/`.
+For complex grain tests, create a singular test in `dbt/ff_data_transform/tests/singular/`.
 
 ### 6. Kimball Dimensional Modeling
 
@@ -318,7 +318,7 @@ When adding a new data source (KTC, FFanalytics, etc.), follow this sequence:
 - [ ] **Map player IDs** (if applicable)
   - Crosswalk via `dim_player_id_xref` using appropriate provider ID column
   - Document mapping coverage percentage
-- [ ] **Create staging model** in `dbt/ff_analytics/models/staging/<provider>/`
+- [ ] **Create staging model** in `dbt/ff_data_transform/models/staging/<provider>/`
   - Follow naming: `stg_<provider>__<dataset>.sql`
   - Map to canonical IDs, normalize to long-form
   - Document NULL filtering and mapping coverage in header

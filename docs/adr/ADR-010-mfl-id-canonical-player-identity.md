@@ -295,7 +295,7 @@ make samples-nflverse DATASETS=ff_playerids
 # Generate dim_player_id_xref.csv from sample
 uv run python tools/generate_seed_from_sample.py \
   --source samples/nflverse/ff_playerids \
-  --output dbt/ff_analytics/seeds/dim_player_id_xref.csv \
+  --output dbt/ff_data_transform/seeds/dim_player_id_xref.csv \
   --primary-key mfl_id
 ```
 

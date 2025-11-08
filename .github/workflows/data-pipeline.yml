@@ -56,7 +56,7 @@ jobs:
           RAW_NFLVERSE_PLAYERS_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/players/dt=*/*.parquet"
           RAW_NFLVERSE_WEEKLY_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/weekly/dt=*/*.parquet"
         run: |
-          uv run dbt --project-dir dbt/ff_analytics run
+          uv run dbt --project-dir dbt/ff_data_transform run
 
       - name: dbt test
         env:
@@ -64,4 +64,4 @@ jobs:
           RAW_NFLVERSE_PLAYERS_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/players/dt=*/*.parquet"
           RAW_NFLVERSE_WEEKLY_GLOB: "${{ inputs.out_dir || 'data/raw/nflverse' }}/weekly/dt=*/*.parquet"
         run: |
-          uv run dbt --project-dir dbt/ff_analytics test
+          uv run dbt --project-dir dbt/ff_data_transform test

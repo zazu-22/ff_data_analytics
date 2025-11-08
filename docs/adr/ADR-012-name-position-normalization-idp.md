@@ -91,7 +91,7 @@ Input: "Patrick Mahomes"
 
 **Implementation:** New seed + R script position-aware matching
 
-**Seed:** `dbt/ff_analytics/seeds/dim_position_translation.csv`
+**Seed:** `dbt/ff_data_transform/seeds/dim_position_translation.csv`
 
 ```csv
 fantasy_position,nfl_position,position_type,match_priority,notes
@@ -293,12 +293,12 @@ def _normalize_position(txn_position: str) -> list[str]:
    - Added `name_last_first` column generation (lines 65-80)
    - Updated seed columns list (28 columns)
 
-3. **New seed:** `dbt/ff_analytics/seeds/dim_position_translation.csv`
+3. **New seed:** `dbt/ff_data_transform/seeds/dim_position_translation.csv`
 
    - 19 rows mapping fantasy positions to NFL positions
    - Includes match_priority for disambiguation
 
-4. **Seed documentation:** `dbt/ff_analytics/seeds/seeds.yml`
+4. **Seed documentation:** `dbt/ff_data_transform/seeds/seeds.yml`
 
    - Added dim_position_translation entry with column descriptions
    - Updated dim_player_id_xref description for new column
@@ -425,7 +425,7 @@ GROUP BY pos
 - [Phase 1 IDP Investigation](../findings/PHASE_1_IDP_DATA_FLOW_INVESTIGATION.md)
 - [ADR-011](./ADR-011-sequential-surrogate-player-id.md) (Player ID architecture)
 - [scripts/R/ffanalytics_run.R](../../scripts/R/ffanalytics_run.R) (Implementation)
-- [dim_position_translation.csv](../../dbt/ff_analytics/seeds/dim_position_translation.csv)
+- [dim_position_translation.csv](../../dbt/ff_data_transform/seeds/dim_position_translation.csv)
 - [generate_dim_player_id_xref.py](../../scripts/seeds/generate_dim_player_id_xref.py)
 
 ## Revision History

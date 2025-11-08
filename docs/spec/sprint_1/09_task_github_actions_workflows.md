@@ -12,9 +12,9 @@ Create 4 GitHub Actions workflows for automated data refreshes.
 ## Files to Create
 
 1. `.github/workflows/nflverse_weekly.yml` - Mon 8am EST
-1. `.github/workflows/projections_weekly.yml` - Tue 8am EST
-1. `.github/workflows/league_data_daily.yml` - Daily 6am/6pm EST
-1. `.github/workflows/backfill_historical.yml` - Manual trigger
+2. `.github/workflows/projections_weekly.yml` - Tue 8am EST
+3. `.github/workflows/league_data_daily.yml` - Daily 6am/6pm EST
+4. `.github/workflows/backfill_historical.yml` - Manual trigger
 
 **Full YAML:** See `00_SPRINT_PLAN.md` lines 1493-1579
 

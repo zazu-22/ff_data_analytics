@@ -53,7 +53,7 @@ def compute_weighted_points(
     # Map weights by data_src if present
     if "data_src" in frame.columns:
         frame = frame.with_columns(
-            provider_weight=pl.col("data_src").map_dict(weights.by_source, default=1.0)
+            provider_weight=pl.col("data_src").replace(weights.by_source, default=1.0)
         )
     else:
         frame = frame.with_columns(provider_weight=pl.lit(1.0))
@@ -90,12 +90,10 @@ def compute_weighted_points(
 
 
 def to_long_form(frame: pl.DataFrame, id_cols: list[str]) -> pl.DataFrame:
-    """Melt to long-form metrics keyed by given id columns."""
+    """Unpivot to long-form metrics keyed by given id columns."""
     # Keep id columns + single value column
     value_cols = [c for c in frame.columns if c not in set(id_cols)]
-    melted = frame.melt(
-        id_vars=id_cols, value_vars=value_cols, variable_name="metric", value_name="value"
-    )
+    melted = frame.unpivot(on=value_cols, index=id_cols, variable_name="metric", value_name="value")
     return melted
 
 

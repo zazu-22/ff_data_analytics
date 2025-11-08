@@ -87,7 +87,7 @@ def generate_dim_player_id_xref(raw_path, output_path):
     )
 
     # 4. Export to CSV seed
-    df_with_id.write_csv("dbt/ff_analytics/seeds/dim_player_id_xref.csv")
+    df_with_id.write_csv("dbt/ff_data_transform/seeds/dim_player_id_xref.csv")
 ```
 
 ## Rationale
@@ -201,8 +201,8 @@ The crosswalk still serves its purpose of cross-platform integration, with playe
 **Current State:** ✅ Fully implemented (October 2025)
 
 - Seed generation script: `scripts/seeds/generate_dim_player_id_xref.py`
-- Seed file: `dbt/ff_analytics/seeds/dim_player_id_xref.csv` (9,734 rows)
-- dim_player model: `dbt/ff_analytics/models/core/dim_player.sql`
+- Seed file: `dbt/ff_data_transform/seeds/dim_player_id_xref.csv` (9,734 rows)
+- dim_player model: `dbt/ff_data_transform/models/core/dim_player.sql`
 - All fact tables: Use player_id as foreign key
 - All staging models: Map provider IDs → player_id via crosswalk join
 
@@ -279,7 +279,7 @@ SELECT
 
 - [ADR-010](./ADR-010-mfl-id-canonical-player-identity.md) (Superseded decision)
 - [ADR-012](./ADR-012-name-position-normalization-idp.md) (Related: Name/position normalization)
-- [dim_player.sql](../../dbt/ff_analytics/models/core/dim_player.sql) (Implementation)
+- [dim_player.sql](../../dbt/ff_data_transform/models/core/dim_player.sql) (Implementation)
 - [generate_dim_player_id_xref.py](../../scripts/seeds/generate_dim_player_id_xref.py) (Seed generation)
 - [SPEC-1 v2.2](../spec/SPEC-1_v_2.2.md) (Identity resolution requirements)
 

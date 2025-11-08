@@ -8,12 +8,12 @@ ______________________________________________________________________
 
 ## 1. Mahomes Comp Pick Trail Validation ✅
 
-**Transaction 3824 (2025 FAAD - Chip drafts Mahomes from Piper)**
+**Transaction 3824** (2025 FAAD - Chip drafts Mahomes from Piper)
 
 - FAAD Comp: "2nd to Piper"
 - Result: Piper awarded a 2026 2nd round compensatory pick
 
-**Transaction 3957 (2025 Week 8 - Piper → Eric trade)**
+**Transaction 3957** (2025 Week 8 - Piper → Eric trade)
 
 - Asset: 2026 R2 P30 (the Mahomes comp pick)
 - From: Piper → To: Eric
@@ -42,7 +42,7 @@ ______________________________________________________________________
 | 2024      | 2025       | 4                | 2   | 2   | 0   | 0   | 0   |
 | 2025      | 2026       | 9                | 5   | 3   | 1   | 0   | 0   |
 
-**Total compensatory picks tracked: 56**
+**Total compensatory picks tracked:** 56
 
 ______________________________________________________________________
 
@@ -84,7 +84,7 @@ ______________________________________________________________________
 | 2025 | 4     | 12   | 0    | 12       | 12     | 0    | ✅ Perfect match                |
 | 2025 | 5     | 12   | 0    | 12       | 8      | -4   | 📝 Draft incomplete             |
 
-**Overall Accuracy: 92% exact match (23/25 round-years with 0 difference)**
+**Overall Accuracy:** 92% exact match (23/25 round-years with 0 difference)
 
 ______________________________________________________________________
 

@@ -187,7 +187,7 @@ def get_output_path(source, dataset, dt, samples=True):
 1. **Verify dbt doesn't read samples**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt compile --select stg_nflverse__player_stats
    # Check compiled SQL - should not reference _samples paths
    ```

@@ -109,7 +109,7 @@ def check_snapshot_currency(source: str, dataset: str, max_age_days: int) -> dic
     from datetime import datetime, timedelta
 
     # Read snapshot registry
-    registry_path = Path("dbt/ff_analytics/seeds/snapshot_registry.csv")
+    registry_path = Path("dbt/ff_data_transform/seeds/snapshot_registry.csv")
     registry = pl.read_csv(registry_path)
 
     # Find current snapshot for source/dataset
@@ -161,7 +161,7 @@ def detect_row_count_anomaly(
         Dictionary with anomaly detection results
     """
     # Read snapshot registry
-    registry_path = Path("dbt/ff_analytics/seeds/snapshot_registry.csv")
+    registry_path = Path("dbt/ff_data_transform/seeds/snapshot_registry.csv")
     registry = pl.read_csv(registry_path)
 
     # Get previous snapshot row count

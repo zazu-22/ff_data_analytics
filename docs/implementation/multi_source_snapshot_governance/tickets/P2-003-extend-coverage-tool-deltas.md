@@ -165,7 +165,7 @@ DELTA_THRESHOLDS = {
    import polars as pl
 
    # Load registry
-   registry = pl.read_csv('dbt/ff_analytics/seeds/snapshot_registry.csv')
+   registry = pl.read_csv('dbt/ff_data_transform/seeds/snapshot_registry.csv')
 
    # Calculate deltas for nflverse weekly
    deltas = calculate_deltas('nflverse', 'weekly', registry)

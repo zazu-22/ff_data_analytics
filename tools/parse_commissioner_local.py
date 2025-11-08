@@ -79,7 +79,7 @@ def _export_tabs(sheet_url: str, tabs: list[str], out_dir: Path, max_rows: int =
         csv_path = tdir / f"{tab}.csv"
         # de-duplicate header names minimally
         if cols:
-            seen = {}
+            seen: dict[str, int] = {}
             headers = []
             for c in cols:
                 if c in seen:

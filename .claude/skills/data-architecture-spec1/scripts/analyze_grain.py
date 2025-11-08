@@ -99,7 +99,7 @@ def analyze_grain(
             cmd,
             capture_output=True,
             text=True,
-            cwd="dbt/ff_analytics",
+            cwd="dbt/ff_data_transform",
             check=False,
         )
 
@@ -152,7 +152,7 @@ Examples:
 Note: This script generates SQL to validate grain uniqueness.
 For automated validation, use dbt singular tests instead:
 
-  # dbt/ff_analytics/tests/singular/fact_player_stats_grain.sql
+  # dbt/ff_data_transform/tests/singular/fact_player_stats_grain.sql
   select
     player_key, game_id, stat_name, provider, measure_domain, stat_kind,
     count(*) as row_count

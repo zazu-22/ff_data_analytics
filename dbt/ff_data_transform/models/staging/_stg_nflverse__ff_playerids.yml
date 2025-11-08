@@ -1,0 +1,169 @@
+version: 2
+
+models:
+  - name: stg_nflverse__ff_playerids
+    description: |
+      Staging model for nflverse ff_playerids with deduplication logic.
+
+      Replaces the seed-based approach (dim_player_id_xref.csv) and ensures the crosswalk
+      is always fresh from raw data. Performs comprehensive deduplication:
+
+      - Filters team placeholder entries (prevents join explosions)
+      - Resolves sleeper_id duplicates via Sleeper API birthdate matching (clears all but one even if birthdates match)
+      - Attempts fallback matching for missing/cleared sleeper_ids with position normalization (name+position required, birthdate optional)
+      - Resolves gsis_id/mfl_id duplicates by keeping newer players (higher draft_year)
+      - Assigns deterministic sequential player_id (1-N)
+      - Tracks all corrections in xref_correction_status
+
+      **Deduplication Philosophy**: All player records are preserved. Only duplicate provider
+      IDs are cleared (using sentinel values: -1 for numeric IDs, 'DUPLICATE_CLEARED' for VARCHAR).
+      This assumes duplicate IDs are data quality issues from the provider, not duplicate players.
+
+      **Fallback Matching**: When sleeper_id duplicates are cleared due to birthdate mismatches,
+      or when players have NULL sleeper_id in raw data, the model attempts to find the correct
+      sleeper_id by matching on name, position (with normalization), and optionally birthdate
+      from the Sleeper players database. Name and position matches are required; birthdate is
+      optional (20-point bonus). Position normalization uses canonical families (Safety: S↔SS/FS/DB,
+      Kicker: PK↔K, Punter: PN↔P, OffensiveLine: OL↔G/OT/C/OG/T, DefensiveBack: DB↔CB/SS/FS/S,
+      DefensiveLine: DL↔DE/DT/NT, Linebacker: LB↔OLB/ILB) for bidirectional matching. This recovers sleeper_ids
+      that were incorrectly mapped or missing, improving crosswalk coverage. Strict uniqueness
+      is maintained - if multiple players match to the same sleeper_id, only the best match is kept.
+
+      **Grain**: One row per player (after filtering and deduplication)
+      **Source**: nflverse ff_playerids dataset (~9,734 valid players after filtering)
+      **Used by**: dim_player_id_xref (core model), all staging models for player ID mapping
+
+    config:
+      materialized: table
+
+    columns:
+      - name: player_id
+        description: |
+          Canonical, sequential surrogate key (1-N) assigned deterministically.
+          Ordering: mfl_id, gsis_id, name (ensures stability across runs)
+        data_tests:
+          - not_null
+          - unique
+
+      - name: mfl_id
+        description: |
+          MyFantasyLeague player ID (external ID from nflverse).
+          Sentinel value -1 indicates ID was cleared due to duplicate (player record preserved).
+        data_tests:
+          - not_null
+
+      - name: gsis_id
+        description: |
+          NFL GSIS ID.
+          Sentinel value 'DUPLICATE_CLEARED' indicates ID was cleared due to duplicate (player record preserved).
+
+      - name: sleeper_id
+        description: |
+          Sleeper platform player ID.
+          Sentinel value -1 indicates ID was cleared due to duplicate (player record preserved).
+          May be corrected via fallback matching if valid match found in Sleeper players database.
+          NULL indicates player not found in Sleeper database or unable to match.
+
+      - name: espn_id
+        description: ESPN player ID
+
+      - name: yahoo_id
+        description: Yahoo Fantasy player ID
+
+      - name: pfr_id
+        description: Pro Football Reference player ID
+
+      - name: fantasypros_id
+        description: FantasyPros player ID
+
+      - name: pff_id
+        description: Pro Football Focus player ID
+
+      - name: cbs_id
+        description: CBS Sports player ID
+
+      - name: ktc_id
+        description: KeepTradeCut player ID
+
+      - name: sportradar_id
+        description: Sportradar player ID
+
+      - name: fleaflicker_id
+        description: Fleaflicker player ID
+
+      - name: rotowire_id
+        description: Rotowire player ID
+
+      - name: rotoworld_id
+        description: Rotoworld player ID
+
+      - name: stats_id
+        description: Stats.com player ID
+
+      - name: stats_global_id
+        description: Stats Global player ID
+
+      - name: fantasy_data_id
+        description: FantasyData player ID
+
+      - name: swish_id
+        description: Swish Analytics player ID
+
+      - name: cfbref_id
+        description: College Football Reference player ID
+
+      - name: nfl_id
+        description: NFL.com player ID
+
+      - name: name
+        description: Player name in "First Last" format
+        data_tests:
+          - not_null
+
+      - name: merge_name
+        description: Normalized name for fuzzy matching (lowercased, normalized)
+
+      - name: name_last_first
+        description: |
+          Player name in "Last, First" format for FantasySharks projection matching.
+          Generated from name field (e.g., "Patrick Mahomes" → "Mahomes, Patrick")
+
+      - name: position
+        description: Player position (QB, RB, WR, TE, DE, DT, CB, S, etc.)
+
+      - name: team
+        description: Current NFL team abbreviation
+
+      - name: birthdate
+        description: Player birthdate (used for duplicate resolution)
+
+      - name: draft_year
+        description: NFL draft year (used for duplicate resolution, null for undrafted)
+
+      - name: xref_correction_status
+        description: |
+          Correction status tracking for duplicate resolution and fallback matching.
+
+          Values:
+          - 'original': No corrections applied
+          - 'cleared_sleeper_duplicate': sleeper_id cleared due to birthdate mismatch
+          - 'added_sleeper_id': sleeper_id added via fallback matching (was NULL in raw data)
+          - 'corrected_sleeper_id': sleeper_id corrected via fallback matching (was cleared duplicate)
+          - 'kept_sleeper_verified': sleeper_id kept after birthdate verification
+          - 'cleared_gsis_duplicate': gsis_id cleared (older player in duplicate set)
+          - 'kept_gsis_newer': gsis_id kept (newer player in duplicate set)
+          - 'cleared_mfl_duplicate': mfl_id cleared (older player in duplicate set)
+          - 'kept_mfl_newer': mfl_id kept (newer player in duplicate set)
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - original
+                  - cleared_sleeper_duplicate
+                  - added_sleeper_id
+                  - corrected_sleeper_id
+                  - kept_sleeper_verified
+                  - cleared_gsis_duplicate
+                  - kept_gsis_newer
+                  - cleared_mfl_duplicate
+                  - kept_mfl_newer

@@ -19,7 +19,7 @@ exclude: |
 repos:
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.4
+    rev: v0.14.4
     hooks:
       - id: ruff
         name: ruff (Python src/scripts/tools/tests)
@@ -32,7 +32,7 @@ repos:
 
   # Notebooks: Use nbQA to apply ruff to notebooks
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.8.5
+    rev: 1.9.1
     hooks:
       - id: nbqa-ruff
         name: nbqa-ruff (Jupyter notebooks)
@@ -47,7 +47,7 @@ repos:
 
   # Notebooks: Strip outputs before commit (prevent bloat)
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
+    rev: 0.8.1
     hooks:
       - id: nbstripout
         name: nbstripout (strip notebook outputs)
@@ -56,7 +56,7 @@ repos:
 
   # Type checking with mypy (standard/mature)
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+    rev: v1.18.2
     hooks:
       - id: mypy
         name: mypy (type checking)
@@ -81,7 +81,7 @@ repos:
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
         name: yamllint (YAML files)
@@ -97,7 +97,7 @@ repos:
 
   # General file cleanup
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: pretty-format-json
         name: pretty-format-json
@@ -119,77 +119,36 @@ repos:
     hooks:
       - id: sqlfmt
         name: sqlfmt (SQL formatting)
-        files: ^dbt/ff_analytics/models/.*\.sql$
-        exclude: ^dbt/ff_analytics/tests/.*\.sql$
+        files: ^dbt/ff_data_transform/models/.*\.sql$
+        exclude: ^dbt/ff_data_transform/tests/.*\.sql$
         args: [--dialect, polyglot]  # Polyglot mode supports DuckDB
 
   # SQL linting (selective - excludes DuckDB-specific syntax files)
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 3.1.1
+    rev: 3.5.0
     hooks:
       # Lint on every commit (fast check)
       # Excludes staging models and files with DuckDB-specific syntax
       - id: sqlfluff-lint
         name: sqlfluff-lint (dbt SQL - selective)
-        files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
+        entry: bash -c 'DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" EXTERNAL_ROOT="$(pwd)/data/raw" sqlfluff lint "$@"' --
+        language: system
+        files: ^dbt/ff_data_transform/models/.*\.(sql|sql\.j2)$
         exclude: |
           (?x)^(
-            dbt/ff_analytics/tests/.*\.sql$|
-            dbt/ff_analytics/models/staging/stg_.*\.sql$|
-            dbt/ff_analytics/models/core/dim_player_contract_history\.sql$|
-            dbt/ff_analytics/models/core/fact_league_transactions\.sql$|
-            dbt/ff_analytics/models/core/intermediate/int_pick_.*\.sql$|
-            dbt/ff_analytics/models/marts/mart_contract_snapshot_current\.sql$|
-            dbt/ff_analytics/models/marts/mart_real_world_actuals_weekly\.sql$
+            dbt/ff_data_transform/tests/.*\.sql$|
+            dbt/ff_data_transform/models/staging/stg_.*\.sql$|
+            dbt/ff_data_transform/models/core/dim_player_contract_history\.sql$|
+            dbt/ff_data_transform/models/core/fact_league_transactions\.sql$|
+            dbt/ff_data_transform/models/core/intermediate/int_pick_.*\.sql$|
+            dbt/ff_data_transform/models/marts/mart_contract_snapshot_current\.sql$|
+            dbt/ff_data_transform/models/marts/mart_real_world_actuals_weekly\.sql$
           )$
-        additional_dependencies:
-          [
-            "dbt-core>=1.8.0",
-            "dbt-duckdb>=1.8.0",
-            "sqlfluff-templater-dbt>=3.1.1",
-          ]
         args: [--config, pyproject.toml]
-
-      # Auto-fix on commit (DISABLED - causing file modification issues)
-      # Re-enable only after resolving why sqlfluff-fix modifies files after staging
-      # Use `make sqlfix` manually instead for now
-      # - id: sqlfluff-fix
-      #   name: sqlfluff-fix (dbt SQL auto-fix)
-      #   files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
-      #   additional_dependencies:
-      #     [
-      #       "dbt-core>=1.8.0",
-      #       "dbt-duckdb>=1.8.0",
-      #       "sqlfluff-templater-dbt>=3.1.1",
-      #     ]
-      #   args: [--config, pyproject.toml, --ignore, parsing]
-
-  # dbt compile (syntax validation using actual DuckDB parser)
-  - repo: local
-    hooks:
-      - id: dbt-compile-check
-        name: dbt-compile-check (SQL syntax validation)
-        entry: bash -c 'cd dbt/ff_analytics && uv run dbt deps --project-dir . --profiles-dir . && uv run dbt compile --project-dir . --profiles-dir .'
-        language: system
-        files: ^dbt/ff_analytics/models/.*\.sql$
-        pass_filenames: false
-        always_run: true  # Run on any SQL file change to validate all models
-
-  # dbt-opiner (dbt best practices linting)
-  - repo: local
-    hooks:
-      - id: dbt-opiner-lint
-        name: dbt-opiner-lint (dbt best practices)
-        entry: bash -c 'cd dbt/ff_analytics && uv run dbt deps --project-dir . --profiles-dir . && uv run dbt compile --project-dir . --profiles-dir . && cd ../.. && uv run dbt-opiner lint --all-files'
-        language: system
-        files: ^dbt/ff_analytics/.*\.(sql|yml|yaml)$
-        exclude: ^dbt/ff_analytics/tests/.*\.sql$  # Exclude test files (not in dbt manifest as nodes)
-        pass_filenames: false
-        always_run: true  # Run on any dbt file change to check all files
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.3
+    rev: v1.7.8
     hooks:
       - id: actionlint
         name: actionlint (GitHub Actions)

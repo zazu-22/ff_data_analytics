@@ -31,16 +31,16 @@ import duckdb
 
 def _sanitize_path_for_sql(parquet_path: Path) -> str:
     """Sanitize a file path for safe use in SQL queries.
-    
+
     Args:
         parquet_path: Path to sanitize
-    
+
     Returns:
         Escaped string path safe for SQL
-    
+
     Raises:
         ValueError: If path is invalid or doesn't exist
-    
+
     """
     # Resolve to absolute path and validate
     resolved = parquet_path.resolve()
@@ -48,12 +48,12 @@ def _sanitize_path_for_sql(parquet_path: Path) -> str:
         raise ValueError(f"Path does not exist: {parquet_path}")
     if not resolved.is_file():
         raise ValueError(f"Path is not a file: {parquet_path}")
-    
+
     # Convert to string and escape single quotes (SQL standard)
     path_str = str(resolved)
     # Escape single quotes by doubling them
     escaped = path_str.replace("'", "''")
-    
+
     return escaped
 
 
@@ -90,7 +90,7 @@ def _analyze_season_coverage(
     if "week" in columns:
         # Path is sanitized and validated by _sanitize_path_for_sql
         season_info = conn.execute(f"""
-            SELECT 
+            SELECT
                 MIN(season) as min_season,
                 MAX(season) as max_season,
                 COUNT(DISTINCT season) as distinct_seasons,
@@ -101,7 +101,7 @@ def _analyze_season_coverage(
     else:
         # Path is sanitized and validated by _sanitize_path_for_sql
         season_info = conn.execute(f"""
-            SELECT 
+            SELECT
                 MIN(season) as min_season,
                 MAX(season) as max_season,
                 COUNT(DISTINCT season) as distinct_seasons,
@@ -132,7 +132,7 @@ def _analyze_week_coverage(
     safe_path = _sanitize_path_for_sql(parquet_path)
     # Path is sanitized and validated by _sanitize_path_for_sql
     week_info = conn.execute(f"""
-        SELECT 
+        SELECT
             MIN(week) as min_week,
             MAX(week) as max_week
         FROM read_parquet('{safe_path}')
@@ -167,7 +167,7 @@ def _count_distinct_entities(
             # Path is sanitized and validated by _sanitize_path_for_sql
             # Column name is from schema introspection, not user input
             result = conn.execute(f"""
-                SELECT COUNT(DISTINCT {col_name}) 
+                SELECT COUNT(DISTINCT {col_name})
                 FROM read_parquet('{safe_path}')
                 WHERE {col_name} IS NOT NULL
             """).fetchone()  # noqa: S608
@@ -187,7 +187,7 @@ def _get_season_week_breakdown(
     safe_path = _sanitize_path_for_sql(parquet_path)
     # Path is sanitized and validated by _sanitize_path_for_sql
     season_week_breakdown = conn.execute(f"""
-        SELECT 
+        SELECT
             season,
             COUNT(DISTINCT week) as weeks,
             MIN(week) as min_week,
@@ -334,9 +334,7 @@ def _print_snapshot_metrics(metrics: dict[str, Any], dt: str, parquet_path: Path
     _print_season_week_breakdown(metrics)
 
 
-def _analyze_dataset(
-    dataset: str, files: list[tuple[str, Path]]
-) -> dict[str, dict[str, Any]]:
+def _analyze_dataset(dataset: str, files: list[tuple[str, Path]]) -> dict[str, dict[str, Any]]:
     """Analyze all snapshots for a single dataset.
 
     Args:
@@ -590,11 +588,7 @@ def _generate_snapshot_details(metrics: dict[str, Any], dataset: str, dt: str) -
         lines.extend([f"**ERROR**: {metrics['error']}", ""])
         return lines
 
-    file_path = (
-        Path(metrics.get("file_path", "unknown")).name
-        if "file_path" in metrics
-        else "N/A"
-    )
+    file_path = Path(metrics.get("file_path", "unknown")).name if "file_path" in metrics else "N/A"
     lines.append(f"- **File**: `{file_path}`")
     lines.append(f"- **Rows**: {metrics.get('row_count', 0):,}")
     lines.append("")

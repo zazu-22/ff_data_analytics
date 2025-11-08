@@ -44,13 +44,13 @@ ______________________________________________________________________
    - `GET /league/{league_id}/rosters`
    - Returns: Array of rosters with `roster_id`, `owner_id`, `players[]`, `starters[]`
 
-1. **Get Players (ALL NFL):**
+2. **Get Players (ALL NFL):**
 
    - `GET /players/nfl`
    - Returns: Dict keyed by sleeper_player_id (~5MB JSON)
    - Contains: full_name, position, team, age, status, injury_status
 
-1. **Get League Users:**
+3. **Get League Users:**
 
    - `GET /league/{league_id}/users`
    - Returns: Array of users with `user_id`, `username`, `display_name`
@@ -401,7 +401,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### 4. `dbt/ff_analytics/models/sources/src_sleeper.yml`
+### 4. `dbt/ff_data_transform/models/sources/src_sleeper.yml`
 
 ```yaml
 version: 2
@@ -514,7 +514,7 @@ sources:
             description: Display name
 ```
 
-### 5. `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.sql`
+### 5. `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql`
 
 ```sql
 -- Grain: player_key (one row per FA player)
@@ -574,7 +574,7 @@ WHERE
     fa.position IN ('QB', 'RB', 'WR', 'TE', 'K', 'DL', 'LB', 'DB', 'DEF')
 ```
 
-### 6. `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.yml`
+### 6. `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.yml`
 
 ```yaml
 version: 2
@@ -653,21 +653,21 @@ ______________________________________________________________________
    - Create `src/ingest/sleeper/__init__.py`
    - Create `src/ingest/sleeper/client.py` with `SleeperClient` class
 
-1. **Create production loader:**
+2. **Create production loader:**
 
    - Create `scripts/ingest/load_sleeper.py`
    - Test locally: `python scripts/ingest/load_sleeper.py --league-id $SLEEPER_LEAGUE_ID --out data/raw/sleeper`
 
-1. **Create dbt source definition:**
+3. **Create dbt source definition:**
 
-   - Create `dbt/ff_analytics/models/sources/src_sleeper.yml`
+   - Create `dbt/ff_data_transform/models/sources/src_sleeper.yml`
 
-1. **Create staging model:**
+4. **Create staging model:**
 
-   - Create `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.sql`
-   - Create `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.yml` with tests
+   - Create `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql`
+   - Create `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.yml` with tests
 
-1. **Run and validate:**
+5. **Run and validate:**
 
    ```bash
    # Load data
@@ -693,19 +693,19 @@ ______________________________________________________________________
    - ✅ Rosters: 12 teams
    - ✅ Players: ~2000+ NFL players
 
-1. **dbt model:**
+2. **dbt model:**
 
    - ✅ `stg_sleeper__fa_pool` builds successfully
    - ✅ All tests pass (9 column tests + 1 unique test)
    - ✅ Mapping rate >95% (sleeper_id → mfl_id)
 
-1. **Data validation:**
+3. **Data validation:**
 
    - ✅ Jason's rostered players NOT in FA pool
    - ✅ Known free agents (e.g., recently cut players) ARE in FA pool
    - ✅ Position distribution reasonable (not all QBs, etc.)
 
-1. **Code quality:**
+4. **Code quality:**
 
    - ✅ `make lint` passes
    - ✅ `make typecheck` passes

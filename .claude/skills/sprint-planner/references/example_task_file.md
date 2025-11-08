@@ -26,7 +26,8 @@ ______________________________________________________________________
 - Commissioner Sheet roster tabs exist (parsed in `.tmp_commissioner_extract/`)
 - Row 3 of each GM's tab contains cap space data: Available, Dead, Traded
 - Example from Jason's tab:
-  ```
+
+  ```text
   Available Cap Space,,$80,$80,$158,$183,$250
   Dead Cap Space,,$26,$13,$6,$0,$0
   Traded Cap Space,$7,$0,$0,$0,$0
@@ -77,7 +78,7 @@ def parse_cap_space(roster_df: pl.DataFrame, gm_name: str) -> pl.DataFrame:
 - Write to `data/raw/commissioner/cap_space/dt={today}/cap_space.parquet`
 - Include in manifest
 
-### 2. Create: `dbt/ff_analytics/models/staging/stg_sheets__cap_space.sql`
+### 2. Create: `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.sql`
 
 ```sql
 -- Grain: franchise_id, season
@@ -116,7 +117,7 @@ INNER JOIN franchise_xref fx
     AND cr.season BETWEEN fx.season_start AND fx.season_end
 ```
 
-### 3. Create: `dbt/ff_analytics/models/staging/stg_sheets__cap_space.yml`
+### 3. Create: `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.yml`
 
 ```yaml
 version: 2
@@ -175,7 +176,7 @@ models:
             - season
 ```
 
-### 4. Create: `dbt/ff_analytics/models/core/mart_cap_situation.sql`
+### 4. Create: `dbt/ff_data_transform/models/core/mart_cap_situation.sql`
 
 ```sql
 -- Grain: franchise_id, season
@@ -252,7 +253,7 @@ LEFT JOIN dead_cap_calculated dc USING (franchise_id, season)
 ORDER BY franchise_name, season
 ```
 
-### 5. Create: `dbt/ff_analytics/models/core/mart_cap_situation.yml`
+### 5. Create: `dbt/ff_data_transform/models/core/mart_cap_situation.yml`
 
 ```yaml
 version: 2
@@ -302,7 +303,7 @@ models:
             - season
 ```
 
-### 6. Update: `dbt/ff_analytics/models/sources/src_sheets.yml`
+### 6. Update: `dbt/ff_data_transform/models/sources/src_sheets.yml`
 
 Add new source table:
 
@@ -437,7 +438,7 @@ ______________________________________________________________________
 
 ## Commit Message
 
-```
+```text
 feat: add cap space parsing and mart for FASA bid planning
 
 Parse cap space data from Commissioner Sheet roster tabs (row 3) to

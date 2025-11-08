@@ -74,7 +74,7 @@ Snapshots progress through four states:
 3. **historical** — Retained for continuity (e.g., baseline snapshots)
 4. **archived** — Kept for audit but not used in models
 
-See: `dbt/ff_analytics/seeds/snapshot_registry.csv`
+See: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 
 ## Legacy Sample Data
 
@@ -93,7 +93,7 @@ Legacy sample artifacts from fully integrated sources have been archived:
 
 ```bash
 # Query registry
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 uv run dbt seed --select snapshot_registry
 duckdb target/dev.duckdb "SELECT * FROM snapshot_registry WHERE status='current' ORDER BY source, dataset"
 ````
@@ -138,8 +138,8 @@ export RAW_NFLVERSE_SNAP_COUNTS_GLOB="data/raw/nflverse/snap_counts/dt=*/*.parqu
 
 ## References
 
-- Snapshot registry: `dbt/ff_analytics/seeds/snapshot_registry.csv`
-- Selection macro: `dbt/ff_analytics/macros/snapshot_selection.sql`
+- Snapshot registry: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
+- Selection macro: `dbt/ff_data_transform/macros/snapshot_selection.sql`
 - Validation tool: `tools/validate_manifests.py`
 - Coverage analysis: `tools/analyze_snapshot_coverage.py`
 

@@ -176,7 +176,7 @@ uv run python src/ingest/sleeper/fetch.py
 1. Check workflow run logs in GitHub UI
 2. Verify credentials still valid (service account keys expire)
 3. Run load manually to reproduce issue
-4. Check freshness tests: `cd dbt/ff_analytics && uv run dbt source freshness`
+4. Check freshness tests: `cd dbt/ff_data_transform && uv run dbt source freshness`
 
 ### Manual Load Not Working
 

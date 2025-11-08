@@ -121,7 +121,7 @@ def check_player_id_mapping(path: Path, id_field: str = "gsis_id") -> tuple[bool
     stats = {}
 
     # Load crosswalk
-    crosswalk_path = Path("dbt/ff_analytics/seeds/dim_player_id_xref.csv")
+    crosswalk_path = Path("dbt/ff_data_transform/seeds/dim_player_id_xref.csv")
     if not crosswalk_path.exists():
         errors.append(f"Crosswalk not found: {crosswalk_path}")
         return False, errors, stats

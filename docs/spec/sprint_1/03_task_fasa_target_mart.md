@@ -33,7 +33,7 @@ ______________________________________________________________________
 
 ## Files to Create
 
-### 1. `dbt/ff_analytics/models/marts/mart_fasa_targets.sql`
+### 1. `dbt/ff_data_transform/models/marts/mart_fasa_targets.sql`
 
 **Full SQL:** See `00_SPRINT_PLAN.md` lines 476-687 for complete implementation
 
@@ -49,7 +49,7 @@ ______________________________________________________________________
 
 **Grain:** `player_key, asof_date, week`
 
-### 2. `dbt/ff_analytics/models/marts/mart_fasa_targets.yml`
+### 2. `dbt/ff_data_transform/models/marts/mart_fasa_targets.yml`
 
 Include tests:
 
@@ -59,7 +59,7 @@ Include tests:
 - Accepted values: `bid_confidence IN ('HIGH', 'MEDIUM', 'LOW')`
 - Range: `value_score BETWEEN 0 AND 100`
 
-### 3. `dbt/ff_analytics/models/marts/mart_my_roster_droppable.sql`
+### 3. `dbt/ff_data_transform/models/marts/mart_my_roster_droppable.sql`
 
 **Full SQL:** See `00_SPRINT_PLAN.md` lines 689-834 for complete implementation
 
@@ -73,7 +73,7 @@ Include tests:
 
 **Grain:** `player_key, asof_date`
 
-### 4. `dbt/ff_analytics/models/marts/mart_my_roster_droppable.yml`
+### 4. `dbt/ff_data_transform/models/marts/mart_my_roster_droppable.yml`
 
 Include tests:
 
@@ -87,10 +87,10 @@ ______________________________________________________________________
 ## Implementation Steps
 
 1. Copy SQL from sprint plan (`00_SPRINT_PLAN.md`)
-1. Create `mart_fasa_targets.sql` and `.yml`
-1. Create `mart_my_roster_droppable.sql` and `.yml`
-1. Run dbt: `make dbt-run --select mart_fasa_targets mart_my_roster_droppable`
-1. Run tests: `make dbt-test --select mart_fasa_targets mart_my_roster_droppable`
+2. Create `mart_fasa_targets.sql` and `.yml`
+3. Create `mart_my_roster_droppable.sql` and `.yml`
+4. Run dbt: `make dbt-run --select mart_fasa_targets mart_my_roster_droppable`
+5. Run tests: `make dbt-test --select mart_fasa_targets mart_my_roster_droppable`
 
 ______________________________________________________________________
 

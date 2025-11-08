@@ -166,12 +166,12 @@ option_list <- list(
   ),
   make_option(c("--player_xref"),
     type = "character",
-    default = "dbt/ff_analytics/seeds/dim_player_id_xref.csv",
+    default = "dbt/ff_data_transform/seeds/dim_player_id_xref.csv",
     help = "Path to player ID crosswalk seed"
   ),
   make_option(c("--position_xref"),
     type = "character",
-    default = "dbt/ff_analytics/seeds/dim_position_translation.csv",
+    default = "dbt/ff_data_transform/seeds/dim_position_translation.csv",
     help = "Path to position translation seed"
   )
 )

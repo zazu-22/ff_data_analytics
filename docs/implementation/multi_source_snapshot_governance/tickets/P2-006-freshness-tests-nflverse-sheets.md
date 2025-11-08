@@ -24,21 +24,21 @@ These sources are grouped together because they share similar operational monito
 
 ### Add nflverse Freshness Tests
 
-- [ ] Update `dbt/ff_analytics/models/sources/src_nflverse.yml`
+- [ ] Update `dbt/ff_data_transform/models/sources/src_nflverse.yml`
 - [ ] Set `loaded_at_field: dt` at source level
 - [ ] Configure freshness: warn_after 2 days, error_after 7 days
 - [ ] Test with `dbt source freshness --select source:nflverse`
 
 ### Add sheets Freshness Tests
 
-- [ ] Create or update `dbt/ff_analytics/models/sources/src_sheets.yml`
+- [ ] Create or update `dbt/ff_data_transform/models/sources/src_sheets.yml`
 - [ ] Set `loaded_at_field: dt` at source level
 - [ ] Configure freshness: warn_after 1 day, error_after 7 days
 - [ ] Test with `dbt source freshness --select source:sheets`
 
 ### Add sleeper Freshness Tests
 
-- [ ] Create or update `dbt/ff_analytics/models/sources/src_sleeper.yml`
+- [ ] Create or update `dbt/ff_data_transform/models/sources/src_sleeper.yml`
 - [ ] Set `loaded_at_field: dt` at source level
 - [ ] Configure freshness: warn_after 1 day, error_after 7 days
 - [ ] Test with `dbt source freshness --select source:sleeper`
@@ -68,7 +68,7 @@ These sources are grouped together because they share similar operational monito
 | **sleeper**  | 1 day      | 7 days      | Daily roster changes and league activity           |
 | **nflverse** | 2 days     | 7 days      | Weekly in-season, updates within 2 days post-games |
 
-**File: `dbt/ff_analytics/models/sources/src_nflverse.yml`**
+**File: `dbt/ff_data_transform/models/sources/src_nflverse.yml`**
 
 ```yaml
 version: 2
@@ -109,7 +109,7 @@ sources:
         identifier: "teams/dt=*/*.parquet"
 ```
 
-**File: `dbt/ff_analytics/models/sources/src_sheets.yml`** (create if doesn't exist)
+**File: `dbt/ff_data_transform/models/sources/src_sheets.yml`** (create if doesn't exist)
 
 ```yaml
 version: 2
@@ -142,7 +142,7 @@ sources:
           external_location: "data/raw/sheets/picks/dt=*/*.parquet"
 ```
 
-**File: `dbt/ff_analytics/models/sources/src_sleeper.yml`** (create if doesn't exist)
+**File: `dbt/ff_data_transform/models/sources/src_sleeper.yml`** (create if doesn't exist)
 
 ```yaml
 version: 2
@@ -174,7 +174,7 @@ sources:
 1. **Test nflverse freshness**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt source freshness --select source:nflverse
    ```
 

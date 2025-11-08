@@ -24,12 +24,12 @@ if TYPE_CHECKING:
 try:
     import polars as pl
 except ImportError:
-    pl = None
+    pl = None  # type: ignore[assignment]  # Optional dependency - None when not installed
 
 try:
     import duckdb
 except ImportError:
-    duckdb = None
+    duckdb = None  # type: ignore[assignment]  # Optional dependency - None when not installed
 
 # ============================================================================
 # Constants - Define once, use everywhere
@@ -46,7 +46,7 @@ DEFAULT_POSITIONS = "QB,RB,WR,TE,K,DST,DL,LB,DB"
 # Default file paths (relative to repo root)
 DEFAULT_OUT_DIR = "data/raw/ffanalytics"
 DEFAULT_WEIGHTS_CSV = "config/projections/ffanalytics_projection_weights_mapped.csv"
-DEFAULT_PLAYER_XREF = "dbt/ff_analytics/seeds/dim_player_id_xref.csv"
+DEFAULT_PLAYER_XREF = "dbt/ff_data_transform/seeds/dim_player_id_xref.csv"
 
 # Fantasy season constants
 FANTASY_SEASON_END_WEEK = 17  # Week 18 excluded (teams rest starters)
@@ -490,7 +490,7 @@ def _get_current_week(season: int, duckdb_path: str | None = None) -> int:
 
     Args:
         season: NFL season year
-        duckdb_path: Path to DuckDB database (default: dbt/ff_analytics/target/dev.duckdb)
+        duckdb_path: Path to DuckDB database (default: dbt/ff_data_transform/target/dev.duckdb)
 
     Returns:
         int: Current fantasy week number (1-17)
@@ -503,7 +503,7 @@ def _get_current_week(season: int, duckdb_path: str | None = None) -> int:
     if duckdb_path is None:
         # Default to dbt project database
         repo_root = _get_repo_root()
-        duckdb_path = str(repo_root / "dbt" / "ff_analytics" / "target" / "dev.duckdb")
+        duckdb_path = str(repo_root / "dbt" / "ff_data_transform" / "target" / "dev.duckdb")
 
     try:
         conn = duckdb.connect(duckdb_path, read_only=True)

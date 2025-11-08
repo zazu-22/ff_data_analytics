@@ -20,6 +20,7 @@ ______________________________________________________________________
 **Solution:** Mine `fact_league_transactions` for FA signings and train model to predict winning bids.
 
 **Example insights:**
+
 - High-value RBs (>8 PPG) typically go for $10-15
 - WR market more efficient: bids track projections closely
 - Early-season FAAD bids 30% higher than in-season
@@ -36,7 +37,7 @@ ______________________________________________________________________
 
 ## Files to Create
 
-### 1. `dbt/ff_analytics/models/marts/mart_fa_acquisition_history.sql`
+### 1. `dbt/ff_data_transform/models/marts/mart_fa_acquisition_history.sql`
 
 **Purpose:** Analytical mart of all FA acquisitions with context
 
@@ -173,8 +174,9 @@ LEFT JOIN position_scarcity ps USING (transaction_id_unique)
 ```
 
 **Tests:**
+
 ```yaml
-# dbt/ff_analytics/models/marts/_mart_fa_acquisition_history.yml
+# dbt/ff_data_transform/models/marts/_mart_fa_acquisition_history.yml
 models:
   - name: mart_fa_acquisition_history
     description: "Historical FA acquisitions with performance/market context for bid modeling"
@@ -238,7 +240,7 @@ make dbt-run MODELS=mart_fa_acquisition_history
 make dbt-test MODELS=mart_fa_acquisition_history
 
 # Explore
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT position, performance_tier, season_phase,
        COUNT(*) as acquisitions,
        AVG(bid_amount) as avg_bid,
@@ -273,5 +275,6 @@ ______________________________________________________________________
 ## Next Steps
 
 After this task completes:
+
 - **Task 2.5**: Create league roster depth mart (value over replacement)
 - **Task 2.6**: Enhance `mart_fasa_targets` with bid model predictions

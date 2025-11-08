@@ -30,7 +30,7 @@ ______________________________________________________________________
 
 ## Files to Create
 
-### 1. `dbt/ff_analytics/models/marts/mart_player_features_historical.sql`
+### 1. `dbt/ff_data_transform/models/marts/mart_player_features_historical.sql`
 
 **Full SQL:** See `00_SPRINT_PLAN.md` lines 1087-1183
 
@@ -73,10 +73,10 @@ ______________________________________________________________________
 ## Implementation Steps
 
 1. Create feature mart SQL
-1. Create Python model training script
-1. Train model: `python -m src.ff_analytics_utils.models.player_valuation --train --save models/player_valuation_v1.pkl`
-1. Validate metrics (MAE, R², RMSE)
-1. Test predictions
+2. Create Python model training script
+3. Train model: `python -m src.ff_analytics_utils.models.player_valuation --train --save models/player_valuation_v1.pkl`
+4. Validate metrics (MAE, R², RMSE)
+5. Test predictions
 
 ______________________________________________________________________
 

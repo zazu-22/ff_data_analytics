@@ -17,13 +17,13 @@ Create user guides and polish sprint deliverables.
    - Bidding frameworks
    - Drop decision frameworks
 
-1. `docs/analytics/TRADE_ANALYSIS_GUIDE.md`
+2. `docs/analytics/TRADE_ANALYSIS_GUIDE.md`
 
    - Buy-low identification
    - Sell-high timing
    - Negotiation frameworks
 
-1. `docs/dev/sleeper_loader.md`
+3. `docs/dev/sleeper_loader.md`
 
    - API endpoints used
    - Refresh cadence

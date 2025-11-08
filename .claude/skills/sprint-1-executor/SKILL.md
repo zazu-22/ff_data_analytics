@@ -124,7 +124,7 @@ Each task file contains these sections (use them in order):
 
 ### dbt Model Tasks (1.1, 1.3, 2.2)
 
-- Create models in `dbt/ff_analytics/models/staging/` or `dbt/ff_analytics/models/core/` or `dbt/ff_analytics/models/marts/`
+- Create models in `dbt/ff_data_transform/models/staging/` or `dbt/ff_data_transform/models/core/` or `dbt/ff_data_transform/models/marts/`
 - Always create both `.sql` and `.yml` files
 - Include comprehensive tests in `.yml`
 - Set `EXTERNAL_ROOT` environment variable before dbt commands
@@ -241,11 +241,11 @@ If blocked by dependencies:
 
 ## Task Dependencies Quick Reference
 
-**Phase 1: Foundation (✅ COMPLETE)**
+**Phase 1: Foundation** (✅ COMPLETE)
 
 - Task 1.1 (Cap Space) → Task 1.2 (Sleeper) → Task 1.3 (FASA Mart) ✅
 
-**Phase 2: FASA Intelligence (🟡 CURRENT FOCUS)**
+**Phase 2: FASA Intelligence** (🟡 CURRENT FOCUS)
 
 - Task 1.3 (FASA Mart) ✅
   - ⬇
@@ -256,7 +256,7 @@ If blocked by dependencies:
   - ⬇
   - Task 1.4 (FASA Strategy Notebook) 🟦
 
-**Phase 3: Trade Intelligence (⏸️ DEFERRED - blocked)**
+**Phase 3: Trade Intelligence** (⏸️ DEFERRED - blocked)
 
 - Task 2.1 (Historical Backfill) 🟡 (2020-2025 complete, 2012-2019 deferred)
   - ⬇
@@ -266,7 +266,7 @@ If blocked by dependencies:
   - ⬇
   - Task 2.4 (Trade Notebook) ❌ (blocked by 2.3)
 
-**Phase 4: Automation (⏸️ FUTURE)**
+**Phase 4: Automation** (⏸️ FUTURE)
 
 - Task 3.1 (GitHub Actions) → Task 3.2 (Documentation) ⬜
 

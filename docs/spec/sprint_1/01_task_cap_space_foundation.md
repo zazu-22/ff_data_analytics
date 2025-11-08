@@ -24,7 +24,9 @@ ______________________________________________________________________
 **Current state:**
 
 - Commissioner Sheet roster tabs exist (parsed in `.tmp_commissioner_extract/`)
+
 - Row 3 of each GM's tab contains cap space data: Available, Dead, Traded
+
 - Example from Jason's tab:
 
   ```csv
@@ -78,7 +80,7 @@ def parse_cap_space(roster_df: pl.DataFrame, gm_name: str) -> pl.DataFrame:
 - Write to `data/raw/commissioner/cap_space/dt={today}/cap_space.parquet`
 - Include in manifest
 
-### 2. Create: `dbt/ff_analytics/models/staging/stg_sheets__cap_space.sql`
+### 2. Create: `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.sql`
 
 ```sql
 -- Grain: franchise_id, season
@@ -117,7 +119,7 @@ INNER JOIN franchise_xref fx
     AND cr.season BETWEEN fx.season_start AND fx.season_end
 ```
 
-### 3. Create: `dbt/ff_analytics/models/staging/stg_sheets__cap_space.yml`
+### 3. Create: `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.yml`
 
 ```yaml
 version: 2
@@ -176,7 +178,7 @@ models:
             - season
 ```
 
-### 4. Create: `dbt/ff_analytics/models/core/mart_cap_situation.sql`
+### 4. Create: `dbt/ff_data_transform/models/core/mart_cap_situation.sql`
 
 ```sql
 -- Grain: franchise_id, season
@@ -253,7 +255,7 @@ LEFT JOIN dead_cap_calculated dc USING (franchise_id, season)
 ORDER BY franchise_name, season
 ```
 
-### 5. Create: `dbt/ff_analytics/models/core/mart_cap_situation.yml`
+### 5. Create: `dbt/ff_data_transform/models/core/mart_cap_situation.yml`
 
 ```yaml
 version: 2
@@ -303,7 +305,7 @@ models:
             - season
 ```
 
-### 6. Update: `dbt/ff_analytics/models/sources/src_sheets.yml`
+### 6. Update: `dbt/ff_data_transform/models/sources/src_sheets.yml`
 
 Add new source table:
 
@@ -338,21 +340,21 @@ ______________________________________________________________________
    - Update `parse_commissioner_dir()` to parse cap space
    - Write output to `data/raw/commissioner/cap_space/dt={date}/cap_space.parquet`
 
-1. **Update source definition:**
+2. **Update source definition:**
 
    - Add `cap_space` table to `src_sheets.yml`
 
-1. **Create staging model:**
+3. **Create staging model:**
 
    - Write `stg_sheets__cap_space.sql`
    - Write `stg_sheets__cap_space.yml` with tests
 
-1. **Create mart model:**
+4. **Create mart model:**
 
    - Write `mart_cap_situation.sql`
    - Write `mart_cap_situation.yml` with tests
 
-1. **Test locally:**
+5. **Test locally:**
 
    ```bash
    # Run parser
@@ -380,20 +382,20 @@ ______________________________________________________________________
    - ✅ Files contain 12 franchises × 5 years = 60 rows
    - ✅ Jason's row shows: `available_cap_space=80` for 2025
 
-1. **dbt models:**
+2. **dbt models:**
 
    - ✅ `stg_sheets__cap_space` builds successfully
    - ✅ All tests pass (6 column tests + 1 unique combination test)
    - ✅ `mart_cap_situation` builds successfully
    - ✅ All tests pass (4 column tests + 1 unique combination test)
 
-1. **Data validation:**
+3. **Data validation:**
 
    - ✅ Jason's cap space matches sheet: $81 (2025), $80 (2026), $158 (2027), $183 (2028), $250 (2029)
    - ✅ All 12 franchises have data for 5 years
    - ✅ Reconciliation differences documented (expected to be non-zero due to manual adjustments)
 
-1. **Code quality:**
+4. **Code quality:**
 
    - ✅ `make lint` passes
    - ✅ `make typecheck` passes (if applicable to Python changes)

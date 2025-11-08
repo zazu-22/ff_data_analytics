@@ -44,7 +44,7 @@ ______________________________________________________________________
    - ☑ **dim_position_slot_eligibility** (roster slot rules by position) ✅ **NEW**
    - ☐ stat_dictionary (optional - single provider, not yet needed)
 
-1. **Phase 2 - Parallel Tracks** (ALL UNBLOCKED):
+2. **Phase 2 - Parallel Tracks** (ALL UNBLOCKED):
 
    - **Track A (NFL Actuals)**: ☑ 100% COMPLETE ✅ - nflverse staging ✅ → fact_player_stats ✅ (109 stat types) → player_key solution ✅ → dim_player ✅ → dim_team ✅ (dedupe added) → dim_schedule ✅ (requires teams data availability) → mart_real_world_actuals_weekly ✅ → mart_fantasy_actuals_weekly ✅ (data-driven scoring) → **Kicking stats added ✅ (21 new stats: FG/PAT by distance)**
 
@@ -62,7 +62,7 @@ ______________________________________________________________________
    - **Track C (Market Data)**: ☑ 100% COMPLETE ✅ - KTC fetcher ✅ → stg_ktc_assets ✅ → fact_asset_market_values ✅ (all tests passing)
    - **Track D (Projections)**: ☑ 100% COMPLETE ✅ - FFanalytics weighted aggregation ✅ → stg_ffanalytics\_\_projections ✅ → fact_player_projections ✅ → mart_real_world_projections ✅ → mart_fantasy_projections ✅ → mart_projection_variance ✅ (20/20 tests passing)
 
-1. **Phase 3 - Integration & Analysis:**
+3. **Phase 3 - Integration & Analysis:**
 
    - ✅ Variance marts: mart_projection_variance (actuals vs projections)
    - Trade valuations: mart_trade_valuations (TRANSACTIONS vs KTC market)
@@ -78,7 +78,7 @@ ______________________________________________________________________
   - Scripts named `verb_noun.py` under a domain folder
   - Ensure ingest shims stay in `ingest/<provider>/`; reusable helpers live in `src/ff_analytics_utils/`
   - Confirm data folders mirror cloud layout (`data/{raw,stage,mart,ops}` for local dev)
-  - Add `dbt/ff_analytics/` scaffold with `models/{sources,staging,core,markets,ops}`
+  - Add `dbt/ff_data_transform/` scaffold with `models/{sources,staging,core,markets,ops}`
 - ☑ Link conventions doc from README.
 - ☑ Add Makefile shortcuts for local iteration (`samples-nflverse`, `dbt-run`, `dbt-test`, `quickstart-local`).
 - ☑ Add dev dependency: `dbt-duckdb` and include in dev setup instructions.
@@ -243,7 +243,7 @@ Next steps (weighted aggregation and normalization):
   - Derive `horizon` from projection type ('weekly', 'rest_of_season', 'full_season')
   - Output real-world stats only (`measure_domain='real_world'`)
   - Fantasy scoring applied in marts (not in raw projections)
-  - **Implementation**: `dbt/ff_analytics/models/staging/stg_ffanalytics__projections.sql`
+  - **Implementation**: `dbt/ff_data_transform/models/staging/stg_ffanalytics__projections.sql`
 - ☑ Write to `data/raw/ffanalytics/projections/dt=YYYY-MM-DD/` with `_meta.json` ✅ COMPLETE
   - **Output structure**: Separate `projections_raw_*.parquet` and `projections_consensus_*.parquet`
   - **Metadata includes**: player_mapping stats, source success/failure, weights applied
@@ -257,10 +257,10 @@ Acceptance criteria:
 
 ## 7) dbt — Seeds, Staging, and Marts
 
-- ☑ Scaffold dbt project structure under `dbt/ff_analytics/` with external Parquet defaults.
+- ☑ Scaffold dbt project structure under `dbt/ff_data_transform/` with external Parquet defaults.
 - ☑ **Seeds - PHASE 1 COMPLETE** (5/8 done, 3 optional - ALL TRACKS UNBLOCKED):
   - ☑ **`dim_player_id_xref`** (ADR-010 - COMPLETE ✅):
-    - Source: nflverse ff_playerids dataset → dbt/ff_analytics/seeds/dim_player_id_xref.csv
+    - Source: nflverse ff_playerids dataset → dbt/ff_data_transform/seeds/dim_player_id_xref.csv
     - 12,133 players with 19 provider ID mappings
     - Primary key: `mfl_id` (canonical player_id)
     - Includes: name, merge_name, position, team, birthdate, draft_year

@@ -370,7 +370,7 @@ LIMIT 10;
 - [ ] **Validate cloud reads work in dbt**:
 
   ```bash
-  cd dbt/ff_analytics
+  cd dbt/ff_data_transform
   # Update dbt_project.yml with GCS paths
   uv run dbt compile
   uv run dbt run --select stg_nflverse__player_stats

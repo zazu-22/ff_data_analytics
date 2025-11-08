@@ -37,7 +37,7 @@ The snap_counts dataset has slightly different snapshot dates (2025-10-28 vs 202
 
 ## Implementation Notes
 
-**File**: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__snap_counts.sql`
+**File**: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__snap_counts.sql`
 
 **Change Pattern**:
 
@@ -88,7 +88,7 @@ This fallback pattern allows per-dataset overrides if needed while defaulting to
 1. **Compilation test**:
 
    ```bash
-   cd dbt/ff_analytics
+   cd dbt/ff_data_transform
    uv run dbt compile --select stg_nflverse__snap_counts
    ```
 
@@ -117,4 +117,4 @@ This fallback pattern allows per-dataset overrides if needed while defaulting to
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - dbt Models section (lines 30-34)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 1 Staging Updates (lines 46-49)
-- Model file: `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__snap_counts.sql`
+- Model file: `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__snap_counts.sql`

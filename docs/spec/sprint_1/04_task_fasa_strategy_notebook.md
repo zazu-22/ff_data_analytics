@@ -40,32 +40,32 @@ ______________________________________________________________________
    - Future years breakdown
    - Cap calculator function
 
-1. **Top FASA Targets by Position**
+2. **Top FASA Targets by Position**
 
    - Top 10 RBs (Priority #1)
    - Top 15 WRs (Priority #2)
    - Top 8 TEs (Priority #3)
    - Tables + scatter plots
 
-1. **Bidding Strategy Matrix**
+3. **Bidding Strategy Matrix**
 
    - Tiered approach (RB1/RB2/RB3)
    - Bid recommendations (1yr/2yr/3yr)
    - Fallback logic
 
-1. **Drop Scenarios**
+4. **Drop Scenarios**
 
    - Top 5 drop candidates
    - Cap freed vs value lost analysis
    - Trade-off calculations
 
-1. **Position Depth Analysis**
+5. **Position Depth Analysis**
 
    - My RB depth vs league median
    - FLEX performance impact
    - ROI calculations
 
-1. **Final Recommendation**
+6. **Final Recommendation**
 
    - Primary bid
    - Contingency plan
@@ -78,11 +78,11 @@ ______________________________________________________________________
 ## Implementation Steps
 
 1. Create `notebooks/` directory if needed
-1. Create Jupyter notebook with 6 sections
-1. Add DuckDB connection code
-1. Add data loading from marts
-1. Add visualizations (matplotlib/seaborn)
-1. Test execution end-to-end
+2. Create Jupyter notebook with 6 sections
+3. Add DuckDB connection code
+4. Add data loading from marts
+5. Add visualizations (matplotlib/seaborn)
+6. Test execution end-to-end
 
 ______________________________________________________________________
 

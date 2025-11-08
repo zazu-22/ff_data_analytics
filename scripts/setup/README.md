@@ -80,7 +80,7 @@ This directory contains one-time setup and validation scripts for the FF Analyti
    ./scripts/setup/gcs_validate.sh
    ```
 
-1. **Generate service account key for GitHub Actions**:
+2. **Generate service account key for GitHub Actions**:
 
    ```bash
    # If not done during setup
@@ -92,7 +92,7 @@ This directory contains one-time setup and validation scripts for the FF Analyti
    base64 -i config/secrets/gcp-service-account-key.json | pbcopy
    ```
 
-1. **Add to GitHub Secrets**:
+3. **Add to GitHub Secrets**:
 
    - Go to Settings → Secrets and variables → Actions
    - Add secret named `GOOGLE_APPLICATION_CREDENTIALS_JSON`

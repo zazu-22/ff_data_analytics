@@ -139,7 +139,7 @@ Use this checklist when adding a new data provider (KTC, FFanalytics, etc.).
     source.<name_field> as player_name,
     source.<provider_id_field> as provider_id
   from read_parquet('data/raw/<provider>/<dataset>/dt=*/*.parquet') source
-  left join read_csv('dbt/ff_analytics/seeds/dim_player_id_xref.csv') xref
+  left join read_csv('dbt/ff_data_transform/seeds/dim_player_id_xref.csv') xref
     on source.<provider_id_field> = xref.<provider_id_field>
   where xref.player_id is null
   order by player_name;
@@ -150,7 +150,7 @@ Use this checklist when adding a new data provider (KTC, FFanalytics, etc.).
 ### Phase 5: Staging Model
 
 - [ ] **Create staging model**
-  - Location: `dbt/ff_analytics/models/staging/<provider>/stg_<provider>__<dataset>.sql`
+  - Location: `dbt/ff_data_transform/models/staging/<provider>/stg_<provider>__<dataset>.sql`
   - Naming: `stg_<provider>__<dataset>.sql`
   - Header template:
 
@@ -179,14 +179,14 @@ Use this checklist when adding a new data provider (KTC, FFanalytics, etc.).
   - Ensure grain uniqueness after unpivoting
 
 - [ ] **Add schema.yml**
-  - Location: `dbt/ff_analytics/models/staging/<provider>/schema.yml`
+  - Location: `dbt/ff_data_transform/models/staging/<provider>/schema.yml`
   - Document: description, columns, grain
 
 ### Phase 6: Tests
 
 - [ ] **Create test suite using standard template**
 
-  Add to `dbt/ff_analytics/models/staging/<provider>/schema.yml`:
+  Add to `dbt/ff_data_transform/models/staging/<provider>/schema.yml`:
 
   ```yaml
   models:
@@ -265,7 +265,7 @@ Use this checklist to validate an existing or new staging model.
 
 - [ ] **Naming convention**
   - Pattern: `stg_<provider>__<dataset>.sql`
-  - Location: `dbt/ff_analytics/models/staging/<provider>/`
+  - Location: `dbt/ff_data_transform/models/staging/<provider>/`
 
 - [ ] **Header documentation**
 
@@ -322,7 +322,7 @@ Use this checklist to validate an existing or new staging model.
 ### Test Coverage
 
 - [ ] **schema.yml exists**
-  - Location: `dbt/ff_analytics/models/staging/<provider>/schema.yml`
+  - Location: `dbt/ff_data_transform/models/staging/<provider>/schema.yml`
 
 - [ ] **Grain uniqueness test**
 
@@ -430,7 +430,7 @@ Use this checklist to validate fact table implementations.
 ### Test Coverage
 
 - [ ] **Grain uniqueness test (singular)**
-  - File: `dbt/ff_analytics/tests/singular/fact_<name>_grain.sql`
+  - File: `dbt/ff_data_transform/tests/singular/fact_<name>_grain.sql`
   - Validates composite key uniqueness
 
 - [ ] **FK integrity tests**
@@ -696,7 +696,7 @@ Use this checklist to validate player ID mapping.
 
 - [ ] **Update alias table (if valid matches found)**
 
-  Add entries to `dbt/ff_analytics/seeds/dim_name_alias.csv`:
+  Add entries to `dbt/ff_data_transform/seeds/dim_name_alias.csv`:
 
   ```csv
   alias_name,canonical_name,alias_type,notes

@@ -44,8 +44,8 @@ class SleeperClient:
         data = response.json()
 
         # Normalize to DataFrame
-        df = pl.from_dicts(data, infer_schema_length=None)
-        return df
+        rosters_df = pl.from_dicts(data, infer_schema_length=None)
+        return rosters_df
 
     def get_players(self) -> pl.DataFrame:
         """Fetch all NFL players (5MB file, cache locally).
@@ -75,13 +75,13 @@ class SleeperClient:
         # Convert to DataFrame
         records = [{"sleeper_player_id": k, **v} for k, v in data.items()]
         # Increase infer_schema_length to handle varying string lengths
-        df = pl.from_dicts(records, infer_schema_length=10000)
+        players_df = pl.from_dicts(records, infer_schema_length=10000)
 
         # Cache
-        self._players_cache = df
+        self._players_cache = players_df
         self._players_cache_time = datetime.now()
 
-        return df
+        return players_df
 
     def get_league_users(self, league_id: str) -> pl.DataFrame:
         """Fetch league users/owners.
@@ -116,7 +116,7 @@ class SleeperClient:
         for attempt in range(max_retries):
             try:
                 # Rate limiting: random sleep 0.5-2s
-                time.sleep(random.uniform(0.5, 2.0))
+                time.sleep(random.uniform(0.5, 2.0))  # noqa: S311
 
                 response = requests.get(url, timeout=30)
                 response.raise_for_status()
@@ -124,10 +124,11 @@ class SleeperClient:
 
             except requests.exceptions.RequestException as e:
                 if attempt == max_retries - 1:
-                    raise Exception(f"Failed to fetch {url} after {max_retries} retries: {e}")
+                    msg = f"Failed to fetch {url} after {max_retries} retries: {e}"
+                    raise Exception(msg) from e
 
                 # Exponential backoff
-                wait = 2**attempt + random.uniform(0, 1)
+                wait = 2**attempt + random.uniform(0, 1)  # noqa: S311
                 time.sleep(wait)
 
         raise Exception(f"Failed to fetch {url} after {max_retries} retries")

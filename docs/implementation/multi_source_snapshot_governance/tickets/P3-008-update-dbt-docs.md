@@ -17,7 +17,7 @@ This ticket ensures dbt model files themselves are self-documenting regarding sn
 - [ ] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
 - [ ] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
 - [ ] Add comments to `stg_nflverse__ff_opportunity` explaining snapshot strategy (latest_only, uses snapshot_selection_strategy macro for consistency)
-- [ ] Update `dbt/ff_analytics/models/staging/README.md` with snapshot governance overview
+- [ ] Update `dbt/ff_data_transform/models/staging/README.md` with snapshot governance overview
 - [ ] Document baseline date choices and rationale
 
 ## Acceptance Criteria
@@ -31,10 +31,10 @@ This ticket ensures dbt model files themselves are self-documenting regarding sn
 
 **Files to Update**:
 
-1. `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__player_stats.sql`
-2. `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__snap_counts.sql`
-3. `dbt/ff_analytics/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
-4. `dbt/ff_analytics/models/staging/README.md` (create if doesn't exist)
+1. `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__player_stats.sql`
+2. `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__snap_counts.sql`
+3. `dbt/ff_data_transform/models/staging/nflverse/stg_nflverse__ff_opportunity.sql`
+4. `dbt/ff_data_transform/models/staging/README.md` (create if doesn't exist)
 
 **Comment Style**:
 
@@ -51,7 +51,7 @@ This ticket ensures dbt model files themselves are self-documenting regarding sn
  *   2025-10-01 was chosen as baseline because it contains complete data
  *   through the 2024 season and represents a stable, validated snapshot.
  *
- * See: dbt/ff_analytics/macros/snapshot_selection.sql
+ * See: dbt/ff_data_transform/macros/snapshot_selection.sql
  * See: docs/ops/snapshot_management_current_state.md
  */
 
@@ -70,7 +70,7 @@ with source as (
 
 **README Structure**:
 
-`dbt/ff_analytics/models/staging/README.md`
+`dbt/ff_data_transform/models/staging/README.md`
 
 ````markdown
 # Staging Models
@@ -153,7 +153,7 @@ All staging models have:
 Run tests:
 
 ```bash
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 uv run dbt test --select staging.*
 ```
 
@@ -173,7 +173,7 @@ uv run dbt test --select staging.*
 
 ```bash
 # Test compilation
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 uv run dbt compile --select staging.nflverse.*
 ````
 
@@ -181,4 +181,4 @@ uv run dbt compile --select staging.nflverse.*
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 3 Activity (lines 426-429)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 3 dbt Docs (lines 259-262)
-- Model files: `dbt/ff_analytics/models/staging/nflverse/`
+- Model files: `dbt/ff_data_transform/models/staging/nflverse/`

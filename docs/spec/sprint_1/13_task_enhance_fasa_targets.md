@@ -651,7 +651,7 @@ ______________________________________________________________________
 
 ### Step 2: Schema Design (1 hour)
 
-1. Update `dbt/ff_analytics/models/marts/_mart_fasa_targets.yml`
+1. Update `dbt/ff_data_transform/models/marts/_mart_fasa_targets.yml`
 2. Add all new column definitions with descriptions
 3. Add tests for new columns (not_null, ranges, accepted_values)
 4. Document grain and dependencies
@@ -759,7 +759,7 @@ make dbt-run MODELS=mart_fasa_targets
 make dbt-test MODELS=mart_fasa_targets
 
 # Inspect aging curve adjustments
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT
   player_name,
   position,
@@ -775,7 +775,7 @@ LIMIT 15;
 "
 
 # Check market efficiency signals
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT
   player_name,
   position,
@@ -791,7 +791,7 @@ LIMIT 20;
 "
 
 # Validate TDOE and sustainability
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT
   player_name,
   position,
@@ -808,7 +808,7 @@ LIMIT 20;
 "
 
 # Compare old vs new value scores
-EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_analytics/target/dev.duckdb -c "
+EXTERNAL_ROOT="$PWD/data/raw" duckdb dbt/ff_data_transform/target/dev.duckdb -c "
 SELECT
   player_name,
   position,

@@ -253,7 +253,7 @@ qualify row_number() over (
 
 ```bash
 # Rebuild both staging models
-cd dbt/ff_analytics
+cd dbt/ff_data_transform
 EXTERNAL_ROOT="../../data/raw" dbt run --select stg_nflverse__player_stats stg_nflverse__snap_counts --full-refresh
 
 # Rebuild downstream fact table

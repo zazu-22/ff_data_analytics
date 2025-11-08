@@ -7,7 +7,7 @@ from pathlib import Path
 
 import polars as pl
 
-from src.ingest.sleeper.client import SleeperClient
+from .client import SleeperClient
 
 
 def load_players(
@@ -32,7 +32,7 @@ def load_players(
 
     # Fetch all players
     print("Fetching Sleeper players API (5MB file)...")
-    df = client.get_players()
+    players_df = client.get_players()
 
     # Prepare metadata
     asof_date = partition_date or datetime.now(UTC).strftime("%Y-%m-%d")
@@ -44,7 +44,7 @@ def load_players(
 
     # Write parquet
     output_path = partition_dir / output_filename
-    df.write_parquet(output_path)
+    players_df.write_parquet(output_path)
 
     # Write metadata
     metadata = {
@@ -56,8 +56,8 @@ def load_players(
         "source_name": "Sleeper API",
         "source_url": "https://api.sleeper.app/v1/players/nfl",
         "output_parquet": [output_filename],
-        "row_count": len(df),
-        "column_count": len(df.columns),
+        "row_count": len(players_df),
+        "column_count": len(players_df.columns),
     }
 
     meta_path = partition_dir / "_meta.json"
@@ -65,13 +65,13 @@ def load_players(
     with meta_path.open("w") as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"✅ Wrote {len(df):,} players to {output_path}")
+    print(f"✅ Wrote {len(players_df):,} players to {output_path}")
     print(f"   Metadata: {meta_path}")
 
     return {
         "output_path": str(output_path),
         "metadata_path": str(meta_path),
-        "row_count": len(df),
+        "row_count": len(players_df),
         "partition": asof_date,
     }
 
@@ -97,19 +97,31 @@ def load_fa_pool(
 
     # Get all players and filter to FA-relevant positions
     print("Fetching Sleeper players API...")
-    df = client.get_players()
+    players_df = client.get_players()
 
     # Filter to fantasy-relevant positions
     # Include all defense/team position variants (DEF, DST, D/ST, TD)
     # Include both K and PK for kickers
     fa_positions = [
-        "QB", "RB", "WR", "TE",           # Offense
-        "K", "PK",                         # Kickers
-        "DEF", "DST", "D/ST", "TD",       # Defense/Special Teams (all variants)
-        "DL", "LB", "DB",                  # IDP general
-        "S", "CB", "DE", "DT",             # IDP specific
+        "QB",
+        "RB",
+        "WR",
+        "TE",  # Offense
+        "K",
+        "PK",  # Kickers
+        "DEF",
+        "DST",
+        "D/ST",
+        "TD",  # Defense/Special Teams (all variants)
+        "DL",
+        "LB",
+        "DB",  # IDP general
+        "S",
+        "CB",
+        "DE",
+        "DT",  # IDP specific
     ]
-    df_fa = df.filter(pl.col("position").is_in(fa_positions))
+    df_fa = players_df.filter(pl.col("position").is_in(fa_positions))
 
     # Prepare metadata
     asof_date = partition_date or datetime.now(UTC).strftime("%Y-%m-%d")

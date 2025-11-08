@@ -16,7 +16,7 @@ def is_shared_drive(drive_id: str) -> bool:
 
     Shared Drive IDs typically start with '0A'.
     """
-    return drive_id and drive_id.startswith("0A")
+    return bool(drive_id and drive_id.startswith("0A"))
 
 
 def get_drive_info(drive, drive_id: str) -> dict[str, Any] | None:
@@ -209,7 +209,7 @@ def ensure_folder(drive, path: str, parent_id: str = "root", create_missing: boo
             "includeItemsFromAllDrives": True,
         }
 
-        if use_shared_drive:
+        if use_shared_drive and drive_id:
             list_params.update(
                 {
                     "corpora": "drive",

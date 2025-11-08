@@ -67,8 +67,8 @@ ______________________________________________________________________
 
 - `src/ingest/sheets/commissioner_parser.py` - Add `parse_cap_space()` function
 - `data/raw/commissioner/cap_space/dt=YYYY-MM-DD/cap_space.parquet` (new)
-- `dbt/ff_analytics/models/staging/stg_sheets__cap_space.sql` (new)
-- `dbt/ff_analytics/models/core/mart_cap_situation.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sheets__cap_space.sql` (new)
+- `dbt/ff_data_transform/models/core/mart_cap_situation.sql` (new)
 
 **Technical Spec - `parse_cap_space()`:**
 
@@ -183,10 +183,10 @@ ______________________________________________________________________
 - `scripts/ingest/load_sleeper.py` (new - main loader)
 - `src/ingest/sleeper/client.py` (new - API client module)
 - `src/ingest/sleeper/registry.py` (new - dataset registry)
-- `dbt/ff_analytics/models/sources/src_sleeper.yml` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__rosters.sql` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__players.sql` (new)
-- `dbt/ff_analytics/models/staging/stg_sleeper__fa_pool.sql` (new)
+- `dbt/ff_data_transform/models/sources/src_sleeper.yml` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__rosters.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__players.sql` (new)
+- `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql` (new)
 
 **Technical Spec - `src/ingest/sleeper/client.py`:**
 
@@ -484,8 +484,8 @@ ______________________________________________________________________
 
 **Files Created:**
 
-- `dbt/ff_analytics/models/marts/mart_fasa_targets.sql` (new)
-- `dbt/ff_analytics/models/marts/mart_my_roster_droppable.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_fasa_targets.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_my_roster_droppable.sql` (new)
 
 **Technical Spec - `mart_fasa_targets.sql`:**
 
@@ -1111,7 +1111,7 @@ ______________________________________________________________________
 **Files Created:**
 
 - `src/ff_analytics_utils/models/player_valuation.py` (new)
-- `dbt/ff_analytics/models/marts/mart_player_features_historical.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_player_features_historical.sql` (new)
 - `models/player_valuation_v1.pkl` (new - pickled model)
 
 **Technical Spec - `mart_player_features_historical.sql`:**
@@ -1440,8 +1440,8 @@ ______________________________________________________________________
 
 **Files Created:**
 
-- `dbt/ff_analytics/models/marts/mart_trade_targets.sql` (new)
-- `dbt/ff_analytics/models/marts/mart_my_trade_chips.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_trade_targets.sql` (new)
+- `dbt/ff_data_transform/models/marts/mart_my_trade_chips.sql` (new)
 
 **Technical Specs:** (Abbreviated - see full SQL in implementation phase)
 
@@ -1696,7 +1696,7 @@ ______________________________________________________________________
 ### dbt Models
 
 _Note:_ All dbt models must be accompanied by a corresponding yml file. Use
-the `dbt/ff_analytics/models/` directory to store dbt models, and look to
+the `dbt/ff_data_transform/models/` directory to store dbt models, and look to
 good examples there for patterns and best practices.
 
 **Staging:**

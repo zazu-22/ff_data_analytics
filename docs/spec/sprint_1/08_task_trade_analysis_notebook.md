@@ -16,9 +16,9 @@ Create `notebooks/trade_targets_analysis.ipynb` for trade partner identification
 ## Notebook Sections
 
 1. Buy-Low Candidates (filter: trade_signal='BUY_LOW')
-1. Sell-High Candidates (my overvalued players)
-1. Trade Partner Matrix (12x12 heatmap)
-1. Position Arbitrage
+2. Sell-High Candidates (my overvalued players)
+3. Trade Partner Matrix (12x12 heatmap)
+4. Position Arbitrage
 
 **Full structure:** See `00_SPRINT_PLAN.md` lines 1439-1458
 

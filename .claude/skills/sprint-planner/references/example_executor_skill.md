@@ -105,7 +105,7 @@ Each task file contains these sections (use them in order):
 
 ### dbt Model Tasks (1.1, 1.3, 2.2)
 
-- Create models in `dbt/ff_analytics/models/staging/` or `dbt/ff_analytics/models/core/` or `dbt/ff_analytics/models/marts/`
+- Create models in `dbt/ff_data_transform/models/staging/` or `dbt/ff_data_transform/models/core/` or `dbt/ff_data_transform/models/marts/`
 - Always create both `.sql` and `.yml` files
 - Include comprehensive tests in `.yml`
 - Set `EXTERNAL_ROOT` environment variable before dbt commands

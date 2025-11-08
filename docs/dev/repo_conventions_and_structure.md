@@ -43,7 +43,7 @@ Purpose: establish consistent naming, directory layout, and data organization to
 
 ## dbt Project Organization (duckdb + external Parquet)
 
-- Root folder: `dbt/ff_analytics/` (project name: `ff_analytics`).
+- Root folder: `dbt/ff_data_transform/` (project name: `ff_data_transform`).
 - Subfolders:
   - `models/`
     - `sources/` → `src_<provider>.yml` (source definitions)
@@ -66,13 +66,80 @@ Purpose: establish consistent naming, directory layout, and data organization to
 
 ### SQL Style & Linting
 
-- Use SQLFluff with `templater: dbt` and `dialect: duckdb`.
-- Enforce lowercase for keywords, identifiers, and function names.
-- Staging models: allow raw‑aligned column names (ignore `RF04`) and omit statement terminators (ignore `CV06`).
-- Core/marts: optionally re‑enable `RF04` and terminators as policy tightens.
-- Pre‑commit hooks:
-  - `sqlfluff-lint` runs on `dbt/ff_analytics/models/**.{sql,sql.j2}`
-  - Manual fixer available via `pre-commit run sqlfluff-fix --all-files`.
+This project uses a **multi-tool approach** for SQL quality assurance:
+
+1. **sqlfmt** (formatting) - Formats all SQL files for consistent indentation/spacing
+
+   - Uses polyglot dialect (supports DuckDB syntax)
+   - Fast and opinionated (minimal configuration)
+   - Uses 4-space indentation (default, non-configurable)
+   - Run: `make sqlfmt` (format) or `make sqlfmt-check` (check only)
+   - Pre-commit hook: Formats SQL files automatically on commit
+
+2. **SQLFluff** (selective linting) - Style/quality checks on standard SQL models
+
+   - Configuration: `.sqlfluff`, `pyproject.toml`, and `.sqlfluffignore` (all used)
+   - Templater: `dbt` (understands Jinja)
+   - Dialect: `duckdb` (with limitations)
+   - Uses 4-space indentation (configured to match sqlfmt)
+   - **Exclusions**: Files with DuckDB-specific syntax are excluded from SQLFluff linting via `.sqlfluffignore`:
+     - Staging models (`stg_*.sql`) - use `read_parquet()` with named parameters
+     - Core models: `dim_player_contract_history.sql`, `fact_league_transactions.sql`, `int_pick_*.sql`
+     - Mart models: `mart_contract_snapshot_current.sql`, `mart_real_world_actuals_weekly.sql`
+   - **Note**: `.sqlfluffignore` patterns should be kept in sync with pre-commit hook exclude patterns (different syntax: glob vs regex, but same files)
+   - Rules: Enforce lowercase keywords/identifiers/functions; allow raw column names in staging (ignore `RF04`, `CV06`)
+   - Run: `make sqlcheck` (lint) or `make sqlfix` (auto-fix)
+   - Pre-commit hook: Lints SQL files (with exclusions matching `.sqlfluffignore`)
+
+3. **dbt compile** (syntax validation) - Validates SQL syntax using actual DuckDB parser
+
+   - Catches real syntax errors regardless of linting exclusions
+   - Uses dbt's compilation process (validates after Jinja templating)
+   - Run: `make dbt-compile-check`
+   - Pre-commit hook: Validates all models on SQL file changes
+
+4. **dbt-opiner** (dbt best practices) - Enforces dbt project conventions
+
+   - Checks naming, structure, and dbt-specific patterns
+   - **Configuration**: `.dbt-opiner.yaml` (optional - uses defaults if not present)
+   - **Exclusions**: Test files (`tests/*.sql`) are excluded via pre-commit hook - they're not dbt project nodes
+   - Separate from SQL syntax/style concerns
+   - Run: `make dbt-opiner-check`
+   - Pre-commit hook: Checks dbt best practices on dbt file changes
+   - **Note**: When using `--all-files`, dbt-opiner will report errors for test files (expected - they're excluded from linting)
+
+**All-in-one**: `make sql-all` runs all four checks in sequence.
+
+**Pre-commit workflow**: Format (sqlfmt) → Lint (SQLFluff) → Validate (dbt compile) → dbt practices (dbt-opiner)
+
+**Why multiple tools?**
+
+- SQLFluff's DuckDB dialect has incomplete support for DuckDB-specific syntax (parsing errors on valid SQL)
+- sqlfmt handles formatting correctly for all DuckDB syntax
+- dbt compile provides authoritative syntax validation using the actual DuckDB parser
+- dbt-opiner focuses on dbt project structure and conventions (not SQL syntax)
+
+### Excluded Files Reference
+
+**SQLFluff Exclusions** (via `.sqlfluffignore` file):
+
+| File Pattern                                                            | Reason for Exclusion                                                                                      |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `dbt/ff_data_transform/models/staging/stg_*.sql`                        | Use `read_parquet()` with named parameters (e.g., `hive_partitioning = true`) which SQLFluff cannot parse |
+| `dbt/ff_data_transform/models/core/dim_player_contract_history.sql`     | Uses `list_sum()`, `list_concat()` - DuckDB-specific list functions                                       |
+| `dbt/ff_data_transform/models/core/fact_league_transactions.sql`        | Uses interval arithmetic (e.g., `date + interval '1' year`) which SQLFluff misparses                      |
+| `dbt/ff_data_transform/models/core/intermediate/int_pick_*.sql`         | Uses `regexp_matches()`, `regexp_extract()`, `make_date()`, `unnest()` - DuckDB-specific functions        |
+| `dbt/ff_data_transform/models/marts/mart_contract_snapshot_current.sql` | Uses `cast(... as json)`, `unnest()` - DuckDB-specific JSON/array functions                               |
+| `dbt/ff_data_transform/models/marts/mart_real_world_actuals_weekly.sql` | Uses `arbitrary()` - DuckDB-specific aggregation function                                                 |
+| `dbt/ff_data_transform/tests/*.sql`                                     | Test files are not dbt project nodes (validated separately via `dbt test`)                                |
+
+**dbt-opiner Exclusions** (via pre-commit hook):
+
+| File Pattern                        | Reason for Exclusion                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `dbt/ff_data_transform/tests/*.sql` | Test files are not dbt project nodes - they're standalone SQL files executed by `dbt test`, not part of the dbt manifest |
+
+**Note**: All excluded files are still validated via `dbt compile` (syntax validation) and `dbt test` (data quality tests). Only style/formatting linting is excluded.
 
 ## Ingest Module Structure
 

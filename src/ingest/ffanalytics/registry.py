@@ -11,7 +11,7 @@ Production loaders:
 DATASETS = {
     "projections_ros": {
         "loader": "load_projections_ros",
-        "description": "Rest-of-season projections with auto-detection (weeks current->17). PRODUCTION DEFAULT for GitHub Actions.",
+        "description": "Rest-of-season projections with auto-detection (weeks current->17).",
         "r_required": True,
         "python_available": False,
         "output_format": "parquet",
@@ -36,7 +36,7 @@ DATASETS = {
         "output_format": "parquet",
         "incremental_key": "asof_date",
         "usage": "load_projections(season=2025, week=9)",
-    }
+    },
 }
 
 

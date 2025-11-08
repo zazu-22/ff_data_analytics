@@ -4,7 +4,7 @@
 **Purpose**: Tracking only incomplete/outstanding items from SPEC-1 implementation
 **Verification**: Based on actual codebase inspection (see verification notes at end)
 
----
+______________________________________________________________________
 
 ## Status Summary
 
@@ -29,7 +29,7 @@
 - Ops models: ☐ Not implemented
 - Monitoring: ☐ Not implemented
 
----
+______________________________________________________________________
 
 ## Critical Issues (Fix Before Prefect Migration)
 
@@ -37,13 +37,15 @@
 
 **Priority**: HIGH
 
-- ☐ **Fix mart_contract_snapshot_history grain violation** (dbt/ff_analytics/models/marts/mart_contract_snapshot_history.sql)
+- ☐ **Fix mart_contract_snapshot_history grain violation** (dbt/ff_data_transform/models/marts/mart_contract_snapshot_history.sql)
+
   - **Issue**: 4 duplicate rows violate grain uniqueness test
   - **Grain**: `(player_key, franchise_id, snapshot_date, obligation_year)` should be unique
   - **Impact**: Contract analysis unreliable for affected rows
-  - **Location**: dbt/ff_analytics/models/marts/mart_contract_snapshot_history.sql
+  - **Location**: dbt/ff_data_transform/models/marts/mart_contract_snapshot_history.sql
 
 - ☐ **Resolve orphaned pick_id warnings** (~200 transactions)
+
   - **Issue**: `fact_league_transactions` still references compensatory or provisional picks not present in `dim_pick`
   - **Root cause**: Seed currently only contains the 60 base picks per season; comp / TBD picks require explicit adds
   - **Options**:
@@ -51,9 +53,10 @@
     - OR: Model compensatory picks dynamically from transactions, then union into dim_pick
     - OR: Relax FK test (currently warn-only) *and* document gaps
   - **Impact**: Low (queries succeed, but referential checks fail)
-  - **Location**: `dbt/ff_analytics/seeds/dim_pick.csv`, `dbt/ff_analytics/models/staging/stg_sheets__transactions.sql`
+  - **Location**: `dbt/ff_data_transform/seeds/dim_pick.csv`, `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql`
 
 - ☐ **Commissioner sheet mismatch – Gordon → JP (2026 R1)**
+
   - **Issue**: `stg_sheets__draft_pick_holdings` shows a trade-out for Gordon’s 2026 1st to JP with no corresponding inbound row
   - **Root cause**: Commissioner sheet snapshot missing JP’s acquired entry (multiple trades logged 2024‑11‑11)
   - **Action**: Ask commissioner to confirm final holder, update sheet, rerun `make ingest-sheets`, and rerun orphan validation
@@ -91,7 +94,7 @@
     ```
   - **Impact**: Prevents full reconciliation of 2026 base picks until resolved
 
----
+______________________________________________________________________
 
 ## Phase 2 Extensions (Optional)
 
@@ -105,23 +108,25 @@
   - `stg_sleeper__rosters.sql` - Current roster state
   - `stg_sleeper__roster_players.sql` - Roster player details (long form)
   - **Blocker**: None (make_samples.py sleeper command works)
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 ### 3. Change Detection Models
 
 **Priority**: LOW (optimization, not required for initial deployment)
 
 - ☐ **Implement roster change tracking**
+
   - `stg_sheets__roster_changelog.sql` - Hash-based SCD tracking for GM roster tabs
   - **Purpose**: Detect when rosters change between runs
   - **Pattern**: Row hash per GM tab per dt partition
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 - ☐ **Implement generic sheet change log**
+
   - `stg_sheets__change_log.sql` - Row hash per tab per dt
   - **Purpose**: Change detection for any commissioner sheet tab
   - **Pattern**: Generic change capture for all tabs
-  - **Location**: dbt/ff_analytics/models/staging/
+  - **Location**: dbt/ff_data_transform/models/staging/
 
 ### 4. Trade Analysis Marts
 
@@ -138,9 +143,9 @@
     - Apply transactions chronologically to build roster snapshots
     - Grain: one row per player per franchise per date
   - **Dependencies**: All complete (fact_league_transactions ✅, fact_asset_market_values ✅)
-  - **Location**: dbt/ff_analytics/models/marts/
+  - **Location**: dbt/ff_data_transform/models/marts/
 
----
+______________________________________________________________________
 
 ## Phase 3 - CI/CD & Orchestration
 
@@ -149,6 +154,7 @@
 **Priority**: MEDIUM (required for full automation)
 
 - ☐ **Schedule sheets ingest**
+
   - **Workflow**: .github/workflows/ingest_google_sheets.yml (currently only creates league sheet copy; does NOT run full ingest into raw/sheets/)
   - **Schedule**: TBD
   - **Trigger**: TBD
@@ -157,6 +163,7 @@
   - **Output**: GCS write to `gs://ff-analytics/raw/sheets/`
 
 - ☐ **Schedule nflverse weekly ingest**
+
   - **Workflow**: New workflow or extend data-pipeline.yml
   - **Schedule**: TBD
   - **Trigger**: TBD
@@ -165,6 +172,7 @@
   - **Output**: GCS write to `gs://ff-analytics/raw/nflverse/`
 
 - ☐ **Schedule projections weekly ingest**
+
   - **Workflow**: New workflow or extend data-pipeline.yml
   - **Schedule**: TBD
   - **Trigger**: Add `on.schedule.cron: '0 8 * * 2'`
@@ -173,6 +181,7 @@
   - **Output**: GCS write to `gs://ff-analytics/raw/ffanalytics/`
 
 - ☐ **Schedule KTC ingest**
+
   - **Workflow**: New workflow or extend data-pipeline.yml
   - **Schedule**: TBD
   - **Trigger**: TBD
@@ -180,6 +189,7 @@
   - **Output**: GCS write to `gs://ff-analytics/raw/ktc/`
 
 - ☐ **Add build artifact uploads**
+
   - Upload `_meta.json` files from all ingest runs
   - Upload dbt logs (target/run_results.json, target/manifest.json)
   - Upload dbt test summary (parsed from dbt test output)
@@ -190,6 +200,7 @@
 **Priority**: MEDIUM (cloud-ready architecture)
 
 - ☐ **Enable GCS writes in all workflows**
+
   - **Current**: Workflows write to local `data/raw/` only
   - **Target**: Write to `gs://ff-analytics/raw/` via `EXTERNAL_ROOT` env var
   - **Dependencies**: GCS bucket exists ✅, service account has write access ✅
@@ -199,6 +210,7 @@
     - Update dbt profiles to read from GCS globs
 
 - ☐ **Configure dbt to read from GCS**
+
   - **Current**: dbt reads local `data/raw/` Parquet
   - **Target**: dbt reads from `gs://ff-analytics/raw/` globs
   - **Dependencies**: DuckDB httpfs extension ✅ (supports gs:// paths)
@@ -206,7 +218,7 @@
     - Update dbt_project.yml sources to use GCS paths
     - Set `EXTERNAL_ROOT` in profiles.yml for CI environment
 
----
+______________________________________________________________________
 
 ## Phase 3 - Operations & Monitoring
 
@@ -215,22 +227,25 @@
 **Priority**: HIGH (required for production observability)
 
 - ☐ **Implement ops.run_ledger**
+
   - **Columns**: run_id, started_at, ended_at, status, trigger, scope, error_class, retry_count
   - **Purpose**: Track all ingestion and dbt runs
   - **Grain**: one row per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_run_ledger.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_run_ledger.sql
 
 - ☐ **Implement ops.model_metrics**
+
   - **Columns**: run_id, model_name, row_count, bytes_written, duration_ms, error_rows
   - **Purpose**: Track dbt model performance over time
   - **Grain**: one row per model per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_model_metrics.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_model_metrics.sql
 
 - ☐ **Implement ops.data_quality**
+
   - **Columns**: run_id, model_name, check_name, status, observed_value, threshold
   - **Purpose**: Track dbt test results over time
   - **Grain**: one row per test per run
-  - **Location**: dbt/ff_analytics/models/ops/ops_data_quality.sql
+  - **Location**: dbt/ff_data_transform/models/ops/ops_data_quality.sql
 
 ### 8. Freshness Monitoring
 
@@ -243,21 +258,23 @@
     - ffanalytics: warn_after 48h, error_after 96h
     - ktc: warn_after 24h, error_after 48h
     - sheets: warn_after 12h, error_after 24h
-  - **Implementation**: Add `freshness:` blocks to src_*.yml files
-  - **Location**: dbt/ff_analytics/models/sources/*.yml
+  - **Implementation**: Add `freshness:` blocks to src\_\*.yml files
+  - **Location**: dbt/ff_data_transform/models/sources/\*.yml
 
 ### 9. Last Known Good (LKG) Fallback
 
 **Priority**: MEDIUM (resilience)
 
 - ☐ **Extend LKG fallback to all sources**
+
   - **Current**: Only sheets copy has LKG logic (scripts/ingest/copy_league_sheet.py)
   - **Needed**: sheets ingest, nflverse, ffanalytics, ktc, sleeper loaders, etc.
   - **Pattern**: On fetch failure, use most recent `dt=*` partition
-  - **Implementation**: Add LKG retry logic to ingest/*/registry.py loaders
-  - **Flag**: Add `_lkg_fallback` column to _meta.json when LKG used
+  - **Implementation**: Add LKG retry logic to ingest/\*/registry.py loaders
+  - **Flag**: Add `_lkg_fallback` column to \_meta.json when LKG used
 
 - ☐ **Add LKG banners to notebook freshness**
+
   - Display "⚠️ Using last known good data from 2025-10-22 (current fetch failed)"
   - Check `_lkg_fallback` flag in metadata
 
@@ -270,9 +287,9 @@
   - **Tables**: TBD
   - **Pattern**: dbt test with ± thresholds (e.g., warn if row count changes >20%)
   - **Implementation**: Custom dbt test macro
-  - **Location**: dbt/ff_analytics/tests/generic/row_delta_threshold.sql
+  - **Location**: dbt/ff_data_transform/tests/generic/row_delta_threshold.sql
 
----
+______________________________________________________________________
 
 ## Phase 3 - Documentation
 
@@ -281,6 +298,7 @@
 **Priority**: MEDIUM (onboarding and maintenance)
 
 - ☐ **Document orchestration & language strategy**
+
   - **Content**:
     - Python-first with R escape hatch for nflverse/ffanalytics
     - When to use R vs Python
@@ -288,6 +306,7 @@
   - **Location**: docs/dev/orchestration_language_strategy.md
 
 - ☐ **Document backfill strategy**
+
   - **Content**:
     - dt-based reprocess pattern
     - Idempotent write guarantees
@@ -296,13 +315,14 @@
   - **Location**: docs/dev/backfill_strategy.md
 
 - ☐ **Document compaction playbook**
+
   - **Content**:
     - Monthly Parquet compaction for small files
     - Partition invariant preservation
     - Compaction manifest for audit
   - **Location**: docs/dev/compaction_playbook.md
 
----
+______________________________________________________________________
 
 ## Minor Cleanup (Nice to Have)
 
@@ -311,6 +331,7 @@
 **Priority**: LOW (polish)
 
 - ☐ **Align files to repo conventions**
+
   - **Patterns**:
     - Scripts: `verb_noun.py` under domain folder
     - Ingest shims: `ingest/<provider>/` (already aligned)
@@ -320,12 +341,13 @@
   - **Reference**: docs/dev/repo_conventions_and_structure.md
 
 - ☐ **SQL style enforcement for core/marts**
+
   - **Current**: Staging models ignore RF04 (keywords as identifiers) and CV06 (semicolon terminator)
   - **Consider**: Re-enable RF04/CV06 for core/marts (stricter style)
   - **Decision**: Team preference (low priority)
   - **Location**: .sqlfluff config
 
----
+______________________________________________________________________
 
 ## Verification Notes
 
@@ -336,26 +358,31 @@
 **Key Corrections to SPEC-1 v2.3 Checklist**:
 
 1. **Track C (Market Data)** - SPEC incorrectly states "0% - KTC integration stub only"
+
    - **Actual**: 100% complete with full registry + loader functions
    - **Evidence**: src/ingest/ktc/registry.py has working load_players() and load_picks()
    - **Staging**: stg_ktc_assets.sql exists and builds
    - **Fact**: fact_asset_market_values.sql exists with 12/12 tests passing
 
 2. **nflverse Registry** - SPEC marks ff_playerids, snap_counts, ff_opportunity as "☐ todo"
+
    - **Actual**: All 3 datasets registered and working
    - **Evidence**: src/ingest/nflverse/registry.py includes all TIER 1 + TIER 2 datasets
 
 3. **Seeds** - SPEC claims "6/8 done, 2 optional"
+
    - **Actual**: 12/13 done (only stat_dictionary.csv deferred)
    - **Added**: 5 league rules dimensions (dim_league_rules, dim_rookie_contract_scale, etc.)
-   - **Evidence**: dbt/ff_analytics/seeds/ contains 12 CSV files
+   - **Evidence**: dbt/ff_data_transform/seeds/ contains 12 CSV files
 
 4. **Test Coverage** - SPEC claims "147/149 tests passing (98.7%)"
+
    - **Actual**: 275/278 tests passing (98.9%) - significant expansion
    - **Growth**: Added 126+ tests since checklist written
    - **Evidence**: dbt test output shows 275 passed, 2 warnings, 1 error
 
 5. **CI/CD Workflows** - SPEC implies minimal configuration
+
    - **Actual**: 2 fully functional workflows with schedules
    - **Evidence**:
      - .github/workflows/ingest_google_sheets.yml (scheduled 2x/day)
@@ -363,15 +390,15 @@
 
 **Files Verified**:
 
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/seeds/` - 12 seeds
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/seeds/` - 12 seeds
 - `/Users/jason/code/ff_analytics/src/ingest/nflverse/registry.py` - 10 datasets
 - `/Users/jason/code/ff_analytics/src/ingest/ktc/registry.py` - Full implementation (not stub)
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/staging/` - 8 models
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/core/` - 9 models (4 facts, 5 dims)
-- `/Users/jason/code/ff_analytics/dbt/ff_analytics/models/marts/` - 7 marts
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/staging/` - 8 models
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/core/` - 9 models (4 facts, 5 dims)
+- `/Users/jason/code/ff_analytics/dbt/ff_data_transform/models/marts/` - 7 marts
 - `/Users/jason/code/ff_analytics/.github/workflows/` - 2 workflows
 
----
+______________________________________________________________________
 
 ## Next Steps Discussion
 

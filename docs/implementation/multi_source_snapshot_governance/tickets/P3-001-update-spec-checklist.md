@@ -80,7 +80,7 @@ This ticket ensures the checklist accurately reflects:
    - [x] Legacy sample artifacts archived (data/_archived_samples/2025-11-07/)
    - [x] Performance baseline documented (all three NFLverse models profiled)
 
-   See: `dbt/ff_analytics/macros/snapshot_selection.sql`
+   See: `dbt/ff_data_transform/macros/snapshot_selection.sql`
    See: `docs/implementation/multi_source_snapshot_governance/`
    ```
 
@@ -91,7 +91,7 @@ This ticket ensures the checklist accurately reflects:
 
    ### Snapshot Registry
 
-   - [x] Registry seed created (`dbt/ff_analytics/seeds/snapshot_registry.csv`)
+   - [x] Registry seed created (`dbt/ff_data_transform/seeds/snapshot_registry.csv`)
    - [x] Populated with all 5 sources (nflverse, sheets, ktc, ffanalytics, sleeper)
    - [x] Lifecycle states defined (pending, current, historical, archived)
    - [x] Validation tooling implemented (`tools/validate_manifests.py`)
@@ -107,7 +107,7 @@ This ticket ensures the checklist accurately reflects:
    - [x] ktc: warn 5 days, error 14 days
    - [x] ffanalytics: warn 2 days, error 7 days
 
-   See: `dbt/ff_analytics/models/sources/src_*.yml`
+   See: `dbt/ff_data_transform/models/sources/src_*.yml`
 
    ### Coverage Analysis
 

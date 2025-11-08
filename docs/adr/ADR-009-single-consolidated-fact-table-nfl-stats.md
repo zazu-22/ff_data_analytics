@@ -11,8 +11,8 @@
 The Fantasy Football Analytics platform ingests multiple types of NFL player statistics from nflverse:
 
 1. **Base player stats** (`load_player_stats`): Traditional passing, rushing, receiving, defense, kicking stats (~50 stat types)
-1. **Snap counts** (`load_snap_counts`): Offensive, defensive, and special teams snap participation (~6 stat types)
-1. **FF opportunity metrics** (`load_ff_opportunity`): Expected stats, variances, and team shares (~40 stat types)
+2. **Snap counts** (`load_snap_counts`): Offensive, defensive, and special teams snap participation (~6 stat types)
+3. **FF opportunity metrics** (`load_ff_opportunity`): Expected stats, variances, and team shares (~40 stat types)
 
 All three datasets share the **same grain**: one row per player per game.
 
@@ -69,11 +69,11 @@ CREATE TABLE fact_player_stats (
 
 **Total:** ~96 stat types per player-game
 
-| Source | Stat Count | Examples |
+| Source         | Stat Count | Examples                                                      |
 | -------------- | ---------- | ------------------------------------------------------------- |
-| Base stats | ~50 | `passing_yards`, `rushing_tds`, `receptions`, `def_sacks` |
-| Snap counts | 6 | `offense_snaps`, `offense_pct`, `defense_snaps`, `st_snaps` |
-| FF opportunity | ~40 | `pass_yards_gained_exp`, `receptions_diff`, `air_yards_share` |
+| Base stats     | ~50        | `passing_yards`, `rushing_tds`, `receptions`, `def_sacks`     |
+| Snap counts    | 6          | `offense_snaps`, `offense_pct`, `defense_snaps`, `st_snaps`   |
+| FF opportunity | ~40        | `pass_yards_gained_exp`, `receptions_diff`, `air_yards_share` |
 
 ## Rationale
 
@@ -177,17 +177,17 @@ Per Kimball methodology:
 ### Positive
 
 1. **Simpler queries:** No fact-to-fact joins required
-1. **Single source of truth:** All NFL actuals in one place
-1. **Better compression:** Parquet columnar format benefits from unified schema
-1. **Easier maintenance:** One table to test, partition, compact
-1. **Consistent grain enforcement:** Single unique key test in dbt
-1. **Correlation queries:** Naturally express "rushing yards per offensive snap" queries
+2. **Single source of truth:** All NFL actuals in one place
+3. **Better compression:** Parquet columnar format benefits from unified schema
+4. **Easier maintenance:** One table to test, partition, compact
+5. **Consistent grain enforcement:** Single unique key test in dbt
+6. **Correlation queries:** Naturally express "rushing yards per offensive snap" queries
 
 ### Negative
 
 1. **Sparse rows:** Not all players have all stats (mitigated by Parquet columnar storage)
-1. **Larger unpivot logic:** More UNION ALL branches in staging (mitigated by code generation)
-1. **Mixed stat semantics:** Absolute counts, percentages, expected values in same column (mitigated by stat_name prefix conventions)
+2. **Larger unpivot logic:** More UNION ALL branches in staging (mitigated by code generation)
+3. **Mixed stat semantics:** Absolute counts, percentages, expected values in same column (mitigated by stat_name prefix conventions)
 
 ### Mitigation Strategies
 

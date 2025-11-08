@@ -17,13 +17,13 @@ Create `mart_trade_targets` (all rosters) and `mart_my_trade_chips` (my overvalu
 
 ## Files
 
-1. `dbt/ff_analytics/models/marts/mart_trade_targets.sql` + `.yml`
+1. `dbt/ff_data_transform/models/marts/mart_trade_targets.sql` + `.yml`
 
    - Grain: `player_key, current_franchise_id, asof_date`
    - All 300+ rostered players (12 teams)
    - Trade signals: BUY_LOW / SELL_HIGH / HOLD
 
-1. `dbt/ff_analytics/models/marts/mart_my_trade_chips.sql` + `.yml`
+1. `dbt/ff_data_transform/models/marts/mart_my_trade_chips.sql` + `.yml`
 
    - Grain: `player_key, asof_date`
    - Jason's players only
@@ -46,7 +46,7 @@ make dbt-test --select mart_trade_targets mart_my_trade_chips
 
 ## Commit
 
-```
+```text
 feat: add trade target marts for buy-low/sell-high analysis
 Resolves: Sprint 1 Task 2.3
 ```

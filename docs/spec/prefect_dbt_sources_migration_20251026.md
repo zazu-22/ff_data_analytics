@@ -51,9 +51,9 @@ AM, Tue AM, Wed noon, Thu AM)
 **Storage:** Local Parquet → Ready for GCS migration
 **Warehouse:** DuckDB → Ready for BigQuery migration
 **Sources:** dbt sources document data contracts
-**Monitoring: **Prefect UI + Slack alerts
+\*\*Monitoring: \*\*Prefect UI + Slack alerts
 
----
+______________________________________________________________________
 
 ## Phases
 
@@ -79,7 +79,7 @@ prefect cloud login
 prefect block register -m prefect_shell
 ```
 
-**Deliverable: **Working Prefect installation with Cloud connection
+\*\*Deliverable: \*\*Working Prefect installation with Cloud connection
 
 #### 1.2 Project Structure Setup
 
@@ -97,7 +97,7 @@ ff_analytics/
 ├── scripts/                        # EXISTING: Keep as-is
 │   ├── ingest/                    # Your existing scripts
 │   └── ...
-└── dbt/ff_analytics/
+└── dbt/ff_data_transform/
       └── models/sources/    # EXISTING: Will enhance incrementally
 ```
 
@@ -333,7 +333,7 @@ Prefect
 Deliverable: Automated Google Sheets pipeline
 running 2x/day
 
----
+______________________________________________________________________
 
 ### Phase 2: NFL Data Sources (Week 2)
 
@@ -346,7 +346,7 @@ Build source definitions incrementally as you add
 flows:
 
 ```
-	# dbt/ff_analytics/models/sources/src_nflverse.yml
+	# dbt/ff_data_transform/models/sources/src_nflverse.yml
 	version: 2
 
 sources:
@@ -576,7 +576,7 @@ Similar pattern to NFLverse. Create flows for:
 
 Deliverable: All 6 data sources automated
 
----
+______________________________________________________________________
 
 ### Phase 3: Backfill & Monitoring (Week 3)
 
@@ -771,7 +771,7 @@ if __name__ == "__main__":
 
 Deliverable: Automated freshness monitoring
 
----
+______________________________________________________________________
 
 ### Phase 4: GitHub Actions Integration & Documentation
 
@@ -986,7 +986,7 @@ For LLM Assistants
 
 When modifying flows:
 1. Check flows/<flow_name>.py for flow definition
-2. Check dbt/ff_analytics/models/sources/ for data
+2. Check dbt/ff_data_transform/models/sources/ for data
 contracts
 3. Update both if schema changes
 4. Test locally: python flows/<flow_name>.py
@@ -1122,7 +1122,7 @@ Evaluate Phase B vs C in 3-6 months based on:
 
 **Deliverable**: Clear migration path documented
 
----
+______________________________________________________________________
 
 ## Week 4 Deliverables Summary
 
@@ -1141,7 +1141,7 @@ successes
 assistants
 ✅ **GCS/BigQuery migration plan** documented
 
----
+______________________________________________________________________
 
 ## Next Steps (Post-Week 4)
 
@@ -1164,7 +1164,7 @@ assistants
 - Activate dbt sources for freshness monitoring
 - Optimize BigQuery partitioning/clustering
 
----
+______________________________________________________________________
 
 ## Resource Requirements
 
@@ -1195,7 +1195,7 @@ assistants
 - **Monthly**: ~2 hours (update schedules, add
   sources)
 
----
+______________________________________________________________________
 
 ## Success Criteria
 
@@ -1218,7 +1218,7 @@ to GCS
 ✅ **Backfill complete** - 2020-2024 historical
 data loaded
 
----
+______________________________________________________________________
 
 ## Decision Points
 
@@ -1256,7 +1256,7 @@ of truth)
 - Now: A (Prefect) - works with Parquet files
 - After BigQuery: B (dbt) - native support
 
----
+______________________________________________________________________
 
 ## Questions?
 

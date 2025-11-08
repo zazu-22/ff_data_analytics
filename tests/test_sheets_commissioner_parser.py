@@ -53,55 +53,70 @@ class TestDeriveTransactionType:
 
     def test_rookie_draft_selection(self):
         """Verify rookie draft selection classification."""
-        assert _derive_transaction_type("rookie_draft", "Draft", "-") == "rookie_draft_selection"
+        assert (
+            _derive_transaction_type("rookie_draft", "Draft", "-", "-", "-")
+            == "rookie_draft_selection"
+        )
 
     def test_franchise_tag(self):
         """Verify franchise tag classification."""
-        assert _derive_transaction_type("offseason", "Franchise", "-") == "franchise_tag"
+        assert _derive_transaction_type("offseason", "Franchise", "-", "-", "-") == "franchise_tag"
 
     def test_faad_ufa_signing(self):
         """Verify FAAD UFA signing classification."""
-        assert _derive_transaction_type("faad", "Signing", "-") == "faad_ufa_signing"
-        assert _derive_transaction_type("faad", "FA", "-") == "faad_ufa_signing"
+        assert _derive_transaction_type("faad", "Signing", "-", "-", "-") == "faad_ufa_signing"
+        assert _derive_transaction_type("faad", "FA", "-", "-", "-") == "faad_ufa_signing"
 
     def test_faad_rfa_matched(self):
         """Verify FAAD RFA matched classification."""
-        assert _derive_transaction_type("faad", "Signing", "yes") == "faad_rfa_matched"
+        assert _derive_transaction_type("faad", "Signing", "yes", "-", "-") == "faad_rfa_matched"
 
     def test_fasa_signing(self):
         """Verify FASA signing classification across periods."""
-        assert _derive_transaction_type("regular", "Signing", "-") == "fasa_signing"
-        assert _derive_transaction_type("deadline", "Signing", "-") == "fasa_signing"
-        assert _derive_transaction_type("preseason", "Signing", "-") == "fasa_signing"
-        assert _derive_transaction_type("offseason", "Signing", "-") == "fasa_signing"
+        assert _derive_transaction_type("regular", "Signing", "-", "-", "-") == "fasa_signing"
+        assert _derive_transaction_type("deadline", "Signing", "-", "-", "-") == "fasa_signing"
+        assert _derive_transaction_type("preseason", "Signing", "-", "-", "-") == "fasa_signing"
+        assert _derive_transaction_type("offseason", "Signing", "-", "-", "-") == "fasa_signing"
 
     def test_offseason_ufa_signing(self):
         """Verify offseason UFA signing classification."""
-        assert _derive_transaction_type("offseason", "FA", "-") == "offseason_ufa_signing"
+        assert _derive_transaction_type("offseason", "FA", "-", "-", "-") == "offseason_ufa_signing"
 
     def test_trade(self):
         """Verify trade classification."""
-        assert _derive_transaction_type("regular", "Trade", "-") == "trade"
+        assert _derive_transaction_type("regular", "Trade", "-", "-", "-") == "trade"
 
     def test_cut(self):
         """Verify cut classification."""
-        assert _derive_transaction_type("regular", "Cut", "-") == "cut"
+        assert _derive_transaction_type("regular", "Cut", "-", "Team A", "-") == "cut"
 
     def test_waiver_claim(self):
         """Verify waiver claim classification."""
-        assert _derive_transaction_type("regular", "Waivers", "-") == "waiver_claim"
+        assert _derive_transaction_type("regular", "Waivers", "-", "-", "-") == "waiver_claim"
+        # Verify waiver claim via Cut from Waiver Wire
+        assert (
+            _derive_transaction_type("regular", "Cut", "-", "Waiver Wire", "Team B")
+            == "waiver_claim"
+        )
+        # Verify waiver claim via Cut from Cap Space
+        assert (
+            _derive_transaction_type("regular", "Cut", "-", "Cap Space", "Team B") == "waiver_claim"
+        )
 
     def test_contract_extension(self):
         """Verify contract extension classification."""
-        assert _derive_transaction_type("offseason", "Extension", "-") == "contract_extension"
+        assert (
+            _derive_transaction_type("offseason", "Extension", "-", "-", "-")
+            == "contract_extension"
+        )
 
     def test_amnesty_cut(self):
         """Verify amnesty cut classification."""
-        assert _derive_transaction_type("offseason", "Amnesty", "-") == "amnesty_cut"
+        assert _derive_transaction_type("offseason", "Amnesty", "-", "-", "-") == "amnesty_cut"
 
     def test_unknown(self):
         """Verify unknown transaction type fallback."""
-        assert _derive_transaction_type("unknown", "Unknown", "-") == "unknown"
+        assert _derive_transaction_type("unknown", "Unknown", "-", "-", "-") == "unknown"
 
 
 class TestInferAssetType:
@@ -195,32 +210,32 @@ class TestParseContractFields:
 
     def test_standard_contract(self):
         """Verify standard contract parsing with split."""
-        df = pl.DataFrame({"Contract": ["12/4"], "Split": ["3-3-3-3"]})
-        result = _parse_contract_fields(df)
+        contract_df = pl.DataFrame({"Contract": ["12/4"], "Split": ["3-3-3-3"]})
+        result = _parse_contract_fields(contract_df)
         assert result["total"][0] == 12
         assert result["years"][0] == 4
         assert result["split_array"][0].to_list() == [3, 3, 3, 3]
 
     def test_front_loaded_contract(self):
         """Verify front-loaded contract parsing."""
-        df = pl.DataFrame({"Contract": ["152/4"], "Split": ["40-40-37-35"]})
-        result = _parse_contract_fields(df)
+        contract_df = pl.DataFrame({"Contract": ["152/4"], "Split": ["40-40-37-35"]})
+        result = _parse_contract_fields(contract_df)
         assert result["total"][0] == 152
         assert result["years"][0] == 4
         assert result["split_array"][0].to_list() == [40, 40, 37, 35]
 
     def test_even_distribution_no_split(self):
         """Verify even distribution when no split provided."""
-        df = pl.DataFrame({"Contract": ["12/3"], "Split": ["-"]})
-        result = _parse_contract_fields(df)
+        contract_df = pl.DataFrame({"Contract": ["12/3"], "Split": ["-"]})
+        result = _parse_contract_fields(contract_df)
         assert result["total"][0] == 12
         assert result["years"][0] == 3
         assert result["split_array"][0].to_list() == [4, 4, 4]
 
     def test_null_contract(self):
         """Verify null contract handling."""
-        df = pl.DataFrame({"Contract": ["-"], "Split": ["-"]})
-        result = _parse_contract_fields(df)
+        contract_df = pl.DataFrame({"Contract": ["-"], "Split": ["-"]})
+        result = _parse_contract_fields(contract_df)
         assert result["total"][0] is None
         assert result["years"][0] is None
         assert result["split_array"][0] is None

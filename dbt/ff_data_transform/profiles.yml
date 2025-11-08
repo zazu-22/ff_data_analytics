@@ -1,0 +1,19 @@
+ff_duckdb:
+  target: "{{ env_var('DBT_TARGET', 'local') }}"
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'target/dev.duckdb') }}"
+      threads: "{{ env_var('DBT_THREADS', '1') | int }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'main') }}"
+      extensions:
+        - httpfs
+        - parquet
+    ci:
+      type: duckdb
+      path: ":memory:"
+      threads: "{{ env_var('DBT_THREADS', '1') | int }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'main') }}"
+      extensions:
+        - httpfs
+        - parquet

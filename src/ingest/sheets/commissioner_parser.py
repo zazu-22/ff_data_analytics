@@ -743,7 +743,7 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
 
 def _apply_name_aliases(player_df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
     """Apply name alias corrections from seed file."""
-    alias_path = Path("dbt/ff_analytics/seeds/dim_name_alias.csv")
+    alias_path = Path("dbt/ff_data_transform/seeds/dim_name_alias.csv")
     if not alias_path.exists():
         return player_df
 
@@ -1023,7 +1023,7 @@ def _map_player_names(player_df: pl.DataFrame) -> pl.DataFrame:
         DataFrame with added player_id column (-1 for unmapped)
 
     """
-    xref_path = Path("dbt/ff_analytics/seeds/dim_player_id_xref.csv")
+    xref_path = Path("dbt/ff_data_transform/seeds/dim_player_id_xref.csv")
     if not xref_path.exists():
         raise FileNotFoundError(f"dim_player_id_xref seed not found at {xref_path}")
 
@@ -1080,7 +1080,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     transactions_df = pl.read_csv(csv_path)
 
     # Join to dim_timeframe for period_type classification
-    timeframe_seed_path = Path("dbt/ff_analytics/seeds/dim_timeframe.csv")
+    timeframe_seed_path = Path("dbt/ff_data_transform/seeds/dim_timeframe.csv")
     if not timeframe_seed_path.exists():
         raise FileNotFoundError(f"dim_timeframe seed not found at {timeframe_seed_path}")
 

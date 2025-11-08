@@ -7,13 +7,13 @@ Difference from `tools/`: Scripts are typically invoked by CI/CD or for one-off 
 
 ## Directory Structure
 
-| Directory | Purpose | When to Use |
+| Directory          | Purpose                   | When to Use                          |
 | ------------------ | ------------------------- | ------------------------------------ |
-| `ingest/` | Production data ingestion | CI workflows, scheduled runs |
-| `R/` | R-based loaders | When Python alternatives unavailable |
-| `setup/` | One-time initialization | Environment setup, bucket creation |
-| `troubleshooting/` | Debugging utilities | Investigating issues |
-| `debug/` | Development helpers | Local debugging only |
+| `ingest/`          | Production data ingestion | CI workflows, scheduled runs         |
+| `R/`               | R-based loaders           | When Python alternatives unavailable |
+| `setup/`           | One-time initialization   | Environment setup, bucket creation   |
+| `troubleshooting/` | Debugging utilities       | Investigating issues                 |
+| `debug/`           | Development helpers       | Local debugging only                 |
 
 ## Key Scripts
 
@@ -26,9 +26,9 @@ Difference from `tools/`: Scripts are typically invoked by CI/CD or for one-off 
 **Strategy**:
 
 1. Use Google Sheets API `copyTo()` to duplicate tabs
-1. Freeze formulas to values via batch operations
-1. Atomic rename/swap for consistency
-1. Log to Shared Drive (avoids service account quota)
+2. Freeze formulas to values via batch operations
+3. Atomic rename/swap for consistency
+4. Log to Shared Drive (avoids service account quota)
 
 **Usage**: Invoked by GitHub Actions workflow
 
@@ -122,16 +122,16 @@ GCS_BUCKET=ff-analytics
 **Operational script** (production use):
 
 1. Create in appropriate subdirectory (`ingest/`, `setup/`, etc.)
-1. Add argparse CLI
-1. Document required environment variables
-1. Add to GitHub Actions workflow if needed
-1. Update this file
+2. Add argparse CLI
+3. Document required environment variables
+4. Add to GitHub Actions workflow if needed
+5. Update this file
 
 **One-off utility**:
 
 1. Create in `troubleshooting/` or `debug/`
-1. Add usage docstring
-1. Not required to be production-ready
+2. Add usage docstring
+3. Not required to be production-ready
 
 ## CI Integration
 
