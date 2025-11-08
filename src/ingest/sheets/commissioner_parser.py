@@ -639,15 +639,28 @@ def _normalize_position(txn_position: str | None) -> list[str]:
     return position_map.get(txn_position.strip().upper(), [txn_position.strip().upper()])
 
 
-def _parse_pick_id(player_str: str | None, pick_col: str) -> str | None:
-    """Parse pick reference to standardized pick_id.
+def _parse_pick_id(player_str: str | None, pick_col: str) -> dict | None:
+    """Parse pick reference to structured pick information.
 
     Args:
         player_str: Player column value (e.g., "2025 1st Round")
-        pick_col: Pick column value (slot number or "TBD")
+        pick_col: Pick column value (overall pick number or "TBD")
 
     Returns:
-        pick_id in format YYYY_R#_P## or YYYY_R#_TBD, or None if not a pick
+        dict with:
+          - pick_season: Draft year (int)
+          - pick_round: Round number (int)
+          - pick_overall_number: Overall pick number from sheet (int or None)
+          - pick_id_raw: Raw combined format YYYY_R#_P## (str)
+        or None if not a pick
+
+    Note:
+        The Pick column contains OVERALL pick numbers (1-60+), not within-round slots.
+        Example: "23" means the 23rd overall pick, which with comp picks could be
+        Round 2, Slot 11 (if R1 had 5 comp picks making 17 total R1 picks).
+
+        Canonical pick_id assignment happens in dbt by matching overall pick numbers
+        to dim_pick after compensatory picks are properly sequenced.
 
     """
     import re
@@ -659,13 +672,23 @@ def _parse_pick_id(player_str: str | None, pick_col: str) -> str | None:
     if not match:
         return None
 
-    season, round_num = int(match.group(1)), int(match.group(2))
+    season = int(match.group(1))
+    round_num = int(match.group(2))
 
     if pick_col and pick_col != "TBD" and pick_col != "-":
-        slot = int(pick_col)
-        return f"{season}_R{round_num}_P{slot:02d}"
+        overall_pick = int(pick_col)
+        # Raw pick_id uses overall pick number as-is (will be corrected in dbt)
+        pick_id_raw = f"{season}_R{round_num}_P{overall_pick:02d}"
     else:
-        return f"{season}_R{round_num}_TBD"  # Synthetic ID
+        overall_pick = None
+        pick_id_raw = f"{season}_R{round_num}_TBD"
+
+    return {
+        "pick_season": season,
+        "pick_round": round_num,
+        "pick_overall_number": overall_pick,
+        "pick_id_raw": pick_id_raw,
+    }
 
 
 def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
@@ -1107,14 +1130,41 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     # Map player names to player_id using helper
     transactions_df = _map_player_names(transactions_df)
 
-    # Map pick references to pick_id using helper
-    transactions_df = transactions_df.with_columns(
-        pl.struct(["Player", "Pick"])
-        .map_elements(
-            lambda x: _parse_pick_id(x["Player"], x["Pick"]),
-            return_dtype=pl.String,
+    # Map pick references to pick_id using helper (returns struct with multiple fields)
+    def parse_pick_safe(x):
+        """Handle None return from _parse_pick_id."""
+        result = _parse_pick_id(x["Player"], x["Pick"])
+        if result is None:
+            # Return None values for non-pick rows
+            return {
+                "pick_season": None,
+                "pick_round": None,
+                "pick_overall_number": None,
+                "pick_id_raw": None,
+            }
+        return result
+
+    transactions_df = (
+        transactions_df.with_columns(
+            pl.struct(["Player", "Pick"])
+            .map_elements(
+                parse_pick_safe,
+                return_dtype=pl.Struct(
+                    {
+                        "pick_season": pl.Int64,
+                        "pick_round": pl.Int64,
+                        "pick_overall_number": pl.Int64,
+                        "pick_id_raw": pl.String,
+                    }
+                ),
+            )
+            .alias("pick_struct")
         )
-        .alias("pick_id")
+        .unnest("pick_struct")
+        .with_columns(
+            # Rename pick_id_raw to pick_id for backward compatibility
+            pl.col("pick_id_raw").alias("pick_id")
+        )
     )
 
     # Clean transaction_id (Sort column)
@@ -1133,6 +1183,21 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             + "_"
             + pl.arange(0, pl.len()).over("transaction_id").cast(pl.String)
         ).alias("transaction_id_unique")
+    )
+
+    # Calculate FAAD award sequence (v2 architecture - immutable sequence tracking)
+    # This assigns a 1-indexed chronological sequence to FAAD UFA signings per season
+    # The sequence is persisted at ingestion time and never recalculated, ensuring
+    # that comp pick ordering remains stable even if transaction_ids are manually corrected
+    transactions_df = transactions_df.with_columns(
+        pl.when(pl.col("transaction_type_refined") == "faad_ufa_signing")
+        .then(
+            pl.col("transaction_id")
+            .rank(method="ordinal")
+            .over(["season", "transaction_type_refined"])
+        )
+        .otherwise(pl.lit(None).cast(pl.Int64))
+        .alias("faad_award_sequence")
     )
 
     # Select final columns
@@ -1156,6 +1221,11 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             "Player",
             "player_id",
             "pick_id",
+            # New pick fields for matching to dim_pick
+            "pick_season",
+            "pick_round",
+            "pick_overall_number",
+            "pick_id_raw",
             "Contract",
             "Split",
             "total",
@@ -1163,6 +1233,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             "split_array",
             "RFA Matched",
             "FAAD Comp",
+            "faad_award_sequence",  # v2: Immutable FAAD sequence
             "Type",
         ]
     )

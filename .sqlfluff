@@ -9,7 +9,12 @@ large_file_skip_byte_limit = 30000
 fix_even_unparsable = false
 # Exclude third-party packages, build artifacts, archive directories, and test files from linting
 exclude_dirs = .venv,target,dbt_packages,_archive,tests
-exclude = **/.venv/**,**/target/**,**/dbt_packages/**,dbt/ff_analytics/analyses/_archive/**,**/tests/**
+# Exclude files with DuckDB-specific syntax that SQLFluff cannot parse:
+# - Staging models use read_parquet() with named parameters
+# - Core models with DuckDB-specific functions (list_sum, try_cast, regexp_matches, etc.)
+# - Mart models with DuckDB-specific functions
+# Note: Patterns are relative to the config file location
+exclude = **/.venv/**,**/target/**,**/dbt_packages/**,dbt/ff_analytics/analyses/_archive/**,**/tests/**,dbt/ff_analytics/models/staging/stg_*__*.sql,dbt/ff_analytics/models/core/dim_player_contract_history.sql,dbt/ff_analytics/models/core/fact_league_transactions.sql,dbt/ff_analytics/models/core/intermediate/int_pick_*.sql,dbt/ff_analytics/models/marts/mart_contract_snapshot_current.sql,dbt/ff_analytics/models/marts/mart_real_world_actuals_weekly.sql
 # Reduce noise from dbt macro warnings
 warnings_file_skip = **/.venv/**,**/target/**,**/dbt_packages/**
 
@@ -20,8 +25,8 @@ profile = ff_duckdb
 target = local
 
 [sqlfluff:indentation]
-# More lenient indentation to avoid noise
-tab_space_size = 2
+# Match sqlfmt's default 4-space indentation
+tab_space_size = 4
 indent_unit = space
 
 [sqlfluff:rules:capitalisation.keywords]

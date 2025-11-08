@@ -1,0 +1,11 @@
+transaction_id_unique,pick_id_corrected,correction_note
+1589_0,2021_R3_P01,Off by 2 - likely data entry error in sheet Pick column
+1596_0,2021_R3_P16,Off by 4 - likely data entry error in sheet Pick column
+2153_0,2022_R4_P01,Off by 2 - likely data entry error in sheet Pick column
+2661_0,2023_R3_P01,Off by 4 - likely data entry error in sheet Pick column
+3170_0,2024_R2_P01,Off by 1 - likely data entry error in sheet Pick column
+3174_0,2024_R2_P01,Off by 1 - likely data entry error in sheet Pick column (duplicate transaction)
+3201_0,2024_R3_P01,Off by 2 - likely data entry error in sheet Pick column
+3612_0,2025_R3_P01,Off by 4 - likely data entry error in sheet Pick column
+3613_0,2025_R2_P15,Off by 4 - likely data entry error in sheet Pick column
+3635_0,2025_R5_P01,Off by 1 - likely data entry error in sheet Pick column

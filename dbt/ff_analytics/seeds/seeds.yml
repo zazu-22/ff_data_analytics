@@ -48,45 +48,11 @@ seeds:
         data_tests:
           - not_null
 
-  - name: dim_pick
-    description: "Base draft picks 2012-2030 (compensatory picks added via TRANSACTIONS)"
-    config:
-      column_types:
-        season: BIGINT
-        round: BIGINT
-        overall_pick: BIGINT
-    columns:
-      - name: pick_id
-        description: "Unique pick identifier (e.g., 2024_R1_P01)"
-        data_tests:
-          - not_null
-          - unique
-      - name: season
-        description: "Draft season"
-        data_tests:
-          - not_null
-      - name: round
-        description: "Round number (1-5)"
-        data_tests:
-          - not_null
-          - accepted_values:
-              config:
-                severity: error
-              arguments:
-                values: [1, 2, 3, 4, 5]
-      - name: overall_pick
-        description: "Overall pick number in draft (P01-P60 for base picks, >60 for comp, 99 for TBD)"
-        data_tests:
-          - not_null
-      - name: pick_type
-        description: "Pick type (base, compensatory, or conditional)"
-        data_tests:
-          - not_null
-          - accepted_values:
-              config:
-                severity: error
-              arguments:
-                values: ['base', 'compensatory', 'conditional']
+  # NOTE: dim_pick has been migrated to a dbt model (models/core/dim_pick.sql)
+  # See: dbt/ff_analytics/models/core/dim_pick.sql
+  # Migration date: 2025-11-07
+  # Reason: Incorporates compensatory picks from FAAD, TBD picks, full dimensional model
+  # Old seed archived: seeds/_archive/dim_pick.csv
 
   - name: dim_scoring_rule
     description: "Fantasy scoring rules (SCD Type 2)"
@@ -314,3 +280,20 @@ seeds:
           - not_null
       - name: notes
         description: "Explanation of mapping relationship"
+
+  - name: seed_faad_award_sequence_snapshot
+    description: "Baseline snapshot of FAAD award sequences for immutability testing (v2 architecture). Updated when new FAAD completes."
+    columns:
+      - name: transaction_id
+        description: "Transaction ID from commissioner sheet"
+        data_tests:
+          - not_null
+          - unique
+      - name: season
+        description: "Season year"
+        data_tests:
+          - not_null
+      - name: faad_award_sequence
+        description: "Chronological 1-indexed sequence of FAAD awards within season (immutable baseline)"
+        data_tests:
+          - not_null

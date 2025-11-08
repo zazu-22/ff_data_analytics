@@ -113,15 +113,35 @@ repos:
       - id: check-merge-conflict
         name: check-merge-conflict
 
-  # SQL linting and formatting
+  # SQL formatting (runs first to fix indentation/spacing)
+  - repo: https://github.com/tconbeer/sqlfmt
+    rev: v0.28.2
+    hooks:
+      - id: sqlfmt
+        name: sqlfmt (SQL formatting)
+        files: ^dbt/ff_analytics/models/.*\.sql$
+        exclude: ^dbt/ff_analytics/tests/.*\.sql$
+        args: [--dialect, polyglot]  # Polyglot mode supports DuckDB
+
+  # SQL linting (selective - excludes DuckDB-specific syntax files)
   - repo: https://github.com/sqlfluff/sqlfluff
     rev: 3.1.1
     hooks:
       # Lint on every commit (fast check)
+      # Excludes staging models and files with DuckDB-specific syntax
       - id: sqlfluff-lint
-        name: sqlfluff-lint (dbt SQL)
+        name: sqlfluff-lint (dbt SQL - selective)
         files: ^dbt/ff_analytics/models/.*\.(sql|sql\.j2)$
-        exclude: ^dbt/ff_analytics/tests/.*\.sql$
+        exclude: |
+          (?x)^(
+            dbt/ff_analytics/tests/.*\.sql$|
+            dbt/ff_analytics/models/staging/stg_.*\.sql$|
+            dbt/ff_analytics/models/core/dim_player_contract_history\.sql$|
+            dbt/ff_analytics/models/core/fact_league_transactions\.sql$|
+            dbt/ff_analytics/models/core/intermediate/int_pick_.*\.sql$|
+            dbt/ff_analytics/models/marts/mart_contract_snapshot_current\.sql$|
+            dbt/ff_analytics/models/marts/mart_real_world_actuals_weekly\.sql$
+          )$
         additional_dependencies:
           [
             "dbt-core>=1.8.0",
@@ -143,6 +163,29 @@ repos:
       #       "sqlfluff-templater-dbt>=3.1.1",
       #     ]
       #   args: [--config, pyproject.toml, --ignore, parsing]
+
+  # dbt compile (syntax validation using actual DuckDB parser)
+  - repo: local
+    hooks:
+      - id: dbt-compile-check
+        name: dbt-compile-check (SQL syntax validation)
+        entry: bash -c 'cd dbt/ff_analytics && uv run dbt deps --project-dir . --profiles-dir . && uv run dbt compile --project-dir . --profiles-dir .'
+        language: system
+        files: ^dbt/ff_analytics/models/.*\.sql$
+        pass_filenames: false
+        always_run: true  # Run on any SQL file change to validate all models
+
+  # dbt-opiner (dbt best practices linting)
+  - repo: local
+    hooks:
+      - id: dbt-opiner-lint
+        name: dbt-opiner-lint (dbt best practices)
+        entry: bash -c 'cd dbt/ff_analytics && uv run dbt deps --project-dir . --profiles-dir . && uv run dbt compile --project-dir . --profiles-dir . && cd ../.. && uv run dbt-opiner lint --all-files'
+        language: system
+        files: ^dbt/ff_analytics/.*\.(sql|yml|yaml)$
+        exclude: ^dbt/ff_analytics/tests/.*\.sql$  # Exclude test files (not in dbt manifest as nodes)
+        pass_filenames: false
+        always_run: true  # Run on any dbt file change to check all files
 
   # GitHub Actions linting
   - repo: https://github.com/rhysd/actionlint

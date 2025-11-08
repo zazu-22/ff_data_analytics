@@ -1,0 +1,7 @@
+# dbt-opiner configuration
+# See https://pypi.org/project/dbt-opiner/ for available options
+#
+# File exclusions are handled here for portability and observability
+# Test files are excluded - they're not dbt project nodes
+
+ignore_opinions: []

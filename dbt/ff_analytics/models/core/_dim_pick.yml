@@ -1,0 +1,284 @@
+models:
+  - name: dim_pick
+    description: |
+      Complete draft pick dimension including base picks, compensatory picks, and TBD picks.
+
+      **Grain**: One row per draft pick (pick_id unique)
+
+      **Sources**:
+      - Base picks (P01-P12): Generated for all years/rounds
+      - Compensatory picks (P13+): Extracted from FAAD Comp column in transactions
+      - TBD picks: Future picks with unknown position
+
+      **Pick Types**:
+      - `base`: Standard picks P01-P12 determined by standings
+      - `compensatory`: Comp picks P13+ awarded for RFA losses in FAAD
+      - `tbd`: Future picks with unknown slot (format: YYYY_R#_TBD)
+
+      **Compensatory Pick Rules** (per League Constitution XI.M-N):
+      - Awarded to team that LOST an RFA in FAAD
+      - Round determined by contract AAV:
+        - R1: $25+ per year
+        - R2: $15-24 per year
+        - R3: $10-14 per year
+      - Sequenced chronologically by FAAD transaction order
+      - All comp picks come at END of each round (after P12)
+      - System ends after 2026 offseason
+
+      **Historical Draft Structure**:
+      - 2012-2017: 5 rounds
+      - 2018-2024: 4 rounds
+      - 2025+: 5 rounds
+
+      **Replaces**: Previous seed-based dim_pick (moved to seeds/_archive/)
+
+    config:
+      tags: ['core', 'dimension']
+
+    # Grain test - pick_id must be unique
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - pick_id
+          config:
+            severity: error
+            tags: ['critical', 'pre_rebuild']  # v2: Critical quality gate
+
+      # Base picks count validation (12 picks × 5 rounds × 19 years = 1,140)
+      - dbt_expectations.expect_table_row_count_to_equal:
+          arguments:
+            value: 1140
+          config:
+            where: "pick_type = 'base'"
+            severity: error
+            error_if: "!= 0"
+
+      # Comp picks count validation (56 total historically, may grow)
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 50
+            max_value: 100
+          config:
+            where: "pick_type = 'compensatory'"
+            severity: warn
+
+      # TBD picks count validation (varies based on future trades)
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 0
+            max_value: 100
+          config:
+            where: "pick_type = 'tbd'"
+            severity: warn
+
+    columns:
+      - name: pick_id
+        description: |
+          Primary key. Draft pick identifier in format YYYY_R#_P##.
+
+          **Examples**:
+          - `2024_R1_P01`: 2024 Round 1, Pick 1 (1st overall - worst team)
+          - `2024_R1_P14`: 2024 Round 1, Pick 14 (comp pick, 14th overall)
+          - `2027_R1_TBD`: 2027 Round 1, position unknown (future trade)
+
+          **Format Rules**:
+          - YYYY: Draft year (4 digits)
+          - R#: Round (1-5)
+          - P##: Pick number (01-60+) OR "TBD"
+          - Leading zero required for picks 01-09
+
+        data_tests:
+          - not_null
+          - unique
+
+      - name: season
+        description: |
+          Draft year (2012-2030+).
+
+          Represents the year the rookie draft takes place, which is typically
+          in the offseason following the NFL season year.
+
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 2012
+                max_value: 2035
+
+      - name: round
+        description: |
+          Draft round (1-5).
+
+          **Historical variation**:
+          - 2012-2017: 5 rounds
+          - 2018-2024: 4 rounds (Round 5 picks exist but unused)
+          - 2025+: 5 rounds
+
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+
+      - name: overall_pick
+        description: |
+          Overall draft position accounting for compensatory picks in prior rounds.
+
+          **Calculation**:
+          - Recalculated after all picks (base + comp) are assembled
+          - Sequenced by round, then slot_number within round
+          - Compensatory picks increase overall_pick for subsequent rounds
+
+          **Examples**:
+          - 2024 R1 P13 (comp): overall_pick = 13
+          - 2024 R2 P01 (base): overall_pick = 18 (after 17 R1 picks)
+
+          **Special values**:
+          - `99`: Placeholder for TBD picks (position unknown)
+
+        data_tests:
+          - not_null
+
+      - name: slot_number
+        description: |
+          Position within round (1-60+).
+
+          **Base picks**: 1-12 (P01-P12)
+          **Comp picks**: 13+ (P13, P14, P15, etc.)
+          **TBD picks**: 99 (placeholder)
+
+          For comp picks, slot_number is assigned chronologically:
+          - First FAAD RFA that awards comp → slot 13
+          - Second FAAD RFA that awards comp → slot 14
+          - Etc.
+
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 100
+              config:
+                where: "pick_type != 'tbd'"
+
+      - name: pick_type
+        description: |
+          Pick classification.
+
+          **Values**:
+          - `base`: Standard picks (P01-P12) determined by standings
+          - `compensatory`: Comp picks (P13+) awarded for RFA losses
+          - `tbd`: Future picks with unknown position
+
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['base', 'compensatory', 'tbd']
+
+      - name: is_compensatory
+        description: |
+          Boolean flag: TRUE for compensatory picks (P13+), FALSE otherwise.
+
+          Convenience column for filtering. Equivalent to:
+          `pick_type = 'compensatory'`
+
+        data_tests:
+          - not_null
+
+      - name: comp_source_player
+        description: |
+          Player name that triggered the compensatory pick award.
+
+          **Populated for**: Comp picks only
+          **NULL for**: Base picks and TBD picks
+
+          **Example**: "Patrick Mahomes" (RFA who signed with different team)
+
+        data_tests:
+          - not_null:
+              config:
+                where: "pick_type = 'compensatory'"
+
+      - name: comp_awarded_to_franchise
+        description: |
+          Franchise ID of team that originally received the comp pick.
+
+          **Note**: This is the ORIGINAL recipient (team that lost the RFA).
+          The pick may have been traded to another team. Use fact_league_transactions
+          or dim_pick_valuation to track current ownership.
+
+          **Populated for**: Comp picks only
+          **NULL for**: Base picks and TBD picks
+
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_franchise')
+                field: franchise_id
+              config:
+                where: "comp_awarded_to_franchise is not null"
+
+      - name: comp_faad_transaction_id
+        description: |
+          Transaction ID from FAAD where the comp pick was awarded.
+
+          Links to stg_sheets__transactions to find the RFA signing that triggered
+          the comp pick award.
+
+          **Populated for**: Comp picks only
+          **NULL for**: Base picks and TBD picks
+
+      - name: comp_round_threshold
+        description: |
+          Contract AAV threshold that determined the comp pick round.
+
+          **Values** (per League Constitution XI.N):
+          - `R1: $25+/yr`: Contract AAV ≥ $25/year
+          - `R2: $15-24/yr`: Contract AAV $15-24/year
+          - `R3: $10-14/yr`: Contract AAV $10-14/year
+
+          **Populated for**: Comp picks only
+          **NULL for**: Base picks and TBD picks
+
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['R1: $25+/yr', 'R2: $15-24/yr', 'R3: $10-14/yr']
+              config:
+                where: "comp_round_threshold is not null"
+
+      - name: faad_chronological_seq
+        description: |
+          Chronological sequence number within round for comp picks.
+
+          Determines the order of comp picks within a round based on FAAD
+          transaction timing. First RFA signing = 1, second = 2, etc.
+
+          **Populated for**: Comp picks only
+          **NULL for**: Base picks and TBD picks
+
+          **Example (2024 R1 comp picks)**:
+          - P13: faad_chronological_seq = 1 (first RFA signing in FAAD)
+          - P14: faad_chronological_seq = 2 (second RFA signing)
+          - P15: faad_chronological_seq = 3 (third RFA signing)
+
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 20
+              config:
+                where: "faad_chronological_seq is not null"
+
+      - name: notes
+        description: |
+          Freeform notes about the pick.
+
+          **Comp picks**: Includes player name and AAV validation status
+          **TBD picks**: Standard message "TBD - position unknown until standings finalized"
+          **Base picks**: Empty string
+
+          **Example comp pick note**:
+          "Comp for Patrick Mahomes | MISMATCH: FAAD shows R2 but AAV $25/yr suggests R1"

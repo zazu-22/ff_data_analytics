@@ -23,7 +23,6 @@ dependencies = [
     "pydrive2>=1.21.3",
     "rich>=14.1.0",
     "seaborn>=0.13.2",
-    "sqlglot>=27.19.0",
     "vegafusion>=2.0.2",
     "vl-convert-python>=1.8.0",
     "websockets>=15.0.1",
@@ -45,9 +44,11 @@ dev = [
     "ruff>=0.13.2",
     "sqlfluff>=3.1.1",
     "sqlfluff-templater-dbt>=3.1.1",
+    "shandy-sqlfmt>=0.20.0",
     "types-pyyaml>=6.0.0",
     "types-requests>=2.31.0",
     "yamllint>=1.35.1",
+    "dbt-opiner>=1.5.0",
 ]
 
 [build-system]
@@ -148,12 +149,21 @@ exclude_rules = "L034,L044,RF02,RF03,RF04,RF06,CV06"  # Allow keywords as identi
 # IMPORTANT: Do not fix files with parsing/templating errors
 # This prevents sqlfluff-fix from modifying files it can't fully parse
 fix_even_unparsable = false
-# Exclude test files from linting (dbt templater compilation issues with test config blocks)
-exclude = ["**/tests/**"]
+# Exclude test files and DuckDB-specific files from linting
+# DuckDB-specific files use syntax SQLFluff cannot parse (read_parquet, list_sum, try_cast, etc.)
+exclude = [
+    "**/tests/**",
+    "**/staging/stg_*__*.sql",  # Staging models use read_parquet() with named parameters
+    "**/core/dim_player_contract_history.sql",  # Uses list_sum, list_concat
+    "**/core/fact_league_transactions.sql",  # Uses interval arithmetic
+    "**/core/intermediate/int_pick_*.sql",  # Uses regexp_matches, make_date, unnest
+    "**/marts/mart_contract_snapshot_current.sql",  # Uses cast(... as json), unnest
+    "**/marts/mart_real_world_actuals_weekly.sql",  # Uses arbitrary()
+]
 
 [tool.sqlfluff.indentation]
 indent_unit = "space"
-tab_space_size = 2
+tab_space_size = 4  # Match sqlfmt's default 4-space indentation
 
 [tool.sqlfluff.layout.type.comma]
 line_position = "trailing"
