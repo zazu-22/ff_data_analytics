@@ -55,7 +55,7 @@ ______________________________________________________________________
 ### Sleeper Models (2 tickets) ⚠️ **Priority: Fixes 1,893 duplicates**
 
 - [x] **P1-013** — Update stg_sleeper\_\_fa_pool model (latest_only) - ⚠️ See commit notes: duplicates persist, root cause in mart logic
-- [ ] **P1-014** — Update stg_sleeper\_\_rosters model (latest_only)
+- [x] **P1-014** — Update stg_sleeper\_\_rosters model (latest_only)
 
 ### KTC Models (1 ticket)
 
@@ -140,10 +140,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 11/50 (22%)\
+**Completed**: 12/50 (24%)\
 **In Progress**: 0/50\
 **Blocked**: 0/50\
-**Remaining**: 39/50
+**Remaining**: 38/50
 
 **Notes**:
 

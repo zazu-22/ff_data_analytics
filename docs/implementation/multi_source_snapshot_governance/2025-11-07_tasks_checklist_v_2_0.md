@@ -90,9 +90,11 @@ ______________________________________________________________________
   - [x] Replace custom latest_snapshot CTE with macro call using `latest_only` strategy
   - [x] Test compilation and execution
   - [~] Verify `mrt_fasa_targets` duplicate fix - ⚠️ DUPLICATES PERSIST (root cause in mart logic, not staging)
-- [ ] Update `stg_sleeper__rosters`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_sleeper__rosters`:
+  - [x] Replace `dt=*` with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
+  - [x] Verify snapshot count = 1 (2025-11-05)
+  - [x] Verify roster counts (12 franchises, 321 roster slots)
 
 **KTC (1 model)**:
 

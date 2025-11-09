@@ -1,6 +1,7 @@
 # Ticket P1-014: Update stg_sleeper\_\_rosters Model
 
 **Phase**: 1 - Foundation\
+**Status**: COMPLETE\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
 
@@ -22,23 +23,23 @@ Only the latest roster state is needed for validation and analysis purposes.
 
 ## Tasks
 
-- [ ] Locate `stg_sleeper__rosters.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sleeper__rosters`
-- [ ] Test execution and verify row counts
-- [ ] Verify roster parity tests still run correctly
+- [x] Locate `stg_sleeper__rosters.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sleeper__rosters`
+- [x] Test execution and verify row counts
+- [x] Verify roster parity tests still run correctly
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count reasonable (active rosters across franchises)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count reasonable (active rosters across franchises)
 
 ## Implementation Notes
 
@@ -123,3 +124,27 @@ Sleeper rosters are **current platform state** where:
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Lines 82-84
 - Model file: `dbt/ff_data_transform/models/staging/stg_sleeper__rosters.sql`
 - Related test: `assert_sleeper_commissioner_roster_parity` (17 mismatches - not caused by snapshot issue)
+
+## Completion Notes
+
+**Implemented**: 2025-11-09
+
+**Changes Made**:
+
+- Replaced manual `latest_snapshot` CTE approach with `snapshot_selection_strategy` macro
+- Removed `dt=*` wildcard pattern and manual `WHERE r.dt = (select max_dt from latest_snapshot)` filter
+- Applied `latest_only` strategy for point-in-time roster state
+
+**Test Results**:
+
+- Compilation: PASS
+- Execution: PASS
+- Snapshot count: 1 (2025-11-05)
+- Franchise count: 12 franchises
+- Total roster slots: 321
+
+**Impact**:
+
+- Model now uses standardized snapshot selection approach
+- Removed manual snapshot filtering logic
+- Roster data correctly filtered to latest snapshot only

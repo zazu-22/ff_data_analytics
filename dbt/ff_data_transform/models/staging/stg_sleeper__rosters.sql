@@ -5,15 +5,18 @@ with
     raw_rosters as (
         select *
         from read_parquet('{{ var("external_root") }}/sleeper/rosters/dt=*/rosters_*.parquet', hive_partitioning = true)
+        where
+            {{ snapshot_selection_strategy(
+                var("external_root") ~ '/sleeper/rosters/dt=*/rosters_*.parquet',
+                strategy='latest_only'
+            ) }}
     ),
-
-    latest_snapshot as (select max(dt) as max_dt from raw_rosters),
 
     expanded as (
         select r.league_id, r.roster_id, r.owner_id, r.dt, p.player as sleeper_player_id
         from raw_rosters r
         cross join unnest(r.players) p(player)
-        where r.dt = (select max_dt from latest_snapshot) and p.player ~ '^[0-9]+$'
+        where p.player ~ '^[0-9]+$'
     ),
 
     player_xref as (
