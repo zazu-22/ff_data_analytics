@@ -50,11 +50,18 @@ with
             and s.season is not null
             and s.week is not null
             -- Load multiple snapshots to get historical coverage (2020-2025)
-            -- Historical + partial 2025 + latest 2025 for complete coverage
-            and (
-                s.dt = '2025-10-01'  -- Historical: 2020-2024 + partial 2025
-                or s.dt = '2025-10-28'  -- Latest: 2025
-            )
+            -- Baseline snapshot (2020-2024 complete) + latest snapshot (current data)
+            -- Uses baseline_plus_latest strategy for NFLverse historical continuity
+            and {{
+                snapshot_selection_strategy(
+                    var("external_root", "data/raw") ~ "/nflverse/snap_counts/dt=*/*.parquet",
+                    strategy="baseline_plus_latest",
+                    baseline_dt=var(
+                        "NFLVERSE_SNAP_BASELINE_DT",
+                        var("NFLVERSE_BASELINE_DT", "2025-10-01")
+                    )
+                )
+            }}
     ),
 
     crosswalk as (
