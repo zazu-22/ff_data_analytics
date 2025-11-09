@@ -98,4 +98,5 @@ When dbt tests fail (duplicates, relationship violations, etc.), **assume the is
 ## Environment Variables & Security
 
 - See `.env` for all environment variables
+- **direnv support**: The project uses direnv with a `.envrc` file that automatically loads all `.env` variables when you `cd` into the project directory
 - **Security**: Never commit secrets; use repo secrets for CI

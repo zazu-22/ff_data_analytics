@@ -28,7 +28,7 @@ Keep `PYTHONPATH=.` when running Python modules so `src/` packages resolve corre
 
 ## Daily Workflows
 
-- **Environment setup**: `uv sync` (Python 3.13.6 via `.python-version`). Add packages with `uv add` / `uv add --dev`.
+- **Environment setup**: `uv sync` (Python 3.13.6 via `.python-version`). Add packages with `uv add` / `uv add --dev`. The project uses direnv with a `.envrc` file that automatically loads all `.env` variables when you `cd` into the project directory.
 - **Sample generation**: `uv run python tools/make_samples.py nflverse --datasets players weekly --seasons 2024 --out ./samples`.
 - **Run nflverse loader**: `uv run python -c "from ingest.nflverse.shim import load_nflverse; print(load_nflverse('players', seasons=[2024], out_dir='data/raw/nflverse'))"`.
 - **dbt**: `make dbt-run` / `make dbt-test` (wrapped in `uv run` to ensure adapters and env vars) — outputs land in `dbt/ff_data_transform/target/dev.duckdb`.
