@@ -38,12 +38,12 @@ ______________________________________________________________________
 
 ### Macro Implementation
 
-- [ ] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
-- [ ] Implement `snapshot_selection_strategy` macro with three strategies:
-  - [ ] `latest_only` strategy
-  - [ ] `baseline_plus_latest` strategy
-  - [ ] `all` strategy (no filter for backfills)
-- [ ] Test macro compilation with `dbt compile`
+- [x] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
+- [x] Implement `snapshot_selection_strategy` macro with three strategies:
+  - [x] `latest_only` strategy
+  - [x] `baseline_plus_latest` strategy
+  - [x] `all` strategy (no filter for backfills)
+- [x] Test macro compilation with `dbt compile`
 
 ### Staging Model Updates (13 models total)
 

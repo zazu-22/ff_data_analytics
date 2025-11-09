@@ -35,7 +35,7 @@ ______________________________________________________________________
 
 ### Macro & Infrastructure
 
-- [ ] **P1-001** — Create snapshot_selection_strategy macro
+- [x] **P1-001** — Create snapshot_selection_strategy macro
 
 ### NFLverse Models (4 tickets)
 
@@ -134,10 +134,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 1/47 (2%)\
+**Completed**: 2/47 (4%)\
 **In Progress**: 0/47\
 **Blocked**: 0/47\
-**Remaining**: 46/47
+**Remaining**: 45/47
 
 ______________________________________________________________________
 
