@@ -129,6 +129,65 @@ tests:
 - NEVER duplicate dimension logic
 - Use crosswalk seeds (`dim_player_id_xref`) for identity resolution
 
+### SELECT * Policy
+
+**CRITICAL for dbt-opiner O007 compliance**: Using `SELECT *` in the final SELECT statement breaks YAML column validation.
+
+**Rule**:
+
+- ✅ **In CTEs**: `SELECT *` is acceptable for readability
+- ❌ **In final SELECT**: MUST use explicit columns
+
+**Why?**
+dbt-opiner validates that YAML column documentation matches the actual SQL output. When you use `SELECT *` in the final statement:
+
+1. Linter cannot determine which columns are in the output
+2. Upstream schema changes silently break YAML documentation
+3. Creates maintenance burden when debugging O007 violations
+
+**Good Example**:
+
+```sql
+with real_world as (
+    select * from {{ ref('mrt_real_world_actuals_weekly') }}  -- OK in CTE
+),
+
+scoring as (
+    select * from {{ ref('dim_scoring_rule') }}  -- OK in CTE
+)
+
+-- Final SELECT: Explicit columns (dbt-opiner can validate)
+select
+    rw.player_id,
+    rw.season,
+    rw.week,
+    rw.passing_yards,
+    rw.rushing_yards,
+    rw.receiving_yards,
+    s.fantasy_points
+from real_world rw
+cross join scoring s
+```
+
+**Bad Example**:
+
+```sql
+with real_world as (
+    select * from {{ ref('mrt_real_world_actuals_weekly') }}
+)
+
+-- BAD: SELECT * in final output
+select rw.*,  -- ❌ Fails O007 validation
+    fantasy_points
+from real_world rw
+```
+
+**If you must use `SELECT *`**:
+
+- Document EVERY column from the upstream model in your YAML
+- When upstream schema changes, update your YAML immediately
+- Consider using explicit columns instead for better maintainability
+
 ### 2×2 Stat Model (ADR-007)
 
 The project implements a **2×2 model** for player performance data:
@@ -213,6 +272,36 @@ This project uses a **multi-tool approach** for SQL quality:
 
 **Pre-commit hooks**: All tools run automatically on commit (format → lint → validate → dbt practices).
 
+#### Pre-commit Hook Workflow
+
+When you commit SQL/YAML changes, hooks run in this **specific order**:
+
+1. **sqlfmt** - Formats SQL (auto-fixes, modifies files)
+2. **sqlfluff-lint** - Style checks (fails on violations)
+3. **dbt-compile** - Syntax validation (fails on SQL errors)
+4. **dbt-opiner** - Best practices (fails on O001-O007 violations)
+
+**If pre-commit fails**:
+
+1. Check the specific hook that failed in the error output
+2. Fix the reported issue (see "Common Pitfalls" section below)
+3. Stage the changes: `git add .`
+4. Retry the commit
+
+**Run manually before committing** (recommended):
+
+```bash
+make sql-all  # Runs all 4 checks at once - faster than waiting for pre-commit
+```
+
+**Emergency override** (NOT recommended - use sparingly):
+
+```bash
+git commit --no-verify  # Skips ALL pre-commit hooks
+```
+
+**Tip**: Hooks only run on files you've changed, so commits are usually fast. For full validation, use `pre-commit run --all-files`.
+
 **Why multiple tools?**
 
 - SQLFluff's DuckDB dialect has incomplete support for DuckDB-specific syntax
@@ -234,6 +323,147 @@ This project uses a **multi-tool approach** for SQL quality:
 - **Test files**: `tests/*.sql` (not dbt project nodes in manifest)
 
 **Note**: Excluded files are still validated via `dbt compile` and `dbt test`. Only style linting is excluded.
+
+## Creating a New Model: Step-by-Step Checklist
+
+Follow this checklist when creating any new dbt model to ensure dbt-opiner compliance.
+
+### Before You Write SQL
+
+- [ ] **Identify the grain**: One row per \_\_\_?
+- [ ] **Determine materialization**: table, view, or incremental?
+- [ ] **Check upstream dependencies**: Do required models exist?
+- [ ] **Choose unique_key**: Single column or composite key?
+
+### SQL File (`models/<layer>/<model_name>.sql`)
+
+```sql
+{{ config(
+    materialized='table',
+    unique_key='player_id',  -- REQUIRED for dbt-opiner O005
+    external=true,
+    partition_by=['season', 'week']
+) }}
+
+/*
+Model description: One row per [grain]. [Purpose].
+
+Grain: [Detailed grain explanation]
+Source: [Upstream models or sources]
+*/
+
+-- Use CTEs for readability
+with base as (
+    select * from {{ ref('upstream_model') }}  -- SELECT * OK in CTEs
+),
+
+transformed as (
+    select
+        col1,
+        col2,
+        -- calculations
+    from base
+)
+
+-- FINAL SELECT: Must use explicit columns (not SELECT *)
+select
+    player_id,        -- List all columns explicitly
+    season,
+    week,
+    fantasy_points
+from transformed
+```
+
+**Key Requirements**:
+
+- [ ] Add config block with `materialized` and `unique_key`
+- [ ] Include descriptive header comment with grain
+- [ ] Use **explicit columns in final SELECT** (not `SELECT *`)
+- [ ] Format with sqlfmt (runs automatically via pre-commit)
+
+### YAML File (`models/<layer>/_<model_name>.yml`)
+
+Create `_<model_name>.yml` in the same directory:
+
+```yaml
+version: 2
+
+models:
+  - name: <model_name>
+    description: |
+      [One sentence grain statement]. [Purpose and key logic].
+
+      Grain: One row per [detailed grain]
+      Source: [Upstream models]
+    config:
+      unique_key: player_id  # Must match SQL config
+    columns:
+      - name: player_id
+        description: Canonical player identifier
+        data_tests:
+          - not_null
+          - unique
+
+      - name: season
+        description: NFL season year
+        data_tests:
+          - not_null
+
+      # Document ALL columns, even calculated ones
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - player_id
+              - season
+          config:
+            severity: error
+```
+
+**Key Requirements**:
+
+- [ ] File named `_<model_name>.yml` (underscore prefix)
+- [ ] Model description with grain declaration
+- [ ] `unique_key` in config block (must match SQL)
+- [ ] **All columns documented** (dbt-opiner O003)
+- [ ] Grain uniqueness test
+- [ ] FK relationship tests for foreign keys
+- [ ] `not_null` tests on key columns
+- [ ] Use `data_tests:` and `arguments:` (dbt 1.10+ syntax)
+
+### Validation Workflow
+
+Run these commands **in order** before committing:
+
+```bash
+# 1. Compile (validates Jinja and SQL syntax)
+make dbt-run --select <model_name>
+
+# 2. Test (validates data quality)
+make dbt-test --select <model_name>
+
+# 3. Check best practices (runs all quality checks)
+make sql-all
+```
+
+**Pre-commit hooks will automatically run**:
+
+1. sqlfmt (formats SQL)
+2. sqlfluff-lint (style checks)
+3. dbt-compile (syntax validation)
+4. dbt-opiner (best practices validation)
+
+If pre-commit fails, fix the reported issues and retry the commit.
+
+### Common Validation Errors
+
+| Error                           | Fix                                    |
+| ------------------------------- | -------------------------------------- |
+| O001: Model has no description  | Add `description:` to YAML             |
+| O003: Column has no description | Document all columns in YAML           |
+| O005: Missing unique_key        | Add to both SQL config and YAML config |
+| O007: Column in YAML not in SQL | Use explicit columns in final SELECT   |
 
 ## Common Tasks
 
@@ -344,6 +574,200 @@ tests:  # WRONG - should be data_tests:
 - `config:` remains a sibling to `arguments:` (not nested inside)
 - `not_null` and `unique` tests have no arguments, so just use `- not_null` and `- unique` directly
 - Legacy `tests:` key still works but is deprecated; use `data_tests:` for clarity
+
+## Common Pitfalls and How to Avoid Them
+
+This section covers common dbt-opiner violations (O001-O007) and how to fix them.
+
+### O001: Missing Model Description
+
+**Symptom**: `Model <model_name> must have a description`
+
+**Cause**: YAML file missing or has no `description:` field
+
+**Fix**:
+
+```yaml
+models:
+  - name: <model_name>
+    description: |
+      One row per [grain]. [Purpose statement].
+
+      Grain: [Detailed grain explanation]
+      Source: [Upstream dependencies]
+```
+
+**Template**: "[Grain statement]. [Purpose]."
+
+______________________________________________________________________
+
+### O003: Missing Column Descriptions
+
+**Symptom**: `Column(s): ['col1', 'col2'] in model <model_name> must have a description`
+
+**Cause**: Columns exist in SQL but not documented in YAML
+
+**Fix**: Document ALL columns in YAML, even calculated/derived columns
+
+```yaml
+columns:
+  - name: fantasy_points
+    description: Total fantasy points calculated from scoring rules
+  - name: player_id
+    description: Canonical player identifier from dim_player
+```
+
+**Tips**:
+
+- Copy column list from upstream model and adjust
+- Use meaningful descriptions (WHY, not just WHAT)
+- Include calculation logic for derived columns
+
+______________________________________________________________________
+
+### O005: Missing unique_key
+
+**Symptom**: `Model should have a unique key defined in the config block`
+
+**Cause**: Materialized table without `unique_key` declaration
+
+**Fix**: Add to BOTH SQL config AND YAML config
+
+```sql
+-- In SQL file
+{{ config(
+    materialized='table',
+    unique_key='player_id'  -- Single column
+) }}
+
+-- OR for composite key:
+{{ config(
+    materialized='table',
+    unique_key=['player_id', 'season', 'week']  -- Array for composite
+) }}
+```
+
+```yaml
+# In YAML file
+models:
+  - name: <model_name>
+    config:
+      unique_key: player_id  # Must match SQL config
+```
+
+**Note**: Views don't need unique_key, only materialized tables
+
+______________________________________________________________________
+
+### O006: Model Naming Convention
+
+**Symptom**: `Model must start with a prefix that specifies the layer`
+
+**Standard Prefixes**:
+
+- `stg_<provider>__<dataset>` - Staging models (from sources)
+- `fct_<name>` - Fact tables (NOT `fact_*`)
+- `dim_<name>` - Dimensions
+- `mrt_<name>` - Analytics marts (NOT `mart_*`)
+- `int_<name>` - Intermediate models
+
+**Fix**: Rename the model file and update all `{{ ref() }}` calls
+
+**IMPORTANT**: This is a breaking change! Before renaming:
+
+1. Search for all refs: `grep -r "ref('old_name')" models/`
+2. Update all references in downstream models
+3. Update tests and documentation
+4. Commit in a dedicated commit for easy rollback
+
+______________________________________________________________________
+
+### O007: YAML/SQL Column Mismatch
+
+**Symptom**: `Unnecessary column(s) defined in YAML: {'col1', 'col2'}`
+
+**Cause**: Columns documented in YAML but not in final SQL SELECT
+
+**Common Causes**:
+
+1. **Using `SELECT *` in final statement** (most common)
+2. Renamed columns in SQL but not updated in YAML
+3. Removed columns from SQL but forgot to update YAML
+
+**Fix Option 1** (Recommended): Use explicit columns in final SELECT
+
+```sql
+-- BAD
+select rw.*, fantasy_points from real_world rw
+
+-- GOOD
+select
+    rw.player_id,
+    rw.season,
+    rw.week,
+    fantasy_points
+from real_world rw
+```
+
+**Fix Option 2**: Remove columns from YAML that don't exist in SQL
+
+**Prevention**: Always use explicit columns in the final SELECT statement (see SELECT * Policy above)
+
+______________________________________________________________________
+
+### Pre-commit Hook Failures
+
+**Symptom**: Commit rejected with hook errors
+
+**Hooks run in this order**:
+
+1. **sqlfmt** - SQL formatting (auto-fixes)
+2. **sqlfluff-lint** - Style checks
+3. **dbt-compile** - Syntax validation
+4. **dbt-opiner** - Best practices validation
+
+**What to do**:
+
+1. Read the specific hook error message
+2. Fix the issue (see violation guides above)
+3. Stage changes: `git add .`
+4. Retry commit
+
+**Run manually before committing**:
+
+```bash
+make sql-all  # Runs all 4 checks at once
+```
+
+**Emergency only** (NOT recommended):
+
+```bash
+git commit --no-verify  # Skips ALL hooks
+```
+
+______________________________________________________________________
+
+### Debugging Tips
+
+**Check which files are affected**:
+
+```bash
+make dbt-opiner-check  # Shows all violations
+```
+
+**Validate a specific model**:
+
+```bash
+make dbt-run --select <model_name>
+make dbt-test --select <model_name>
+```
+
+**Common workflow**:
+
+1. Make changes to SQL/YAML
+2. Run `make sql-all` to check everything
+3. Fix any violations
+4. Commit (pre-commit will validate again)
 
 ## References
 
