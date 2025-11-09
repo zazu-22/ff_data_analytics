@@ -39,7 +39,7 @@ ______________________________________________________________________
 
 ### NFLverse Models (4 tickets)
 
-- [ ] **P1-002** — Update stg_nflverse\_\_player_stats model (baseline_plus_latest)
+- [x] **P1-002** — Update stg_nflverse\_\_player_stats model (baseline_plus_latest)
 - [ ] **P1-003** — Update stg_nflverse\_\_snap_counts model (baseline_plus_latest)
 - [ ] **P1-004** — Update stg_nflverse\_\_ff_opportunity model (latest_only, consistency)
 - [ ] **P1-007** — Update stg_nflverse\_\_ff_playerids model (latest_only)
@@ -139,10 +139,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 4/49 (8%)\
+**Completed**: 5/49 (10%)\
 **In Progress**: 0/49\
 **Blocked**: 0/49\
-**Remaining**: 45/49
+**Remaining**: 44/49
 
 **Notes**:
 

@@ -49,10 +49,10 @@ ______________________________________________________________________
 
 **NFLverse (4 models)**:
 
-- [ ] Update `stg_nflverse__player_stats`:
-  - [ ] Replace `dt IN ('2025-10-01', '2025-10-27')` with macro call
-  - [ ] Use `baseline_plus_latest` strategy with baseline var
-  - [ ] Test compilation and execution
+- [x] Update `stg_nflverse__player_stats`:
+  - [x] Replace `dt IN ('2025-10-01', '2025-10-27')` with macro call
+  - [x] Use `baseline_plus_latest` strategy with baseline var
+  - [x] Test compilation and execution
 - [ ] Update `stg_nflverse__snap_counts`:
   - [ ] Replace `dt IN ('2025-10-01', '2025-10-28')` with macro call
   - [ ] Use `baseline_plus_latest` strategy with baseline var
