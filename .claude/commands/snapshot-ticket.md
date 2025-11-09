@@ -17,11 +17,13 @@ Execute ticket **$ARGUMENTS** following the implementation plan.
 **Read these files in order**:
 
 1. **Ticket file** (your primary instructions):
+
    ```
    docs/implementation/multi_source_snapshot_governance/tickets/$ARGUMENTS*.md
    ```
 
 2. **Epic overview** (for context if needed):
+
    ```
    docs/implementation/multi_source_snapshot_governance/2025-11-07_README_v_2_0.md
    ```
@@ -55,6 +57,7 @@ Follow the ticket's **Tasks** section exactly. Typical workflow:
 ### Testing Requirements
 
 **Minimum tests** (from ticket's Testing section):
+
 - [ ] Compilation test passes
 - [ ] Execution test passes
 - [ ] Row count verification (should match expected)
@@ -62,6 +65,7 @@ Follow the ticket's **Tasks** section exactly. Typical workflow:
 - [ ] Duplicate tests pass (if applicable)
 
 **For high-priority tickets** (P1-013, P1-016):
+
 - [ ] Run full test suite: `make dbt-test`
 - [ ] Verify duplicate count reduction as documented
 - [ ] Check downstream model impacts
@@ -73,11 +77,13 @@ Follow the ticket's **Tasks** section exactly. Typical workflow:
 **File**: `docs/implementation/multi_source_snapshot_governance/tickets/00-OVERVIEW.md`
 
 Mark ticket status:
+
 ```markdown
 - [x] **$ARGUMENTS** — <ticket description>
 ```
 
 Update progress summary:
+
 ```markdown
 **Completed**: X/47 (X%)
 **Remaining**: Y/47
@@ -88,9 +94,10 @@ Update progress summary:
 **File**: `docs/implementation/multi_source_snapshot_governance/2025-11-07_tasks_checklist_v_2_0.md`
 
 Find the corresponding task in Phase 1 "Staging Model Updates" section and mark sub-tasks complete:
+
 ```markdown
 - [x] Update `stg_<source>__<model>`:
-  - [x] Replace dt=* with macro call
+  - [x] Replace dt=\* with macro call
   - [x] Test compilation and execution
   - [x] Verify duplicate fix (if applicable)
 ```
@@ -99,23 +106,28 @@ Find the corresponding task in Phase 1 "Staging Model Updates" section and mark 
 
 **File**: `docs/implementation/multi_source_snapshot_governance/tickets/$ARGUMENTS*.md` (the ticket you just completed)
 
-Update the ticket's **Status** field at the top of the file:
-```markdown
-**Status**: ✅ COMPLETE
-```
+Confirm that you completed all tasks in the ticket checklist, and mark them as complete, if so.
 
 If the ticket has a **Completion Notes** or **Results** section, add:
+
 - Implementation date
 - Test results summary
 - Any notable findings or deviations from plan
 
 If no such section exists, add one at the end:
+
 ```markdown
 ## Completion Notes
 
 **Implemented**: YYYY-MM-DD
 **Tests**: All passing
 **Impact**: <duplicate reduction or other measurable outcome>
+```
+
+Then update the ticket's **Status** field at the top of the file, depending on the completion status (e.g. COMPLETE, IN PROGRESS, BLOCKED):
+
+```markdown
+**Status**: COMPLETE
 ```
 
 ### 4. Document Results
@@ -130,6 +142,7 @@ If no such section exists, add one at the end:
 ### 5. Commit Changes
 
 Create a commit with this format:
+
 ```
 feat(snapshot): implement $ARGUMENTS - <model_name>
 
@@ -159,6 +172,7 @@ Refs: docs/implementation/multi_source_snapshot_governance/tickets/$ARGUMENTS*.m
 **Macro not found**: If `snapshot_selection_strategy` is undefined, ticket P1-001 hasn't been completed yet.
 
 **Wrong strategy**:
+
 - NFLverse uses `baseline_plus_latest` (historical continuity)
 - All other sources use `latest_only` (current state only)
 
