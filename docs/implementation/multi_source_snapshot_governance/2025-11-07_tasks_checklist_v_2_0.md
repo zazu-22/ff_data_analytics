@@ -6,7 +6,7 @@
 
 ______________________________________________________________________
 
-**Implementation Tickets**: This checklist has been broken into 37 standalone tickets in the `tickets/` directory. Each ticket corresponds to a logical unit of work completable in one session. See `tickets/00-OVERVIEW.md` for tracking.
+**Implementation Tickets**: This checklist has been broken into 48 standalone tickets in the `tickets/` directory (expanded from 37 to cover all 13 staging models + mart fix). Each ticket corresponds to a logical unit of work completable in one session. See `tickets/00-OVERVIEW.md` for tracking.
 
 **Status Legend**: `[ ]` pending, `[x]` complete, `[-]` in progress
 
@@ -105,6 +105,23 @@ ______________________________________________________________________
   - [ ] Test compilation and execution
   - [ ] Verify duplicate fix (expect 33 duplicates → 0)
   - [ ] Verify `fct_player_projections` duplicate fix (expect 162 duplicates → 0)
+
+### Mart Data Quality ⚠️ **Priority: Fixes 1,893 mart duplicates**
+
+- [ ] Fix `mrt_fasa_targets` duplicate rows (discovered during P1-013):
+  - [ ] Phase 1: Investigation
+    - [ ] Test each CTE in isolation to identify where duplicates originate
+    - [ ] Check `position_baselines` UNION ALL logic (offense vs IDP)
+    - [ ] Determine correct grain: `player_id` vs `sleeper_player_id`
+    - [ ] Document root cause with SQL evidence
+  - [ ] Phase 2: Implementation
+    - [ ] Implement fix based on root cause (QUALIFY/DISTINCT or join fixes)
+    - [ ] Test compilation and execution
+    - [ ] Verify row counts match expected (~3,380 unique combinations)
+  - [ ] Phase 3: Validation
+    - [ ] Run grain uniqueness test (expect 1,893 duplicates → 0)
+    - [ ] Spot-check IDP players not duplicated
+    - [ ] Verify metrics are consistent per player
 
 ### Sample Archival
 

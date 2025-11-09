@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 47 (expanded from 37 to cover all 13 staging models)
+- **Total Tickets**: 48 (expanded from 37 to cover all 13 staging models + 1 mart fix)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~140-170 hours (updated for expanded Phase 1)
+- **Estimated Total Effort**: ~145-177 hours (updated for expanded Phase 1 + mart fix)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -31,7 +31,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (16 tickets - expanded to cover all 13 staging models)
+## Phase 1: Foundation (17 tickets - expanded to cover all 13 staging models + mart fix)
 
 ### Macro & Infrastructure
 
@@ -64,6 +64,10 @@ ______________________________________________________________________
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
 - [ ] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
+
+### Mart Data Quality (1 ticket) ⚠️ **Priority: Fixes 1,893 mart duplicates**
+
+- [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (discovered during P1-013 investigation)
 
 ### Sample Cleanup & Validation
 
@@ -134,14 +138,14 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 3/47 (6%)\
-**In Progress**: 0/47\
-**Blocked**: 0/47\
-**Remaining**: 44/47
+**Completed**: 3/48 (6%)\
+**In Progress**: 0/48\
+**Blocked**: 0/48\
+**Remaining**: 45/48
 
 **Notes**:
 
-- P1-013: Staging model fix complete, but downstream mart duplicates persist (requires separate investigation)
+- P1-013: Staging model fix complete, but downstream mart duplicates persist (separate ticket P1-017 created)
 
 ______________________________________________________________________
 
@@ -149,15 +153,16 @@ ______________________________________________________________________
 
 The following tickets represent the critical path for achieving minimum viable governance:
 
-1. **P0-001** → Scope confirmation
-2. **P1-001** → Macro foundation
-3. **P1-013, P1-016** → High-priority staging model updates (fixes 2,088 duplicates)
-4. **P1-002, P1-003, P1-004** → NFLverse baseline models
-5. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
-6. **P2-001, P2-002** → Registry creation
-7. **P2-005** → Validation tooling
-8. **P2-006, P2-007** → Freshness tests
-9. **P3-001** → SPEC update
+01. **P0-001** → Scope confirmation
+02. **P1-001** → Macro foundation
+03. **P1-013, P1-016** → High-priority staging model updates
+04. **P1-002, P1-003, P1-004** → NFLverse baseline models
+05. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
+06. **P1-017** → Mart duplicate fix (1,893 duplicates discovered during P1-013)
+07. **P2-001, P2-002** → Registry creation
+08. **P2-005** → Validation tooling
+09. **P2-006, P2-007** → Freshness tests
+10. **P3-001** → SPEC update
 
 ______________________________________________________________________
 
@@ -174,9 +179,12 @@ ______________________________________________________________________
 ### Can Be Done in Parallel
 
 - After P1-001, all staging model updates (P1-002 through P1-016) can be done in parallel
-  - **Suggested priority**: P1-013 and P1-016 first (fix 2,088 duplicates)
+  - **Suggested priority**: P1-013 and P1-016 first (standardize high-impact models)
   - **Then**: P1-002, P1-003, P1-004 (NFLverse baseline models)
   - **Finally**: Remaining 7 models (P1-007 through P1-012, P1-014, P1-015)
+- **P1-017** (mart fix) can run in parallel with late staging models or P1-005/P1-006
+  - Dependency: P1-013 must be complete (to rule out staging as root cause)
+  - Should be resolved before Phase 2 (governance) begins
 - All Phase 3 documentation tickets (P3-001 through P3-008) are independent
 - Phase 4 flow tickets (P4-003 through P4-006) can be done in parallel after P4-001
 - **Note**: P4-002a and P4-002 are sequential (copy flow before parse flow)
@@ -189,7 +197,10 @@ ______________________________________________________________________
 Implementation is complete when:
 
 - [ ] Zero hardcoded snapshot dates in all 13 staging models (P1-002 through P1-016)
-- [ ] All current test failures resolved (2,088 duplicates eliminated)
+- [ ] All staging models use snapshot_selection_strategy macro (P1-001 through P1-016)
+- [ ] All current test failures resolved:
+  - [ ] 1,893 mart duplicates eliminated (P1-017)
+  - [ ] 195 FFAnalytics duplicates eliminated (P1-016)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)
