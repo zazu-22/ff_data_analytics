@@ -48,7 +48,7 @@ ______________________________________________________________________
 
 - [x] **P1-008** — Update stg_sheets\_\_cap_space model (latest_only)
 - [x] **P1-009** — Update stg_sheets\_\_contracts_active model (latest_only)
-- [ ] **P1-010** — Update stg_sheets\_\_contracts_cut model (latest_only)
+- [x] **P1-010** — Update stg_sheets\_\_contracts_cut model (latest_only)
 - [ ] **P1-011** — Update stg_sheets\_\_draft_pick_holdings model (latest_only)
 - [ ] **P1-012** — Update stg_sheets\_\_transactions model (latest_only)
 
@@ -140,10 +140,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 10/50 (20%)\
+**Completed**: 11/50 (22%)\
 **In Progress**: 0/50\
 **Blocked**: 0/50\
-**Remaining**: 40/50
+**Remaining**: 39/50
 
 **Notes**:
 

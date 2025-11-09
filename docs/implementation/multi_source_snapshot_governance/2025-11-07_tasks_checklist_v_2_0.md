@@ -73,9 +73,10 @@ ______________________________________________________________________
   - [x] Replace `latest_snapshot_only()` with `snapshot_selection_strategy` macro call using `latest_only` strategy
   - [x] Test compilation and execution
   - [x] Verify zero duplicates in unique key grain
-- [ ] Update `stg_sheets__contracts_cut`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_sheets__contracts_cut`:
+  - [x] Replace `latest_snapshot_only()` with `snapshot_selection_strategy` macro call using `latest_only` strategy
+  - [x] Test compilation and execution
+  - [x] Verify zero duplicates in unique key grain
 - [ ] Update `stg_sheets__draft_pick_holdings`:
   - [ ] Replace `dt=*` with macro call using `latest_only` strategy
   - [ ] Test compilation and execution

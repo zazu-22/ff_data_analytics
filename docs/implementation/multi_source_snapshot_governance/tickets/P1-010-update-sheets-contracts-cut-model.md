@@ -1,5 +1,6 @@
 # Ticket P1-010: Update stg_sheets\_\_contracts_cut Model
 
+**Status**: ✅ COMPLETE\
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
@@ -118,3 +119,19 @@ Cut liability schedule is **league rules reference data** where:
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Lines 67-69
 - Model file: `dbt/ff_data_transform/models/staging/stg_sheets__contracts_cut.sql`
 - Downstream: `dbt/ff_data_transform/models/core/dim_cut_liability_schedule.sql`
+
+## Completion Notes
+
+**Implemented**: 2025-11-09\
+**Tests**: 8/9 tests passing (1 pre-existing roster parity test failure unrelated to snapshot governance)\
+**Impact**: Successfully replaced `latest_snapshot_only()` helper with `snapshot_selection_strategy` macro using `latest_only` strategy
+
+**Implementation Details**:
+
+- Replaced `latest_snapshot_only()` with `snapshot_selection_strategy(strategy='latest_only')` in WHERE clause
+- Macro correctly filters to latest snapshot (2025-11-09) out of 3 available snapshots
+- Verified zero duplicates in franchise_id/player_key/obligation_year/snapshot_date grain (436 rows = 436 unique keys)
+- Row count: 436 dead cap obligations across all franchises
+- Uniqueness test: PASS
+- Referential integrity tests: PASS
+- Pre-existing test failure: `assert_sleeper_commissioner_roster_parity` (17 discrepancies, documented in P1-019)

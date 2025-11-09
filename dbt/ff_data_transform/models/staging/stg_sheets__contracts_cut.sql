@@ -70,9 +70,10 @@ with
             read_parquet('{{ var("external_root", "data/raw") }}/commissioner/contracts_cut/dt=*/contracts_cut.parquet')
         where
             {{
-                latest_snapshot_only(
+                snapshot_selection_strategy(
                     var("external_root", "data/raw")
-                    ~ "/commissioner/contracts_cut/dt=*/contracts_cut.parquet"
+                    ~ "/commissioner/contracts_cut/dt=*/contracts_cut.parquet",
+                    strategy='latest_only'
                 )
             }}
     ),
