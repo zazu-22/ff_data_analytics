@@ -69,9 +69,10 @@ ______________________________________________________________________
 - [x] Update `stg_sheets__cap_space`:
   - [x] Replace `dt=*` with macro call using `latest_only` strategy
   - [x] Test compilation and execution
-- [ ] Update `stg_sheets__contracts_active`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_sheets__contracts_active`:
+  - [x] Replace `latest_snapshot_only()` with `snapshot_selection_strategy` macro call using `latest_only` strategy
+  - [x] Test compilation and execution
+  - [x] Verify zero duplicates in unique key grain
 - [ ] Update `stg_sheets__contracts_cut`:
   - [ ] Replace `dt=*` with macro call using `latest_only` strategy
   - [ ] Test compilation and execution

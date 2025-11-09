@@ -1,5 +1,6 @@
 # Ticket P1-009: Update stg_sheets\_\_contracts_active Model
 
+**Status**: ✅ COMPLETE\
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
@@ -107,3 +108,19 @@ Active contracts are **current roster state** where:
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Lines 64-66
 - Model file: `dbt/ff_data_transform/models/staging/stg_sheets__contracts_active.sql`
 - Downstream: `dbt/ff_data_transform/models/core/dim_player_contract_history.sql`
+
+## Completion Notes
+
+**Implemented**: 2025-11-09\
+**Tests**: 9/10 tests passing (1 pre-existing data quality assertion failure unrelated to snapshot governance)\
+**Impact**: Successfully replaced `latest_snapshot_only()` helper with `snapshot_selection_strategy` macro using `latest_only` strategy
+
+**Implementation Details**:
+
+- Replaced `latest_snapshot_only()` with `snapshot_selection_strategy(strategy='latest_only')` in WHERE clause
+- Macro correctly filters to latest snapshot (2025-11-09) out of 3 available snapshots (2025-11-06, 2025-11-07, 2025-11-09)
+- Verified zero duplicates in franchise_id/player_key/obligation_year/snapshot_date grain (886 rows = 886 unique keys)
+- Row count: 886 active contract obligations
+- Uniqueness test: PASS
+- Referential integrity tests: PASS
+- Pre-existing test failure: `assert_sleeper_commissioner_roster_parity` (17 data discrepancies, not related to snapshot governance change)

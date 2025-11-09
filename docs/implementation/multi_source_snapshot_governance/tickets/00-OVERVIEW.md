@@ -47,7 +47,7 @@ ______________________________________________________________________
 ### Sheets Models (5 tickets)
 
 - [x] **P1-008** — Update stg_sheets\_\_cap_space model (latest_only)
-- [ ] **P1-009** — Update stg_sheets\_\_contracts_active model (latest_only)
+- [x] **P1-009** — Update stg_sheets\_\_contracts_active model (latest_only)
 - [ ] **P1-010** — Update stg_sheets\_\_contracts_cut model (latest_only)
 - [ ] **P1-011** — Update stg_sheets\_\_draft_pick_holdings model (latest_only)
 - [ ] **P1-012** — Update stg_sheets\_\_transactions model (latest_only)
@@ -139,10 +139,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 9/49 (18%)\
+**Completed**: 10/49 (20%)\
 **In Progress**: 0/49\
 **Blocked**: 0/49\
-**Remaining**: 40/49
+**Remaining**: 39/49
 
 **Notes**:
 
