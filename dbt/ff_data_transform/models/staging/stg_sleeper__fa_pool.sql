@@ -3,12 +3,6 @@
 {{ config(materialized="view", unique_key=['player_key', 'asof_date']) }}
 
 with
-    latest_snapshot as (
-        -- Get the most recent snapshot date
-        select max(dt) as latest_dt
-        from read_parquet('{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet', hive_partitioning = true)
-    ),
-
     fa_raw as (
         -- Read only players from the latest snapshot
         select fa.*
@@ -16,8 +10,13 @@ with
             read_parquet(
                 '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet', hive_partitioning = true
             ) fa
-        cross join latest_snapshot
-        where fa.dt = latest_snapshot.latest_dt
+        where
+            {{
+                snapshot_selection_strategy(
+                    var("external_root") ~ "/sleeper/fa_pool/dt=*/fa_pool_*.parquet",
+                    strategy="latest_only"
+                )
+            }}
     ),
 
     player_xref as (
