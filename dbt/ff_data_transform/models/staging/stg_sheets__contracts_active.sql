@@ -1,4 +1,9 @@
-{{ config(materialized="table") }}
+{{
+    config(
+        materialized="table",
+        unique_key=['franchise_id', 'player_key', 'obligation_year', 'snapshot_date']
+    )
+}}
 
 /*
 Stage Commissioner CONTRACTS_ACTIVE sheet with dimension joins and player mapping.

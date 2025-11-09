@@ -1,4 +1,9 @@
-{{ config(materialized="view") }}
+{{
+    config(
+        materialized="view",
+        unique_key=['player_id', 'season', 'week', 'horizon', 'asof_date', 'provider']
+    )
+}}
 
 /*
 Stage FFanalytics weighted consensus projections.

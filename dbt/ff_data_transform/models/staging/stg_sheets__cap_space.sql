@@ -1,7 +1,12 @@
 -- Grain: franchise_id, season
 -- Source: data/raw/commissioner/cap_space/dt=*/cap_space.parquet
 -- Purpose: Stage cap space data from Commissioner Sheet
-{{ config(materialized="view") }}
+{{
+    config(
+        materialized="view",
+        unique_key=['franchise_id', 'season']
+    )
+}}
 
 with
     cap_raw as (
