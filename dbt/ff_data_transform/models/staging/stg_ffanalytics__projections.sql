@@ -128,5 +128,38 @@ with
         from base
     )
 
-select *
+select
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    asof_date,
+    horizon,
+    provider,
+    source_count,
+    total_weight,
+    completions,
+    attempts,
+    passing_yards,
+    passing_tds,
+    interceptions,
+    rushing_attempts,
+    rushing_yards,
+    rushing_tds,
+    targets,
+    receptions,
+    receiving_yards,
+    receiving_tds,
+    fumbles_lost,
+    idp_solo_tackles,
+    idp_assisted_tackles,
+    idp_sacks,
+    idp_passes_defended,
+    idp_interceptions,
+    idp_fumbles_forced,
+    idp_fumbles_recovered,
+    idp_touchdowns,
+    team_consensus
 from normalized

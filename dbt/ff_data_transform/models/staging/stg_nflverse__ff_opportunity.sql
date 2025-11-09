@@ -649,5 +649,17 @@ with
         where rush_attempt_team is not null
     )
 
-select *
+select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    stat_name,
+    stat_value,
+    measure_domain,
+    stat_kind,
+    provider
 from unpivoted

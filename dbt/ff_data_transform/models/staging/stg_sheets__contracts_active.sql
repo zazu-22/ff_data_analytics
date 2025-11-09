@@ -330,5 +330,34 @@ with
         from with_player_id
     )
 
-select *
+select
+    -- Franchise dimension
+    franchise_id,
+    franchise_name,
+    owner_name,
+    gm_full_name,
+
+    -- Player dimension
+    player_id,
+    player_key,
+    canonical_name,
+    player_name,
+    roster_slot,
+
+    -- Contract measures
+    obligation_year,
+    cap_hit,
+
+    -- Contract attributes
+    rfa,
+    franchise,
+
+    -- Validation flags
+    is_unmapped_player,
+    is_unmapped_franchise,
+
+    -- Metadata
+    snapshot_date,
+    snapshot_year
+
 from final
