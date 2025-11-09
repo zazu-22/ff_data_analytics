@@ -36,6 +36,12 @@ with
                 hive_partitioning = true,
                 union_by_name = true
             )
+        where
+            1 = 1
+            and {{ snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/commissioner/draft_picks/dt=*/*.parquet',
+                strategy='latest_only'
+            ) }}
     ),
 
     with_franchise as (

@@ -2,7 +2,8 @@
 
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
-**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
+**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -16,15 +17,15 @@ Transaction history is append-only operational data where new transactions are a
 
 ## Tasks
 
-- [ ] Locate `stg_sheets__transactions.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sheets__transactions`
-- [ ] Test execution and verify row counts
-- [ ] Verify downstream `fct_league_transactions` builds correctly
+- [x] Locate `stg_sheets__transactions.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sheets__transactions`
+- [x] Test execution and verify row counts
+- [x] Verify downstream `fct_league_transactions` builds correctly
 
 ## Acceptance Criteria
 
@@ -128,3 +129,30 @@ Even though transactions are append-only, we still use `latest_only` because:
 - Model file: `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql`
 - Downstream: `dbt/ff_data_transform/models/core/fct_league_transactions.sql`
 - Related warning: `relationships_stg_sheets__transactions_pick_id` (41 orphan picks)
+
+## Completion Notes
+
+**Implemented**: 2025-11-09
+**Tests**: Compilation and execution passing
+
+**Implementation Details**:
+
+- Replaced manual `latest_partition` CTE with `snapshot_selection_strategy` macro
+- Used `latest_only` strategy as specified
+- Removed `latest_partition` CTE and all `cross join latest_partition lp` references
+- Removed `where rt.dt = lp.latest_dt` filters (replaced by macro WHERE clause)
+- Path: `commissioner/transactions/dt=*/*.parquet` (note: source is `commissioner`, not `sheets`)
+
+**Verification Results**:
+
+- Compilation: PASS
+- Execution: PASS (view model)
+- Transaction counts by type show reasonable distribution (867 cuts, 826 rookie draft selections, 775 FASA signings, etc.)
+- Model successfully filters to latest snapshot only
+
+**Impact**:
+
+- Eliminated hardcoded snapshot selection logic
+- Simplified model by removing manual latest_partition CTE
+- Ensured idempotent reads for transaction history
+- Latest snapshot contains complete cumulative transaction log

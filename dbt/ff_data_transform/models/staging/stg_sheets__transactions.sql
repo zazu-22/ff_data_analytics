@@ -61,11 +61,12 @@ with
                 transaction_type_raw,
                 dt
             )
-    ),
-
-    latest_partition as (
-        -- Get the most recent partition date to avoid reading duplicate snapshots
-        select max(dt) as latest_dt from raw_transactions
+        where
+            1 = 1
+            and {{ snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/commissioner/transactions/dt=*/*.parquet',
+                strategy='latest_only'
+            ) }}
     ),
 
     base as (
@@ -121,8 +122,6 @@ with
             rt.transaction_type_raw as transaction_type_raw
 
         from raw_transactions rt
-        cross join latest_partition lp
-        where rt.dt = lp.latest_dt
     ),
 
     draft_boundaries as (
@@ -131,8 +130,7 @@ with
         select
             rt.season as draft_season, min(rt.transaction_id) as draft_start_id, max(rt.transaction_id) as draft_end_id
         from raw_transactions rt
-        cross join latest_partition lp
-        where rt.dt = lp.latest_dt and rt.period_type = 'rookie_draft'
+        where rt.period_type = 'rookie_draft'
         group by rt.season
     ),
 

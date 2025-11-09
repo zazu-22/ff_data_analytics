@@ -2,7 +2,8 @@
 
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
-**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
+**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -16,15 +17,15 @@ Pick holdings change frequently via trades and must reflect the most current own
 
 ## Tasks
 
-- [ ] Locate `stg_sheets__draft_pick_holdings.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sheets__draft_pick_holdings`
-- [ ] Test execution and verify row counts
-- [ ] Verify downstream pick models build correctly (may help fix `dim_pick_lifecycle_control` duplicates)
+- [x] Locate `stg_sheets__draft_pick_holdings.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sheets__draft_pick_holdings`
+- [x] Test execution and verify row counts
+- [x] Verify downstream pick models build correctly (may help fix `dim_pick_lifecycle_control` duplicates)
 
 ## Acceptance Criteria
 
@@ -123,3 +124,28 @@ This fix may contribute to resolving the `dim_pick_lifecycle_control` duplicate 
 - Model file: `dbt/ff_data_transform/models/staging/stg_sheets__draft_pick_holdings.sql`
 - Downstream: `dbt/ff_data_transform/models/core/dim_pick.sql`
 - Related test failure: `unique_dim_pick_lifecycle_control_pick_id` (22 duplicates)
+
+## Completion Notes
+
+**Implemented**: 2025-11-09
+**Tests**: Compilation and execution passing
+
+**Implementation Details**:
+
+- Replaced `dt=*` pattern in `read_parquet()` with `snapshot_selection_strategy` macro
+- Used `latest_only` strategy as specified
+- Path: `commissioner/draft_picks/dt=*/*.parquet` (note: source is `commissioner`, not `sheets`)
+
+**Verification Results**:
+
+- Compilation: PASS
+- Execution: PASS
+- Snapshot count: 1 (latest_snapshot = 2025-11-09)
+- Total rows: 346 draft pick holdings
+- Model successfully filters to latest snapshot only
+
+**Impact**:
+
+- Eliminated hardcoded/wildcard snapshot selection
+- Ensured idempotent reads for draft pick holdings
+- May contribute to resolving `dim_pick_lifecycle_control` duplicate issues (22 duplicates)

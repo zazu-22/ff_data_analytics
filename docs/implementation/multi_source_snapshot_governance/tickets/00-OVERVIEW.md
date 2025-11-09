@@ -49,8 +49,8 @@ ______________________________________________________________________
 - [x] **P1-008** — Update stg_sheets\_\_cap_space model (latest_only)
 - [x] **P1-009** — Update stg_sheets\_\_contracts_active model (latest_only)
 - [x] **P1-010** — Update stg_sheets\_\_contracts_cut model (latest_only)
-- [ ] **P1-011** — Update stg_sheets\_\_draft_pick_holdings model (latest_only)
-- [ ] **P1-012** — Update stg_sheets\_\_transactions model (latest_only)
+- [x] **P1-011** — Update stg_sheets\_\_draft_pick_holdings model (latest_only)
+- [x] **P1-012** — Update stg_sheets\_\_transactions model (latest_only)
 
 ### Sleeper Models (2 tickets) ⚠️ **Priority: Fixes 1,893 duplicates**
 
@@ -69,7 +69,7 @@ ______________________________________________________________________
 
 - [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (1,893 duplicates - discovered during P1-013)
 - [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (17 staging, 101 fact - discovered during P1-016)
-- [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (17 discrepancies - discovered during P1-009)
+- [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (17 discrepancies - discovered during P1-009 - have since updated sleeper data, discrepancy count may have changed -- possible culprit: weekly contract ($1) players tracked on sleeper but not sheets; see league_constitution.csv to understand that concept)
 
 ### Sample Cleanup & Validation
 
@@ -140,10 +140,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 12/50 (24%)\
+**Completed**: 14/50 (28%)\
 **In Progress**: 0/50\
 **Blocked**: 0/50\
-**Remaining**: 38/50
+**Remaining**: 36/50
 
 **Notes**:
 
