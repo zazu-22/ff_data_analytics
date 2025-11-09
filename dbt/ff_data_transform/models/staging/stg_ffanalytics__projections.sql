@@ -79,9 +79,15 @@ with
                 '{{ var("external_root", "data/raw") }}/ffanalytics/projections/dt=*/projections_consensus_*.parquet',
                 hive_partitioning = true
             )
-
-        -- Filter out unmapped players (R runner sets player_id = -1 for unmapped)
-        where cast(player_id as integer) > 0
+        where
+            1 = 1
+            -- Filter to latest snapshot only
+            and {{ snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/ffanalytics/projections/dt=*/*.parquet',
+                strategy='latest_only'
+            ) }}
+            -- Filter out unmapped players (R runner sets player_id = -1 for unmapped)
+            and cast(player_id as integer) > 0
     ),
 
     -- Normalize and add metadata columns

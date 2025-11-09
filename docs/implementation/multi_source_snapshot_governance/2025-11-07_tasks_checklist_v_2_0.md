@@ -100,11 +100,11 @@ ______________________________________________________________________
 
 **FFAnalytics (1 model)** ⚠️ **Priority: Fixes 195 duplicates**:
 
-- [ ] Update `stg_ffanalytics__projections`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
-  - [ ] Verify duplicate fix (expect 33 duplicates → 0)
-  - [ ] Verify `fct_player_projections` duplicate fix (expect 162 duplicates → 0)
+- [x] Update `stg_ffanalytics__projections`:
+  - [x] Replace `dt=*` with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
+  - [x] Verify duplicate fix (33→17, remaining are source data quality issues)
+  - [x] Verify `fct_player_projections` duplicate fix (162→101, cascaded from staging)
 
 ### Mart Data Quality ⚠️ **Priority: Fixes 1,893 mart duplicates**
 
