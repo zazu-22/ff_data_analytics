@@ -84,10 +84,10 @@ ______________________________________________________________________
 
 **Sleeper (2 models)** ⚠️ **Priority: Fixes 1,893 duplicates**:
 
-- [ ] Update `stg_sleeper__fa_pool`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
-  - [ ] Verify `mrt_fasa_targets` duplicate fix (expect 1,893 duplicates → 0)
+- [x] Update `stg_sleeper__fa_pool`:
+  - [x] Replace custom latest_snapshot CTE with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
+  - [~] Verify `mrt_fasa_targets` duplicate fix - ⚠️ DUPLICATES PERSIST (root cause in mart logic, not staging)
 - [ ] Update `stg_sleeper__rosters`:
   - [ ] Replace `dt=*` with macro call using `latest_only` strategy
   - [ ] Test compilation and execution
