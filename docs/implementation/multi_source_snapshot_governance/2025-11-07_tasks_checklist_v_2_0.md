@@ -60,9 +60,9 @@ ______________________________________________________________________
 - [x] Update `stg_nflverse__ff_opportunity`:
   - [x] Replace direct `latest_snapshot_only()` call with `snapshot_selection_strategy` macro (latest_only strategy)
   - [x] Test compilation and execution for consistency
-- [ ] Update `stg_nflverse__ff_playerids`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_nflverse__ff_playerids`:
+  - [x] Replace `dt=*` with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
 
 **Sheets (5 models)**:
 

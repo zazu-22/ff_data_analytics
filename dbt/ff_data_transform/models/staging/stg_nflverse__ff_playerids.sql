@@ -59,6 +59,13 @@ with
                 '{{ var("external_root", "data/raw") }}/nflverse/ff_playerids/dt=*/ff_playerids_*.parquet',
                 hive_partitioning = true
             )
+        where
+            {{
+            snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/nflverse/ff_playerids/dt=*/*.parquet',
+                strategy='latest_only'
+            )
+        }}
     ),
 
     -- Filter out team placeholder entries (critical to prevent join explosions)
