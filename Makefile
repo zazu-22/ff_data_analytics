@@ -253,19 +253,24 @@ dbt-opiner-check:
 	@echo ""
 	@echo "Running dbt-opiner lint..."
 	@echo "Note: Test files (tests/*.sql) are excluded - they're not dbt project nodes"
-	@cd dbt/ff_data_transform && uv run dbt deps --project-dir . --profiles-dir . > /dev/null 2>&1 && uv run dbt compile --project-dir . --profiles-dir . > /dev/null 2>&1 || true
-	@OUTPUT=$$(uv run dbt-opiner lint --all-files 2>&1); \
-	TEST_ERRORS=$$(echo "$$OUTPUT" | grep -c "CRITICAL.*tests/.*\.sql.*Node not found" || true); \
-	PROJECT_ERRORS=$$(echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql" | wc -l | tr -d ' '); \
-	if [ "$$TEST_ERRORS" -gt 0 ]; then \
-		echo "  ⚠ Test file errors detected (expected - test files excluded from linting)"; \
-	fi; \
-	if [ "$$PROJECT_ERRORS" -eq 0 ]; then \
-		echo "  ✓ dbt-opiner completed successfully (test file errors ignored)"; \
-	else \
-		echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql"; \
-		echo "  ✗ dbt-opiner found issues in project files"; \
-	fi
+	@mkdir -p dbt/ff_data_transform/target
+	@cd dbt/ff_data_transform && \
+		EXTERNAL_ROOT="$$(pwd)/../../data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/target/dev.duckdb" \
+		uv run dbt deps --project-dir . --profiles-dir . > /dev/null 2>&1 || true
+	@cd dbt/ff_data_transform && \
+		OUTPUT=$$(EXTERNAL_ROOT="$$(pwd)/../../data/raw" DBT_DUCKDB_PATH="$$(pwd)/target/dev.duckdb" uv run dbt-opiner lint --all-files --force-compile 2>&1); \
+		TEST_ERRORS=$$(echo "$$OUTPUT" | grep -c "CRITICAL.*tests/.*\.sql.*Node not found" || true); \
+		PROJECT_ERRORS=$$(echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql" | wc -l | tr -d ' '); \
+		if [ "$$TEST_ERRORS" -gt 0 ]; then \
+			echo "  ⚠ Test file errors detected (expected - test files excluded from linting)"; \
+		fi; \
+		if [ "$$PROJECT_ERRORS" -eq 0 ]; then \
+			echo "  ✓ dbt-opiner completed successfully (test file errors ignored)"; \
+		else \
+			echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql"; \
+			echo "  ✗ dbt-opiner found issues in project files"; \
+		fi
 	@echo ""
 	@echo "=========================================="
 	@echo "DBT-OPINER CHECK COMPLETE"
@@ -290,14 +295,18 @@ sql-all:
 		dbt compile --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform && echo "  ✓ Syntax validation OK" || echo "  ✗ Syntax errors found"
 	@echo ""
 	@echo "[4/4] Checking dbt best practices (dbt-opiner)..."
-	@cd dbt/ff_data_transform && uv run dbt deps --project-dir . --profiles-dir . > /dev/null 2>&1 && uv run dbt compile --project-dir . --profiles-dir . > /dev/null 2>&1 || true
-	@OUTPUT=$$(uv run dbt-opiner lint --all-files 2>&1); \
-	PROJECT_ERRORS=$$(echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql" | wc -l | tr -d ' '); \
-	if [ "$$PROJECT_ERRORS" -eq 0 ]; then \
-		echo "  ✓ dbt-opiner OK (test file errors ignored)"; \
-	else \
-		echo "  ✗ dbt-opiner found issues"; \
-	fi
+	@cd dbt/ff_data_transform && \
+		EXTERNAL_ROOT="$$(pwd)/../../data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/target/dev.duckdb" \
+		uv run dbt deps --project-dir . --profiles-dir . > /dev/null 2>&1 || true
+	@cd dbt/ff_data_transform && \
+		OUTPUT=$$(EXTERNAL_ROOT="$$(pwd)/../../data/raw" DBT_DUCKDB_PATH="$$(pwd)/target/dev.duckdb" uv run dbt-opiner lint --all-files --force-compile 2>&1); \
+		PROJECT_ERRORS=$$(echo "$$OUTPUT" | grep -E "(CRITICAL|ERROR)" | grep -v "tests/.*\.sql" | wc -l | tr -d ' '); \
+		if [ "$$PROJECT_ERRORS" -eq 0 ]; then \
+			echo "  ✓ dbt-opiner OK (test file errors ignored)"; \
+		else \
+			echo "  ✗ dbt-opiner found issues"; \
+		fi
 	@echo ""
 	@echo "=========================================="
 	@echo "ALL SQL QUALITY CHECKS COMPLETE"
