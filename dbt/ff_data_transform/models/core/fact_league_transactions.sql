@@ -1,6 +1,7 @@
 {{
     config(
         materialized="table",
+        unique_key='transaction_id_unique',
         indexes=[
             {"columns": ["player_id"]},
             {"columns": ["pick_id"]},

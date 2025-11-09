@@ -1,6 +1,7 @@
 {{
     config(
         materialized="table",
+        unique_key=['player_key', 'market_scope', 'asof_date'],
         indexes=[
             {"columns": ["player_id"]},
             {"columns": ["asset_type"]},

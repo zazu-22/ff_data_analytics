@@ -1,6 +1,7 @@
 {{
     config(
         materialized="table",
+        unique_key=['player_id', 'season', 'week', 'horizon', 'stat_name', 'provider', 'measure_domain', 'stat_kind', 'asof_date'],
         indexes=[
             {"columns": ["player_id"]},
             {"columns": ["season", "week"]},

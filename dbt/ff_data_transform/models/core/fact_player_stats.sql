@@ -1,6 +1,7 @@
 {{
     config(
         materialized="table",
+        unique_key=['player_key', 'game_id', 'stat_name', 'provider', 'measure_domain', 'stat_kind'],
         indexes=[
             {"columns": ["player_id"]},
             {"columns": ["game_id"]},
