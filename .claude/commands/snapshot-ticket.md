@@ -95,7 +95,30 @@ Find the corresponding task in Phase 1 "Staging Model Updates" section and mark 
   - [x] Verify duplicate fix (if applicable)
 ```
 
-### 3. Document Results
+### 3. Update Ticket Status
+
+**File**: `docs/implementation/multi_source_snapshot_governance/tickets/$ARGUMENTS*.md` (the ticket you just completed)
+
+Update the ticket's **Status** field at the top of the file:
+```markdown
+**Status**: ✅ COMPLETE
+```
+
+If the ticket has a **Completion Notes** or **Results** section, add:
+- Implementation date
+- Test results summary
+- Any notable findings or deviations from plan
+
+If no such section exists, add one at the end:
+```markdown
+## Completion Notes
+
+**Implemented**: YYYY-MM-DD
+**Tests**: All passing
+**Impact**: <duplicate reduction or other measurable outcome>
+```
+
+### 4. Document Results
 
 **In your final response to the user**, provide:
 
@@ -104,7 +127,7 @@ Find the corresponding task in Phase 1 "Staging Model Updates" section and mark 
 3. **Impact**: Duplicate reduction (before → after counts)
 4. **Next steps**: Recommended next ticket or any blockers discovered
 
-### 4. Commit Changes
+### 5. Commit Changes
 
 Create a commit with this format:
 ```
