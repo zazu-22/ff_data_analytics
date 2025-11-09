@@ -67,12 +67,16 @@ ______________________________________________________________________
 
 ### Data Quality Follow-ups (6 tickets) ⚠️ **Discovered during staging model updates**
 
-- [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (1,893 duplicates - discovered during P1-013)
-- [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (17 staging, 101 fact - discovered during P1-016)
-- [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (17 discrepancies - discovered during P1-009 - have since updated sleeper data, discrepancy count may have changed -- possible culprit: weekly contract ($1) players tracked on sleeper but not sheets; see league_constitution.csv to understand that concept)
-- [ ] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (22 pick_ids, 301 rows - discovered during P1-011)
-- [ ] **P1-021** — Fix assert_canonical_player_key_alignment test error (missing snap counts data - discovered during P1-012)
-- [ ] **P1-022** — Resolve fct_league_transactions orphan pick references (5 orphans, down from 41 - discovered during P1-012)
+**Recommended Execution Order** (sequential on main branch, no file conflicts):
+
+1. [ ] **P1-021** — Fix assert_canonical_player_key_alignment test error (Small: 1-2 hours - test infrastructure issue)
+2. [ ] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - grain investigation)
+3. [ ] **P1-022** — Resolve fct_league_transactions orphan pick references (Small: 2-3 hours - 5 orphans remaining)
+4. [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 17 discrepancies)
+5. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - R runner or staging fix)
+6. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - complex mart logic, 1,893 duplicates)
+
+**Rationale**: Start with smallest/easiest (P1-021, P1-020, P1-022) to build momentum, then tackle more complex data quality investigations (P1-019, P1-018, P1-017). All can be done on main branch - zero file conflicts between tickets.
 
 ### Sample Cleanup & Validation
 
