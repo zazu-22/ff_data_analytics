@@ -40,9 +40,6 @@ models:
       - name: provider
         description: Projection provider (e.g., 'ffanalytics_consensus')
 
-      - name: display_name
-        description: Player display name from dim_player
-
       - name: position
         description: Player position
 
