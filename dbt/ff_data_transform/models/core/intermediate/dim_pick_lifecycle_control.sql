@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='pick_id') }}
 
 /*
 Pick Lifecycle Control - Manages TBD → Actual Pick Transitions

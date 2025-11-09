@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='pick_id') }}
 
 /*
 Draft Pick Validation - Validates completeness of base picks.

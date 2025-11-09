@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='pick_id') }}
 
 /*
 Pick transaction crosswalk - Matches transaction pick references to canonical dim_pick pick_ids.

@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='pick_id') }}
 
 /*
 Actual rookie draft picks extracted from commissioner transactions.

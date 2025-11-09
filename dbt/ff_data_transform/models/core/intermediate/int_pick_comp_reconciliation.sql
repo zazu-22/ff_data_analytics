@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='pick_id') }}
 
 /*
 Compensatory Pick Reconciliation - FAAD Awards vs Dimensional Picks
