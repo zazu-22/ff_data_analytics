@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['player_id', 'season', 'week']) }}
 
 /*
 Fantasy actuals mart - weekly player performance with fantasy scoring applied.

@@ -1,3 +1,5 @@
+{{ config(materialized="table", unique_key=['sleeper_player_id', 'asof_date']) }}
+
 -- Grain: sleeper_player_id, asof_date (one row per Sleeper FA per snapshot date)
 -- Purpose: Score every FA for FASA with bid recommendations
 -- Enhanced with dynasty market intelligence (aging curves, market efficiency,

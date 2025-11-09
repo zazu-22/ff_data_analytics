@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['franchise_id', 'player_key']) }}
 
 /*
 League Roster Depth - rank all rostered players for VoR analysis.

@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='transaction_id_unique') }}
 
 /*
 FA Acquisition History - analyze winning bids for predictive modeling.

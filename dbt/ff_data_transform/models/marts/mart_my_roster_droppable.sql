@@ -1,3 +1,5 @@
+{{ config(materialized="table", unique_key=['player_key', 'asof_date']) }}
+
 -- Grain: player_key, asof_date
 -- Purpose: Identify drop candidates on Jason's roster
 with

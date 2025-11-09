@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['player_id', 'franchise_id', 'obligation_year']) }}
 
 /*
 Contract snapshot mart - current contract obligations by year (transaction-derived).

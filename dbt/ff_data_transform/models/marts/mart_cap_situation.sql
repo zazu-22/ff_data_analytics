@@ -1,6 +1,6 @@
 -- Grain: franchise_id, season
 -- Purpose: Comprehensive cap space view with reconciliation
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['franchise_id', 'season']) }}
 
 with
     cap_reported as (select * from {{ ref("stg_sheets__cap_space") }}),

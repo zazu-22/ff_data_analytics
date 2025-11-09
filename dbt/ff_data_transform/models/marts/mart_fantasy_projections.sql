@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['player_id', 'season', 'week', 'horizon', 'provider']) }}
 
 /*
 Fantasy projections mart - weekly/season player projections with fantasy scoring applied.

@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['player_id', 'season', 'week', 'asof_date']) }}
 
 /*
 Projection variance mart - compare actual performance vs pre-game projections.

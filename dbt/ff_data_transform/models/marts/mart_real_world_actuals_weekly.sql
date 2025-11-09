@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key=['player_id', 'season', 'week']) }}
 
 /*
 Real-world actuals mart - weekly player performance in physical stats (no fantasy scoring).
