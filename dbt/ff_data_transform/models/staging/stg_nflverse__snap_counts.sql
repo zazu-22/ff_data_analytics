@@ -194,5 +194,19 @@ with
             = 1
     )
 
-select *
+select
+    player_id,
+    player_key,
+    game_id,
+    season,
+    week,
+    season_type,
+    position,
+    stat_name,
+    stat_value,
+    measure_domain,
+    stat_kind,
+    provider,
+    team,
+    opponent
 from deduplicated
