@@ -125,6 +125,30 @@ models:
                 to: ref('fact_league_transactions')
                 field: transaction_id_unique
 
+      - name: player_name
+        description: "Player display name from dim_player"
+
+      - name: position
+        description: "Player position from dim_player"
+
+      - name: franchise_name
+        description: "Franchise name from dim_franchise"
+
+      - name: contract_split_json
+        description: "Year-by-year contract cap hit breakdown as JSON"
+
+      - name: rfa_matched
+        description: "Flag: true if this contract originated from an RFA match"
+
+      - name: faad_compensation
+        description: "Compensatory pick awarded if this was an RFA contract"
+
+      - name: transaction_id
+        description: "Transaction ID from fact_league_transactions (for grouping multi-asset trades)"
+
+      - name: loaded_at
+        description: "Timestamp when this record was loaded into the dimension"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

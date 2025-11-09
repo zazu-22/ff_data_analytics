@@ -44,3 +44,24 @@ models:
           - accepted_values:
               arguments:
                 values: ['North', 'South', 'East', 'West']
+
+      - name: team_city
+        description: "Team city (e.g., 'Kansas City')"
+
+      - name: team_abbr
+        description: "Team abbreviation (e.g., 'KC', 'SF')"
+
+      - name: team_color
+        description: "Primary team color (hex code)"
+
+      - name: team_color2
+        description: "Secondary team color (hex code)"
+
+      - name: team_logo_wikipedia
+        description: "URL to team logo on Wikipedia"
+
+      - name: team_logo_espn
+        description: "URL to team logo on ESPN"
+
+      - name: team_wordmark
+        description: "URL to team wordmark logo"

@@ -60,3 +60,27 @@ models:
         description: "When projection was made"
         data_tests:
           - not_null
+
+      - name: player_name
+        description: "Player name from projection provider"
+
+      - name: position
+        description: "Player position from projection provider"
+
+      - name: current_team
+        description: "Current NFL team from projection provider"
+
+      - name: season
+        description: "NFL season year for this projection"
+
+      - name: week
+        description: "NFL week number (null for season-long projections)"
+
+      - name: provider
+        description: "Projection data source (e.g., ffanalytics_consensus)"
+
+      - name: source_count
+        description: "Number of projection sources contributing to consensus"
+
+      - name: total_weight
+        description: "Sum of weights across all contributing sources"

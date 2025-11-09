@@ -116,6 +116,57 @@ models:
                 to: ref('fact_league_transactions')
                 field: transaction_id_unique
 
+      - name: player_name
+        description: "Player display name"
+
+      - name: position
+        description: "Player position"
+
+      - name: franchise_name
+        description: "Franchise name from dim_franchise"
+
+      - name: dead_cap_pct
+        description: "Dead cap percentage if cut (based on league rules)"
+
+      - name: dead_cap_note
+        description: "Explanation of dead cap calculation"
+
+      - name: contract_start_season
+        description: "Season when contract became effective"
+
+      - name: contract_end_season
+        description: "Season when contract expires"
+
+      - name: effective_date
+        description: "Date when this contract state became active"
+
+      - name: expiration_date
+        description: "Date when this contract state ended (9999-12-31 if current)"
+
+      - name: is_current
+        description: "Flag indicating if this is the player's current contract"
+
+      - name: contract_total
+        description: "Total contract value in dollars"
+
+      - name: contract_years
+        description: "Contract length in years"
+
+      - name: annual_amount
+        description: "Average annual value (contract_total / contract_years)"
+
+      - name: rfa_matched
+        description: "Flag: true if this contract originated from an RFA match"
+
+      - name: faad_compensation
+        description: "Compensatory pick awarded if this was an RFA contract"
+
+      - name: loaded_at
+        description: "Timestamp when this record was loaded"
+
+      - name: snapshot_at
+        description: "Timestamp of current snapshot"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

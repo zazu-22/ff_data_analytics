@@ -25,3 +25,39 @@ models:
       - ACTIVE_TBD: TBD pick currently in use (draft order not finalized)
       - SUPERSEDED: TBD pick replaced by actual pick (soft-delete)
       - ACTUAL: Pick from actual draft data (future state)
+
+    columns:
+      - name: pick_id
+        description: "Pick identifier (includes both TBD and actual picks)"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: lifecycle_state
+        description: "Current lifecycle state (ACTIVE_TBD, SUPERSEDED, ACTUAL)"
+        data_tests:
+          - not_null
+
+      - name: superseded_by_pick_id
+        description: "Pick ID that replaced this TBD pick (null if still active)"
+
+      - name: superseded_at
+        description: "Timestamp when TBD pick was replaced by actual pick"
+
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number"
+
+      - name: created_at
+        description: "Timestamp when this lifecycle record was created"
+
+      - name: migration_note
+        description: "Explanation of lifecycle migration or state change"
+
+      - name: control_version
+        description: "Version number for lifecycle control records"
+
+      - name: last_updated
+        description: "Timestamp when this record was last updated"

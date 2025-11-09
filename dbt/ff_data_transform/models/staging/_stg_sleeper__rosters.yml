@@ -64,6 +64,12 @@ models:
               arguments:
                 values: [true, false]
 
+      - name: mfl_id
+        description: "MFL player ID from dim_player_id_xref crosswalk"
+
+      - name: source_platform
+        description: "Data source platform (sleeper)"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

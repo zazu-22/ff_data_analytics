@@ -8,20 +8,27 @@ models:
       and current holding flags that exclude outbound trades and unresolved contingencies.
     columns:
       - name: snapshot_date
+        description: "Partition date (dt=YYYY-MM-DD) when this pick holding snapshot was taken"
         data_tests:
           - not_null
       - name: year
+        description: "Draft year for this pick (e.g., 2025, 2026)"
         data_tests:
           - not_null
       - name: round
+        description: "Draft round number (1-5)"
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [1, 2, 3, 4, 5]
       - name: gm_full_name
+        description: "GM full name from Commissioner sheet"
         data_tests:
           - not_null
+      - name: gm_tab
+        description: "GM tab name from Commissioner sheet for franchise mapping"
+
       - name: franchise_id
         description: Franchise that currently owns the GM tab in the commissioner sheet.
         data_tests:
@@ -30,24 +37,42 @@ models:
               arguments:
                 to: ref('dim_franchise')
                 field: franchise_id
+
+      - name: franchise_name
+        description: "Franchise name from dim_franchise"
+
+      - name: franchise_owner_name
+        description: "Current franchise owner name from dim_franchise"
+
       - name: pick_category
+        description: "Pick classification: original, acquired, compensatory, or trade_out"
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['original', 'acquired', 'compensatory', 'trade_out']
       - name: is_current_holding
+        description: "Flag: true if pick is currently held (excludes trade_out and pending contingencies)"
         data_tests:
           - not_null
       - name: is_comp_pick
+        description: "Flag: true if pick is a compensatory pick"
         data_tests:
           - not_null
       - name: is_pending
+        description: "Flag: true if pick has unresolved condition/contingency"
         data_tests:
           - not_null
       - name: source_type
+        description: "Raw source classification from Commissioner sheet: owned, acquired, or trade_out"
         data_tests:
           - not_null
+
+      - name: original_owner
+        description: "Original franchise that owned this pick at draft time"
+
+      - name: acquired_from
+        description: "Franchise this pick was acquired from (if applicable)"
       - name: acquisition_note
         description: Raw commissioner text describing the acquisition (original owner or comp note).
       - name: acquisition_owner_key

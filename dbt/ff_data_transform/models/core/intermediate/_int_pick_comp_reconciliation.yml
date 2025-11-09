@@ -17,3 +17,67 @@ models:
       - SEQUENCE_MISMATCH: Pick exists in both but different chronological order
       - FAAD_AWARD_NOT_IN_DIM_PICK: FAAD awarded but missing from dim_pick
       - DIM_PICK_WITHOUT_FAAD_AWARD: Comp pick in dim_pick but no FAAD record
+
+    columns:
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number"
+
+      - name: reconciliation_status
+        description: "Overall reconciliation status (MATCHED, MISMATCH, etc.)"
+
+      - name: severity
+        description: "Issue severity level (INFO, WARN, ERROR)"
+
+      - name: diagnostic_message
+        description: "Detailed diagnostic message about reconciliation"
+
+      - name: faad_transaction_id
+        description: "Transaction ID from FAAD comp registry"
+
+      - name: faad_award_sequence
+        description: "Award sequence from FAAD"
+
+      - name: faad_player
+        description: "Player name from FAAD registry"
+
+      - name: faad_franchise
+        description: "Franchise from FAAD registry"
+
+      - name: faad_apy
+        description: "Contract APY from FAAD"
+
+      - name: comp_round_threshold
+        description: "Round threshold from FAAD"
+
+      - name: is_aav_round_valid
+        description: "AAV validation flag from FAAD"
+
+      - name: dim_pick_id
+        description: "Pick ID from dim_pick"
+
+      - name: dim_slot
+        description: "Slot number from dim_pick"
+
+      - name: dim_sequence
+        description: "Sequence number from dim_pick"
+
+      - name: dim_player
+        description: "Player name from dim_pick"
+
+      - name: dim_franchise
+        description: "Franchise from dim_pick"
+
+      - name: in_faad
+        description: "Flag: true if comp exists in FAAD registry"
+
+      - name: in_dim_pick
+        description: "Flag: true if comp exists in dim_pick"
+
+      - name: sequence_matches
+        description: "Flag: true if sequences match between FAAD and dim_pick"
+
+      - name: reconciled_at
+        description: "Timestamp when reconciliation was performed"

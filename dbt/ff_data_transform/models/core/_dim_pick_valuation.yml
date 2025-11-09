@@ -16,3 +16,40 @@ models:
       - mid_round: Assume middle of round (slot 6-7 out of 12)
       - prior_standings: Use previous season final standings (future)
       - current_standings: Use current season standings (future, updates weekly)
+
+    columns:
+      - name: pick_id
+        description: "Pick identifier from dim_pick"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number"
+
+      - name: overall_pick
+        description: "Overall pick number within draft (actual or provisional)"
+
+      - name: pick_type
+        description: "Pick classification (base, compensatory, tbd)"
+
+      - name: ktc_value_1qb
+        description: "KTC market value for 1QB leagues (placeholder, future integration)"
+
+      - name: notes
+        description: "Additional notes about valuation or provisional method"
+
+      - name: overall_pick_number
+        description: "Alternative name for overall_pick"
+
+      - name: round_pick_number
+        description: "Alternative name for slot_number"
+
+      - name: is_provisional
+        description: "Alternative name for is_prospective"
+
+      - name: ktc_value_sf
+        description: "Alternative name for ktc_value_superflex"

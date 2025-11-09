@@ -19,3 +19,40 @@ models:
       Future State (when actual draft data available):
       - Will validate actual draft transactions have 12 base picks per round
       - Incomplete rounds will trigger fallback to generated picks
+
+    columns:
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number"
+
+      - name: base_picks_count
+        description: "Count of base picks in this round from int_pick_base"
+
+      - name: validation_status
+        description: "Validation result (COMPLETE, INCOMPLETE, MISSING)"
+
+      - name: picks_in_round
+        description: "Total number of picks in this round (base + comp)"
+
+      - name: first_slot
+        description: "First slot number in this round"
+
+      - name: last_slot
+        description: "Last slot number in this round"
+
+      - name: comp_picks_count
+        description: "Count of compensatory picks in this round"
+
+      - name: has_complete_base_picks
+        description: "Flag: true if all 12 base picks are present"
+
+      - name: validation_message
+        description: "Detailed validation message"
+
+      - name: pick_source
+        description: "Source of pick data (ACTUAL or GENERATED)"
+
+      - name: validated_at
+        description: "Timestamp when validation was performed"

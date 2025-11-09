@@ -85,6 +85,30 @@ models:
         data_tests:
           - not_null
 
+      - name: player_name
+        description: "Player display name"
+
+      - name: canonical_name
+        description: "Canonical player name after alias normalization"
+
+      - name: roster_slot
+        description: "Roster designation (e.g., active, injured reserve)"
+
+      - name: franchise_name
+        description: "Franchise name from dim_franchise"
+
+      - name: owner_name
+        description: "Current owner name from dim_franchise"
+
+      - name: gm_full_name
+        description: "GM full name from Commissioner sheet"
+
+      - name: gm_tab
+        description: "GM tab name from Commissioner sheet"
+
+      - name: loaded_at
+        description: "Timestamp when this snapshot record was loaded"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

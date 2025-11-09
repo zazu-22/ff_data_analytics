@@ -84,6 +84,27 @@ models:
         data_tests:
           - not_null
 
+      - name: franchise_name
+        description: "Franchise name from dim_franchise (e.g., Team McCreary)"
+
+      - name: owner_name
+        description: "Current owner name from dim_franchise"
+
+      - name: gm_full_name
+        description: "GM full name as recorded in Commissioner sheet"
+
+      - name: canonical_name
+        description: "Canonical player name after alias normalization"
+
+      - name: player_name
+        description: "Raw player name from Commissioner sheet"
+
+      - name: position
+        description: "Player position from Commissioner sheet"
+
+      - name: snapshot_year
+        description: "Year extracted from snapshot_date for partitioning"
+
       - name: is_unmapped_player
         description: "Flag: true if player_id could not be resolved from crosswalk"
 

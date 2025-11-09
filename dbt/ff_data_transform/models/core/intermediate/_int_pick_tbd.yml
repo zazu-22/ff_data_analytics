@@ -19,3 +19,58 @@ models:
       - 2027 rookie draft: pick_id becomes 2027_R1_P05
 
       Note: Slot number and overall pick use placeholder value (99) until finalized.
+
+    columns:
+      - name: pick_id
+        description: "TBD pick identifier (YYYY_R#_TBD)"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: season
+        description: "Draft year for this TBD pick"
+        data_tests:
+          - not_null
+
+      - name: round
+        description: "Draft round number (1-5)"
+        data_tests:
+          - not_null
+
+      - name: overall_pick
+        description: "Placeholder overall pick number (99) until draft order finalized"
+        data_tests:
+          - not_null
+
+      - name: slot_number
+        description: "Placeholder slot number (99) until draft order finalized"
+        data_tests:
+          - not_null
+
+      - name: pick_type
+        description: "Pick classification (always 'tbd' for this model)"
+        data_tests:
+          - not_null
+
+      - name: is_compensatory
+        description: "Flag indicating compensatory pick (always false for TBD picks)"
+        data_tests:
+          - not_null
+
+      - name: comp_source_player
+        description: "Player triggering comp pick (null for TBD picks)"
+
+      - name: comp_awarded_to_franchise
+        description: "Franchise receiving comp pick (null for TBD picks)"
+
+      - name: comp_faad_transaction_id
+        description: "FAAD transaction ID for comp pick (null for TBD picks)"
+
+      - name: comp_round_threshold
+        description: "Round threshold for comp pick (null for TBD picks)"
+
+      - name: faad_chronological_seq
+        description: "FAAD chronological sequence number (null for TBD picks)"
+
+      - name: notes
+        description: "Explanation that pick slot is TBD until standings finalized"

@@ -48,3 +48,54 @@ models:
           Total fantasy points calculated from real-world stat projections and league scoring rules.
           Applies dim_scoring_rule (half-PPR) to projected passing/rushing/receiving stats.
           Does not include IDP scoring (projections lack defensive stats).
+
+      - name: player_name
+        description: "Player name from projection provider"
+
+      - name: current_team
+        description: "Current NFL team from projection provider"
+
+      - name: source_count
+        description: "Number of projection sources contributing to consensus"
+
+      - name: total_weight
+        description: "Sum of weights across all contributing sources"
+
+      - name: completions
+        description: "Projected passing completions"
+
+      - name: attempts
+        description: "Projected passing attempts"
+
+      - name: passing_yards
+        description: "Projected passing yards"
+
+      - name: passing_tds
+        description: "Projected passing touchdowns"
+
+      - name: interceptions
+        description: "Projected interceptions thrown"
+
+      - name: rushing_attempts
+        description: "Projected rushing attempts"
+
+      - name: rushing_yards
+        description: "Projected rushing yards"
+
+      - name: rushing_tds
+        description: "Projected rushing touchdowns"
+
+      - name: targets
+        description: "Projected receiving targets"
+
+      - name: receptions
+        description: "Projected receptions"
+
+      - name: receiving_yards
+        description: "Projected receiving yards"
+
+      - name: receiving_tds
+        description: "Projected receiving touchdowns"
+
+      - name: fumbles_lost
+        description: "Projected fumbles lost"

@@ -20,3 +20,46 @@ models:
       - First RFA signing that awards a comp → P13 in that round
       - Second RFA signing that awards a comp → P14 in that round
       - Sequence determined by faad_award_sequence (immutable)
+
+    columns:
+      - name: pick_id
+        description: "Compensatory pick identifier (YYYY_R#_P##)"
+
+      - name: season
+        description: "Draft year when comp pick is awarded"
+
+      - name: round
+        description: "Draft round for comp pick"
+
+      - name: overall_pick
+        description: "Overall pick number within draft (includes base + prior comps)"
+
+      - name: slot_number
+        description: "Slot number within round (P13+ for comp picks)"
+
+      - name: pick_type
+        description: "Pick classification (always 'compensatory')"
+
+      - name: is_compensatory
+        description: "Flag indicating compensatory pick (always true)"
+
+      - name: comp_source_player
+        description: "Player whose RFA signing triggered this comp pick"
+
+      - name: comp_awarded_to_franchise
+        description: "Franchise ID receiving the comp pick"
+
+      - name: comp_faad_transaction_id
+        description: "Transaction ID that triggered this comp award"
+
+      - name: comp_round_threshold
+        description: "AAV threshold description (e.g., 'R1: $25+/yr')"
+
+      - name: faad_chronological_seq
+        description: "Chronological sequence of FAAD awards (determines P13, P14, etc.)"
+
+      - name: notes
+        description: "Additional notes about the compensatory pick"
+
+      - name: contract_apy
+        description: "Average per year value of RFA contract that triggered comp"

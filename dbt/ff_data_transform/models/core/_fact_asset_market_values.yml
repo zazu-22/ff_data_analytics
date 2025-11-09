@@ -88,6 +88,33 @@ models:
               config:
                 where: "asset_type = 'player' and player_id != -1"
 
+      - name: asset_name
+        description: "Player or pick name from KTC"
+
+      - name: position
+        description: "Player position (null for picks)"
+
+      - name: current_team
+        description: "Current NFL team (null for picks)"
+
+      - name: pick_name
+        description: "Standardized pick name (e.g., '2025 Early 1st') for picks"
+
+      - name: draft_year
+        description: "Draft year for picks (null for players)"
+
+      - name: pick_tier
+        description: "Pick tier classification: early, mid, or late (null for players)"
+
+      - name: pick_round
+        description: "Draft round number for picks (null for players)"
+
+      - name: positional_rank
+        description: "Rank within position group (null for picks)"
+
+      - name: loaded_at
+        description: "Timestamp when this record was loaded"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

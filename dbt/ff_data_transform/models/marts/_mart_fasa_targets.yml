@@ -394,6 +394,9 @@ models:
       - name: suggested_bid_rebuilder
         description: "Rebuilder-adjusted bid (30% premium for youth <25, 50% discount for age >27)"
 
+      - name: sleeper_player_id
+        description: "Sleeper platform player ID for this FA target"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

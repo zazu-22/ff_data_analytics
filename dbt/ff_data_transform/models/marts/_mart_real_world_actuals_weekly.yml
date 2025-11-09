@@ -69,6 +69,87 @@ models:
               arguments:
                 values: [1]
 
+      - name: completions
+        description: "Passing completions"
+
+      - name: attempts
+        description: "Passing attempts"
+
+      - name: passing_yards
+        description: "Passing yards"
+
+      - name: passing_tds
+        description: "Passing touchdowns"
+
+      - name: passing_interceptions
+        description: "Interceptions thrown"
+
+      - name: passing_2pt_conversions
+        description: "Two-point conversion passes"
+
+      - name: carries
+        description: "Rushing attempts"
+
+      - name: rushing_yards
+        description: "Rushing yards"
+
+      - name: rushing_tds
+        description: "Rushing touchdowns"
+
+      - name: rushing_fumbles_lost
+        description: "Rushing fumbles lost"
+
+      - name: rushing_2pt_conversions
+        description: "Two-point conversion rushes"
+
+      - name: targets
+        description: "Receiving targets"
+
+      - name: receptions
+        description: "Receptions"
+
+      - name: receiving_yards
+        description: "Receiving yards"
+
+      - name: receiving_tds
+        description: "Receiving touchdowns"
+
+      - name: receiving_fumbles_lost
+        description: "Receiving fumbles lost"
+
+      - name: receiving_2pt_conversions
+        description: "Two-point conversion receptions"
+
+      - name: def_tackles_solo
+        description: "Solo tackles (IDP)"
+
+      - name: def_tackles_with_assist
+        description: "Assisted tackles (IDP)"
+
+      - name: def_sacks
+        description: "Sacks (IDP)"
+
+      - name: def_interceptions
+        description: "Interceptions (IDP)"
+
+      - name: def_fumbles_forced
+        description: "Fumbles forced (IDP)"
+
+      - name: def_tds
+        description: "Defensive touchdowns (IDP)"
+
+      - name: def_safeties
+        description: "Safeties (IDP)"
+
+      - name: sacks_suffered
+        description: "Times sacked (negative stat)"
+
+      - name: special_teams_tds
+        description: "Special teams touchdowns"
+
+      - name: current_team
+        description: "Current NFL team from dim_player"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

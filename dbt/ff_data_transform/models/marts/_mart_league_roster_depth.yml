@@ -29,3 +29,60 @@ models:
           - accepted_values:
               arguments:
                 values: ['QB', 'RB', 'WR', 'TE']
+
+      - name: player_name
+        description: "Player display name"
+
+      - name: cap_hit
+        description: "Annual cap hit for this player's contract"
+
+      - name: projected_ppg_ros
+        description: "Projected fantasy points per game for rest of season"
+
+      - name: projected_total_ros
+        description: "Total projected fantasy points for rest of season"
+
+      - name: team_depth_rank
+        description: "Player's depth chart ranking within their team at this position"
+
+      - name: league_rank_at_position
+        description: "League-wide ranking at this position (1 = best)"
+
+      - name: total_rostered_at_position
+        description: "Total players rostered league-wide at this position"
+
+      - name: league_percentile_at_position
+        description: "Percentile ranking within position (100 = best, 0 = worst)"
+
+      - name: median_starter_ppg
+        description: "Median PPG for starting-caliber players at this position"
+
+      - name: weak_starter_ppg
+        description: "PPG threshold for weak starter at this position"
+
+      - name: median_flex_ppg
+        description: "Median PPG for flex-worthy players at this position"
+
+      - name: median_rostered_ppg
+        description: "Median PPG for all rostered players at this position"
+
+      - name: replacement_level_ppg
+        description: "Replacement level PPG (minimum rostered value)"
+
+      - name: pts_above_median_starter
+        description: "Points per game above median starter at position"
+
+      - name: pts_above_flex_median
+        description: "Points per game above median flex player"
+
+      - name: pts_above_replacement
+        description: "Points per game above replacement level"
+
+      - name: roster_tier
+        description: "Roster tier classification (Elite, Starter, Flex, Bench, etc.)"
+
+      - name: league_tier
+        description: "League-wide tier classification based on percentile"
+
+      - name: asof_date
+        description: "Date when this roster depth snapshot was taken"

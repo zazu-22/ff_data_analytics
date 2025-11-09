@@ -21,3 +21,66 @@ models:
       - R3: $10-14 per year
 
       Validates contract AAV matches comp round assignment and flags mismatches.
+
+    columns:
+      - name: comp_faad_transaction_id
+        description: "Transaction ID from fact_league_transactions that triggered this comp pick"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: comp_season
+        description: "Draft year when comp pick is awarded"
+        data_tests:
+          - not_null
+
+      - name: comp_round
+        description: "Draft round for comp pick (1-5)"
+        data_tests:
+          - not_null
+
+      - name: comp_source_player
+        description: "Player name whose RFA signing triggered comp pick"
+        data_tests:
+          - not_null
+
+      - name: comp_source_player_id
+        description: "Player ID from dim_player_id_xref"
+
+      - name: comp_awarded_to_franchise_id
+        description: "Franchise receiving the comp pick (team that lost RFA)"
+        data_tests:
+          - not_null
+
+      - name: faad_award_sequence
+        description: "Chronological sequence of comp awards within season"
+
+      - name: contract_apy
+        description: "Average annual value of RFA contract that triggered comp"
+
+      - name: comp_round_expected_by_aav
+        description: "Expected comp round based on contract AAV thresholds"
+
+      - name: comp_round_threshold
+        description: "AAV threshold description (e.g., 'R1: $25+/yr')"
+
+      - name: transaction_date
+        description: "Date of the FAAD transaction that triggered this comp"
+
+      - name: signing_franchise_id
+        description: "Franchise that signed the RFA (not the one receiving comp)"
+
+      - name: comp_awarded_to_owner_name
+        description: "Owner name receiving the comp pick (for validation)"
+
+      - name: comp_awarded_to_owner_verified
+        description: "Flag: true if owner name matches franchise mapping"
+
+      - name: is_aav_round_valid
+        description: "Flag: true if AAV matches the comp round assigned"
+
+      - name: aav_validation_message
+        description: "Explanation of AAV validation result"
+
+      - name: faad_comp_original
+        description: "Original FAAD comp text before parsing"

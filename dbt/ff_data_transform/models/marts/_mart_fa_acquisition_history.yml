@@ -27,3 +27,72 @@ models:
           - accepted_values:
               arguments:
                 values: ['QB', 'RB', 'WR', 'TE']
+
+      - name: transaction_date
+        description: "Date of FA acquisition transaction"
+
+      - name: season
+        description: "NFL season year"
+
+      - name: period_type
+        description: "Season phase (offseason, regular_season, playoffs)"
+
+      - name: week
+        description: "NFL week number (null for offseason)"
+
+      - name: player_id
+        description: "Canonical player ID from dim_player"
+
+      - name: player_key
+        description: "Composite player identifier"
+
+      - name: player_name
+        description: "Player display name"
+
+      - name: to_franchise_id
+        description: "Franchise that acquired the player"
+
+      - name: to_franchise_name
+        description: "Name of franchise that acquired the player"
+
+      - name: contract_length
+        description: "Contract length in years"
+
+      - name: aav
+        description: "Average annual value of contract"
+
+      - name: fantasy_ppg_l4_weeks
+        description: "Fantasy PPG in last 4 weeks before signing"
+
+      - name: fantasy_ppg_season_before_signing
+        description: "Fantasy PPG for full season before signing"
+
+      - name: touches_per_game_l4_weeks
+        description: "Touches per game in last 4 weeks"
+
+      - name: fantasy_ppg_l4_games
+        description: "Fantasy PPG in last 4 games played"
+
+      - name: touches_per_game_l4_games
+        description: "Touches per game in last 4 games played"
+
+      - name: days_since_last_game
+        description: "Days elapsed since player's last game"
+
+      - name: quality_fas_available
+        description: "Count of quality free agents available at time of signing"
+
+      - name: market_depth_ratio
+        description: "Ratio of quality FAs to league size"
+
+      - name: season_phase
+        description: "Phase of season (early, mid, late, offseason)"
+
+      - name: performance_tier
+        description: "Player performance tier (Elite, Starter, Flex, etc.)"
+
+      - name: dollars_per_ppg
+        description: "Contract efficiency metric (AAV / Fantasy PPG)"
+
+      - name: asof_date
+        description: "Date when this acquisition data was captured"

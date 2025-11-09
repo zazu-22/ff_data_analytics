@@ -18,3 +18,58 @@ models:
 
       Note: overall_pick is provisional and recalculated in final model to account
       for compensatory picks in prior rounds.
+
+    columns:
+      - name: pick_id
+        description: "Standardized pick identifier (YYYY_R#_P##)"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: season
+        description: "Draft year (2012-2030)"
+        data_tests:
+          - not_null
+
+      - name: round
+        description: "Draft round number (1-5)"
+        data_tests:
+          - not_null
+
+      - name: overall_pick
+        description: "Provisional overall pick number ignoring compensatory picks"
+        data_tests:
+          - not_null
+
+      - name: slot_number
+        description: "Pick slot within round (1-12)"
+        data_tests:
+          - not_null
+
+      - name: pick_type
+        description: "Pick classification (always 'base' for this model)"
+        data_tests:
+          - not_null
+
+      - name: is_compensatory
+        description: "Flag indicating compensatory pick (always false for base picks)"
+        data_tests:
+          - not_null
+
+      - name: comp_source_player
+        description: "Player triggering comp pick (null for base picks)"
+
+      - name: comp_awarded_to_franchise
+        description: "Franchise receiving comp pick (null for base picks)"
+
+      - name: comp_faad_transaction_id
+        description: "FAAD transaction ID for comp pick (null for base picks)"
+
+      - name: comp_round_threshold
+        description: "Round threshold for comp pick (null for base picks)"
+
+      - name: faad_chronological_seq
+        description: "FAAD chronological sequence number (null for base picks)"
+
+      - name: notes
+        description: "Additional notes about the pick (empty for base picks)"

@@ -43,3 +43,69 @@ models:
         description: |
           NFL draft year (SCD Type 0 - immutable).
           Null for undrafted free agents.
+
+      - name: searchable_name
+        description: "Normalized player name for searching (lowercase, no punctuation)"
+
+      - name: birthdate
+        description: "Player date of birth"
+
+      - name: mfl_id
+        description: "MyFantasyLeague player ID"
+
+      - name: gsis_id
+        description: "NFL GSIS player ID"
+
+      - name: sleeper_id
+        description: "Sleeper platform player ID"
+
+      - name: espn_id
+        description: "ESPN player ID"
+
+      - name: yahoo_id
+        description: "Yahoo Fantasy player ID"
+
+      - name: pfr_id
+        description: "Pro Football Reference player ID"
+
+      - name: fantasypros_id
+        description: "FantasyPros player ID"
+
+      - name: pff_id
+        description: "Pro Football Focus player ID"
+
+      - name: cbs_id
+        description: "CBS Sports player ID"
+
+      - name: ktc_id
+        description: "KeepTradeCut player ID"
+
+      - name: sportradar_id
+        description: "Sportradar player ID"
+
+      - name: fleaflicker_id
+        description: "Fleaflicker platform player ID"
+
+      - name: rotowire_id
+        description: "RotoWire player ID"
+
+      - name: rotoworld_id
+        description: "Rotoworld player ID"
+
+      - name: stats_id
+        description: "Stats Inc player ID"
+
+      - name: stats_global_id
+        description: "Stats Inc global player ID"
+
+      - name: fantasy_data_id
+        description: "FantasyData player ID"
+
+      - name: swish_id
+        description: "Swish Analytics player ID"
+
+      - name: cfbref_id
+        description: "College Football Reference player ID"
+
+      - name: nfl_id
+        description: "Official NFL player ID"

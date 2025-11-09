@@ -47,6 +47,33 @@ models:
         data_tests:
           - not_null
 
+      - name: base_cap
+        description: "Starting cap space each season ($250)"
+
+      - name: cap_space_available_reported
+        description: "Cap space available per Commissioner sheet"
+
+      - name: dead_cap_reported
+        description: "Dead cap per Commissioner sheet"
+
+      - name: traded_cap_net
+        description: "Net cap space traded (positive = acquired, negative = sent)"
+
+      - name: active_contracts_total
+        description: "Sum of active contract obligations from contracts_active"
+
+      - name: dead_cap_calculated
+        description: "Calculated dead cap from contracts_cut"
+
+      - name: cap_space_available_calculated
+        description: "Calculated available cap space (base - active - dead + traded)"
+
+      - name: reconciliation_difference
+        description: "Difference between reported and calculated cap space (should be ~0)"
+
+      - name: asof_date
+        description: "Date when this cap situation snapshot was taken"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

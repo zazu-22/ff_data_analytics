@@ -19,3 +19,61 @@ models:
       - Primary: Match by (season, round, overall_pick)
       - Fallback: Match by (season, round, slot_number) for misencoded picks
       - TBD: Match by (season, round) only
+
+    columns:
+      - name: transaction_id_unique
+        description: "Unique transaction ID from fact_league_transactions"
+
+      - name: transaction_id
+        description: "Transaction event ID grouping multi-asset trades"
+
+      - name: pick_season
+        description: "Draft year from transaction"
+
+      - name: pick_round
+        description: "Draft round from transaction"
+
+      - name: pick_overall_number
+        description: "Overall pick number from transaction"
+
+      - name: pick_id_raw
+        description: "Raw pick ID from transaction (may be incorrect)"
+
+      - name: pick_id_original
+        description: "Original pick ID for backward compatibility"
+
+      - name: pick_id_canonical
+        description: "Canonical pick ID from dim_pick after matching"
+
+      - name: overall_pick_canonical
+        description: "Canonical overall pick number from dim_pick"
+
+      - name: slot_number_canonical
+        description: "Canonical slot number from dim_pick"
+
+      - name: pick_type
+        description: "Pick classification from dim_pick"
+
+      - name: is_compensatory
+        description: "Flag indicating if this is a compensatory pick"
+
+      - name: is_overall_match
+        description: "Flag: true if overall pick numbers align between transaction and dim_pick"
+
+      - name: is_raw_id_match
+        description: "Flag: true if raw pick_id equals canonical pick_id"
+
+      - name: has_canonical_match
+        description: "Flag: true if pick was successfully matched to dim_pick"
+
+      - name: match_status
+        description: "Match quality indicator (EXACT MATCH, OVERALL MATCH, NO MATCH, etc.)"
+
+      - name: pick_id_final
+        description: "Final pick ID after lifecycle migration (TBD → actual)"
+
+      - name: lifecycle_state
+        description: "Lifecycle state of this pick (ACTIVE, SUPERSEDED, etc.)"
+
+      - name: lifecycle_migration_note
+        description: "Explanation of lifecycle state transition"

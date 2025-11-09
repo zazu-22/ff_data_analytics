@@ -233,6 +233,66 @@ models:
 
           Compensation given to losing team when RFA is signed by another team.
 
+      - name: transaction_date_corrected
+        description: "Corrected transaction date after sequence validation"
+
+      - name: was_sequence_corrected
+        description: "Flag: true if transaction sequence was corrected"
+
+      - name: period_type
+        description: "Season phase: offseason, regular_season, or playoffs"
+
+      - name: week
+        description: "NFL week number (null for offseason transactions)"
+
+      - name: sort_sequence
+        description: "Intra-week ordering for transactions in same timeframe"
+
+      - name: timeframe_string
+        description: "Original timeframe from Commissioner sheet (e.g., '2024 Offseason')"
+
+      - name: from_franchise_name
+        description: "Source franchise name from dim_franchise"
+
+      - name: to_franchise_name
+        description: "Destination franchise name from dim_franchise"
+
+      - name: player_name
+        description: "Player name from Commissioner sheet"
+
+      - name: position
+        description: "Player position from Commissioner sheet"
+
+      - name: pick_original_owner
+        description: "Original owner of this draft pick"
+
+      - name: round
+        description: "Draft round (legacy field, prefer pick_round)"
+
+      - name: pick_number
+        description: "Pick number within round (legacy field)"
+
+      - name: contract_split_array
+        description: "Year-by-year cap hit breakdown as array"
+
+      - name: faad_compensation_text
+        description: "Human-readable FAAD compensation description"
+
+      - name: contract_raw
+        description: "Raw contract string from Commissioner sheet"
+
+      - name: split_raw
+        description: "Raw contract split string from Commissioner sheet"
+
+      - name: transaction_type_raw
+        description: "Original transaction type from Commissioner sheet before refinement"
+
+      - name: from_owner_name
+        description: "Source owner name from Commissioner sheet (for franchise mapping)"
+
+      - name: to_owner_name
+        description: "Destination owner name from Commissioner sheet (for franchise mapping)"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

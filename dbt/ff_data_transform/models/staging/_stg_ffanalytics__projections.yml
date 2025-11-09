@@ -41,6 +41,85 @@ models:
         description: "Canonical team code from dim_player_id_xref (fallback to consensus label if unavailable)"
       - name: team_consensus
         description: "Weighted consensus team label prior to crosswalk normalization (for QA)"
+
+      - name: player_name
+        description: "Player name from FFanalytics provider"
+
+      - name: position
+        description: "Player position from FFanalytics provider"
+
+      - name: week
+        description: "NFL week number (null for season-long projections)"
+
+      - name: source_count
+        description: "Number of projection sources contributing to consensus"
+
+      - name: total_weight
+        description: "Sum of weights across all contributing sources"
+
+      - name: completions
+        description: "Projected passing completions"
+
+      - name: attempts
+        description: "Projected passing attempts"
+
+      - name: passing_yards
+        description: "Projected passing yards"
+
+      - name: passing_tds
+        description: "Projected passing touchdowns"
+
+      - name: interceptions
+        description: "Projected interceptions thrown"
+
+      - name: rushing_attempts
+        description: "Projected rushing attempts"
+
+      - name: rushing_yards
+        description: "Projected rushing yards"
+
+      - name: rushing_tds
+        description: "Projected rushing touchdowns"
+
+      - name: targets
+        description: "Projected receiving targets (not available in FFanalytics)"
+
+      - name: receptions
+        description: "Projected receptions"
+
+      - name: receiving_yards
+        description: "Projected receiving yards"
+
+      - name: receiving_tds
+        description: "Projected receiving touchdowns"
+
+      - name: fumbles_lost
+        description: "Projected fumbles lost"
+
+      - name: idp_solo_tackles
+        description: "Projected solo tackles (IDP)"
+
+      - name: idp_assisted_tackles
+        description: "Projected assisted tackles (IDP)"
+
+      - name: idp_sacks
+        description: "Projected sacks (IDP)"
+
+      - name: idp_passes_defended
+        description: "Projected passes defended (IDP)"
+
+      - name: idp_interceptions
+        description: "Projected interceptions (IDP)"
+
+      - name: idp_fumbles_forced
+        description: "Projected fumbles forced (IDP)"
+
+      - name: idp_fumbles_recovered
+        description: "Projected fumbles recovered (IDP)"
+
+      - name: idp_touchdowns
+        description: "Projected defensive touchdowns (IDP)"
+
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

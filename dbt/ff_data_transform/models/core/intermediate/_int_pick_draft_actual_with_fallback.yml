@@ -19,3 +19,43 @@ models:
       - Use actual draft data for complete rounds (12 base picks)
       - Fall back to generated picks for incomplete rounds
       - pick_source = 'ACTUAL' for draft data, 'GENERATED' for fallback
+
+    columns:
+      - name: pick_id
+        description: "Base pick identifier (YYYY_R#_P##)"
+
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number"
+
+      - name: overall_pick
+        description: "Overall pick number within draft"
+
+      - name: slot_number
+        description: "Pick slot within round (1-12 for base picks)"
+
+      - name: pick_type
+        description: "Pick classification (always 'base')"
+
+      - name: pick_source
+        description: "Data source (ACTUAL from transactions or GENERATED from int_pick_base)"
+
+      - name: draft_transaction_id
+        description: "Transaction ID from actual draft (null for generated)"
+
+      - name: player_drafted
+        description: "Player selected with this pick (null for generated)"
+
+      - name: drafted_by_franchise
+        description: "Franchise that made selection (null for generated)"
+
+      - name: validation_status
+        description: "Validation status (COMPLETE, INCOMPLETE, GENERATED)"
+
+      - name: validation_message
+        description: "Validation message or fallback reason"
+
+      - name: has_complete_base_picks
+        description: "Flag: true if round has all 12 base picks from actuals"

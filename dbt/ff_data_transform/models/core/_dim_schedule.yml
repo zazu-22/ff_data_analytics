@@ -62,3 +62,45 @@ models:
               arguments:
                 to: ref('dim_team')
                 field: team_id
+
+      - name: gametime
+        description: "Game kickoff time (timestamp)"
+
+      - name: weekday
+        description: "Day of week game was played"
+
+      - name: home_score
+        description: "Final score for home team"
+
+      - name: away_score
+        description: "Final score for away team"
+
+      - name: result
+        description: "Game outcome differential from home team perspective"
+
+      - name: location
+        description: "Game location (Home, Away, Neutral)"
+
+      - name: roof
+        description: "Stadium roof type (dome, outdoors, retractable)"
+
+      - name: surface
+        description: "Playing surface type (grass, turf, etc.)"
+
+      - name: temp
+        description: "Game-time temperature in Fahrenheit"
+
+      - name: wind
+        description: "Wind speed in MPH"
+
+      - name: div_game
+        description: "Flag: true if divisional game"
+
+      - name: overtime
+        description: "Flag: true if game went to overtime"
+
+      - name: stadium
+        description: "Stadium name"
+
+      - name: stadium_id
+        description: "Stadium identifier"

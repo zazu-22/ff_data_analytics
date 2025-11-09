@@ -63,3 +63,6 @@ models:
           - 'Compensatory pick'
           - 'RFA compensation pick'
         data_tests: [not_null]
+
+      - name: overall_pick
+        description: "Overall pick number within draft (for picks only)"

@@ -155,3 +155,81 @@ models:
           Immutable FAAD award ordering (1-indexed per season) persisted during
           ingestion. Keeps compensatory pick sequencing stable even if commissioner
           transaction_ids are edited after the draft.
+
+      - name: season
+        description: "NFL season year for this transaction"
+
+      - name: period_type
+        description: "Season phase: offseason, regular_season, or playoffs"
+
+      - name: week
+        description: "NFL week number (null for offseason transactions)"
+
+      - name: sort_sequence
+        description: "Intra-week ordering for transactions in same timeframe"
+
+      - name: from_franchise_name
+        description: "Source franchise name from dim_franchise"
+
+      - name: to_franchise_name
+        description: "Destination franchise name from dim_franchise"
+
+      - name: player_name
+        description: "Player name from Commissioner sheet"
+
+      - name: position
+        description: "Player position from Commissioner sheet"
+
+      - name: pick_season
+        description: "Draft year for this pick (e.g., 2025)"
+
+      - name: pick_round
+        description: "Draft round number for this pick"
+
+      - name: pick_overall_number
+        description: "Overall pick number within the draft"
+
+      - name: pick_id_raw
+        description: "Raw pick identifier from Commissioner sheet"
+
+      - name: pick_original_owner
+        description: "Original owner of this draft pick"
+
+      - name: round
+        description: "Draft round (legacy field, prefer pick_round)"
+
+      - name: pick_number
+        description: "Pick number within round (legacy field)"
+
+      - name: contract_total
+        description: "Total contract value in dollars"
+
+      - name: contract_years
+        description: "Contract length in years"
+
+      - name: contract_split_array
+        description: "Year-by-year cap hit breakdown as array"
+
+      - name: rfa_matched
+        description: "Flag: true if this is an RFA match transaction"
+
+      - name: faad_compensation
+        description: "FAAD compensation awarded (draft pick, cap space, etc.)"
+
+      - name: faad_compensation_text
+        description: "Human-readable FAAD compensation description"
+
+      - name: contract_raw
+        description: "Raw contract string from Commissioner sheet"
+
+      - name: split_raw
+        description: "Raw contract split string from Commissioner sheet"
+
+      - name: transaction_type_raw
+        description: "Original transaction type from Commissioner sheet before refinement"
+
+      - name: from_owner_name
+        description: "Source owner name from Commissioner sheet (for franchise mapping)"
+
+      - name: to_owner_name
+        description: "Destination owner name from Commissioner sheet (for franchise mapping)"

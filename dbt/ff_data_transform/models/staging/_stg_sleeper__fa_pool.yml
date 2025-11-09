@@ -67,3 +67,21 @@ models:
           - accepted_values:
               arguments:
                 values: [true, false]
+
+      - name: age
+        description: "Player age in years"
+
+      - name: nfl_experience
+        description: "Years of NFL experience"
+
+      - name: injury_status
+        description: "Current injury designation (Active, IR, Out, etc.)"
+
+      - name: fantasy_positions
+        description: "Eligible fantasy positions (array)"
+
+      - name: asof_date
+        description: "Date when FA pool snapshot was taken"
+
+      - name: source_platform
+        description: "Data source platform (sleeper)"

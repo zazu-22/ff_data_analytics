@@ -282,3 +282,27 @@ models:
 
           **Example comp pick note**:
           "Comp for Patrick Mahomes | MISMATCH: FAAD shows R2 but AAV $25/yr suggests R1"
+
+      - name: lifecycle_state
+        description: "Pick lifecycle state (ACTIVE, ACTIVE_TBD, SUPERSEDED, etc.)"
+
+      - name: is_prospective
+        description: "Flag: true if this is a TBD pick with unknown draft position"
+
+      - name: superseded_by_pick_id
+        description: "Pick ID that replaced this TBD pick when draft order finalized (null if still active)"
+
+      - name: superseded_at
+        description: "Timestamp when this TBD pick was replaced (null if still active)"
+
+      - name: rfa_player_name
+        description: "Player name for RFA comp picks (alternative to comp_source_player)"
+
+      - name: awarded_to_franchise_id
+        description: "Franchise ID receiving this comp pick (alternative to comp_awarded_to_franchise)"
+
+      - name: rfa_contract_aav
+        description: "Average annual value of RFA contract that triggered comp pick"
+
+      - name: faad_transaction_id
+        description: "FAAD transaction ID (alternative to comp_faad_transaction_id)"

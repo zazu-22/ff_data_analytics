@@ -19,3 +19,49 @@ models:
       - player_*: Drafted player metadata
 
       Outputs canonical pick_id (YYYY_R#_P##) with proper sequencing.
+
+    columns:
+      - name: pick_id
+        description: "Canonical pick identifier from draft transaction"
+
+      - name: season
+        description: "Draft year"
+
+      - name: round
+        description: "Draft round number from transaction"
+
+      - name: slot_number
+        description: "Calculated slot number"
+
+      - name: overall_pick
+        description: "Overall pick number within draft"
+
+      - name: drafted_player_id
+        description: "Player selected with this pick"
+
+      - name: drafted_player_name
+        description: "Name of player selected"
+
+      - name: pick_type
+        description: "Pick classification (base or compensatory)"
+
+      - name: is_compensatory
+        description: "Flag: true if this is a compensatory pick"
+
+      - name: draft_transaction_id
+        description: "Transaction ID from fact_league_transactions for this draft pick"
+
+      - name: drafted_by_franchise_id
+        description: "Franchise ID that made this draft selection"
+
+      - name: drafted_by_franchise_name
+        description: "Franchise name that made this draft selection"
+
+      - name: drafted_player_position
+        description: "Position of player selected with this pick"
+
+      - name: draft_timestamp
+        description: "Timestamp when draft selection was made"
+
+      - name: ingested_at
+        description: "Timestamp when draft data was ingested"
