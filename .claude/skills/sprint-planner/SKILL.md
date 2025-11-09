@@ -37,29 +37,34 @@ Follow this five-step process to create a complete sprint:
 Work with the user to develop an overarching sprint plan. The sprint plan should include:
 
 **Sprint Metadata:**
+
 - Sprint name and duration
 - Primary goal and success criteria
 - Target milestones and deadlines
 
 **Technical Architecture:**
+
 - System context and current state
 - Key components to build/modify
 - Integration points and dependencies
 - Data flows and transformations
 
 **Task Breakdown:**
+
 - Phases with milestones
 - Individual tasks with objectives
 - Dependencies between tasks
 - Estimated durations and priorities
 
 **Implementation Specifications:**
+
 - For each major task, include complete technical specs
 - SQL queries, Python code templates, API schemas
 - File paths and directory structures
 - Configuration and environment variables
 
 **Ask clarifying questions:**
+
 - "What are the success criteria for this sprint?"
 - "Which tasks are on the critical path?"
 - "What existing code/data can we build on?"
@@ -78,6 +83,7 @@ Break down the sprint plan into atomic, standalone task files. Each task should 
 - **Committable** - Can be committed as a single, coherent unit
 
 **Task Design Principles:**
+
 - One task = one logical unit of work (e.g., "build X", "integrate Y")
 - Include complete context: why it matters, current state, dependencies
 - Provide full code templates, not just descriptions
@@ -86,12 +92,14 @@ Break down the sprint plan into atomic, standalone task files. Each task should 
 - Add notes about gotchas, future considerations, related tasks
 
 **Determining Task Boundaries:**
+
 - Can this be implemented and tested independently?
 - Does it have clear success criteria?
 - Is it small enough to complete in one focused session?
 - Does it map to a single commit?
 
 **For each task, define:**
+
 - Objective and context
 - Files to create/modify with complete code
 - Implementation steps
@@ -117,11 +125,13 @@ docs/spec/{sprint_directory}/
 ```
 
 **Naming Conventions:**
+
 - Sprint directory: `sprint_N` or descriptive name (e.g., `sprint_authentication`)
 - Task files: `{NN}_task_{descriptive_name}.md` (zero-padded, snake_case)
 - Use consistent numbering: 01, 02, ..., 10, 11 (not 1, 2, ..., 10, 11)
 
 **Directory Location:**
+
 - Project specs: `docs/spec/{sprint_directory}/`
 - Or appropriate location based on project structure
 
@@ -150,6 +160,7 @@ Create all task files using the task template:
    - Link to task files where appropriate
 
 **Quality Checklist:**
+
 - [ ] Each task file is self-contained (no "see other file" references)
 - [ ] All code templates are complete and copy-paste ready
 - [ ] Validation commands are exact (not "run the tests")
@@ -162,6 +173,7 @@ Create all task files using the task template:
 Create a dedicated skill for executing the sprint tasks using the skill-creator skill:
 
 1. **Initialize the executor skill:**
+
    ```
    Use the skill-creator skill to create a new skill named "{sprint-name}-executor"
    ```
@@ -190,6 +202,7 @@ Create a dedicated skill for executing the sprint tasks using the skill-creator 
    - Verify SKILL.md has complete information
 
 **The executor skill enables:**
+
 - User can say "Execute Sprint N Task X.Y" and Claude has all context
 - No need to search for files during task execution
 - Consistent execution workflow across all tasks
@@ -291,6 +304,7 @@ uv run jupyter nbconvert --execute --to notebook --inplace [notebook]
 When helping user create a sprint:
 
 1. **After Step 1 (Sprint Planning):**
+
    ```text
    ✅ Sprint Plan Complete: {SPRINT_NAME}
 
@@ -303,6 +317,7 @@ When helping user create a sprint:
    ```
 
 2. **After Step 2 (Task Design):**
+
    ```text
    ✅ Task Units Designed
 
@@ -317,6 +332,7 @@ When helping user create a sprint:
    ```
 
 3. **After Step 4 (Files Generated):**
+
    ```text
    ✅ Sprint Directory Created: docs/spec/{sprint_directory}/
 
@@ -329,6 +345,7 @@ When helping user create a sprint:
    ```
 
 4. **After Step 5 (Executor Skill):**
+
    ```text
    ✅ Sprint Setup Complete!
 
@@ -349,6 +366,7 @@ When helping user create a sprint:
 **User says:** "I want to plan a sprint for implementing user authentication"
 
 **Response:**
+
 1. Acknowledge and begin Step 1 (Sprint Planning)
 2. Ask clarifying questions about goals, timeline, tech stack
 3. Collaborate to create comprehensive sprint plan
@@ -359,6 +377,7 @@ When helping user create a sprint:
 **User says:** "I have a sprint plan, help me break it into task files"
 
 **Response:**
+
 1. Read the sprint plan
 2. Begin Step 2 (Task Design)
 3. Propose task boundaries and dependencies
@@ -369,6 +388,7 @@ When helping user create a sprint:
 **User says:** "Add a new task to Sprint 1"
 
 **Response:**
+
 1. Read existing sprint directory
 2. Create new task file following established patterns
 3. Update README task index
@@ -380,6 +400,7 @@ When helping user create a sprint:
 **User says:** "How should I structure my sprint?"
 
 **Response:**
+
 1. Share sprint planning philosophy
 2. Explain atomic task principles
 3. Provide examples from references/
@@ -388,21 +409,25 @@ When helping user create a sprint:
 ## Troubleshooting
 
 **Issue: Task files too large or complex**
+
 - Break task into smaller subtasks
 - Each subtask should be committable independently
 - Ensure each task has single focus
 
 **Issue: Tasks have circular dependencies**
+
 - Review dependency graph
 - Identify which task should come first
 - Consider if tasks need to be combined or split differently
 
 **Issue: Validation commands unclear**
+
 - Make commands copy-paste ready with exact paths
 - Show expected output for success case
 - Include commands for both happy path and error cases
 
 **Issue: Executor skill references not working**
+
 - Ensure all task files copied to `references/` directory
 - Check file paths match between task index and actual files
 - Verify SKILL.md references correct file names
@@ -412,5 +437,4 @@ When helping user create a sprint:
 This skill works well with:
 
 - **skill-creator** - Use in Step 5 to create the executor skill
-- **data-architecture-spec1** - For data-focused sprints, consult for architecture patterns
 - **Project-specific executor skills** - Once created, use the executor skill for task execution

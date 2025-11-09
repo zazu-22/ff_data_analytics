@@ -70,7 +70,15 @@ seeds:
               config:
                 severity: error
               arguments:
-                values: ['passing', 'rushing', 'receiving', 'idp', 'team_dst', 'kicking']
+                values:
+                  [
+                    "passing",
+                    "rushing",
+                    "receiving",
+                    "idp",
+                    "team_dst",
+                    "kicking",
+                  ]
       - name: stat_name
         description: "Stat name"
         data_tests:
@@ -138,9 +146,10 @@ seeds:
         data_tests:
           - not_null
           - accepted_values:
+              arguments:
+                values: [true, false]
               config:
                 severity: error
-              values: [true, false]
       - name: annual_salary_cap
         description: "Base salary cap per season ($)"
         data_tests:
@@ -188,9 +197,10 @@ seeds:
           - not_null
           - unique
           - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
               config:
                 severity: error
-              values: [1, 2, 3, 4, 5]
       - name: dead_cap_pct
         description: "Percentage of contract amount owed as dead cap"
         data_tests:
@@ -200,9 +210,10 @@ seeds:
         data_tests:
           - not_null
           - accepted_values:
+              arguments:
+                values: ["ceil"]
               config:
                 severity: error
-              values: ['ceil']
 
   - name: dim_rfa_compensation_schedule
     description: "RFA compensation pick schedule by contract value"
@@ -229,9 +240,10 @@ seeds:
         data_tests:
           - not_null
           - accepted_values:
+              arguments:
+                values: [1, 2, 3]
               config:
                 severity: error
-              values: [1, 2, 3]
 
   - name: dim_position_slot_eligibility
     description: "Position eligibility for roster slots"
@@ -270,10 +282,10 @@ seeds:
         data_tests:
           - not_null
           - accepted_values:
+              arguments:
+                values: ["offense", "defense", "special_teams"]
               config:
                 severity: error
-              arguments:
-                values: ['offense', 'defense', 'special_teams']
       - name: match_priority
         description: "Priority for matching (100 = exact, 95 = compatible)"
         data_tests:

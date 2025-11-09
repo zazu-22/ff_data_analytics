@@ -48,6 +48,7 @@ Staging models normalize raw provider data.
    - Add not_null, unique tests for PKs
    - Add accepted_values for enums
 5. **Run and test**:
+
    ```bash
    make dbt-run --select stg_{provider}__{dataset}
    make dbt-test --select stg_{provider}__{dataset}
@@ -72,12 +73,14 @@ Fact tables capture measurable events/processes.
    - Add relationship tests for all FKs
    - Add not_null for required measures
 5. **Run and test**:
+
    ```bash
    make dbt-run --select fact_{process}
    make dbt-test --select fact_{process}
    ```
 
 **Critical**: Fact tables MUST have grain uniqueness test with dbt 1.10+ syntax:
+
 ```yaml
 data_tests:
   - dbt_utils.unique_combination_of_columns:
@@ -108,6 +111,7 @@ Dimensions provide descriptive context for facts.
 5. **Run and test**
 
 **SCD Type 2 pattern**:
+
 - Track changes over time with validity dates
 - Include version_number for multiple versions
 - Set is_current flag for latest version
@@ -117,6 +121,7 @@ Dimensions provide descriptive context for facts.
 Marts provide wide-format, analytics-ready data.
 
 **2×2 Model Quadrants:**
+
 - `mart_real_world_actuals` - NFL stats (actuals)
 - `mart_real_world_projections` - Projected NFL stats
 - `mart_fantasy_actuals` - Fantasy points (actuals, apply scoring rules)
@@ -136,6 +141,7 @@ Marts provide wide-format, analytics-ready data.
 6. **Run and test**
 
 **Example pivot**:
+
 ```sql
 SUM(CASE WHEN stat_name = 'passing_yards' THEN stat_value END) AS passing_yards,
 SUM(CASE WHEN stat_name = 'passing_tds' THEN stat_value END) AS passing_tds
@@ -169,6 +175,7 @@ Templates for creating models:
 ### Grain Declaration
 
 **CRITICAL**: Every model must explicitly declare grain:
+
 - In SQL comments: `-- Grain: one row per...`
 - In YAML description
 - In grain uniqueness test (facts)
@@ -176,16 +183,19 @@ Templates for creating models:
 ### Testing Strategy
 
 **Staging models**:
+
 - not_null on all PKs
 - unique on single-column PKs
 - accepted_values on enums
 
 **Fact tables**:
+
 - dbt_utils.unique_combination_of_columns (grain test)
 - relationships to all dimensions
 - not_null on FKs and measures
 
 **Dimensions**:
+
 - unique on surrogate key
 - not_null on natural key
 
@@ -238,6 +248,7 @@ tests:  # WRONG - should be data_tests:
 ```
 
 **Key Points:**
+
 - Always use `data_tests:` (not `tests:`)
 - `arguments:` wraps test parameters (to, field, values, combination_of_columns)
 - `config:` is a sibling to `arguments:`, not nested inside
@@ -246,6 +257,7 @@ tests:  # WRONG - should be data_tests:
 ### External Parquet Configuration
 
 Large models use External Parquet:
+
 ```sql
 {{ config(
     materialized='table',
@@ -266,4 +278,3 @@ Large models use External Parquet:
 
 - **data-ingestion-builder** - Create staging models after adding providers
 - **data-quality-test-generator** - Enhance testing beyond basics
-- **data-architecture-spec1** - Ensure compliance with SPEC-1 patterns

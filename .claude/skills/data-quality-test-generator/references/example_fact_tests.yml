@@ -1,8 +1,8 @@
+---
 version: 2
-
 models:
   - name: fact_player_projections
-    description: "Projections fact table in long form (real-world stats only)"
+    description: Projections fact table in long form (real-world stats only)
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -20,39 +20,35 @@ models:
             severity: warn  # Warn for now since we have limited test data
     columns:
       - name: player_id
-        description: "Canonical player ID (mfl_id)"
-        data_tests:
-          - not_null
+        description: Canonical player ID (mfl_id)
+        data_tests: [not_null]
       - name: stat_name
-        description: "Name of statistical measure"
-        data_tests:
-          - not_null
+        description: Name of statistical measure
+        data_tests: [not_null]
       - name: stat_value
-        description: "Projected value for the stat"
-        data_tests:
-          - not_null
+        description: Projected value for the stat
+        data_tests: [not_null]
       - name: measure_domain
-        description: "Always 'real_world' for projections base"
+        description: Always 'real_world' for projections base
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['real_world']
+                values: [real_world]
       - name: stat_kind
-        description: "Always 'projection'"
+        description: Always 'projection'
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['projection']
+                values: [projection]
       - name: horizon
-        description: "Projection timeframe"
+        description: Projection timeframe
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['weekly', 'full_season', 'rest_of_season']
+                values: [weekly, full_season, rest_of_season]
       - name: asof_date
-        description: "When projection was made"
-        data_tests:
-          - not_null
+        description: When projection was made
+        data_tests: [not_null]

@@ -1,6 +1,6 @@
 [project]
 name = "ff-analytics"
-version = "0.5.0"
+version = "0.6.0"
 description = "Adavanced data architecture and analytics for Fantasy Football"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -48,6 +48,7 @@ dev = [
     "types-requests>=2.31.0",
     "yamllint>=1.35.1",
     "dbt-opiner>=1.5.0",
+    "yamlfix>=1.19.0",
 ]
 
 [build-system]
@@ -182,25 +183,6 @@ project_dir = "dbt/ff_data_transform"
 profiles_dir = "dbt/ff_data_transform"
 profile = "ff_duckdb"
 target = "local"
-
-# YAML linting configuration
-[tool.yamllint]
-extends = "default"
-ignore = [
-    ".venv/",
-    "venv/",
-    "data/",
-]
-
-[tool.yamllint.rules.line-length]
-max = 120
-level = "warning"
-
-[tool.yamllint.rules.document-start]
-disable = true
-
-[tool.yamllint.rules.truthy]
-allowed-values = ["true", "false", "yes", "no"]
 
 # Coverage configuration
 [tool.coverage.run]

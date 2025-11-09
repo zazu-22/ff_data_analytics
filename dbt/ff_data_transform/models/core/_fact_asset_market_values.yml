@@ -40,9 +40,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values:
-                  - dynasty_1qb
-                  - dynasty_superflex
+                values: ["dynasty_1qb", "dynasty_superflex"]
 
       - name: asof_date
         description: Snapshot date of market values

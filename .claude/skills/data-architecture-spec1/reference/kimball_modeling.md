@@ -1,1 +1,0 @@
-../../../../docs/architecture/kimball_modeling_guidance/kimbal_modeling.md

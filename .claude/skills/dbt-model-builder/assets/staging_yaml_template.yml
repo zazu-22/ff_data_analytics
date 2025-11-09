@@ -1,23 +1,17 @@
+---
 version: 2
-
 models:
   - name: stg_{provider}__{dataset}
     description: |
       {Brief description of what this staging model does}
-
       **Grain:** {describe the grain - e.g., "one row per player per game"}
-
       **Source:** {provider} {dataset}
-
     columns:
-      - name: {pk_column}
-        description: {PK column description}
-        data_tests:
-          - not_null
-          - unique
-
-      - name: {attribute_column}
-        description: {Attribute description}
+      - name: {pk_column: null}
+        description: {PK column description: null}
+        data_tests: [not_null, unique]
+      - name: {attribute_column: null}
+        description: {Attribute description: null}
         data_tests:
           - not_null
           - accepted_values:

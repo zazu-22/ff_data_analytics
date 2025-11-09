@@ -1,37 +1,31 @@
+---
 version: 2
-
 models:
   - name: fact_{process_name}
     description: |
       {Description of what this fact table captures}
-
       **Grain:** {describe composite grain}
-
     config:
       contract:
         enforced: false
-
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
-              - {pk_column_1}
-              - {pk_column_2}
-              - {pk_column_3}
+              - {pk_column_1: null}
+              - {pk_column_2: null}
+              - {pk_column_3: null}
           config:
             severity: error
-
     columns:
-      - name: {entity_id}
+      - name: {entity_id: null}
         description: Foreign key to dim_{entity}
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('dim_{entity}')
-                field: {entity_id}
-
-      - name: {measure_column}
-        description: {Measure description}
-        data_tests:
-          - not_null
+                field: {entity_id: null}
+      - name: {measure_column: null}
+        description: {Measure description: null}
+        data_tests: [not_null]

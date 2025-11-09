@@ -1,55 +1,53 @@
+---
 # Test suite template for dbt models
 # Use dbt 1.10+ syntax with arguments: wrapper
-
 version: 2
-
 models:
-  - name: {model_name}
-    description: {model description}
+  - name: {model_name: null}
+    description: {model description: null}
 
     # Grain uniqueness test (for fact tables)
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
-              - {pk_column_1}
-              - {pk_column_2}
+              - {pk_column_1: null}
+              - {pk_column_2: null}
           config:
             severity: error
-
     columns:
       # Primary key tests
-      - name: {pk_column}
-        description: {PK description}
+      - name: {pk_column: null}
+        description: {PK description: null}
         data_tests:
           - not_null
           - unique
 
       # Foreign key relationship tests
-      - name: {fk_column}
+      - name: {fk_column: null}
         description: Foreign key to {ref_table}
         data_tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('{ref_table}')
-                field: {ref_column}
+                field: {ref_column: null}
               config:
-                where: "{fk_column} IS NOT NULL"
+                where: '{fk_column} IS NOT NULL'
 
       # Enum/categorical tests
-      - name: {enum_column}
-        description: {Enum description}
+      - name: {enum_column: null}
+        description: {Enum description: null}
         data_tests:
           - accepted_values:
               arguments:
                 values: ['{value1}', '{value2}', '{value3}']
 
       # Measure validation
-      - name: {measure_column}
-        description: {Measure description}
+      - name: {measure_column: null}
+        description: {Measure description: null}
         data_tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments:
-                expression: ">= 0"  # Non-negative constraint
+                expression: '>= 0'  # Non-negative constraint

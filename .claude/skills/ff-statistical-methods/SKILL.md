@@ -43,12 +43,14 @@ Trigger this skill for queries involving:
 ### 2. Monte Carlo Simulation
 
 **Applications:**
+
 - Rest-of-season projections with uncertainty
 - Championship probability estimation
 - Trade scenario impact analysis
 - Lineup optimization under uncertainty
 
 **Core Approach:**
+
 ```python
 # Simulate player week: Normal(projection, std_dev)
 simulated_points = np.random.normal(projection, std_dev, n_sims=10000)
@@ -56,6 +58,7 @@ simulated_points = np.maximum(simulated_points, 0)  # Floor at zero
 ```
 
 **Key Considerations:**
+
 - **Iterations:** 10,000 default (SE ≈ 0.5%), 100,000 for critical decisions
 - **Error correlation:** QB and WRs are correlated, model synergies
 - **Path dependence:** Update team ratings within simulations (FiveThirtyEight approach)
@@ -70,17 +73,20 @@ simulated_points = np.maximum(simulated_points, 0)  # Floor at zero
 **Concept:** Extreme values tend toward average in subsequent measurements
 
 **Fantasy Application:**
+
 - +TDOE (Touchdowns Over Expected): Declines 86% next year
 - -TDOE: Improves 93% next year
 - High TD rates regress downward, low TD rates improve
 
 **Position-Specific Sample Sizes (50% regression):**
+
 - QB: 21 games
 - RB: 29-30 games
 - WR: 13-14 games
 - TE: ~20 games
 
 **Implementation:**
+
 ```python
 regression_factor = sample_size / (sample_size + n_50[position])
 regressed_estimate = (regression_factor * current_stat) + ((1 - regression_factor) * position_mean)
@@ -109,6 +115,7 @@ lower, upper = prediction - margin, prediction + margin
 **How it works:** Fit smooth spline for each feature: `y = β₀ + f₁(age) + f₂(experience) + ...`
 
 **Fantasy use cases:**
+
 - Aging curves (inverted-U shapes for position-specific performance)
 - Experience effects on production
 - Visualize smooth trends
@@ -116,6 +123,7 @@ lower, upper = prediction - margin, prediction + margin
 **Research finding:** GAMs reveal QB peaks at 28-33, RB declines post-27
 
 **Python:**
+
 ```python
 from pygam import LinearGAM, s, f
 
@@ -134,47 +142,57 @@ gam.partial_dependence(term=0)  # Age curve
 ### Choosing a Regression Method
 
 **Step 1: Define Goal**
+
 - Interpretation needed? → OLS or GAMs
 - Prediction focus? → Consider regularization
 
 **Step 2: Check Data Characteristics**
+
 - Small sample (<100)? → OLS or Ridge
 - High-dimensional (many features)? → Lasso or Elastic Net
 - Multicollinearity (VIF > 5)? → Ridge or Elastic Net
 - Non-linear patterns? → GAMs
 
 **Step 3: Baseline**
+
 - Always start with OLS to establish floor
 
 **Step 4: Regularization**
+
 - If overfitting, try Ridge/Lasso/Elastic Net
 - Use cross-validation to select regularization strength
 
 **Step 5: Non-linearity**
+
 - If residuals show patterns, consider GAMs
 - Particularly for aging curves
 
 ### Designing a Monte Carlo Simulation
 
 **Step 1: Define Scenario**
+
 - What are you simulating? (Rest-of-season, trade impact, championship probability)
 - What's the time horizon? (Weeks remaining)
 
 **Step 2: Gather Inputs**
+
 - Player projections (expected values)
 - Standard deviations (from historical performance or model residuals)
 - Correlations (QB-WR pairs, teammates)
 
 **Step 3: Build Simulation**
+
 - Use `assets/monte_carlo_template.py` as starting point
 - Implement correlated errors for teammates
 - Consider path dependence if multi-week
 
 **Step 4: Run Simulations**
+
 - 10,000 iterations default
 - 100,000 for final decisions
 
 **Step 5: Analyze Distribution**
+
 - Don't just report mean!
 - Show percentiles (10th, 50th, 90th)
 - Probability of exceeding thresholds
@@ -183,18 +201,22 @@ gam.partial_dependence(term=0)  # Age curve
 ### Analyzing Regression to the Mean
 
 **Step 1: Identify Extreme Performers**
+
 - Find players with unusually high/low TD rates
 - Calculate TDOE (Touchdowns Over Expected)
 
 **Step 2: Check Sample Size**
+
 - How many games/opportunities?
 - Compare to position-specific threshold (QB: 21, RB: 30, WR: 14)
 
 **Step 3: Apply Regression Formula**
+
 - `regression_factor = n / (n + n_50)`
 - `regressed = (factor * current) + ((1 - factor) * mean)`
 
 **Step 4: Identify Buy-Low / Sell-High**
+
 - Positive TDOE → Likely to regress down (sell high)
 - Negative TDOE → Likely to improve (buy low)
 - Volume matters more than TDs!
@@ -202,18 +224,21 @@ gam.partial_dependence(term=0)  # Age curve
 ## Identifying Data Requirements
 
 **For Regression Analysis:**
+
 - Dependent variable (fantasy points, production metrics)
 - Independent variables (age, usage, efficiency stats)
 - Historical data (3+ years for robust estimates)
 - Position labels (for position-specific models)
 
 **For Monte Carlo Simulation:**
+
 - Player projections (weekly expected values)
 - Historical variance (to estimate std dev)
 - Roster compositions (for team simulations)
 - Correlation structures (teammate relationships)
 
 **For Variance Analysis:**
+
 - Historical performance distributions
 - Sample sizes (games played, opportunities)
 - Position-specific baselines (for regression to mean)
@@ -221,19 +246,16 @@ gam.partial_dependence(term=0)  # Age curve
 ## Integrating with Other Skills
 
 **Complement with `ff-ml-modeling` when:**
+
 - Choosing between regression types and tree-based models
 - Feature engineering informs what to include in regression
 - Validation strategies apply to statistical models too
 
 **Complement with `ff-dynasty-strategy` when:**
+
 - Identifying TD regression candidates (TDOE analysis)
 - Applying aging curves to trade decisions
 - Understanding domain context for statistical findings
-
-**Complement with `data-architecture-spec1` when:**
-- Structuring variance analysis marts
-- Designing projection accuracy tracking tables
-- Building simulation input pipelines
 
 ## Best Practices
 

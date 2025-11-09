@@ -33,7 +33,7 @@ models:
       **Replaces**: Previous seed-based dim_pick (moved to seeds/_archive/)
 
     config:
-      tags: ['core', 'dimension']
+      tags: ["core", "dimension"]
 
     # Grain test - pick_id must be unique
     data_tests:
@@ -43,7 +43,7 @@ models:
               - pick_id
           config:
             severity: error
-            tags: ['critical', 'pre_rebuild']  # v2: Critical quality gate
+            tags: ["critical", "pre_rebuild"] # v2: Critical quality gate
 
       # Base picks count validation (12 picks × 5 rounds × 19 years = 1,140)
       - dbt_expectations.expect_table_row_count_to_equal:
@@ -175,7 +175,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-                values: ['base', 'compensatory', 'tbd']
+                values: ["base", "compensatory", "tbd"]
 
       - name: is_compensatory
         description: |
@@ -245,7 +245,7 @@ models:
         data_tests:
           - accepted_values:
               arguments:
-                values: ['R1: $25+/yr', 'R2: $15-24/yr', 'R3: $10-14/yr']
+                values: ["R1: $25+/yr", "R2: $15-24/yr", "R3: $10-14/yr"]
               config:
                 where: "comp_round_threshold is not null"
 

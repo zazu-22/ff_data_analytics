@@ -31,27 +31,32 @@ Trigger this skill for queries involving:
 **Key Feature Categories:**
 
 **Age Curves**
+
 - Marcel system: 3-year weighted average + age adjustment + regression to mean
 - Position-specific peaks: RB 23-26, WR 26-28, QB 28-33, TE 26-29
 - Implementation: `age_factor = 1 - (age - peak_age) * 0.003` for decline phase
 
 **Opportunity Metrics**
+
 - Target share, snap share, weighted opportunities (carries + targets×1.5)
 - Points per opportunity (efficiency measure)
 - Volume is king: opportunity metrics predict better than TDs
 
 **Efficiency Statistics**
+
 - Yards per route run (YPRR), yards per carry (YPC)
 - Yards after contact (YAC), catch rate
 - Warning: Noisy with small samples, use rolling averages
 
 **Interaction Terms**
+
 - QB quality × target share (receiver production context)
 - Opponent strength adjustments
 - Game script (leading = rushing, trailing = passing)
 - ~40% of team performance from synergy effects
 
 **Rolling Averages**
+
 - Last 3 games, last 5 games, season-long
 - Trend features: recent form vs established baseline
 - Lag features: last game, same opponent last season
@@ -98,6 +103,7 @@ Primary Goal?
 **Time-Series Split:** Always predict future from past data
 
 **Appropriate Metrics:**
+
 - MAE (Mean Absolute Error): Most interpretable
 - RMSE: Penalizes large errors
 - R²: Proportion of variance explained
@@ -121,6 +127,7 @@ Primary Goal?
 ## Workflow: Building a Player Projection Model
 
 **Step 1: Feature Engineering**
+
 - Start with raw stats (yards, TDs, targets, snaps)
 - Create opportunity metrics (target share, snap %)
 - Add efficiency features (YPRR, YPC)
@@ -129,12 +136,14 @@ Primary Goal?
 - Use `assets/player_projection_model_template.py` as starting point
 
 **Step 2: Feature Selection**
+
 - Check correlation (remove highly correlated features)
 - Use Lasso for automatic selection
 - SHAP values for importance
 - Domain knowledge: prioritize opportunity > efficiency > TDs
 
 **Step 3: Model Selection**
+
 - Establish baseline (linear regression or Marcel)
 - Try regularized model (Elastic Net)
 - Test tree-based (Random Forest, then XGBoost)
@@ -142,12 +151,14 @@ Primary Goal?
 - Ensemble top 2-3 models
 
 **Step 4: Validation**
+
 - Hold out most recent season as final test
 - TimeSeriesSplit on training data
 - Nested CV for hyperparameter tuning
 - Evaluate MAE by position
 
 **Step 5: Interpretability**
+
 - SHAP values for feature importance
 - Partial dependence plots for age curves
 - Validate on new season
@@ -155,6 +166,7 @@ Primary Goal?
 ## Identifying Data Requirements
 
 **For Player Projection Models:**
+
 - Historical performance (3+ years for aging curves)
 - Opportunity metrics (targets, snaps, routes run, carries)
 - Efficiency stats (YPRR, YPC, catch rate)
@@ -162,6 +174,7 @@ Primary Goal?
 - Position and age
 
 **For Feature Engineering:**
+
 - Player-level: Stats, age, position, career year
 - Team-level: Total targets, snaps, carries (for share calculations)
 - Game-level: Score differential, home/away, opponent defense rank
@@ -170,18 +183,16 @@ Primary Goal?
 ## Integrating with Other Skills
 
 **Complement with `ff-dynasty-strategy` when:**
+
 - Need domain knowledge for feature selection (aging curves, TD regression)
 - Interpreting model outputs (sell-high candidates)
 - Understanding position-specific patterns
 
 **Complement with `ff-statistical-methods` when:**
+
 - Choosing regression type (OLS vs Lasso vs GAMs)
 - Running Monte Carlo simulations using predictions
 - Performing variance analysis
-
-**Complement with `data-architecture-spec1` when:**
-- Designing feature stores or marts for ML pipelines
-- Structuring training data from fact/dimension tables
 
 ## Best Practices
 

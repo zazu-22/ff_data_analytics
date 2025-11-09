@@ -1,0 +1,1 @@
+exclude = [".venv/**", "venv/**", "data/**", ".github/actionlint.yaml", "dbt/**", ".pre-commit-config.yaml", ".yamllint.yml"]

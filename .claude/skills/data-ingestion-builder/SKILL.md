@@ -36,6 +36,7 @@ Follow this six-step process to create a complete provider:
 Before coding, gather information about the provider:
 
 **Ask clarifying questions:**
+
 - What datasets does this provider offer?
 - What is the API/file format?
 - What are the authentication requirements?
@@ -44,12 +45,14 @@ Before coding, gather information about the provider:
 - What is the update frequency?
 
 **Research existing documentation:**
+
 - API documentation URLs
 - Data schemas and field descriptions
 - Authentication methods
 - Rate limiting policies
 
 **Output**: Clear understanding of:
+
 - Dataset names and descriptions
 - Primary keys for each dataset
 - Authentication approach
@@ -62,6 +65,7 @@ Map datasets to loader functions and define metadata.
 **Use `assets/registry_template.py` as starting point.**
 
 **For each dataset, define:**
+
 - `name`: Logical dataset name (lowercase, descriptive)
 - `loader_function`: Function name in loader.py
 - `primary_keys`: Tuple of columns that uniquely identify rows
@@ -69,6 +73,7 @@ Map datasets to loader functions and define metadata.
 - `notes`: Special considerations, dependencies, or caveats
 
 **Example registry design:**
+
 ```python
 REGISTRY = {
     "players": DatasetSpec(
@@ -89,6 +94,7 @@ REGISTRY = {
 ```
 
 **Quality checks:**
+
 - Primary keys are truly unique for the grain
 - Dataset names are descriptive and consistent
 - Loader function names follow `load_{dataset_name}` pattern
@@ -100,6 +106,7 @@ Create the directory structure following the template.
 **See `assets/package_structure.md` for complete structure.**
 
 **Create directories:**
+
 ```bash
 mkdir -p src/ingest/{provider}
 mkdir -p tests
@@ -107,12 +114,14 @@ mkdir -p samples/{provider}
 ```
 
 **Create files:**
+
 - `src/ingest/{provider}/__init__.py` (empty or with exports)
 - `src/ingest/{provider}/registry.py` (from Step 2)
 - `src/ingest/{provider}/loader.py` (will implement in Step 4)
 - `tests/test_{provider}_samples_pk.py` (will implement in Step 5)
 
 **Naming:**
+
 - Provider name: lowercase, underscore-separated
 - Example: `nflverse`, `espn_api`, `my_provider`
 
@@ -125,6 +134,7 @@ Create loader functions using storage helper pattern.
 **For each dataset in registry:**
 
 1. **Create loader function** following signature:
+
    ```python
    def load_{dataset_name}(
        out_dir: str = "data/raw/{provider}",
@@ -144,6 +154,7 @@ Create loader functions using storage helper pattern.
    - Ensure consistent column types
 
 4. **Write with storage helper:**
+
    ```python
    from ingest.common.storage import write_parquet_any, write_text_sidecar
 
@@ -164,6 +175,7 @@ Create loader functions using storage helper pattern.
    ```
 
 5. **Return manifest:**
+
    ```python
    return {
        "dataset": dataset_name,
@@ -175,10 +187,12 @@ Create loader functions using storage helper pattern.
    ```
 
 **Reference examples:**
+
 - `references/example_loader.py` - Complete nflverse loader
 - `references/example_storage.py` - Storage helper implementation
 
 **Common patterns:**
+
 - Use `datetime.now(UTC)` for all timestamps
 - Generate UUIDs for file names: `uuid.uuid4().hex[:8]`
 - Partition by date: `dt=YYYY-MM-DD`
@@ -191,6 +205,7 @@ Validate sample data quality with automated tests.
 **Use `assets/test_template.py` as starting point.**
 
 **Test structure:**
+
 ```python
 @pytest.mark.parametrize("dataset_name,spec", REGISTRY.items())
 def test_{provider}_primary_keys(dataset_name, spec):
@@ -202,12 +217,14 @@ def test_{provider}_primary_keys(dataset_name, spec):
 ```
 
 **What to test:**
+
 - Primary key columns exist in dataset
 - Primary key uniqueness (no duplicates)
 - Sample data is non-empty
 - Metadata sidecars exist and are valid
 
 **Run tests:**
+
 ```bash
 pytest tests/test_{provider}_samples_pk.py -v
 ```
@@ -219,6 +236,7 @@ Connect the provider to existing workflows.
 **Update `tools/make_samples.py`:**
 
 Add provider-specific sampling logic:
+
 ```python
 # In make_samples.py argument parser
 elif args.provider == "{provider}":
@@ -236,16 +254,19 @@ elif args.provider == "{provider}":
 ```
 
 **Update documentation:**
+
 - `src/ingest/CLAUDE.md` - Add provider-specific notes
 - Root `CLAUDE.md` - If architecturally significant
 - `README.md` - If user-facing
 
 **Create sample data:**
+
 ```bash
 uv run python tools/make_samples.py {provider} --datasets {dataset1} {dataset2} --out ./samples
 ```
 
 **Validate:**
+
 ```bash
 # Check sample data created
 ls -la samples/{provider}/
@@ -316,6 +337,7 @@ Use these templates directly when generating provider code.
 ### Authentication
 
 **Environment variables:**
+
 ```python
 import os
 
@@ -325,6 +347,7 @@ if not api_key:
 ```
 
 **OAuth flow:**
+
 ```python
 from requests_oauthlib import OAuth2Session
 
@@ -335,6 +358,7 @@ response = oauth.get(endpoint)
 ### Pagination
 
 **Offset-based:**
+
 ```python
 all_data = []
 offset = 0
@@ -351,6 +375,7 @@ while True:
 ```
 
 **Cursor-based:**
+
 ```python
 all_data = []
 cursor = None
@@ -368,6 +393,7 @@ while True:
 ### Rate Limiting
 
 **Simple delay:**
+
 ```python
 import time
 
@@ -377,6 +403,7 @@ for dataset in datasets:
 ```
 
 **Exponential backoff:**
+
 ```python
 import time
 from requests.exceptions import HTTPError
@@ -400,6 +427,7 @@ for attempt in range(max_retries):
 When helping user create a provider:
 
 1. **After Step 2 (Registry Design):**
+
    ```text
    ✅ Registry Designed: {provider}
 
@@ -411,6 +439,7 @@ When helping user create a provider:
    ```
 
 2. **After Step 4 (Loader Implementation):**
+
    ```text
    ✅ Loaders Implemented
 
@@ -424,32 +453,35 @@ When helping user create a provider:
    ```
 
 3. **After Step 6 (Integration Complete):**
-   ```text
-   ✅ Provider Integration Complete: {provider}
 
-   Created:
-   - Registry: src/ingest/{provider}/registry.py ({N} datasets)
-   - Loaders: src/ingest/{provider}/loader.py
-   - Tests: tests/test_{provider}_samples_pk.py
-   - Samples: samples/{provider}/ ({N} datasets)
+  ```text
+  ✅ Provider Integration Complete: {provider}
 
-   Integration:
-   - ✓ Added to tools/make_samples.py
-   - ✓ Updated documentation
-   - ✓ Primary key tests passing ({N}/{N})
+  Created:
+  - Registry: src/ingest/{provider}/registry.py ({N} datasets)
+  - Loaders: src/ingest/{provider}/loader.py
+  - Tests: tests/test_{provider}_samples_pk.py
+  - Samples: samples/{provider}/ ({N} datasets)
 
-   To use:
-   ```bash
-   # Generate samples
-   uv run python tools/make_samples.py {provider} --datasets all --out ./samples
+  Integration:
+  - ✓ Added to tools/make_samples.py
+  - ✓ Updated documentation
+  - ✓ Primary key tests passing ({N}/{N})
 
-   # Run tests
-   pytest tests/test_{provider}_samples_pk.py -v
+  To use:
 
-   # Use in production
-   from ingest.{provider}.loader import load_{dataset}
-   result = load_{dataset}(out_dir="gs://ff-analytics/raw/{provider}")
-   ```
+    ```bash
+    # Generate samples
+    uv run python tools/make_samples.py {provider} --datasets all --out ./samples
+
+    # Run tests
+    pytest tests/test_{provider}_samples_pk.py -v
+
+    # Use in production
+    from ingest.{provider}.loader import load_{dataset}
+    result = load_{dataset}(out_dir="gs://ff-analytics/raw/{provider}")
+    ```
+
    ```
 
 ## Handling User Scenarios
@@ -459,6 +491,7 @@ When helping user create a provider:
 **User says:** "Add integration for the ESPN Fantasy API"
 
 **Response:**
+
 1. Begin Step 1 (Understand the Data Source)
 2. Ask clarifying questions about ESPN API
 3. Guide through all 6 steps to complete integration
@@ -468,6 +501,7 @@ When helping user create a provider:
 **User says:** "I have the API docs for PFF, help me integrate it"
 
 **Response:**
+
 1. Ask user to share key details (datasets, auth, PKs)
 2. Begin Step 2 (Design Registry)
 3. Proceed through implementation steps
@@ -477,6 +511,7 @@ When helping user create a provider:
 **User says:** "The nflverse loader is missing a dataset"
 
 **Response:**
+
 1. Read existing provider registry and loaders
 2. Add new dataset to registry (Step 2)
 3. Implement loader for new dataset (Step 4)
@@ -484,25 +519,29 @@ When helping user create a provider:
 
 ## Troubleshooting
 
-**Issue: Primary key tests failing**
+**Issue:** Primary key tests failing
+
 - Review data grain - are PKs actually unique?
 - Check for null values in PK columns
 - Verify sample data represents full population
 - Consider composite keys if single column insufficient
 
-**Issue: Storage helper fails with GCS**
+**Issue:** Storage helper fails with GCS
+
 - Check `GOOGLE_APPLICATION_CREDENTIALS` environment variable
 - Verify GCS bucket permissions
 - Test with local path first, then GCS
 - Review `references/example_storage.py` for patterns
 
-**Issue: Loader returns empty data**
+**Issue:** Loader returns empty data
+
 - Check authentication credentials
 - Verify API endpoint URLs
 - Review rate limiting and retries
 - Add debug logging to data fetching
 
-**Issue: Make_samples.py not finding provider**
+**Issue:** Make_samples.py not finding provider
+
 - Ensure provider package in `src/ingest/{provider}/`
 - Check PYTHONPATH includes src/
 - Verify imports in make_samples.py
@@ -514,4 +553,3 @@ This skill works well with:
 
 - **dbt-model-builder** - After ingestion, create staging models for the provider
 - **data-quality-test-generator** - Add comprehensive tests beyond primary keys
-- **data-architecture-spec1** - Ensure provider follows SPEC-1 patterns

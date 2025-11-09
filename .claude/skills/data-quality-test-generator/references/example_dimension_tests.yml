@@ -1,0 +1,300 @@
+---
+version: 2
+models:
+  - name: dim_player
+    description: Player dimension with SCD Type 2 history tracking
+
+      # Table-level tests
+    data_tests:
+      # Ensure no overlapping validity periods for same natural key
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: |
+              (
+                SELECT COUNT(*)
+                FROM (
+                  SELECT
+                    player_id,
+                    valid_from,
+                    valid_to,
+                    COUNT(*) OVER (
+                      PARTITION BY player_id
+                      ORDER BY valid_from
+                      ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+                    ) as overlaps
+                  FROM {{ ref('dim_player') }}
+                  WHERE valid_to IS NOT NULL
+                ) overlaps
+                WHERE overlaps > 1
+              ) = 0
+          config:
+            severity: error
+    columns:
+      # Surrogate key (SCD Type 2)
+      - name: player_sk
+        description: Surrogate key for SCD Type 2 tracking
+        data_tests:
+          - unique
+          - not_null
+
+          # Natural key
+      - name: player_id
+        description: Canonical player identifier (mfl_id)
+        data_tests:
+          - not_null
+
+          # SCD Type 2 validity tracking
+      - name: valid_from
+        description: Start date of validity period
+        data_tests: [not_null]
+      - name: valid_to
+        description: End date of validity period (NULL = current record)
+          # No not_null test - current records have NULL valid_to
+      - name: is_current
+        description: Boolean flag for current record
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+          # SCD Type 2 date logic validation
+      - name: _scd_date_logic
+        description: Ensure valid_from <= valid_to when valid_to is not NULL
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: valid_from <= COALESCE(valid_to, CURRENT_DATE + INTERVAL
+                  '100 years')
+
+          # Player attributes (Type 2 - track changes over time)
+      - name: player_name
+        description: Player full name
+        data_tests: [not_null]
+      - name: position
+        description: Primary position
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [QB, RB, WR, TE, K, DEF]
+      - name: nfl_team
+        description: Current NFL team (changes tracked via SCD Type 2)
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: LENGTH(nfl_team) BETWEEN 2 AND 3
+              config:
+                where: nfl_team IS NOT NULL
+      - name: status
+        description: Player status (active, inactive, retired)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [active, inactive, retired, suspended, unknown]
+
+          # Player demographics (Type 1 - overwrite, no history needed)
+      - name: birthdate
+        description: Date of birth
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= '1980-01-01'"  # Reasonable lower bound
+              config:
+                where: birthdate IS NOT NULL
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: <= CURRENT_DATE - INTERVAL '18 years'  # Must be 18+
+              config:
+                where: birthdate IS NOT NULL
+      - name: age
+        description: Current age (calculated from birthdate)
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: BETWEEN 18 AND 50  # Reasonable range for NFL players
+              config:
+                where: age IS NOT NULL
+                severity: warn
+      - name: draft_year
+        description: NFL draft year
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 2000'  # Reasonable lower bound
+              config:
+                where: draft_year IS NOT NULL
+
+          # Cross-reference identifiers (Type 1)
+      - name: mfl_id
+        description: MyFantasyLeague player ID (canonical)
+        data_tests:
+          - not_null:
+              config:
+                where: is_current = true  # Only current records need canonical ID
+      - name: gsis_id
+        description: NFL GSIS ID (from nflverse)
+          # No not_null - not all players have GSIS IDs (rookies, etc.)
+      - name: sleeper_id
+        description: Sleeper platform ID
+          # No not_null - not all players on all platforms
+
+          # Metadata
+      - name: created_at
+        description: Timestamp when dimension record was created
+        data_tests: [not_null]
+      - name: updated_at
+        description: Timestamp of last update
+        data_tests: [not_null]
+  - name: dim_team
+    description: NFL team dimension (Type 1 SCD - overwrite changes)
+    columns:
+      # Primary key
+      - name: team_id
+        description: Unique team identifier
+        data_tests:
+          - unique
+          - not_null
+
+          # Team attributes
+      - name: team_abbr
+        description: Team abbreviation (e.g., KC, SF)
+        data_tests:
+          - unique
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: LENGTH(team_abbr) BETWEEN 2 AND 3
+      - name: team_name
+        description: Team full name (e.g., Kansas City Chiefs)
+        data_tests: [unique, not_null]
+      - name: team_city
+        description: Team city
+        data_tests: [not_null]
+      - name: conference
+        description: NFC or AFC
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [NFC, AFC]
+      - name: division
+        description: Division (North, South, East, West)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [North, South, East, West]
+      - name: is_active
+        description: Whether team is currently active
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+  - name: dim_game
+    description: NFL game dimension (Type 1 - games don't change once played)
+    columns:
+      # Primary key
+      - name: game_id
+        description: Unique game identifier (from nflverse)
+        data_tests:
+          - unique
+          - not_null
+
+          # Game metadata
+      - name: game_date
+        description: Date game was played
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= '2020-01-01'"  # Reasonable lower bound
+      - name: season
+        description: NFL season year
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: BETWEEN 2020 AND 2030  # Reasonable range
+      - name: week
+        description: Week number
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 1
+                  - 2
+                  - 3
+                  - 4
+                  - 5
+                  - 6
+                  - 7
+                  - 8
+                  - 9
+                  - 10
+                  - 11
+                  - 12
+                  - 13
+                  - 14
+                  - 15
+                  - 16
+                  - 17
+                  - 18
+                  - 19
+                  - 20
+                  - 21
+                  - 22
+      - name: game_type
+        description: Regular season, playoff, etc.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [REG, WC, DIV, CON, SB]  # Regular, Wild Card, Divisional, Conference, Super Bowl
+
+          # Team references
+      - name: home_team_id
+        description: Foreign key to dim_team (home)
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_team')
+                field: team_id
+      - name: away_team_id
+        description: Foreign key to dim_team (away)
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_team')
+                field: team_id
+
+          # Game results
+      - name: home_score
+        description: Home team final score
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 0'
+              config:
+                where: home_score IS NOT NULL
+      - name: away_score
+        description: Away team final score
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 0'
+              config:
+                where: away_score IS NOT NULL
+
+          # Ensure home and away teams are different
+      - name: _team_validation
+        description: Ensure home_team_id != away_team_id
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: home_team_id != away_team_id

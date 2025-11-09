@@ -1,0 +1,172 @@
+---
+version: 2
+models:
+  - name: stg_nflverse__weekly
+    description: NFLverse weekly player statistics (staging model)
+    columns:
+      # Natural key components
+      - name: player_id
+        description: gsis_id from nflverse (will map to canonical mfl_id)
+        data_tests: [not_null]
+      - name: player_name
+        description: Player name from nflverse
+        data_tests: [not_null]
+      - name: season
+        description: NFL season year
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 2020'  # Reasonable lower bound
+              config:
+                severity: warn
+      - name: week
+        description: Week number (1-18 for regular season)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:  # Includes playoffs
+
+      # Player attributes
+                  - 1
+                  - 2
+                  - 3
+                  - 4
+                  - 5
+                  - 6
+                  - 7
+                  - 8
+                  - 9
+                  - 10
+                  - 11
+                  - 12
+                  - 13
+                  - 14
+                  - 15
+                  - 16
+                  - 17
+                  - 18
+                  - 19
+                  - 20
+                  - 21
+                  - 22
+      - name: position
+        description: Player position
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [QB, RB, WR, TE, K]  # NFLverse excludes DEF from player stats
+      - name: team
+        description: NFL team abbreviation
+        data_tests:
+          - not_null
+          # Could add accepted_values for all 32 teams, but team changes over time
+          # Better to validate length instead
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: LENGTH(team) BETWEEN 2 AND 3
+
+      # Statistical measures (sample - real model has many more)
+      - name: passing_yards
+        description: Passing yards (NULL for non-QBs)
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 0'
+              config:
+                where: passing_yards IS NOT NULL
+      - name: rushing_yards
+        description: Rushing yards
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= -50'  # Allow small negative (sacks, etc)
+              config:
+                where: rushing_yards IS NOT NULL
+      - name: receiving_yards
+        description: Receiving yards
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 0'
+              config:
+                where: receiving_yards IS NOT NULL
+
+      # Metadata
+      - name: snapshot_date
+        description: Date of data snapshot
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: <= CURRENT_DATE  # No future snapshots
+  - name: stg_ktc__assets
+    description: Keep Trade Cut asset valuations (staging model)
+    columns:
+      # Natural key
+      - name: asset_id
+        description: KTC asset identifier
+        data_tests: [not_null]
+      - name: snapshot_date
+        description: Date of KTC snapshot
+        data_tests:
+          - not_null
+
+      # Asset metadata
+      - name: asset_type
+        description: Type of asset (player, pick)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [player, pick]
+      - name: player_name
+        description: Player name (NULL for picks)
+        data_tests:
+          - not_null:
+              config:
+                where: asset_type = 'player'
+      - name: position
+        description: Player position (NULL for picks)
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [QB, RB, WR, TE, K]
+              config:
+                where: asset_type = 'player'
+
+      # League format
+      - name: league_format
+        description: Scoring format (1QB, SF, etc)
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1qb, sf, idp]
+
+      # Valuation metrics
+      - name: ktc_value
+        description: KTC dynasty value (0-9999+)
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '>= 0'
+      - name: overall_rank
+        description: Overall dynasty rank
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '> 0'
+              config:
+                where: overall_rank IS NOT NULL
+      - name: position_rank
+        description: Rank within position
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: '> 0'
+              config:
+                where: position_rank IS NOT NULL AND asset_type = 'player'

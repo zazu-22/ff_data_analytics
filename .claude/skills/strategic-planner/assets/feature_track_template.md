@@ -8,6 +8,7 @@
 ## Motivation
 
 {Why this feature track matters:}
+
 - What analytical capability does it enable?
 - What business value does it provide?
 - What pain points does it address?
@@ -15,10 +16,12 @@
 ## Scope
 
 **In Scope:**
+
 - {Feature 1}
 - {Feature 2}
 
 **Out of Scope:**
+
 - {Explicitly excluded}
 
 ## Dependencies

@@ -6,14 +6,6 @@
 
 opinions_config:
   ignore_opinions: ""
-  ignore_files:
-    # sqlglot parser limitations (DuckDB regex, column ambiguity)
-    O003: >-
-      .*/dbt/ff_data_transform/models/(staging/(stg_sleeper__rosters|stg_sheets__transactions)|core/intermediate/int_pick_comp_.*)\.sql
-    O004: >-
-      .*/dbt/ff_data_transform/models/(staging/(stg_sleeper__rosters|stg_sheets__transactions)|core/intermediate/int_pick_comp_.*)\.sql
-    O007: >-
-      .*/dbt/ff_data_transform/models/(staging/(stg_sleeper__rosters|stg_sheets__transactions)|core/intermediate/int_pick_comp_.*)\.sql
 
 files:
   sql: .*/dbt/ff_data_transform/(models|macros|snapshots)/.*\.sql$
