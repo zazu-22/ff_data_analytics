@@ -171,6 +171,12 @@ repos:
         pass_filenames: false
       - id: dbt-compile
         name: dbt-compile (dbt compile)
-        entry: cd dbt/ff_data_transform && uv run dbt compile --project-dir . --profiles-dir . --target-path target/
+        entry: bash -c 'cd dbt/ff_data_transform && EXTERNAL_ROOT="$(pwd)/../../data/raw" DBT_DUCKDB_PATH="$(pwd)/target/dev.duckdb" uv run dbt compile --project-dir . --profiles-dir . --target-path target/' --
         pass_filenames: false
         language: system
+      - id: dbt-opiner
+        name: dbt-opiner (dbt best practices)
+        entry: bash -c 'cd dbt/ff_data_transform && EXTERNAL_ROOT="$(pwd)/../../data/raw" DBT_DUCKDB_PATH="$(pwd)/target/dev.duckdb" uv run dbt-opiner lint --all-files --force-compile' --
+        pass_filenames: false
+        language: system
+        files: ^dbt/ff_data_transform/(models|tests)/.*\.(sql|yml)$
