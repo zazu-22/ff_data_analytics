@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 49 (expanded from 37 to cover all 13 staging models + 2 data quality fixes)
+- **Total Tickets**: 50 (expanded from 37 to cover all 13 staging models + 3 data quality fixes)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~148-182 hours (updated for expanded Phase 1 + data quality fixes)
+- **Estimated Total Effort**: ~151-187 hours (updated for expanded Phase 1 + data quality fixes)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -65,10 +65,11 @@ ______________________________________________________________________
 
 - [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
 
-### Data Quality Follow-ups (2 tickets) ⚠️ **Discovered during staging model updates**
+### Data Quality Follow-ups (3 tickets) ⚠️ **Discovered during staging model updates**
 
 - [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (1,893 duplicates - discovered during P1-013)
 - [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (17 staging, 101 fact - discovered during P1-016)
+- [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (17 discrepancies - discovered during P1-009)
 
 ### Sample Cleanup & Validation
 
@@ -139,15 +140,16 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 10/49 (20%)\
-**In Progress**: 0/49\
-**Blocked**: 0/49\
-**Remaining**: 39/49
+**Completed**: 10/50 (20%)\
+**In Progress**: 0/50\
+**Blocked**: 0/50\
+**Remaining**: 40/50
 
 **Notes**:
 
+- P1-009: Snapshot governance fix complete; pre-existing roster parity test failure (17 discrepancies - separate ticket P1-019 created)
 - P1-013: Staging model fix complete, but downstream mart duplicates persist (separate ticket P1-017 created)
-- P1-016: Snapshot governance fix complete; reduced cross-snapshot duplicates from 33→17 (staging) and 162→101 (fact table). Remaining 17 duplicates are source data quality issues (player name variations: "DJ Moore" vs "Moore, D.J.")
+- P1-016: Snapshot governance fix complete; reduced cross-snapshot duplicates from 33→17 (staging) and 162→101 (fact table). Remaining 17 duplicates are source data quality issues (player name variations: "DJ Moore" vs "Moore, D.J." - separate ticket P1-018 created)
 
 ______________________________________________________________________
 
@@ -160,7 +162,7 @@ The following tickets represent the critical path for achieving minimum viable g
 03. **P1-013, P1-016** → High-priority staging model updates
 04. **P1-002, P1-003, P1-004** → NFLverse baseline models
 05. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
-06. **P1-017, P1-018** → Data quality fixes (1,893 mart + 17 staging duplicates discovered during P1-013/P1-016)
+06. **P1-017, P1-018, P1-019** → Data quality fixes (1,893 mart duplicates, 17 staging duplicates, 17 roster parity issues discovered during P1-013/P1-016/P1-009)
 07. **P2-001, P2-002** → Registry creation
 08. **P2-005** → Validation tooling
 09. **P2-006, P2-007** → Freshness tests
@@ -190,6 +192,9 @@ ______________________________________________________________________
 - **P1-018** (FFAnalytics source deduplication) can run in parallel with other staging models
   - Dependency: P1-016 must be complete (to rule out snapshot selection as root cause)
   - Can be addressed after Phase 1 staging updates complete
+- **P1-019** (roster parity investigation) can run in parallel with other staging models
+  - Dependency: P1-009 must be complete (to rule out snapshot selection as root cause)
+  - Not blocking other work; can be addressed after Phase 1 staging updates complete
 - All Phase 3 documentation tickets (P3-001 through P3-008) are independent
 - Phase 4 flow tickets (P4-003 through P4-006) can be done in parallel after P4-001
 - **Note**: P4-002a and P4-002 are sequential (copy flow before parse flow)
@@ -207,6 +212,7 @@ Implementation is complete when:
   - [ ] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact)
   - [ ] Source data duplicates eliminated (P1-018: 17→0 staging, 101→0 fact)
   - [ ] Mart duplicates eliminated (P1-017: 1,893→0)
+  - [ ] Roster parity discrepancies investigated and resolved (P1-019: 17→0 or documented)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)
