@@ -94,11 +94,12 @@ with
             -- Keep only latest snapshot (idempotent reads across multiple dt
             -- partitions)
             and {{
-                latest_snapshot_only(
+                snapshot_selection_strategy(
                     env_var(
                         "RAW_NFLVERSE_FF_OPPORTUNITY_GLOB",
-                        "data/raw/nflverse/ff_opportunity/dt=*/*.parquet",
-                    )
+                        "data/raw/nflverse/ff_opportunity/dt=*/*.parquet"
+                    ),
+                    strategy="latest_only"
                 )
             }}
     ),

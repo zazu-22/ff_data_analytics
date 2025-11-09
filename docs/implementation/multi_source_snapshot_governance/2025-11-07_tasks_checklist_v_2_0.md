@@ -57,9 +57,9 @@ ______________________________________________________________________
   - [x] Replace `dt IN ('2025-10-01', '2025-10-28')` with macro call
   - [x] Use `baseline_plus_latest` strategy with baseline var
   - [x] Test compilation and execution
-- [ ] Update `stg_nflverse__ff_opportunity`:
-  - [ ] Replace direct `latest_snapshot_only()` call with `snapshot_selection_strategy` macro (latest_only strategy)
-  - [ ] Test compilation and execution for consistency
+- [x] Update `stg_nflverse__ff_opportunity`:
+  - [x] Replace direct `latest_snapshot_only()` call with `snapshot_selection_strategy` macro (latest_only strategy)
+  - [x] Test compilation and execution for consistency
 - [ ] Update `stg_nflverse__ff_playerids`:
   - [ ] Replace `dt=*` with macro call using `latest_only` strategy
   - [ ] Test compilation and execution
