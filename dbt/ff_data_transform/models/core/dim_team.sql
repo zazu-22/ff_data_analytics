@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='team_id') }}
 
 /*
 NFL team dimension - static reference for all NFL team-based analysis.

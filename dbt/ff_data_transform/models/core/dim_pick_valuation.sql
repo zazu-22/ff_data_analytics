@@ -1,4 +1,4 @@
-{{ config(materialized="view") }}
+{{ config(materialized="view", unique_key='pick_id') }}
 
 /*
 Pick valuation dimension with provisional position estimates.
@@ -23,10 +23,7 @@ Provisional Methods:
 - 'current_standings': Use current season standings (updates weekly)
 */
 with
-    pick_base as (
-        select pick_id, season, round, overall_pick, pick_type, notes
-        from {{ ref("dim_pick") }}
-    ),
+    pick_base as (select pick_id, season, round, overall_pick, pick_type, notes from {{ ref("dim_pick") }}),
 
     overall_pick_number as (
         -- Calculate overall draft position (1-60 base, 61+ for comp picks)
@@ -39,14 +36,10 @@ with
             notes,
 
             -- Overall pick number accounts for comp picks in prior rounds
-            row_number() over (
-                partition by season order by round, overall_pick
-            ) as overall_pick_number,
+            row_number() over (partition by season order by round, overall_pick) as overall_pick_number,
 
             -- Within-round position
-            row_number() over (
-                partition by season, round order by overall_pick
-            ) as round_pick_number
+            row_number() over (partition by season, round order by overall_pick) as round_pick_number
 
         from pick_base
         where pick_type != 'conditional'  -- Exclude TBD picks from base numbering

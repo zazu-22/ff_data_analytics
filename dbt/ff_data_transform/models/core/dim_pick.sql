@@ -1,6 +1,7 @@
 {{ config(
   materialized = "table",
-  tags = ["core", "dimension"]
+  tags = ["core", "dimension"],
+  unique_key = 'pick_id'
 ) }}
 /*
  Complete draft pick dimension including base and compensatory picks.

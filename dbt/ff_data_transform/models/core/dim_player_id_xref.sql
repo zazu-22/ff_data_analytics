@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='player_id') }}
 
 /*
 Player ID crosswalk - backward compatibility model for dim_player_id_xref.

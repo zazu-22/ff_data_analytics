@@ -1,4 +1,4 @@
-{{ config(materialized="table", tags=["core", "dimension"]) }}
+{{ config(materialized="table", tags=["core", "dimension"], unique_key='asset_id') }}
 
 /*
 Unified asset dimension combining players and draft picks.

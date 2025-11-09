@@ -1,6 +1,7 @@
 {{
     config(
         materialized="table",
+        unique_key='contract_history_key',
         indexes=[
             {"columns": ["player_id"]},
             {"columns": ["franchise_id"]},

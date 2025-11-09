@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='player_id') }}
 
 /*
 Player dimension - conformed dimension for all player-based analysis.

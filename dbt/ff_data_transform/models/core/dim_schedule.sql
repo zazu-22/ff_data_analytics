@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='game_id') }}
 
 /*
 NFL game schedule dimension - one row per game for all temporal analysis.
