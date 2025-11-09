@@ -16,21 +16,21 @@ The macro builds on the existing `latest_snapshot_only()` helper but extends it 
 
 ## Tasks
 
-- [ ] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
-- [ ] Implement `snapshot_selection_strategy` macro with three strategies:
-  - [ ] `latest_only` strategy - Select only most recent snapshot
-  - [ ] `baseline_plus_latest` strategy - Select baseline + latest for continuity
-  - [ ] `all` strategy - No filter (for backfills)
-- [ ] Test macro compilation with `uv run dbt compile`
-- [ ] Add inline documentation explaining each strategy
-- [ ] Verify macro works with `env_var()` function for glob patterns
+- [x] Create `dbt/ff_data_transform/macros/snapshot_selection.sql`
+- [x] Implement `snapshot_selection_strategy` macro with three strategies:
+  - [x] `latest_only` strategy - Select only most recent snapshot
+  - [x] `baseline_plus_latest` strategy - Select baseline + latest for continuity
+  - [x] `all` strategy - No filter (for backfills)
+- [x] Test macro compilation with `uv run dbt compile`
+- [x] Add inline documentation explaining each strategy
+- [x] Verify macro works with `env_var()` function for glob patterns
 
 ## Acceptance Criteria
 
-- [ ] Macro file exists at `dbt/ff_data_transform/macros/snapshot_selection.sql`
-- [ ] All three strategies implemented and documented
-- [ ] `dbt compile` succeeds with no errors
-- [ ] Macro accepts `source_glob`, `strategy`, and optional `baseline_dt` parameters
+- [x] Macro file exists at `dbt/ff_data_transform/macros/snapshot_selection.sql`
+- [x] All three strategies implemented and documented
+- [x] `dbt compile` succeeds with no errors
+- [x] Macro accepts `source_glob`, `strategy`, and optional `baseline_dt` parameters
 
 ## Implementation Notes
 
@@ -94,6 +94,46 @@ The new `snapshot_selection_strategy` macro **calls** the existing `latest_snaps
    uv run dbt compile --select stg_nflverse__ff_opportunity
    # Verify compiled SQL in target/compiled/
    ```
+
+## Implementation Summary
+
+**Completed**: 2025-11-09\
+**Commit**: `609bc9c` - feat(snapshot): implement P1-001 - snapshot_selection_strategy macro
+
+### What Was Delivered
+
+1. **Macro Created**: `dbt/ff_data_transform/macros/snapshot_selection.sql` (71 lines)
+
+   - Implements all three snapshot selection strategies
+   - Comprehensive inline documentation and usage examples
+   - Calls existing `latest_snapshot_only()` helper for consistency
+
+2. **Three Strategies Implemented**:
+
+   - `latest_only`: Filters to MAX(dt) from source (calls existing helper)
+   - `baseline_plus_latest`: Selects baseline + latest for historical continuity
+   - `all`: No filter for backfills and debugging
+
+3. **Testing Results**:
+
+   - Compilation: PASS (`dbt compile` successful)
+   - Macro resolution: PASS (verified with `stg_nflverse__ff_opportunity`)
+   - Strategy testing: PASS (all three strategies expand correctly)
+
+4. **Tracking Updated**:
+
+   - `00-OVERVIEW.md`: P1-001 marked complete (2/49 tickets done, 4%)
+   - `tasks_checklist_v_2_0.md`: Phase 1 macro implementation tasks complete
+
+### Foundation for Phase 1
+
+This macro is the foundation for all subsequent staging model updates (P1-002 through P1-016), enabling:
+
+- Parameterizable snapshot selection
+- Elimination of hardcoded dates
+- Consistent snapshot governance pattern across all models
+
+**Status**: COMPLETE - Ready for staging model updates
 
 ## References
 

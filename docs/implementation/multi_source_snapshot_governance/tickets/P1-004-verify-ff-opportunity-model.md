@@ -23,23 +23,23 @@ This model tracks fantasy-relevant opportunities (targets, carries, red zone tou
 
 ## Tasks
 
-- [ ] Locate `stg_nflverse__ff_opportunity.sql` model
-- [ ] Replace `{{ latest_snapshot_only(glob) }}` with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy (no baseline needed)
-  - [ ] Pass RAW_NFLVERSE_FF_OPPORTUNITY_GLOB env var for source_glob
-- [ ] Test compilation: `uv run dbt compile --select stg_nflverse__ff_opportunity`
-- [ ] Test execution: `uv run dbt run --select stg_nflverse__ff_opportunity`
-- [ ] Verify row counts match pre-change baseline
-- [ ] Document that all three NFLverse models now use consistent pattern
+- [x] Locate `stg_nflverse__ff_opportunity.sql` model
+- [x] Replace `{{ latest_snapshot_only(glob) }}` with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy (no baseline needed)
+  - [x] Pass RAW_NFLVERSE_FF_OPPORTUNITY_GLOB env var for source_glob
+- [x] Test compilation: `uv run dbt compile --select stg_nflverse__ff_opportunity`
+- [x] Test execution: `uv run dbt run --select stg_nflverse__ff_opportunity`
+- [x] Verify row counts match pre-change baseline
+- [x] Document that all three NFLverse models now use consistent pattern
 
 ## Acceptance Criteria
 
-- [ ] Hardcoded `latest_snapshot_only()` call replaced with `snapshot_selection_strategy` macro
-- [ ] Model compilation succeeds with no errors
-- [ ] Model execution succeeds with no errors
-- [ ] Row counts match pre-change baseline
-- [ ] Consistent pattern across all three NFLverse staging models documented
+- [x] Hardcoded `latest_snapshot_only()` call replaced with `snapshot_selection_strategy` macro
+- [x] Model compilation succeeds with no errors
+- [x] Model execution succeeds with no errors
+- [x] Row counts match pre-change baseline
+- [x] Consistent pattern across all three NFLverse staging models documented
 
 ## Implementation Notes
 
@@ -118,6 +118,47 @@ While the existing `latest_snapshot_only()` helper works fine, updating to the n
    cat target/compiled/ff_data_transform/models/staging/nflverse/stg_nflverse__ff_opportunity.sql
    # Verify the dt filter looks correct
    ```
+
+## Implementation Summary
+
+**Completed**: 2025-11-09\
+**Commit**: `34eda40` - feat(snapshot): implement P1-004 - stg_nflverse\_\_ff_opportunity
+
+### What Was Delivered
+
+1. **Model Updated**: `dbt/ff_data_transform/models/staging/stg_nflverse__ff_opportunity.sql`
+
+   - Replaced `latest_snapshot_only()` helper with `snapshot_selection_strategy` macro
+   - Uses `latest_only` strategy for current-season analysis
+   - Achieves consistency across all NFLverse staging models
+
+2. **Testing Results**:
+
+   - Compilation: PASS
+   - Execution: PASS (view created successfully)
+   - Row count: 84,576 stat records
+   - Snapshot selection: Latest (2025-11-05) automatically detected
+   - Season coverage: 2025 weeks 1-9 only (latest_only strategy confirmed)
+
+3. **Coverage Verification**:
+
+   - 2025: 9 weeks (492 unique players, 84,576 records)
+   - ~38 stat types per player/game (expected, variance, air yards, team shares)
+
+4. **Benefits Achieved**:
+
+   - Consistent pattern with player_stats and snap_counts models
+   - Explicit strategy naming makes intent clear ('latest_only')
+   - Easier to audit (all models use snapshot_selection_strategy)
+   - Future-proof (easy to change strategy if needed)
+
+5. **Tracking Updated**:
+
+   - `00-OVERVIEW.md`: 7/49 tickets complete (14%)
+   - `tasks_checklist_v_2_0.md`: stg_nflverse\_\_ff_opportunity complete
+   - All 3 NFLverse models (P1-002, P1-003, P1-004) now use consistent snapshot governance pattern
+
+**Status**: COMPLETE - Third NFLverse staging model successfully migrated
 
 ## References
 

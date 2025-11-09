@@ -26,23 +26,23 @@ This is the **highest impact fix** in Phase 1, affecting a critical analytics ma
 
 ## Tasks
 
-- [ ] Locate `stg_sleeper__fa_pool.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy (Sleeper data is daily, only latest needed)
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sleeper__fa_pool`
-- [ ] Test execution and verify row counts
-- [ ] **Verify duplicate fix**: Run `make dbt-test --select mrt_fasa_targets` (expect 1,893 duplicates → 0)
+- [x] Locate `stg_sleeper__fa_pool.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy (Sleeper data is daily, only latest needed)
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sleeper__fa_pool`
+- [x] Test execution and verify row counts
+- [x] **Verify duplicate fix**: Run `make dbt-test --select mrt_fasa_targets` (duplicates PERSIST - root cause in mart logic, not staging)
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] **Critical**: `mrt_fasa_targets` grain test passes (0 duplicates)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [~] **Critical**: `mrt_fasa_targets` grain test passes (0 duplicates) - ⚠️ DUPLICATES PERSIST (mart logic issue, not staging)
 
 ## Implementation Notes
 
@@ -135,9 +135,55 @@ All downstream marts (`mrt_fasa_targets`) expect a single snapshot date per anal
 
 - `mrt_fasa_targets` - Free agent acquisition targets mart
 
+## Implementation Summary
+
+**Completed**: 2025-11-09\
+**Commits**:
+
+- `dfe30f0` - feat(snapshot): implement P1-013 - stg_sleeper\_\_fa_pool model
+- `1e37b27` - docs(snapshot): update P1-013 tracking with investigation findings
+
+### What Was Delivered
+
+1. **Model Updated**: `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql`
+
+   - Replaced custom `latest_snapshot` CTE with `snapshot_selection_strategy` macro
+   - Uses `latest_only` strategy (Sleeper data is daily, only latest needed)
+   - Simplified query by removing extra CTE and cross join
+
+2. **Testing Results**:
+
+   - Compilation: PASS (dbt run successful)
+   - Execution: PASS (5,652 rows from latest snapshot 2025-11-05)
+   - Snapshot filtering: PASS (verified only 1 snapshot date in raw data filter)
+   - Staging model: NO duplicates by sleeper_player_id
+
+3. **⚠️ IMPORTANT FINDING - Duplicate Issue Investigation**:
+
+   - `mrt_fasa_targets` test STILL FAILS with 1,893 duplicates
+   - **Root cause is NOT in staging model** (original had snapshot filtering too)
+   - Duplicates originate from `mrt_fasa_targets` mart logic itself
+   - Evidence: Same player_id appears with DIFFERENT metric values (e.g., different points_above_replacement, priority_ranks)
+   - Ticket's original diagnosis was incorrect - separate ticket P1-017 created for mart fix
+
+4. **What This Change Achieved**:
+
+   - Standardized snapshot selection with the new macro (governance goal)
+   - Simplified staging model query structure
+   - Ruled out staging as root cause of mart duplicates
+
+5. **Tracking Updated**:
+
+   - `00-OVERVIEW.md`: 3/49 tickets complete (6%)
+   - `tasks_checklist_v_2_0.md`: stg_sleeper\_\_fa_pool complete with caveat
+   - Created P1-017 ticket to address the actual mart duplicate root cause
+
+**Status**: COMPLETE (staging model updated) - Downstream mart duplicates require separate fix in P1-017
+
 ## References
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Lines 46-47 (Sleeper models)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Lines 77-81 (Sleeper priority)
 - Model file: `dbt/ff_data_transform/models/staging/stg_sleeper__fa_pool.sql`
 - Downstream test: `dbt/ff_data_transform/models/marts/_mrt_fasa_targets.yml`
+- Follow-up ticket: `P1-017-fix-mrt-fasa-targets-duplicates.md`
