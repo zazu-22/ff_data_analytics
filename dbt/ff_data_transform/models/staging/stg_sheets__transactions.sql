@@ -1,4 +1,4 @@
-{{ config(materialized="view") }}
+{{ config(materialized="view", unique_key='transaction_id_unique') }}
 
 /*
 Stage Commissioner TRANSACTIONS sheet with dimension joins and validation flags.

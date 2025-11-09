@@ -1,6 +1,6 @@
 -- Grain: one row per rostered player in latest Sleeper snapshot
 -- Purpose: Normalize Sleeper roster feed for roster parity checks
-{{ config(materialized="view") }}
+{{ config(materialized="view", unique_key=['roster_id', 'player_id']) }}
 with
     raw_rosters as (
         select *

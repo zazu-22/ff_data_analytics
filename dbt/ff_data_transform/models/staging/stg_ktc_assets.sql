@@ -1,4 +1,9 @@
-{{ config(materialized="view") }}
+{{
+    config(
+        materialized="view",
+        unique_key=['player_key', 'market_scope', 'asof_date']
+    )
+}}
 
 /*
  Stage KeepTradeCut dynasty market values for players and picks.

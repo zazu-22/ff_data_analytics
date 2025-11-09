@@ -1,6 +1,6 @@
 -- Grain: player_key (one row per FA player)
 -- Purpose: All available free agents with fantasy relevance
-{{ config(materialized="view") }}
+{{ config(materialized="view", unique_key=['player_key', 'asof_date']) }}
 
 with
     latest_snapshot as (

@@ -1,4 +1,9 @@
-{{ config(materialized="table") }}
+{{
+    config(
+        materialized="table",
+        unique_key=['snapshot_date', 'gm_full_name', 'year', 'round', 'source_type', 'acquisition_note']
+    )
+}}
 
 /*
 Stage Commissioner draft pick holdings with franchise alignment and pick classification.
