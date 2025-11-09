@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 37
+- **Total Tickets**: 47 (expanded from 37 to cover all 13 staging models)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~120-150 hours
+- **Estimated Total Effort**: ~140-170 hours (updated for expanded Phase 1)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -31,14 +31,44 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (6 tickets)
+## Phase 1: Foundation (16 tickets - expanded to cover all 13 staging models)
+
+### Macro & Infrastructure
 
 - [ ] **P1-001** — Create snapshot_selection_strategy macro
+
+### NFLverse Models (4 tickets)
+
 - [ ] **P1-002** — Update stg_nflverse\_\_player_stats model (baseline_plus_latest)
 - [ ] **P1-003** — Update stg_nflverse\_\_snap_counts model (baseline_plus_latest)
 - [ ] **P1-004** — Update stg_nflverse\_\_ff_opportunity model (latest_only, consistency)
+- [ ] **P1-007** — Update stg_nflverse\_\_ff_playerids model (latest_only)
+
+### Sheets Models (5 tickets)
+
+- [ ] **P1-008** — Update stg_sheets\_\_cap_space model (latest_only)
+- [ ] **P1-009** — Update stg_sheets\_\_contracts_active model (latest_only)
+- [ ] **P1-010** — Update stg_sheets\_\_contracts_cut model (latest_only)
+- [ ] **P1-011** — Update stg_sheets\_\_draft_pick_holdings model (latest_only)
+- [ ] **P1-012** — Update stg_sheets\_\_transactions model (latest_only)
+
+### Sleeper Models (2 tickets) ⚠️ **Priority: Fixes 1,893 duplicates**
+
+- [ ] **P1-013** — Update stg_sleeper\_\_fa_pool model (latest_only)
+- [ ] **P1-014** — Update stg_sleeper\_\_rosters model (latest_only)
+
+### KTC Models (1 ticket)
+
+- [ ] **P1-015** — Update stg_ktc_assets model (latest_only)
+
+### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
+
+- [ ] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
+
+### Sample Cleanup & Validation
+
 - [ ] **P1-005** — Archive legacy sample artifacts from fully integrated sources
-- [ ] **P1-006** — Performance profiling for all three models
+- [ ] **P1-006** — Performance profiling for all updated models
 
 ______________________________________________________________________
 
@@ -104,10 +134,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 0/37 (0%)\
-**In Progress**: 0/37\
-**Blocked**: 0/37\
-**Remaining**: 37/37
+**Completed**: 0/47 (0%)\
+**In Progress**: 0/47\
+**Blocked**: 0/47\
+**Remaining**: 47/47
 
 ______________________________________________________________________
 
@@ -117,11 +147,13 @@ The following tickets represent the critical path for achieving minimum viable g
 
 1. **P0-001** → Scope confirmation
 2. **P1-001** → Macro foundation
-3. **P1-002, P1-003** → Staging model updates
-4. **P2-001, P2-002** → Registry creation
-5. **P2-005** → Validation tooling
-6. **P2-006, P2-007** → Freshness tests
-7. **P3-001** → SPEC update
+3. **P1-013, P1-016** → High-priority staging model updates (fixes 2,088 duplicates)
+4. **P1-002, P1-003, P1-004** → NFLverse baseline models
+5. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
+6. **P2-001, P2-002** → Registry creation
+7. **P2-005** → Validation tooling
+8. **P2-006, P2-007** → Freshness tests
+9. **P3-001** → SPEC update
 
 ______________________________________________________________________
 
@@ -129,7 +161,7 @@ ______________________________________________________________________
 
 ### Must Complete First
 
-- **P1-001** must be done before P1-002, P1-003
+- **P1-001** must be done before all other P1 tickets (macro foundation)
 - **P2-001** must be done before P2-002
 - **P2-003** must be done before P2-004
 - **P4-001** must be done before P4-002a through P4-006
@@ -137,9 +169,13 @@ ______________________________________________________________________
 
 ### Can Be Done in Parallel
 
+- After P1-001, all staging model updates (P1-002 through P1-016) can be done in parallel
+  - **Suggested priority**: P1-013 and P1-016 first (fix 2,088 duplicates)
+  - **Then**: P1-002, P1-003, P1-004 (NFLverse baseline models)
+  - **Finally**: Remaining 7 models (P1-007 through P1-012, P1-014, P1-015)
 - All Phase 3 documentation tickets (P3-001 through P3-008) are independent
 - Phase 4 flow tickets (P4-003 through P4-006) can be done in parallel after P4-001
-- **Note**: P4-002a and P4-002 are sequential (copy before parse)
+- **Note**: P4-002a and P4-002 are sequential (copy flow before parse flow)
 - Phase 5 and Phase 6 tickets are all documentation and can be done in parallel
 
 ______________________________________________________________________
@@ -148,7 +184,8 @@ ______________________________________________________________________
 
 Implementation is complete when:
 
-- [ ] Zero hardcoded snapshot dates in staging models (P1-002, P1-003)
+- [ ] Zero hardcoded snapshot dates in all 13 staging models (P1-002 through P1-016)
+- [ ] All current test failures resolved (2,088 duplicates eliminated)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)

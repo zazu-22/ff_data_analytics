@@ -39,7 +39,9 @@ ______________________________________________________________________
   - [ ] `all` strategy (no filter for backfills)
 - [ ] Test macro compilation with `dbt compile`
 
-### Staging Model Updates
+### Staging Model Updates (13 models total)
+
+**NFLverse (4 models)**:
 
 - [ ] Update `stg_nflverse__player_stats`:
   - [ ] Replace `dt IN ('2025-10-01', '2025-10-27')` with macro call
@@ -49,9 +51,54 @@ ______________________________________________________________________
   - [ ] Replace `dt IN ('2025-10-01', '2025-10-28')` with macro call
   - [ ] Use `baseline_plus_latest` strategy with baseline var
   - [ ] Test compilation and execution
-- [ ] Update `stg_nflverse__ff_opportunity` to use new macro:
+- [ ] Update `stg_nflverse__ff_opportunity`:
   - [ ] Replace direct `latest_snapshot_only()` call with `snapshot_selection_strategy` macro (latest_only strategy)
   - [ ] Test compilation and execution for consistency
+- [ ] Update `stg_nflverse__ff_playerids`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+
+**Sheets (5 models)**:
+
+- [ ] Update `stg_sheets__cap_space`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+- [ ] Update `stg_sheets__contracts_active`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+- [ ] Update `stg_sheets__contracts_cut`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+- [ ] Update `stg_sheets__draft_pick_holdings`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+- [ ] Update `stg_sheets__transactions`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+
+**Sleeper (2 models)** ⚠️ **Priority: Fixes 1,893 duplicates**:
+
+- [ ] Update `stg_sleeper__fa_pool`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+  - [ ] Verify `mrt_fasa_targets` duplicate fix (expect 1,893 duplicates → 0)
+- [ ] Update `stg_sleeper__rosters`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+
+**KTC (1 model)**:
+
+- [ ] Update `stg_ktc_assets`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+
+**FFAnalytics (1 model)** ⚠️ **Priority: Fixes 195 duplicates**:
+
+- [ ] Update `stg_ffanalytics__projections`:
+  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
+  - [ ] Test compilation and execution
+  - [ ] Verify duplicate fix (expect 33 duplicates → 0)
+  - [ ] Verify `fct_player_projections` duplicate fix (expect 162 duplicates → 0)
 
 ### Sample Archival
 

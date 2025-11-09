@@ -1,0 +1,109 @@
+# Ticket P1-009: Update stg_sheets\_\_contracts_active Model
+
+**Phase**: 1 - Foundation\
+**Estimated Effort**: Small (1-2 hours)\
+**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
+
+## Objective
+
+Replace `dt=*` wildcard pattern in `stg_sheets__contracts_active` with the new `snapshot_selection_strategy` macro using `latest_only` strategy.
+
+## Context
+
+The `stg_sheets__contracts_active` model currently reads all snapshots using `dt=*` pattern from the Commissioner Google Sheet exports. Active contracts represent current player-franchise contractual obligations and should only use the latest snapshot.
+
+This model feeds into `dim_player_contract_history` and contract-related analyses. Only the current state of active contracts is needed; historical contract snapshots are tracked via the contract history dimension.
+
+## Tasks
+
+- [ ] Locate `stg_sheets__contracts_active.sql` model
+- [ ] Find the `read_parquet()` call with `dt=*` pattern
+- [ ] Replace with `snapshot_selection_strategy` macro call
+- [ ] Configure macro parameters:
+  - [ ] Use `latest_only` strategy
+  - [ ] Pass source glob path to macro
+- [ ] Test compilation: `make dbt-run --select stg_sheets__contracts_active`
+- [ ] Test execution and verify row counts
+- [ ] Verify downstream `dim_player_contract_history` builds correctly
+
+## Acceptance Criteria
+
+- [ ] `dt=*` pattern removed from model
+- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [ ] Model compiles successfully
+- [ ] Model executes successfully
+- [ ] Row count reasonable (active contracts across all franchises)
+
+## Implementation Notes
+
+**File**: `dbt/ff_data_transform/models/staging/stg_sheets__contracts_active.sql`
+
+**Change Pattern**:
+
+```sql
+-- BEFORE:
+with source as (
+  select * from read_parquet(
+    '{{ var("external_root", "data/raw") }}/sheets/contracts_active/dt=*/*.parquet',
+    hive_partitioning = true
+  )
+)
+
+-- AFTER:
+with source as (
+  select * from read_parquet(
+    '{{ var("external_root", "data/raw") }}/sheets/contracts_active/dt=*/*.parquet',
+    hive_partitioning = true
+  )
+  where 1=1
+    {{ snapshot_selection_strategy(
+        var("external_root", "data/raw") ~ '/sheets/contracts_active/dt=*/*.parquet',
+        strategy='latest_only'
+    ) }}
+)
+```
+
+**Configuration**:
+
+- Strategy: `latest_only` (active contracts are current state)
+- No baseline needed (latest contracts supersede all previous)
+
+**Why `latest_only`**:
+
+Active contracts are **current roster state** where:
+
+- Latest snapshot reflects current player obligations
+- Historical contract changes tracked via `dim_player_contract_history` SCD Type 2
+- Downstream models expect single active contract per player
+- Contract lifecycle (signed → active → cut → expired) tracked separately
+
+## Testing
+
+1. **Compilation test**:
+
+   ```bash
+   make dbt-run --select stg_sheets__contracts_active
+   ```
+
+2. **Verify snapshot filtering**:
+
+   ```bash
+   EXTERNAL_ROOT="$PWD/data/raw" duckdb "$PWD/dbt/ff_data_transform/target/dev.duckdb" -c \
+     "SELECT COUNT(DISTINCT dt) as snapshot_count, MAX(dt) as latest_snapshot
+      FROM main.stg_sheets__contracts_active;"
+   # Should show snapshot_count = 1
+   ```
+
+3. **Verify downstream impact**:
+
+   ```bash
+   make dbt-run --select +dim_player_contract_history
+   # Should rebuild successfully
+   ```
+
+## References
+
+- Plan: `../2025-11-07_plan_v_2_0.md` - Lines 39-43 (Sheets models)
+- Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Lines 64-66
+- Model file: `dbt/ff_data_transform/models/staging/stg_sheets__contracts_active.sql`
+- Downstream: `dbt/ff_data_transform/models/core/dim_player_contract_history.sql`
