@@ -28,6 +28,7 @@ with
             player as player_name,
             coalesce(position_final, pos) as position,
             team as current_team,
+            team as team_consensus,  -- Raw consensus value for QA
 
             -- Time dimensions
             season,
@@ -91,6 +92,7 @@ with
             player_name,
             position,
             current_team,
+            team_consensus,
             season,
             -- Week is nullable for season-long projections
             case when horizon = 'full_season' then null else week end as week,
