@@ -47,7 +47,54 @@ with
     )
 
 select
-    rw.*,
+    -- Base grain columns
+    rw.player_id,
+    rw.player_key,
+    rw.season,
+    rw.week,
+    rw.season_type,
+    rw.position,
+
+    -- Passing stats
+    rw.completions,
+    rw.attempts,
+    rw.passing_yards,
+    rw.passing_tds,
+    rw.passing_interceptions,
+    rw.passing_2pt_conversions,
+
+    -- Rushing stats
+    rw.carries,
+    rw.rushing_yards,
+    rw.rushing_tds,
+    rw.rushing_fumbles_lost,
+    rw.rushing_2pt_conversions,
+
+    -- Receiving stats
+    rw.targets,
+    rw.receptions,
+    rw.receiving_yards,
+    rw.receiving_tds,
+    rw.receiving_fumbles_lost,
+    rw.receiving_2pt_conversions,
+
+    -- Defensive stats (IDP)
+    rw.def_tackles_solo,
+    rw.def_tackles_with_assist,
+    rw.def_sacks,
+    rw.def_interceptions,
+    rw.def_fumbles_forced,
+    rw.def_tds,
+    rw.def_safeties,
+
+    -- Misc stats
+    rw.sacks_suffered,
+    rw.special_teams_tds,
+
+    -- Player attributes
+    rw.display_name,
+    rw.current_team,
+    rw.games_played,
 
     -- Fantasy points calculation (data-driven from dim_scoring_rule)
     -- Offensive scoring

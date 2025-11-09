@@ -21,6 +21,7 @@ select
     null as season,
     null as round,
     null as overall_pick,
+    null as round_slot,
     'Active NFL player' as asset_category
 from {{ ref("dim_player") }}
 
@@ -38,6 +39,7 @@ select
     season,
     round,
     overall_pick,
+    slot_number as round_slot,
     case
         when pick_type = 'compensatory'
         then 'Compensatory pick'

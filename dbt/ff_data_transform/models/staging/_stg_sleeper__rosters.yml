@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: stg_sleeper__rosters
+    description: |
+      Sleeper roster feed normalized for roster parity checks.
+
+      Grain: One row per rostered player (roster_id, player_id)
+      Source: Sleeper API (latest snapshot)
+
+      Normalizes Sleeper roster data with player identity mapping via dim_player_id_xref.
+      Filters to successfully mapped players only (player_id is not null).
+
+    columns:
+      - name: roster_id
+        description: Sleeper roster identifier
+        data_tests:
+          - not_null
+
+      - name: player_id
+        description: Canonical player identifier from dim_player_id_xref
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_player_id_xref')
+                field: player_id
+
+      - name: sleeper_player_id
+        description: Sleeper player ID (raw)
+        data_tests:
+          - not_null
+
+      - name: player_name
+        description: Player full name from crosswalk
+        data_tests:
+          - not_null
+
+      - name: position
+        description: Player position from crosswalk
+        data_tests:
+          - not_null
+
+      - name: league_id
+        description: Sleeper league identifier
+        data_tests:
+          - not_null
+
+      - name: owner_id
+        description: Sleeper owner identifier
+        data_tests:
+          - not_null
+
+      - name: asof_date
+        description: Snapshot date (latest available)
+        data_tests:
+          - not_null
+
+      - name: is_mapped_to_dim_player
+        description: Flag indicating successful mapping to canonical player_id
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - roster_id
+              - player_id
+          config:
+            severity: error

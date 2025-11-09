@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_pick_draft_validation
+    description: |
+      Draft Pick Validation - Validates completeness of base picks.
+
+      Grain: One row per (season, round) combination
+      Source: int_pick_base (generated) vs int_pick_draft_actual (actual transactions)
+
+      Ensures each historical round has exactly 12 base picks to prevent mislabeling
+      of compensatory picks due to missing draft data.
+
+      Current State (v2 Phase 3):
+      - Generates all base picks via int_pick_base (12 teams × 5 rounds × years)
+      - No actual draft transaction data yet (rookie_draft_selection)
+      - Validates generated base picks are complete
+
+      Future State (when actual draft data available):
+      - Will validate actual draft transactions have 12 base picks per round
+      - Incomplete rounds will trigger fallback to generated picks

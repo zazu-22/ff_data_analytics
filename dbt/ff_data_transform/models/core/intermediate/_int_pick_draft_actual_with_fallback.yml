@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_pick_draft_actual_with_fallback
+    description: |
+      Draft Picks with Fallback Logic - Ensures complete base pick coverage.
+
+      Grain: One row per base pick (12 picks per round)
+      Source: int_pick_draft_actual (actual) + int_pick_base (fallback)
+
+      Provides base picks with fallback to generated picks for incomplete drafts.
+
+      Current State (v2 Phase 3):
+      - No actual draft transaction data (rookie_draft_selection)
+      - Uses generated base picks from int_pick_base for all rounds
+      - pick_source = 'GENERATED' for all picks
+
+      Future State (when actual draft data available):
+      - Use actual draft data for complete rounds (12 base picks)
+      - Fall back to generated picks for incomplete rounds
+      - pick_source = 'ACTUAL' for draft data, 'GENERATED' for fallback

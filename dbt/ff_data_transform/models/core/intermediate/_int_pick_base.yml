@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_pick_base
+    description: |
+      Base draft picks generator - P01 through P12 for all years and rounds.
+
+      Grain: One row per base pick (12 picks × 5 rounds × 19 years = 1,140 picks)
+      Source: Standalone generator (no dependencies)
+
+      Generates the "natural" 12-team draft structure without compensatory picks.
+      These are the picks determined by final standings and playoff results.
+
+      Coverage:
+      - Years: 2012-2030 (19 years)
+      - Rounds: 1-5 (all generated; historical 4-round years filtered downstream)
+      - Slots: P01-P12 (12 teams)
+
+      Note: overall_pick is provisional and recalculated in final model to account
+      for compensatory picks in prior rounds.

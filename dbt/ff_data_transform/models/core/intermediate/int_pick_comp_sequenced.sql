@@ -1,4 +1,4 @@
-{{ config(materialized="ephemeral") }}
+{{ config(materialized="ephemeral", unique_key='pick_id') }}
 
 /*
 Compensatory picks with chronological sequencing - Assigns pick numbers (P13+).

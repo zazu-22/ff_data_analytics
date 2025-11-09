@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: int_pick_comp_sequenced
+    description: |
+      Compensatory picks with chronological sequencing - Assigns pick numbers (P13+).
+
+      Grain: One row per compensatory pick
+      Source: int_pick_comp_registry with sequencing logic
+
+      Converts comp pick registry into dimensional format with proper pick_id numbering.
+      Comp picks are sequenced chronologically by FAAD transaction order per league rules.
+
+      Per League Constitution Section XI.N:
+      "All draft pick compensation picks are awarded immediately after a FAAD contract
+      is signed and in the order of the FAAD"
+
+      Sequencing:
+      - Comp picks come AFTER base picks (P13+) in each round
+      - First RFA signing that awards a comp → P13 in that round
+      - Second RFA signing that awards a comp → P14 in that round
+      - Sequence determined by faad_award_sequence (immutable)

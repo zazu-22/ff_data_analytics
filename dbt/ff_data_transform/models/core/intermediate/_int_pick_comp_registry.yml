@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_pick_comp_registry
+    description: |
+      Compensatory pick registry - Extracts comp pick awards from FAAD Comp column.
+
+      Grain: One row per compensatory pick award
+      Source: stg_sheets__transactions (FAAD Comp column)
+
+      Parses transaction FAAD Comp column to identify all compensatory picks awarded
+      for RFA (Restricted Free Agent) signings during FAAD (Free Agent Auction Draft).
+
+      FAAD Comp format:
+      - Historical: "YYYY Rnd" (e.g., "2024 1st", "2023 3rd")
+      - Prospective: "Rnd to Owner" (e.g., "1st to Joe", "2nd to Piper")
+
+      Comp pick round determined by contract AAV (per League Constitution XI.N):
+      - R1: $25+ per year
+      - R2: $15-24 per year
+      - R3: $10-14 per year
+
+      Validates contract AAV matches comp round assignment and flags mismatches.

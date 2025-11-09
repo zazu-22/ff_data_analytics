@@ -22,8 +22,6 @@ models:
       - name: gm_full_name
         data_tests:
           - not_null
-      - name: owner_key
-        description: Normalized owner identifier (first or last name key) for GM/franchise mapping.
       - name: franchise_id
         description: Franchise that currently owns the GM tab in the commissioner sheet.
         data_tests:

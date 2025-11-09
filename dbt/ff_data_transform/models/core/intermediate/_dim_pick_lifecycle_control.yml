@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: dim_pick_lifecycle_control
+    description: |
+      Pick Lifecycle Control - Manages TBD → Actual Pick Transitions.
+
+      Grain: One row per pick with lifecycle tracking (primarily TBD picks)
+      Source: int_pick_tbd + int_pick_draft_actual
+
+      Tracks lifecycle states of draft picks, especially TBD picks that transition
+      to actual picks when draft order is finalized.
+
+      Current State (v2 Phase 4):
+      - No actual draft transaction data yet
+      - All TBD picks remain in ACTIVE_TBD state
+      - Infrastructure ready for future actual draft data
+
+      Future State (when actual draft data available):
+      - TBD picks transition to SUPERSEDED when draft completes
+      - superseded_by_pick_id points to actual pick that replaced TBD
+      - Transactions can migrate from TBD to actual picks automatically
+
+      Lifecycle States:
+      - ACTIVE_TBD: TBD pick currently in use (draft order not finalized)
+      - SUPERSEDED: TBD pick replaced by actual pick (soft-delete)
+      - ACTUAL: Pick from actual draft data (future state)

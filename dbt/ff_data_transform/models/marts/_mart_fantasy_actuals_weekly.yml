@@ -55,6 +55,74 @@ models:
         data_tests:
           - not_null
 
+      # Passing stats
+      - name: completions
+        description: Pass completions
+      - name: attempts
+        description: Pass attempts
+      - name: passing_yards
+        description: Passing yards
+      - name: passing_tds
+        description: Passing touchdowns
+      - name: passing_interceptions
+        description: Interceptions thrown
+      - name: passing_2pt_conversions
+        description: Passing two-point conversions
+
+      # Rushing stats
+      - name: carries
+        description: Rushing attempts
+      - name: rushing_yards
+        description: Rushing yards
+      - name: rushing_tds
+        description: Rushing touchdowns
+      - name: rushing_fumbles_lost
+        description: Rushing fumbles lost
+      - name: rushing_2pt_conversions
+        description: Rushing two-point conversions
+
+      # Receiving stats
+      - name: targets
+        description: Receiving targets
+      - name: receptions
+        description: Receptions
+      - name: receiving_yards
+        description: Receiving yards
+      - name: receiving_tds
+        description: Receiving touchdowns
+      - name: receiving_fumbles_lost
+        description: Receiving fumbles lost
+      - name: receiving_2pt_conversions
+        description: Receiving two-point conversions
+
+      # Defensive stats (IDP)
+      - name: def_tackles_solo
+        description: Solo tackles
+      - name: def_tackles_with_assist
+        description: Assisted tackles
+      - name: def_sacks
+        description: Sacks
+      - name: def_interceptions
+        description: Interceptions
+      - name: def_fumbles_forced
+        description: Forced fumbles
+      - name: def_tds
+        description: Defensive touchdowns
+      - name: def_safeties
+        description: Safeties
+
+      # Misc stats
+      - name: sacks_suffered
+        description: Times sacked
+      - name: special_teams_tds
+        description: Special teams touchdowns
+
+      # Player attributes
+      - name: current_team
+        description: Current NFL team
+      - name: games_played
+        description: Games played in the week (always 1 for weekly grain)
+
       - name: display_name
         description: Player display name
         data_tests:

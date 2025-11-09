@@ -1,4 +1,4 @@
-{{ config(materialized="ephemeral") }}
+{{ config(materialized="ephemeral", unique_key='comp_faad_transaction_id') }}
 
 /*
 Compensatory pick registry - Extracts comp pick awards from FAAD Comp column.

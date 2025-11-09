@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: int_pick_comp_reconciliation
+    description: |
+      Compensatory Pick Reconciliation - FAAD Awards vs Dimensional Picks.
+
+      Grain: One row per compensatory pick (from either FAAD or dim_pick)
+      Source: int_pick_comp_registry (authoritative) vs dim_pick (dimensional)
+
+      Compares FAAD comp pick awards (source of truth) against comp picks in dim_pick
+      to identify discrepancies and data quality issues. This is the KEY model for
+      exposing comp pick discrepancies like the 2024 R2 issue.
+
+      Reconciliation States:
+      - MATCHED: FAAD award exists in dim_pick with matching sequence
+      - SEQUENCE_MISMATCH: Pick exists in both but different chronological order
+      - FAAD_AWARD_NOT_IN_DIM_PICK: FAAD awarded but missing from dim_pick
+      - DIM_PICK_WITHOUT_FAAD_AWARD: Comp pick in dim_pick but no FAAD record

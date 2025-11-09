@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: dim_pick_valuation
+    description: |
+      Pick valuation dimension with provisional position estimates.
+
+      Grain: One row per pick_id (including TBD provisionals)
+      Source: dim_pick with provisional position logic
+
+      Assigns market values to draft picks, including conditional/TBD picks using
+      estimated positions. For TBD picks, uses mid-round estimate (slot 7 of 12).
+      Includes placeholders for KTC market values (future integration).
+
+      Provisional Methods:
+      - mid_round: Assume middle of round (slot 6-7 out of 12)
+      - prior_standings: Use previous season final standings (future)
+      - current_standings: Use current season standings (future, updates weekly)

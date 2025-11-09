@@ -1,4 +1,4 @@
-{{ config(materialized="ephemeral") }}
+{{ config(materialized="ephemeral", unique_key='pick_id') }}
 
 /*
 TBD (To Be Determined) picks extraction from transactions.

@@ -1,4 +1,4 @@
-{{ config(materialized="ephemeral") }}
+{{ config(materialized="ephemeral", unique_key='pick_id') }}
 
 /*
 Base draft picks generator - P01 through P12 for all years and rounds.

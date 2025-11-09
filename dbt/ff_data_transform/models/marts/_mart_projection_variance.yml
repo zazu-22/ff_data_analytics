@@ -47,7 +47,10 @@ models:
       - name: season_type
         description: Season type (currently only 'REG' included)
 
-      - name: asof_date
+      - name: current_team
+        description: Player's current NFL team
+
+      - name: projection_date
         description: When projection was made (latest before game week)
 
       - name: actual_passing_yards
@@ -56,7 +59,7 @@ models:
       - name: projected_passing_yards
         description: Projected passing yards before the game
 
-      - name: variance_passing_yards
+      - name: passing_yards_variance
         description: Actual - Projected passing yards
 
       - name: actual_passing_tds
@@ -65,8 +68,17 @@ models:
       - name: projected_passing_tds
         description: Projected passing touchdowns
 
-      - name: variance_passing_tds
+      - name: passing_tds_variance
         description: Actual - Projected passing touchdowns
+
+      - name: actual_interceptions
+        description: Actual interceptions thrown
+
+      - name: projected_interceptions
+        description: Projected interceptions thrown
+
+      - name: interceptions_variance
+        description: Actual - Projected interceptions
 
       - name: actual_rushing_yards
         description: Actual rushing yards
@@ -74,7 +86,7 @@ models:
       - name: projected_rushing_yards
         description: Projected rushing yards
 
-      - name: variance_rushing_yards
+      - name: rushing_yards_variance
         description: Actual - Projected rushing yards
 
       - name: actual_rushing_tds
@@ -83,7 +95,7 @@ models:
       - name: projected_rushing_tds
         description: Projected rushing touchdowns
 
-      - name: variance_rushing_tds
+      - name: rushing_tds_variance
         description: Actual - Projected rushing touchdowns
 
       - name: actual_receptions
@@ -92,7 +104,7 @@ models:
       - name: projected_receptions
         description: Projected receptions
 
-      - name: variance_receptions
+      - name: receptions_variance
         description: Actual - Projected receptions
 
       - name: actual_receiving_yards
@@ -101,7 +113,7 @@ models:
       - name: projected_receiving_yards
         description: Projected receiving yards
 
-      - name: variance_receiving_yards
+      - name: receiving_yards_variance
         description: Actual - Projected receiving yards
 
       - name: actual_receiving_tds
@@ -110,7 +122,7 @@ models:
       - name: projected_receiving_tds
         description: Projected receiving touchdowns
 
-      - name: variance_receiving_tds
+      - name: receiving_tds_variance
         description: Actual - Projected receiving touchdowns
 
       - name: actual_fumbles_lost
@@ -119,5 +131,5 @@ models:
       - name: projected_fumbles_lost
         description: Projected fumbles lost
 
-      - name: variance_fumbles_lost
+      - name: fumbles_lost_variance
         description: Actual - Projected fumbles lost

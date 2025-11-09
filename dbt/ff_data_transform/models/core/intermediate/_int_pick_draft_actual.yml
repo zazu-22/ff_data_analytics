@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_pick_draft_actual
+    description: |
+      Actual rookie draft picks extracted from commissioner transactions.
+
+      Grain: One row per draft pick (base + compensatory) per season
+      Source: stg_sheets__transactions (rookie_draft_selection transactions)
+
+      Captures the real draft order, player selections, and franchise ownership directly
+      from rookie_draft_selection transactions. This becomes the source of truth for
+      base picks once a draft is complete and enables TBD→actual lifecycle transitions.
+
+      Source Columns:
+      - transaction_id: Draft event identifier
+      - round / pick_number: From commissioner sheet
+      - to_franchise_*: Identifies drafting franchise
+      - player_*: Drafted player metadata
+
+      Outputs canonical pick_id (YYYY_R#_P##) with proper sequencing.

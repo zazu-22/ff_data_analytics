@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_pick_transaction_xref
+    description: |
+      Pick transaction crosswalk - Matches transaction pick references to canonical dim_pick pick_ids.
+
+      Grain: One row per pick transaction reference
+      Source: stg_sheets__transactions (pick references) + dim_pick (canonical picks)
+
+      Resolves pick_id references in transactions by matching on (season, round, overall_pick).
+      The Commissioner sheet contains overall pick numbers (1-60+), but pick_ids in transactions
+      sometimes use incorrect combinations. This model creates the correct mapping.
+
+      Includes lifecycle migration to handle TBD → actual pick transitions via
+      dim_pick_lifecycle_control.
+
+      Match Methods:
+      - Primary: Match by (season, round, overall_pick)
+      - Fallback: Match by (season, round, slot_number) for misencoded picks
+      - TBD: Match by (season, round) only

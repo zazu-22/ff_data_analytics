@@ -1,4 +1,4 @@
-{{ config(materialized="ephemeral") }}
+{{ config(materialized="ephemeral", unique_key='pick_id') }}
 
 /*
 Draft Picks with Fallback Logic - Ensures complete base pick coverage.

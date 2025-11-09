@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_pick_tbd
+    description: |
+      TBD (To Be Determined) picks extraction from transactions.
+
+      Grain: One row per TBD pick referenced in transactions
+      Source: stg_sheets__transactions (pick_id references with '_TBD' suffix)
+
+      Extracts future-year picks traded before draft order is finalized. These picks
+      have unknown slot numbers until the regular season ends and standings are set.
+
+      Format: YYYY_R#_TBD (e.g., "2027_R1_TBD")
+
+      Example Timeline:
+      - 2025: Team trades "2027 1st round pick" → pick_id: 2027_R1_TBD
+      - 2026 season ends: Team finishes 5th place
+      - 2027 rookie draft: pick_id becomes 2027_R1_P05
+
+      Note: Slot number and overall pick use placeholder value (99) until finalized.
