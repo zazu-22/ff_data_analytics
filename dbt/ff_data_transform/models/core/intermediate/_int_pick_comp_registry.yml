@@ -24,7 +24,7 @@ models:
 
     columns:
       - name: comp_faad_transaction_id
-        description: "Transaction ID from fact_league_transactions that triggered this comp pick"
+        description: "Transaction ID from fct_league_transactions that triggered this comp pick"
         data_tests:
           - unique
           - not_null

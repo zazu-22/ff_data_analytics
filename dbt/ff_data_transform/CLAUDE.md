@@ -45,7 +45,7 @@ uv run env \
 
 # Query database directly with DuckDB CLI (from repo root)
 duckdb dbt/ff_data_transform/target/dev.duckdb
-# Within DuckDB: SELECT * FROM main.mart_contract_snapshot_current LIMIT 10;
+# Within DuckDB: SELECT * FROM main.mrt_contract_snapshot_current LIMIT 10;
 
 # Run compiled dbt analysis SQL (from repo root)
 EXTERNAL_ROOT="$(pwd)/data/raw" \
@@ -100,7 +100,7 @@ This project follows **per-model YAML documentation** (dbt best practice):
 **CRITICAL**: Every fact table MUST explicitly declare and test its grain.
 
 ```yaml
-# models/core/schema.yml (fact_player_stats)
+# models/core/schema.yml (fct_player_stats)
 tests:
   - dbt_utils.unique_combination_of_columns:
       arguments:
@@ -136,10 +136,10 @@ The project implements a **2×2 model** for player performance data:
 ```text
                  Real-World Stats              Fantasy Points
                  ────────────────              ──────────────
-Actuals          fact_player_stats        →    mart_fantasy_actuals_weekly
+Actuals          fct_player_stats        →    mrt_fantasy_actuals_weekly
                  (per-game grain)              (apply dim_scoring_rule)
 
-Projections      fact_player_projections  →    mart_fantasy_projections
+Projections      fct_player_projections  →    mrt_fantasy_projections
                  (weekly/season grain)         (apply dim_scoring_rule)
 ```
 
@@ -151,14 +151,14 @@ Projections      fact_player_projections  →    mart_fantasy_projections
 
 **Fact Tables**:
 
-- `fact_player_stats` - Per-game actuals (nflverse): 88 stat types, 6.3M rows
-- `fact_player_projections` - Weekly/season projections (ffanalytics): 13 stat types
+- `fct_player_stats` - Per-game actuals (nflverse): 88 stat types, 6.3M rows
+- `fct_player_projections` - Weekly/season projections (ffanalytics): 13 stat types
 
 **Analytics Marts**:
 
-- Real-world: `mart_real_world_actuals_weekly`, `mart_real_world_projections`
-- Fantasy: `mart_fantasy_actuals_weekly`, `mart_fantasy_projections`
-- Variance: `mart_projection_variance` (actuals vs projections)
+- Real-world: `mrt_real_world_actuals_weekly`, `mrt_real_world_projections`
+- Fantasy: `mrt_fantasy_actuals_weekly`, `mrt_fantasy_projections`
+- Variance: `mrt_projection_variance` (actuals vs projections)
 
 ### External Parquet
 
@@ -190,8 +190,8 @@ This project uses a **multi-tool approach** for SQL quality:
    - Excludes files with DuckDB-specific syntax that SQLFluff cannot parse (via `.sqlfluffignore`)
    - Excluded patterns:
      - Staging models (`stg_*.sql`) - use `read_parquet()` with named parameters
-     - Core models with DuckDB functions (`dim_player_contract_history.sql`, `fact_league_transactions.sql`, `int_pick_*.sql`)
-     - Mart models with DuckDB functions (`mart_contract_snapshot_current.sql`, `mart_real_world_actuals_weekly.sql`)
+     - Core models with DuckDB functions (`dim_player_contract_history.sql`, `fct_league_transactions.sql`, `int_pick_*.sql`)
+     - Mart models with DuckDB functions (`mrt_contract_snapshot_current.sql`, `mrt_real_world_actuals_weekly.sql`)
    - Run: `make sqlcheck` (lint) or `make sqlfix` (auto-fix)
 
 3. **dbt compile** (syntax validation) - Validates SQL syntax using actual DuckDB parser
@@ -225,8 +225,8 @@ This project uses a **multi-tool approach** for SQL quality:
 **SQLFluff Exclusions** (via `.sqlfluffignore` file):
 
 - **Staging models** (`stg_*.sql`): Use `read_parquet()` with named parameters
-- **Core models**: `dim_player_contract_history.sql` (list functions), `fact_league_transactions.sql` (interval arithmetic), `int_pick_*.sql` (regexp/date functions)
-- **Mart models**: `mart_contract_snapshot_current.sql` (JSON/unnest), `mart_real_world_actuals_weekly.sql` (arbitrary)
+- **Core models**: `dim_player_contract_history.sql` (list functions), `fct_league_transactions.sql` (interval arithmetic), `int_pick_*.sql` (regexp/date functions)
+- **Mart models**: `mrt_contract_snapshot_current.sql` (JSON/unnest), `mrt_real_world_actuals_weekly.sql` (arbitrary)
 - **Test files**: `tests/*.sql` (not dbt project nodes)
 
 **dbt-opiner Exclusions** (via pre-commit hook):
@@ -264,7 +264,7 @@ This project uses a **multi-tool approach** for SQL quality:
 2. For fantasy scoring: Join real-world mart with `dim_scoring_rule` and calculate points
 3. For projections: Include `horizon` column ('weekly', 'full_season', 'rest_of_season')
 4. Document grain and test uniqueness
-5. Examples: `mart_real_world_projections.sql`, `mart_fantasy_actuals_weekly.sql`
+5. Examples: `mrt_real_world_projections.sql`, `mrt_fantasy_actuals_weekly.sql`
 
 ## Testing Strategy
 

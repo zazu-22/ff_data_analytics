@@ -206,7 +206,7 @@ models:
           Franchise ID of team that originally received the comp pick.
 
           **Note**: This is the ORIGINAL recipient (team that lost the RFA).
-          The pick may have been traded to another team. Use fact_league_transactions
+          The pick may have been traded to another team. Use fct_league_transactions
           or dim_pick_valuation to track current ownership.
 
           **Populated for**: Comp picks only

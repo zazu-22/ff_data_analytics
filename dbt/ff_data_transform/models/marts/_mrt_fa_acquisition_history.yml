@@ -1,5 +1,5 @@
 models:
-  - name: mart_fa_acquisition_history
+  - name: mrt_fa_acquisition_history
     description: "Historical FA acquisitions with performance/market context for bid modeling"
 
     data_tests:

@@ -1,15 +1,15 @@
 version: 2
 
 models:
-  - name: mart_fantasy_projections
+  - name: mrt_fantasy_projections
     description: |
       Fantasy projections mart - weekly/season player projections with fantasy scoring applied.
 
       **Grain**: One row per player per season per week per horizon per asof_date
-      **Source**: mart_real_world_projections (with scoring rules applied)
+      **Source**: mrt_real_world_projections (with scoring rules applied)
 
       Part of 2×2 model:
-      - Real-world base: mart_real_world_projections (physical stats)
+      - Real-world base: mrt_real_world_projections (physical stats)
       - Fantasy scoring: This mart (applies dim_scoring_rule to calculate points)
 
       League scoring: Half-PPR (no IDP in projections)

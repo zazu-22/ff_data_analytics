@@ -6,7 +6,7 @@ models:
       Player contract history dimension - clean contract state over time.
 
       Grain: One row per player per contract period per franchise
-      Source: fact_league_transactions (contract-creating events)
+      Source: fct_league_transactions (contract-creating events)
       Architecture: Type 2 SCD dimension
 
       Tracks complete contract lifecycle from signing through termination,
@@ -117,12 +117,12 @@ models:
           dim_cut_liability_schedule). Only populated for current contracts.
 
       - name: transaction_id_unique
-        description: FK to fact_league_transactions (audit trail)
+        description: FK to fct_league_transactions (audit trail)
         data_tests:
           - not_null
           - relationships:
               arguments:
-                to: ref('fact_league_transactions')
+                to: ref('fct_league_transactions')
                 field: transaction_id_unique
 
       - name: player_name
@@ -144,7 +144,7 @@ models:
         description: "Compensatory pick awarded if this was an RFA contract"
 
       - name: transaction_id
-        description: "Transaction ID from fact_league_transactions (for grouping multi-asset trades)"
+        description: "Transaction ID from fct_league_transactions (for grouping multi-asset trades)"
 
       - name: loaded_at
         description: "Timestamp when this record was loaded into the dimension"

@@ -122,7 +122,7 @@ with
         -- Need position to disambiguate players with same name (e.g., Josh Allen QB
         -- vs DB)
         select distinct lower(trim(player_name)) as player_name_lower, player_id, position
-        from {{ ref("fact_league_transactions") }}
+        from {{ ref("fct_league_transactions") }}
         where asset_type = 'player' and player_id is not null
     ),
 

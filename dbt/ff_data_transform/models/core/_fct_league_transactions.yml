@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fact_league_transactions
+  - name: fct_league_transactions
     description: |
       League transaction history fact table - immutable event log.
 

@@ -22,7 +22,7 @@ commissioner_active as (
 ),
 commissioner_roster as (
   select distinct c.player_id
-  from {{ ref('mart_contract_snapshot_current') }} c
+  from {{ ref('mrt_contract_snapshot_current') }} c
   where c.obligation_year = year(current_date)
     and (
       not exists (

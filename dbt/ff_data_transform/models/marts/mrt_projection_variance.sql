@@ -5,8 +5,8 @@ Projection variance mart - compare actual performance vs pre-game projections.
 
 Grain: One row per player per season per week (actuals grain)
 Sources:
-  - mart_real_world_actuals_weekly (actual performance)
-  - mart_real_world_projections (weekly projections)
+  - mrt_real_world_actuals_weekly (actual performance)
+  - mrt_real_world_projections (weekly projections)
 
 Analysis:
   - Variance = actual - projected for each stat
@@ -43,7 +43,7 @@ with
             -- fumbles)
             receiving_fumbles_lost as actual_fumbles_lost
 
-        from {{ ref("mart_real_world_actuals_weekly") }}
+        from {{ ref("mrt_real_world_actuals_weekly") }}
         where season_type = 'REG'  -- Regular season only for now
     ),
 
@@ -67,7 +67,7 @@ with
             receiving_tds as projected_receiving_tds,
             fumbles_lost as projected_fumbles_lost
 
-        from {{ ref("mart_real_world_projections") }}
+        from {{ ref("mrt_real_world_projections") }}
         where horizon = 'weekly' and provider = 'ffanalytics_consensus'
     ),
 

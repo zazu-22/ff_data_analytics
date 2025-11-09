@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fact_player_stats
+  - name: fct_player_stats
     description: |
       Consolidated fact table for all NFL player statistics across multiple sources.
 

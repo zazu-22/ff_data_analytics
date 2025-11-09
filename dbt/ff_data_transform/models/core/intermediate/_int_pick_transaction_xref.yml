@@ -22,7 +22,7 @@ models:
 
     columns:
       - name: transaction_id_unique
-        description: "Unique transaction ID from fact_league_transactions"
+        description: "Unique transaction ID from fct_league_transactions"
 
       - name: transaction_id
         description: "Transaction event ID grouping multi-asset trades"

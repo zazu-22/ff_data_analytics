@@ -4,16 +4,16 @@
 Fantasy projections mart - weekly/season player projections with fantasy scoring applied.
 
 Grain: One row per player per season per week per horizon per asof_date
-Source: mart_real_world_projections (with scoring rules applied from dim_scoring_rule)
+Source: mrt_real_world_projections (with scoring rules applied from dim_scoring_rule)
 
 Part of 2×2 model:
-- Real-world base: mart_real_world_projections (physical stats)
+- Real-world base: mrt_real_world_projections (physical stats)
 - Fantasy scoring: This mart (applies dim_scoring_rule dynamically)
 
 League scoring: Half-PPR (no IDP in projections)
 */
 with
-    real_world as (select * from {{ ref("mart_real_world_projections") }}),
+    real_world as (select * from {{ ref("mrt_real_world_projections") }}),
 
     scoring as (select stat_name, points_per_unit from {{ ref("dim_scoring_rule") }} where is_current = true),
 
@@ -34,7 +34,7 @@ with
     )
 
 select
-    -- All columns from mart_real_world_projections
+    -- All columns from mrt_real_world_projections
     rw.player_id,
     rw.player_name,
     rw.position,

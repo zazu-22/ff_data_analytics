@@ -49,7 +49,7 @@ models:
         description: "Flag: true if this is a compensatory pick"
 
       - name: draft_transaction_id
-        description: "Transaction ID from fact_league_transactions for this draft pick"
+        description: "Transaction ID from fct_league_transactions for this draft pick"
 
       - name: drafted_by_franchise_id
         description: "Franchise ID that made this draft selection"

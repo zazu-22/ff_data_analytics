@@ -20,7 +20,7 @@ with
             avg(projected_fantasy_points) as projected_ppg_ros,
             sum(projected_fantasy_points) as projected_total_ros,
             count(*) as weeks_remaining
-        from {{ ref("mart_fantasy_projections") }}
+        from {{ ref("mrt_fantasy_projections") }}
         where
             season = year(current_date)
             and week > (

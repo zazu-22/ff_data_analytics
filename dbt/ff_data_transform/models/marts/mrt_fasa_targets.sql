@@ -87,7 +87,7 @@ with
                     coalesce(def_fumbles_forced, 0) as def_fumbles_forced,
                     coalesce(def_tds, 0) as def_tds,
                     row_number() over (partition by player_id order by season desc, week desc) as game_recency
-                from {{ ref("mart_fantasy_actuals_weekly") }}
+                from {{ ref("mrt_fantasy_actuals_weekly") }}
                 where
                     season = year(current_date)
                     and week <= (
@@ -106,7 +106,7 @@ with
             sum(proj.projected_fantasy_points) as projected_total_ros,
             avg(proj.projected_fantasy_points) as projected_ppg_ros,
             count(*) as weeks_remaining
-        from {{ ref("mart_fantasy_projections") }} proj
+        from {{ ref("mrt_fantasy_projections") }} proj
         where
             proj.season = year(current_date)
             and proj.week > (
@@ -143,7 +143,7 @@ with
                     max(case when stat_name = 'rush_attempt' then stat_value end)
                     / nullif(max(case when stat_name = 'rush_attempt_team' then stat_value end), 0) as rush_share,
                     row_number() over (partition by player_id order by season desc, week desc) as game_recency
-                from {{ ref("fact_player_stats") }}
+                from {{ ref("fct_player_stats") }}
                 where
                     stat_kind = 'actual'
                     and measure_domain = 'real_world'
@@ -203,7 +203,7 @@ with
             overall_rank as ktc_rank_overall,
             positional_rank as ktc_rank_at_position,
             ktc_value - lag(ktc_value, 4) over (partition by player_id order by asof_date) as ktc_trend_4wk
-        from {{ ref("fact_asset_market_values") }}
+        from {{ ref("fct_asset_market_values") }}
         where asset_type = 'player' and market_scope = 'dynasty_1qb'
         qualify row_number() over (partition by player_id order by asof_date desc) = 1
     ),
@@ -573,7 +573,7 @@ with
             max(case when lrd.position = 'RB' then lrd.total_rostered_at_position end) as rb_total_rostered,
             max(case when lrd.position = 'WR' then lrd.total_rostered_at_position end) as wr_total_rostered,
             max(case when lrd.position = 'TE' then lrd.total_rostered_at_position end) as te_total_rostered
-        from {{ ref("mart_league_roster_depth") }} lrd
+        from {{ ref("mrt_league_roster_depth") }} lrd
     ),
 
     league_vor_base as (
@@ -617,7 +617,7 @@ with
             -- Hypothetical league rank (if rostered)
             (
                 select count(*) + 1
-                from {{ ref("mart_league_roster_depth") }} lrd2
+                from {{ ref("mrt_league_roster_depth") }} lrd2
                 where lrd2.position = fa.position and lrd2.projected_ppg_ros > proj.projected_ppg_ros
             ) as hypothetical_league_rank,
 
@@ -1010,7 +1010,7 @@ where
     )
     and not exists (
         select 1
-        from {{ ref("mart_contract_snapshot_current") }} c
+        from {{ ref("mrt_contract_snapshot_current") }} c
         where c.player_id = fa.player_id and c.obligation_year = year(current_date)
     )
     and fa.player_id is not null

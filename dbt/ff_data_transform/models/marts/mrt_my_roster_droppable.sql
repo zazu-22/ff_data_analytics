@@ -41,7 +41,7 @@ with
                     player_id,
                     fantasy_points,
                     row_number() over (partition by player_id order by season desc, week desc) as game_recency
-                from {{ ref("mart_fantasy_actuals_weekly") }}
+                from {{ ref("mrt_fantasy_actuals_weekly") }}
                 where season = year(current_date)
             )
         where game_recency <= 8
@@ -54,7 +54,7 @@ with
             avg(projected_fantasy_points) as projected_ppg_ros,
             sum(projected_fantasy_points) as projected_total_ros,
             count(*) as weeks_remaining
-        from {{ ref("mart_fantasy_projections") }}
+        from {{ ref("mrt_fantasy_projections") }}
         where
             season = year(current_date)
             and week > (
@@ -96,7 +96,7 @@ select
     proj.projected_ppg_ros / nullif(c.current_year_cap_hit, 0) as points_per_dollar,
     proj.projected_ppg_ros - (
         select percentile_cont(0.5) within group (order by projected_ppg_ros)
-        from {{ ref("mart_fasa_targets") }}
+        from {{ ref("mrt_fasa_targets") }}
         where position = r.position
     ) as replacement_surplus,
 

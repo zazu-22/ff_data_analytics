@@ -17,7 +17,7 @@ Includes:
 - Variance stats (*_diff): Actual minus expected (measures over/under-performance)
 - Team shares (*_share, *_attempt): Player's proportion of team opportunity
 
-ADR-009: Feeds into consolidated fact_player_stats
+ADR-009: Feeds into consolidated fct_player_stats
 ADR-011: Uses sequential surrogate player_id as canonical identifier
 */
 with

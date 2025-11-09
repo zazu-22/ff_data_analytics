@@ -4,7 +4,7 @@
 -- This test validates the canonical player identifier contract across staging, fact, and mart layers.
 --
 -- Exclusions:
--- - mart_fasa_targets: player_key intentionally preserved from Sleeper source for reference
+-- - mrt_fasa_targets: player_key intentionally preserved from Sleeper source for reference
 --
 -- Coverage (15 tables):
 -- Staging: 8 tables (sheets, sleeper, nflverse, ktc)
@@ -98,18 +98,18 @@ with checks as (
   -- FACT LAYER
   -- ====================
 
-  select 'fact_player_stats' as table_name,
+  select 'fct_player_stats' as table_name,
     count(*) as violations
-  from {{ ref('fact_player_stats') }}
+  from {{ ref('fct_player_stats') }}
   where player_id is not null
     and player_id != -1
     and cast(player_key as varchar) <> cast(player_id as varchar)
 
   union all
 
-  select 'fact_league_transactions' as table_name,
+  select 'fct_league_transactions' as table_name,
     count(*) as violations
-  from {{ ref('fact_league_transactions') }}
+  from {{ ref('fct_league_transactions') }}
   where asset_type = 'player'
     and player_id is not null
     and player_id != -1
@@ -117,9 +117,9 @@ with checks as (
 
   union all
 
-  select 'fact_asset_market_values' as table_name,
+  select 'fct_asset_market_values' as table_name,
     count(*) as violations
-  from {{ ref('fact_asset_market_values') }}
+  from {{ ref('fct_asset_market_values') }}
   where asset_type = 'player'
     and player_id is not null
     and player_id != -1
@@ -131,36 +131,36 @@ with checks as (
   -- MART LAYER
   -- ====================
 
-  select 'mart_contract_snapshot_history' as table_name,
+  select 'mrt_contract_snapshot_history' as table_name,
     count(*) as violations
-  from {{ ref('mart_contract_snapshot_history') }}
+  from {{ ref('mrt_contract_snapshot_history') }}
   where player_id is not null
     and player_id != -1
     and cast(player_key as varchar) <> cast(player_id as varchar)
 
   union all
 
-  select 'mart_fa_acquisition_history' as table_name,
+  select 'mrt_fa_acquisition_history' as table_name,
     count(*) as violations
-  from {{ ref('mart_fa_acquisition_history') }}
+  from {{ ref('mrt_fa_acquisition_history') }}
   where player_id is not null
     and player_id != -1
     and cast(player_key as varchar) <> cast(player_id as varchar)
 
   union all
 
-  select 'mart_fantasy_actuals_weekly' as table_name,
+  select 'mrt_fantasy_actuals_weekly' as table_name,
     count(*) as violations
-  from {{ ref('mart_fantasy_actuals_weekly') }}
+  from {{ ref('mrt_fantasy_actuals_weekly') }}
   where player_id is not null
     and player_id != -1
     and cast(player_key as varchar) <> cast(player_id as varchar)
 
   union all
 
-  select 'mart_real_world_actuals_weekly' as table_name,
+  select 'mrt_real_world_actuals_weekly' as table_name,
     count(*) as violations
-  from {{ ref('mart_real_world_actuals_weekly') }}
+  from {{ ref('mrt_real_world_actuals_weekly') }}
   where player_id is not null
     and player_id != -1
     and cast(player_key as varchar) <> cast(player_id as varchar)

@@ -15,7 +15,7 @@
 Player contract history dimension - clean contract state over time.
 
 Grain: One row per player per contract period per franchise
-Source: fact_league_transactions (contract-creating events)
+Source: fct_league_transactions (contract-creating events)
 Architecture: Type 2 SCD dimension
 
 This dimension derives clean contract state from the transaction event log,
@@ -117,7 +117,7 @@ with
                     )
             end as extension_id_on_same_date
 
-        from {{ ref("fact_league_transactions") }}
+        from {{ ref("fct_league_transactions") }}
         where
             asset_type = 'player'
             and player_id is not null
@@ -411,7 +411,7 @@ with
             transaction_date,
             player_id,
             from_franchise_id as franchise_id
-        from {{ ref("fact_league_transactions") }}
+        from {{ ref("fct_league_transactions") }}
         where
             asset_type = 'player'
             and player_id is not null

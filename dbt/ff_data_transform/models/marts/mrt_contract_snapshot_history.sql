@@ -9,11 +9,11 @@ Source: stg_sheets__contracts_active (direct from commissioner's CONTRACTS_ACTIV
 This mart provides a point-in-time historical view of contract obligations as recorded
 in the commissioner's CONTRACTS_ACTIVE sheet at various snapshot dates. This enables:
 - Time-series analysis of how obligations changed over time
-- Validation of transaction-derived contracts (mart_contract_snapshot_current)
+- Validation of transaction-derived contracts (mrt_contract_snapshot_current)
 - Historical cap space reconstruction
 - Trend analysis of contract structures
 
-Key Differences from mart_contract_snapshot_current:
+Key Differences from mrt_contract_snapshot_current:
 - Uses direct commissioner sheet snapshots (not derived from transaction log)
 - Includes snapshot_date as grain component (enables time-series)
 - Shows obligations as commissioner recorded them at each point in time

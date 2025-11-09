@@ -4,10 +4,10 @@
 Fantasy actuals mart - weekly player performance with fantasy scoring applied.
 
 Grain: One row per player per season per week
-Source: mart_real_world_actuals_weekly (with scoring rules applied from dim_scoring_rule)
+Source: mrt_real_world_actuals_weekly (with scoring rules applied from dim_scoring_rule)
 
 Part of 2×2 model:
-- Real-world base: mart_real_world_actuals_weekly (physical stats)
+- Real-world base: mrt_real_world_actuals_weekly (physical stats)
 - Fantasy scoring: This mart (applies dim_scoring_rule dynamically)
 
 League scoring: Half-PPR + IDP (data-driven from seed)
@@ -17,7 +17,7 @@ League scoring: Half-PPR + IDP (data-driven from seed)
 - IDP: From dim_scoring_rule.idp_* rules
 */
 with
-    real_world as (select * from {{ ref("mart_real_world_actuals_weekly") }}),
+    real_world as (select * from {{ ref("mrt_real_world_actuals_weekly") }}),
 
     scoring as (select stat_name, points_per_unit from {{ ref("dim_scoring_rule") }} where is_current = true),
 

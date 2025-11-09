@@ -9,7 +9,7 @@ Stage nflverse weekly player stats with mfl_id crosswalk and long-form unpivot.
 Source: data/raw/nflverse/weekly/ (load_player_stats with summary_level='week')
 Output grain: one row per player per game per stat
 Crosswalk: player_id (gsis_id) → mfl_id via dim_player_id_xref
-ADR-009: Feeds into consolidated fact_player_stats
+ADR-009: Feeds into consolidated fct_player_stats
 ADR-010: Uses mfl_id as canonical player_id
 */
 with

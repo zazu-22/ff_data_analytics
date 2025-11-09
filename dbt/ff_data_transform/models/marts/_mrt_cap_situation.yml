@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mart_cap_situation
+  - name: mrt_cap_situation
     description: |
       Comprehensive cap space analysis by franchise and season.
 

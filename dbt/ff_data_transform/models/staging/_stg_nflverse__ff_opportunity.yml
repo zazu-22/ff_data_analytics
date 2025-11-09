@@ -7,7 +7,7 @@ models:
 
       **Grain**: One row per player per game per stat (~38 stat types)
       **Source**: data/raw/nflverse/ff_opportunity/ (nflverse ff_opportunity dataset)
-      **Architecture**: Feeds into fact_player_stats (ADR-009 consolidated fact table)
+      **Architecture**: Feeds into fct_player_stats (ADR-009 consolidated fact table)
 
       **Stat Categories**:
       - Expected stats (*_exp): 12 stats - predicted values based on opportunity

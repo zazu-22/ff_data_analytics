@@ -1,5 +1,5 @@
 models:
-  - name: mart_league_roster_depth
+  - name: mrt_league_roster_depth
     description: "All rostered players ranked by position with league benchmarks"
 
     data_tests:

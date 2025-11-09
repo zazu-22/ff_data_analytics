@@ -1,16 +1,16 @@
 version: 2
 
 models:
-  - name: mart_real_world_actuals_weekly
+  - name: mrt_real_world_actuals_weekly
     description: |
       Real-world actuals mart - weekly player performance in physical stats (no fantasy scoring).
 
       **Grain**: One row per player per season per week
-      **Source**: fact_player_stats (pivoted from long to wide form)
+      **Source**: fct_player_stats (pivoted from long to wide form)
 
       Part of 2×2 model:
       - This mart: Real-world actuals (yards, TDs, receptions, etc.)
-      - Partner mart: mart_fantasy_actuals_weekly (applies scoring rules)
+      - Partner mart: mrt_fantasy_actuals_weekly (applies scoring rules)
 
       Provides denormalized player/team attributes via dimension joins.
 

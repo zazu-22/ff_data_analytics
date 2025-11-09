@@ -1,15 +1,15 @@
 version: 2
 
 models:
-  - name: mart_fantasy_actuals_weekly
+  - name: mrt_fantasy_actuals_weekly
     description: |
       Fantasy actuals mart - weekly player performance with fantasy scoring applied.
 
       **Grain**: One row per player per season per week
-      **Source**: mart_real_world_actuals_weekly (with scoring rules applied)
+      **Source**: mrt_real_world_actuals_weekly (with scoring rules applied)
 
       Part of 2×2 model:
-      - Real-world base: mart_real_world_actuals_weekly (physical stats)
+      - Real-world base: mrt_real_world_actuals_weekly (physical stats)
       - Fantasy scoring: This mart (applies dim_scoring_rule to calculate points)
 
       League scoring: Half-PPR + IDP

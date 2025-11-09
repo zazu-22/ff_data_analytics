@@ -7,7 +7,7 @@ models:
 
       **Grain**: One row per player per game per stat (~71 stat types)
       **Source**: data/raw/nflverse/weekly/ (nflverse weekly player stats)
-      **Architecture**: Primary feed into fact_player_stats (ADR-009 consolidated fact table)
+      **Architecture**: Primary feed into fct_player_stats (ADR-009 consolidated fact table)
 
       **Stat Categories**:
       - Passing stats: 11 stats (completions, attempts, yards, TDs, INTs, air yards, etc.)

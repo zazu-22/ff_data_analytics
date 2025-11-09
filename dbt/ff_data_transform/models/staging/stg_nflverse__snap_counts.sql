@@ -12,7 +12,7 @@ Source: data/raw/nflverse/snap_counts/ (load_snap_counts)
 Output grain: one row per player per game per snap stat (6 stats)
 Crosswalk: pfr_player_id → player_id via dim_player_id_xref
 
-ADR-009: Feeds into consolidated fact_player_stats
+ADR-009: Feeds into consolidated fct_player_stats
 ADR-011: Uses sequential surrogate player_id as canonical identifier
 */
 with

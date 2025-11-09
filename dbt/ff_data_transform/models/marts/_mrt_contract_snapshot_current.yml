@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mart_contract_snapshot_current
+  - name: mrt_contract_snapshot_current
     description: |
       Contract snapshot mart - current contract obligations by year (transaction-derived).
 
@@ -108,12 +108,12 @@ models:
                 field: contract_history_key
 
       - name: transaction_id_unique
-        description: FK to fact_league_transactions (audit trail)
+        description: FK to fct_league_transactions (audit trail)
         data_tests:
           - not_null
           - relationships:
               arguments:
-                to: ref('fact_league_transactions')
+                to: ref('fct_league_transactions')
                 field: transaction_id_unique
 
       - name: player_name

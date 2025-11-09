@@ -23,7 +23,7 @@ with
             t.contract_total as bid_amount,
             t.contract_years as contract_length,
             t.contract_total / nullif(t.contract_years, 0) as aav
-        from {{ ref("fact_league_transactions") }} t
+        from {{ ref("fct_league_transactions") }} t
         where
             t.transaction_type = 'fasa_signing'  -- Only in-season FASA, exclude FAAD
             and t.asset_type = 'player'
@@ -52,8 +52,7 @@ with
             ) as touches_per_game_l4_weeks
 
         from fa_acquisitions fa
-        left join
-            {{ ref("mart_fantasy_actuals_weekly") }} mfa on fa.player_id = mfa.player_id and fa.season = mfa.season
+        left join {{ ref("mrt_fantasy_actuals_weekly") }} mfa on fa.player_id = mfa.player_id and fa.season = mfa.season
         group by 1
     ),
 
@@ -75,7 +74,7 @@ with
             ) as game_rank
         from fa_acquisitions fa
         left join
-            {{ ref("mart_fantasy_actuals_weekly") }} mfa
+            {{ ref("mrt_fantasy_actuals_weekly") }} mfa
             on fa.player_id = mfa.player_id
             -- Games before signing (any season)
             and (fa.season > mfa.season or (fa.season = mfa.season and fa.week > mfa.week))
@@ -112,7 +111,7 @@ with
 
         from fa_acquisitions fa
         left join
-            {{ ref("mart_fantasy_projections") }} proj
+            {{ ref("mrt_fantasy_projections") }} proj
             on fa.season = proj.season
             and fa.week = proj.week
             and fa.position = proj.position

@@ -75,10 +75,10 @@ Kimball-style facts and dimensions:
 
 **Facts**:
 
-- `fact_player_stats` - Consolidated stats (2.7M rows, 109 stat types)
-- `fact_player_projections` - Weekly/season projections
-- `fact_league_transactions` - Transaction history (4,474 events)
-- `fact_asset_market_values` - KTC market value snapshots
+- `fct_player_stats` - Consolidated stats (2.7M rows, 109 stat types)
+- `fct_player_projections` - Weekly/season projections
+- `fct_league_transactions` - Transaction history (4,474 events)
+- `fct_asset_market_values` - KTC market value snapshots
 
 **Dimensions**:
 
@@ -94,22 +94,22 @@ Analytics-ready marts implementing 2×2 stat model:
 
 **Real-World Stats**:
 
-- `mart_real_world_actuals_weekly` - Physical stats (no scoring)
-- `mart_real_world_projections` - Projected stats (no scoring)
+- `mrt_real_world_actuals_weekly` - Physical stats (no scoring)
+- `mrt_real_world_projections` - Projected stats (no scoring)
 
 **Fantasy Scoring**:
 
-- `mart_fantasy_actuals_weekly` - Actual fantasy points (half-PPR + IDP)
-- `mart_fantasy_projections` - Projected fantasy points (half-PPR)
+- `mrt_fantasy_actuals_weekly` - Actual fantasy points (half-PPR + IDP)
+- `mrt_fantasy_projections` - Projected fantasy points (half-PPR)
 
 **Analysis**:
 
-- `mart_projection_variance` - Actuals vs projections comparison
+- `mrt_projection_variance` - Actuals vs projections comparison
 
 **Contracts**:
 
-- `mart_contract_snapshot_current` - Transaction-derived contracts by year
-- `mart_contract_snapshot_history` - Commissioner sheet snapshots
+- `mrt_contract_snapshot_current` - Transaction-derived contracts by year
+- `mrt_contract_snapshot_history` - Commissioner sheet snapshots
 
 #### Markets (`models/markets/`)
 
@@ -178,7 +178,7 @@ Separates real-world stats from fantasy scoring, actuals from projections:
 
 ### Consolidated Fact Table (ADR-009)
 
-Single `fact_player_stats` combines:
+Single `fct_player_stats` combines:
 
 - Base player stats (71 types)
 - Snap counts (6 types)

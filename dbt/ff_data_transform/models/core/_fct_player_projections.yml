@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fact_player_projections
+  - name: fct_player_projections
     description: "Projections fact table in long form (real-world stats only)"
     data_tests:
       - dbt_utils.unique_combination_of_columns:

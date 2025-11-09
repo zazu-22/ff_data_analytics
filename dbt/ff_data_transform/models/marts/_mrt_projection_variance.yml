@@ -1,14 +1,14 @@
 version: 2
 
 models:
-  - name: mart_projection_variance
+  - name: mrt_projection_variance
     description: |
       Projection variance mart - compare actual performance vs pre-game projections.
 
       **Grain**: One row per player per season per week (actuals grain)
       **Sources**:
-      - mart_real_world_actuals_weekly (actual performance)
-      - mart_real_world_projections (weekly projections)
+      - mrt_real_world_actuals_weekly (actual performance)
+      - mrt_real_world_projections (weekly projections)
 
       **Analysis Focus**:
       - Variance = actual - projected for each stat

@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mart_contract_snapshot_history
+  - name: mrt_contract_snapshot_history
     description: |
       Contract snapshot mart - historical point-in-time contract obligations (commissioner sheet snapshots).
 
@@ -11,7 +11,7 @@ models:
       Provides point-in-time historical view of contract obligations as recorded in the
       commissioner's CONTRACTS_ACTIVE sheet at various snapshot dates.
 
-      **Key Differences from mart_contract_snapshot_current**:
+      **Key Differences from mrt_contract_snapshot_current**:
       - Uses direct commissioner sheet snapshots (not derived from transaction log)
       - Includes snapshot_date as grain component (enables time-series)
       - Shows obligations as commissioner recorded them at each point in time

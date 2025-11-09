@@ -193,7 +193,7 @@ select
 
     -- Audit trail
     contract_history_key,  -- FK to dim_player_contract_history
-    transaction_id_unique,  -- FK to fact_league_transactions
+    transaction_id_unique,  -- FK to fct_league_transactions
 
     -- Metadata
     loaded_at,

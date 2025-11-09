@@ -118,7 +118,7 @@ with
         -- DISTINCT ON player_name, player_id to handle position variations (e.g.,
         -- Zaven Collins: LB/DL)
         select distinct lower(trim(player_name)) as player_name_lower, player_id
-        from {{ ref("fact_league_transactions") }}
+        from {{ ref("fct_league_transactions") }}
         where asset_type = 'player' and player_id is not null
     ),
 

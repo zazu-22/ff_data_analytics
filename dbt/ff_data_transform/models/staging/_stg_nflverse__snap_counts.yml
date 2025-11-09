@@ -7,7 +7,7 @@ models:
 
       **Grain**: One row per player per game per snap stat (6 stat types)
       **Source**: data/raw/nflverse/snap_counts/ (nflverse snap counts dataset)
-      **Architecture**: Feeds into fact_player_stats (ADR-009 consolidated fact table)
+      **Architecture**: Feeds into fct_player_stats (ADR-009 consolidated fact table)
 
       **Snap Stats**:
       - offense_snaps: Number of offensive snaps played

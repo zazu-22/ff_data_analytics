@@ -4,11 +4,11 @@
 Real-world projections mart - weekly/season player projections (no fantasy scoring).
 
 Grain: One row per player per season per week per horizon per asof_date
-Source: fact_player_projections (pivoted from long to wide form)
+Source: fct_player_projections (pivoted from long to wide form)
 
 Part of 2×2 model:
 - Real-world base: This mart (physical stats)
-- Fantasy scoring: mart_fantasy_projections (applies dim_scoring_rule)
+- Fantasy scoring: mrt_fantasy_projections (applies dim_scoring_rule)
 
 Usage: Analysis of raw projections, input to variance analysis
 */
@@ -28,7 +28,7 @@ with
             total_weight,
             stat_name,
             stat_value
-        from {{ ref("fact_player_projections") }}
+        from {{ ref("fct_player_projections") }}
         where measure_domain = 'real_world' and stat_kind = 'projection' and provider = 'ffanalytics_consensus'
     ),
 

@@ -4,18 +4,18 @@
 Real-world actuals mart - weekly player performance in physical stats (no fantasy scoring).
 
 Grain: One row per player per season per week
-Source: fact_player_stats (pivoted from long to wide form)
+Source: fct_player_stats (pivoted from long to wide form)
 
 Part of 2×2 model:
 - This mart: Real-world actuals (yards, TDs, receptions, etc.)
-- Partner mart: mart_fantasy_actuals_weekly (applies scoring rules)
+- Partner mart: mrt_fantasy_actuals_weekly (applies scoring rules)
 
 Provides denormalized player/team attributes via dimension joins for ease of querying.
 */
 with
     fact_stats as (
         select player_id, player_key, season, week, season_type, position, stat_name, stat_value
-        from {{ ref("fact_player_stats") }}
+        from {{ ref("fct_player_stats") }}
         where measure_domain = 'real_world' and stat_kind = 'actual' and provider = 'nflverse'
     ),
 

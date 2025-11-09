@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: mart_my_roster_droppable
+  - name: mrt_my_roster_droppable
     description: |
       Identify drop candidates on Jason's roster for FASA cap space planning.
 
@@ -20,7 +20,7 @@ models:
 
     config:
       materialized: external
-      location: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}/marts/mart_my_roster_droppable/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
+      location: "{{ env_var('EXTERNAL_ROOT', 'data/raw') }}/marts/mrt_my_roster_droppable/dt={{ run_started_at.strftime('%Y-%m-%d') }}/data.parquet"
 
     columns:
       - name: player_key

@@ -19,9 +19,9 @@ Sources: stg_ffanalytics__projections (weighted consensus)
 
 Part of 2×2 model:
 - Real-world projections: This fact (measure_domain='real_world')
-- Fantasy projections: mart_fantasy_projections (applies dim_scoring_rule)
+- Fantasy projections: mrt_fantasy_projections (applies dim_scoring_rule)
 
-Key differences from fact_player_stats:
+Key differences from fct_player_stats:
 - No game_id (projections are weekly/season-long, not per-game)
 - Includes horizon column ('weekly', 'full_season', 'rest_of_season')
 - Includes asof_date (when projection was made)
