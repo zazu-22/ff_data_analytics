@@ -14,17 +14,23 @@ ______________________________________________________________________
 
 ## Phase 0: Kickoff & Decision Ratification
 
-- [ ] Confirm scope: All 5 sources for Prefect orchestration (nflverse, sheets, ktc, ffanalytics, sleeper)
-- [ ] Confirm Prefect Phases 1+2 implementation (local flows, all sources)
-- [ ] Approve snapshot registry seed creation and governance model
-- [ ] Define success metrics and acceptance criteria (document in README)
-- [ ] Identify blockers:
-  - [ ] GCS authentication status (service account key available?)
-  - [ ] Prefect Cloud access or local Prefect server setup
-  - [ ] Environment setup (Python 3.13.6, uv, dbt-fusion)
-- [ ] Document Phase 0 decisions and exit criteria
+- [x] Confirm scope: All 5 sources for Prefect orchestration (nflverse, sheets, ktc, ffanalytics, sleeper)
+- [x] Confirm Prefect Phases 1+2 implementation (local flows, all sources)
+- [x] Approve snapshot registry seed creation and governance model
+- [x] Define success metrics and acceptance criteria (document in README)
+- [x] Identify blockers:
+  - [x] GCS authentication status (service account key available?)
+  - [x] Prefect Cloud access or local Prefect server setup
+  - [x] Environment setup (Python 3.13.6, uv, dbt-fusion)
+- [x] Configure environment and path management:
+  - [x] Create `.env.template` with documented path overrides
+  - [x] Create `config/env_config.yaml` with multi-environment paths (local, ci, cloud)
+  - [x] Create `config/README.md` explaining environment switching
+  - [x] Verify default globs in dbt models work without configuration
+  - [x] Test that dbt works with zero configuration (defaults only)
+- [x] Document Phase 0 decisions and exit criteria in implementation README
 
-**Exit Criteria**: Team alignment on full scope and approach; blockers identified with mitigation plans.
+**Exit Criteria**: ✅ Complete - Team alignment on full scope and approach; blockers identified with mitigation plans.
 
 ______________________________________________________________________
 

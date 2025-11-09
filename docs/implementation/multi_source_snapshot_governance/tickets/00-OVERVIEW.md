@@ -27,7 +27,7 @@ ______________________________________________________________________
 
 ## Phase 0: Kickoff & Decision Ratification (1 ticket)
 
-- [ ] **P0-001** — Scope ratification and blocker identification
+- [x] **P0-001** — Scope ratification and blocker identification
 
 ______________________________________________________________________
 
@@ -134,10 +134,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 0/47 (0%)\
+**Completed**: 1/47 (2%)\
 **In Progress**: 0/47\
 **Blocked**: 0/47\
-**Remaining**: 47/47
+**Remaining**: 46/47
 
 ______________________________________________________________________
 

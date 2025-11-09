@@ -1,0 +1,60 @@
+# Multi-environment configuration for Snapshot Governance
+# Controls path resolution for raw data sources across local, CI, and cloud environments
+#
+# Configuration Priority (highest to lowest):
+# 1. Environment variables (explicit overrides)
+# 2. .env file
+# 3. This file (config/env_config.yaml) based on FF_ENV
+# 4. Defaults in dbt code
+
+environments:
+  local:
+    RAW_NFLVERSE_WEEKLY_GLOB: "data/raw/nflverse/weekly/dt=*/*.parquet"
+    RAW_NFLVERSE_SNAP_COUNTS_GLOB: "data/raw/nflverse/snap_counts/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_OPPORTUNITY_GLOB: "data/raw/nflverse/ff_opportunity/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_PLAYERIDS_GLOB: "data/raw/nflverse/ff_playerids/dt=*/*.parquet"
+    RAW_NFLVERSE_SCHEDULE_GLOB: "data/raw/nflverse/schedule/dt=*/*.parquet"
+    RAW_NFLVERSE_TEAMS_GLOB: "data/raw/nflverse/teams/dt=*/*.parquet"
+    RAW_SHEETS_CAP_SPACE_GLOB: "data/raw/sheets/cap_space/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_ACTIVE_GLOB: "data/raw/sheets/contracts_active/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_CUT_GLOB: "data/raw/sheets/contracts_cut/dt=*/*.parquet"
+    RAW_SHEETS_DRAFT_PICK_HOLDINGS_GLOB: "data/raw/sheets/draft_pick_holdings/dt=*/*.parquet"
+    RAW_SHEETS_TRANSACTIONS_GLOB: "data/raw/sheets/transactions/dt=*/*.parquet"
+    RAW_SLEEPER_FA_POOL_GLOB: "data/raw/sleeper/fa_pool/dt=*/*.parquet"
+    RAW_SLEEPER_ROSTERS_GLOB: "data/raw/sleeper/rosters/dt=*/*.parquet"
+    RAW_KTC_ASSETS_GLOB: "data/raw/ktc/assets/dt=*/*.parquet"
+    RAW_FFANALYTICS_PROJECTIONS_GLOB: "data/raw/ffanalytics/projections/dt=*/*.parquet"
+
+  cloud:
+    RAW_NFLVERSE_WEEKLY_GLOB: "gs://ff-analytics/raw/nflverse/weekly/dt=*/*.parquet"
+    RAW_NFLVERSE_SNAP_COUNTS_GLOB: "gs://ff-analytics/raw/nflverse/snap_counts/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_OPPORTUNITY_GLOB: "gs://ff-analytics/raw/nflverse/ff_opportunity/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_PLAYERIDS_GLOB: "gs://ff-analytics/raw/nflverse/ff_playerids/dt=*/*.parquet"
+    RAW_NFLVERSE_SCHEDULE_GLOB: "gs://ff-analytics/raw/nflverse/schedule/dt=*/*.parquet"
+    RAW_NFLVERSE_TEAMS_GLOB: "gs://ff-analytics/raw/nflverse/teams/dt=*/*.parquet"
+    RAW_SHEETS_CAP_SPACE_GLOB: "gs://ff-analytics/raw/sheets/cap_space/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_ACTIVE_GLOB: "gs://ff-analytics/raw/sheets/contracts_active/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_CUT_GLOB: "gs://ff-analytics/raw/sheets/contracts_cut/dt=*/*.parquet"
+    RAW_SHEETS_DRAFT_PICK_HOLDINGS_GLOB: "gs://ff-analytics/raw/sheets/draft_pick_holdings/dt=*/*.parquet"
+    RAW_SHEETS_TRANSACTIONS_GLOB: "gs://ff-analytics/raw/sheets/transactions/dt=*/*.parquet"
+    RAW_SLEEPER_FA_POOL_GLOB: "gs://ff-analytics/raw/sleeper/fa_pool/dt=*/*.parquet"
+    RAW_SLEEPER_ROSTERS_GLOB: "gs://ff-analytics/raw/sleeper/rosters/dt=*/*.parquet"
+    RAW_KTC_ASSETS_GLOB: "gs://ff-analytics/raw/ktc/assets/dt=*/*.parquet"
+    RAW_FFANALYTICS_PROJECTIONS_GLOB: "gs://ff-analytics/raw/ffanalytics/projections/dt=*/*.parquet"
+
+  ci:
+    RAW_NFLVERSE_WEEKLY_GLOB: "data/raw/nflverse/weekly/dt=*/*.parquet"
+    RAW_NFLVERSE_SNAP_COUNTS_GLOB: "data/raw/nflverse/snap_counts/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_OPPORTUNITY_GLOB: "data/raw/nflverse/ff_opportunity/dt=*/*.parquet"
+    RAW_NFLVERSE_FF_PLAYERIDS_GLOB: "data/raw/nflverse/ff_playerids/dt=*/*.parquet"
+    RAW_NFLVERSE_SCHEDULE_GLOB: "data/raw/nflverse/schedule/dt=*/*.parquet"
+    RAW_NFLVERSE_TEAMS_GLOB: "data/raw/nflverse/teams/dt=*/*.parquet"
+    RAW_SHEETS_CAP_SPACE_GLOB: "data/raw/sheets/cap_space/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_ACTIVE_GLOB: "data/raw/sheets/contracts_active/dt=*/*.parquet"
+    RAW_SHEETS_CONTRACTS_CUT_GLOB: "data/raw/sheets/contracts_cut/dt=*/*.parquet"
+    RAW_SHEETS_DRAFT_PICK_HOLDINGS_GLOB: "data/raw/sheets/draft_pick_holdings/dt=*/*.parquet"
+    RAW_SHEETS_TRANSACTIONS_GLOB: "data/raw/sheets/transactions/dt=*/*.parquet"
+    RAW_SLEEPER_FA_POOL_GLOB: "data/raw/sleeper/fa_pool/dt=*/*.parquet"
+    RAW_SLEEPER_ROSTERS_GLOB: "data/raw/sleeper/rosters/dt=*/*.parquet"
+    RAW_KTC_ASSETS_GLOB: "data/raw/ktc/assets/dt=*/*.parquet"
+    RAW_FFANALYTICS_PROJECTIONS_GLOB: "data/raw/ffanalytics/projections/dt=*/*.parquet"
