@@ -1,9 +1,10 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics dbt-xref ingest-with-xref ingest-all
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics dbt-xref ingest-with-xref ingest-all ingest-nflverse
 
 help:
 	@echo "Available targets:"
+	@echo "  ingest-nflverse      Ingest all NFLverse datasets (weekly, snap_counts, ff_opportunity, ff_playerids)"
 	@echo "  ingest-sheets        Ingest league sheets locally"
 	@echo "  ingest-sleeper-players  Ingest Sleeper player database (for crosswalk validation)"
 	@echo "  ingest-ffanalytics   Ingest FFanalytics projections (rest-of-season)"
@@ -25,6 +26,18 @@ help:
 	@echo "  dbt-opiner-check     Run dbt-opiner for dbt best practices"
 	@echo "  sql-all              Run all SQL quality checks (format + lint + compile + opiner)"
 	@echo "  pre-commit           Run pre-commit hooks"
+
+ingest-nflverse:
+	@echo "Ingesting all NFLverse datasets..."
+	@echo "→ Ingesting ff_playerids (player ID crosswalk)"
+	uv run python -c "from src.ingest.nflverse.shim import load_nflverse; load_nflverse('ff_playerids')"
+	@echo "→ Ingesting weekly player stats (2025 season)"
+	uv run python -c "from src.ingest.nflverse.shim import load_nflverse; load_nflverse('weekly', seasons=[2025])"
+	@echo "→ Ingesting snap counts (2025 season)"
+	uv run python -c "from src.ingest.nflverse.shim import load_nflverse; load_nflverse('snap_counts', seasons=[2025])"
+	@echo "→ Ingesting fantasy opportunity (2025 season)"
+	uv run python -c "from src.ingest.nflverse.shim import load_nflverse; load_nflverse('ff_opportunity', seasons=[2025])"
+	@echo "✅ NFLverse ingestion complete"
 
 ingest-sheets:
 	@echo "Ingesting league sheets locally"
@@ -51,6 +64,7 @@ ingest-with-xref: dbt-xref
 	$(MAKE) ingest-ffanalytics
 
 ingest-all: dbt-xref
+	$(MAKE) ingest-nflverse
 	$(MAKE) ingest-sheets
 	$(MAKE) ingest-ffanalytics
 	$(MAKE) ingest-sleeper-players
