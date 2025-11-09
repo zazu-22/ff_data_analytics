@@ -8,7 +8,6 @@
 sqlglot_dialect: "duckdb"
 
 opinions_config:
-  ignore_opinions: ""
   ignore_files: {}
 
 files:
