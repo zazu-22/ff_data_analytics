@@ -1,4 +1,4 @@
-{{ config(materialized="table") }}
+{{ config(materialized="table", unique_key='player_id') }}
 
 /*
 Staging model for nflverse ff_playerids with deduplication logic.

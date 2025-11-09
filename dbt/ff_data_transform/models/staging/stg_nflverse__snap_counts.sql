@@ -1,4 +1,9 @@
-{{ config(materialized="view") }}
+{{
+    config(
+        materialized="view",
+        unique_key=['player_key', 'game_id', 'stat_name', 'provider', 'measure_domain', 'stat_kind']
+    )
+}}
 
 /*
 Stage nflverse snap counts with player_id crosswalk and long-form unpivot.
