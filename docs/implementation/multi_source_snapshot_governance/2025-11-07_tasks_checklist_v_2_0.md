@@ -66,9 +66,9 @@ ______________________________________________________________________
 
 **Sheets (5 models)**:
 
-- [ ] Update `stg_sheets__cap_space`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_sheets__cap_space`:
+  - [x] Replace `dt=*` with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
 - [ ] Update `stg_sheets__contracts_active`:
   - [ ] Replace `dt=*` with macro call using `latest_only` strategy
   - [ ] Test compilation and execution
@@ -591,6 +591,7 @@ ______________________________________________________________________
 ### DuckDB GCS Configuration
 
 - [ ] Document DuckDB GCS setup:
+
   ```sql
   INSTALL httpfs;
   LOAD httpfs;
@@ -598,11 +599,14 @@ ______________________________________________________________________
   SET gcs_access_key_id = '...';
   SET gcs_secret_access_key = '...';
   ```
+
 - [ ] Document test query:
+
   ```sql
   SELECT * FROM read_parquet('gs://ff-analytics/raw/nflverse/weekly/dt=*/weekly.parquet')
   LIMIT 10;
   ```
+
 - [ ] Document performance considerations (network latency, query pushdown)
 
 ### Migration Checklist

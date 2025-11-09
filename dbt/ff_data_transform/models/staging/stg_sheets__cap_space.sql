@@ -11,9 +11,18 @@
 with
     cap_raw as (
         select *
-        from {{ source("sheets_raw", "cap_space") }}
-        -- Get only the latest snapshot per franchise/season (dt partition)
-        qualify row_number() over (partition by gm_tab, season order by dt desc) = 1
+        from
+            read_parquet(
+                '{{ var("external_root", "data/raw") }}/commissioner/cap_space/dt=*/cap_space.parquet',
+                hive_partitioning = true
+            )
+        where
+            {{
+            snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/commissioner/cap_space/dt=*/*.parquet',
+                strategy='latest_only'
+            )
+        }}
     ),
 
     franchise_xref as (
