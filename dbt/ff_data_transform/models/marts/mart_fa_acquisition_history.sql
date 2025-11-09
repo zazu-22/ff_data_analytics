@@ -120,7 +120,21 @@ with
     )
 
 select
-    fa.*,
+    -- Base transaction details
+    fa.transaction_id_unique,
+    fa.transaction_date,
+    fa.season,
+    fa.period_type,
+    fa.week,
+    fa.player_id,
+    fa.player_key,
+    fa.player_name,
+    fa.position,
+    fa.to_franchise_id,
+    fa.to_franchise_name,
+    fa.bid_amount,
+    fa.contract_length,
+    fa.aav,
 
     -- Performance context (calendar-based L4 weeks - current season only)
     ppc_cal.fantasy_ppg_l4_weeks,

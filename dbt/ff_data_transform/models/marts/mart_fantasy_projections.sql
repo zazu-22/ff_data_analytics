@@ -34,7 +34,31 @@ with
     )
 
 select
-    rw.*,
+    -- All columns from mart_real_world_projections
+    rw.player_id,
+    rw.player_name,
+    rw.position,
+    rw.current_team,
+    rw.season,
+    rw.week,
+    rw.horizon,
+    rw.asof_date,
+    rw.provider,
+    rw.source_count,
+    rw.total_weight,
+    rw.completions,
+    rw.attempts,
+    rw.passing_yards,
+    rw.passing_tds,
+    rw.interceptions,
+    rw.rushing_attempts,
+    rw.rushing_yards,
+    rw.rushing_tds,
+    rw.targets,
+    rw.receptions,
+    rw.receiving_yards,
+    rw.receiving_tds,
+    rw.fumbles_lost,
 
     -- Fantasy points calculation (data-driven from dim_scoring_rule)
     -- Offensive scoring only (projections don't include IDP)

@@ -109,7 +109,18 @@ with
     )
 
 select
-    pr.*,
+    -- Base roster details
+    pr.franchise_id,
+    pr.player_key,
+    pr.player_name,
+    pr.position,
+    pr.cap_hit,
+    pr.projected_ppg_ros,
+    pr.projected_total_ros,
+    pr.team_depth_rank,
+    pr.league_rank_at_position,
+    pr.total_rostered_at_position,
+    pr.league_percentile_at_position,
 
     -- Benchmark comparisons
     pb.median_starter_ppg,

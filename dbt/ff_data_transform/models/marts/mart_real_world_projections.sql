@@ -72,5 +72,39 @@ with
         group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
     )
 
-select *
+select
+    -- Grain columns
+    player_id,
+    player_name,
+    position,
+    current_team,
+    season,
+    week,
+    horizon,
+    asof_date,
+    provider,
+    source_count,
+    total_weight,
+
+    -- Passing stats
+    completions,
+    attempts,
+    passing_yards,
+    passing_tds,
+    interceptions,
+
+    -- Rushing stats
+    rushing_attempts,
+    rushing_yards,
+    rushing_tds,
+
+    -- Receiving stats
+    targets,
+    receptions,
+    receiving_yards,
+    receiving_tds,
+
+    -- Turnovers
+    fumbles_lost
+
 from projections_wide

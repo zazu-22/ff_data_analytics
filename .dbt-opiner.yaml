@@ -4,6 +4,9 @@
 # File exclusions are handled here for portability and observability
 # Test files are excluded - they're not dbt project nodes
 
+# Critical: Specify DuckDB dialect for sqlglot parser
+sqlglot_dialect: "duckdb"
+
 opinions_config:
   ignore_opinions: ""
   ignore_files: {}

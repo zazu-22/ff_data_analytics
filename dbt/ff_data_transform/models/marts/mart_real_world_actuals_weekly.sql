@@ -73,7 +73,49 @@ with
     )
 
 select
-    p.*,
+    -- Base grain columns
+    p.player_id,
+    p.player_key,
+    p.season,
+    p.week,
+    p.season_type,
+    p.position,
+
+    -- Passing stats
+    p.completions,
+    p.attempts,
+    p.passing_yards,
+    p.passing_tds,
+    p.passing_interceptions,
+    p.passing_2pt_conversions,
+
+    -- Rushing stats
+    p.carries,
+    p.rushing_yards,
+    p.rushing_tds,
+    p.rushing_fumbles_lost,
+    p.rushing_2pt_conversions,
+
+    -- Receiving stats
+    p.targets,
+    p.receptions,
+    p.receiving_yards,
+    p.receiving_tds,
+    p.receiving_fumbles_lost,
+    p.receiving_2pt_conversions,
+
+    -- Defensive stats (IDP)
+    p.def_tackles_solo,
+    p.def_tackles_with_assist,
+    p.def_sacks,
+    p.def_interceptions,
+    p.def_fumbles_forced,
+    p.def_tds,
+    p.def_safeties,
+
+    -- Misc stats
+    p.sacks_suffered,
+    p.special_teams_tds,
 
     -- Player attributes (from dim_player)
     d.display_name,
