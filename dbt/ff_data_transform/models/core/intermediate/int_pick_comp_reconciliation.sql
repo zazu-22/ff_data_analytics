@@ -58,9 +58,7 @@ with
             comp_faad_transaction_id,
             'DIM_PICK' as source
         from {{ ref("dim_pick") }}
-        where
-            pick_type = 'compensatory'
-            and season <= {{ var("latest_completed_draft_season") }}
+        where pick_type = 'compensatory' and season <= {{ var("latest_completed_draft_season") }}
     ),
 
     -- Full outer join to find all comp picks from both sources
@@ -91,9 +89,7 @@ with
             faad.faad_award_sequence = dim.faad_chronological_seq as sequence_matches
 
         from faad_comp_awards faad
-        full outer join
-            dim_comp_picks dim
-            on faad.comp_faad_transaction_id = dim.comp_faad_transaction_id
+        full outer join dim_comp_picks dim on faad.comp_faad_transaction_id = dim.comp_faad_transaction_id
     ),
 
     reconciliation_status as (
@@ -127,8 +123,7 @@ with
                 then
                     'ERROR: FAAD awarded comp pick but missing from dim_pick - potential data entry error or missing transaction'
                 when not in_faad and in_dim_pick
-                then
-                    'ERROR: Comp pick in dim_pick but no FAAD award record - check transaction history'
+                then 'ERROR: Comp pick in dim_pick but no FAAD award record - check transaction history'
                 else 'UNKNOWN STATUS'
             end as diagnostic_message,
 

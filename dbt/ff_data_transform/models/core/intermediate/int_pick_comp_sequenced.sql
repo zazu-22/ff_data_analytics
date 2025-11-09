@@ -49,9 +49,7 @@ with
             ) as faad_chronological_seq,
 
             -- Slot number = 12 (base picks) + chronological sequence
-            12 + row_number() over (
-                partition by comp_season, comp_round order by faad_award_sequence
-            ) as slot_number
+            12 + row_number() over (partition by comp_season, comp_round order by faad_award_sequence) as slot_number
 
         from comp_registry
     ),
@@ -59,11 +57,7 @@ with
     comp_picks as (
         select
             -- Pick ID format: YYYY_R#_P##
-            comp_season
-            || '_R'
-            || comp_round
-            || '_P'
-            || lpad(slot_number::varchar, 2, '0') as pick_id,
+            comp_season || '_R' || comp_round || '_P' || lpad(slot_number::varchar, 2, '0') as pick_id,
 
             comp_season as season,
             comp_round as round,
@@ -83,12 +77,12 @@ with
             comp_faad_transaction_id,
             comp_round_threshold,
             faad_chronological_seq,
+            contract_apy,
 
             -- Notes with player context and validation
             case
                 when not is_aav_round_valid
-                then
-                    'Comp for ' || comp_source_player || ' | ' || aav_validation_message
+                then 'Comp for ' || comp_source_player || ' | ' || aav_validation_message
                 else 'Comp for ' || comp_source_player
             end as notes
 

@@ -19,60 +19,30 @@ League scoring: Half-PPR + IDP (data-driven from seed)
 with
     real_world as (select * from {{ ref("mart_real_world_actuals_weekly") }}),
 
-    scoring as (
-        select stat_name, points_per_unit
-        from {{ ref("dim_scoring_rule") }}
-        where is_current = true
-    ),
+    scoring as (select stat_name, points_per_unit from {{ ref("dim_scoring_rule") }} where is_current = true),
 
     -- Pivot scoring rules into a single row for easy lookup
     scoring_pivoted as (
         select
-            max(
-                case when stat_name = 'pass_yard_point' then points_per_unit end
-            ) as pass_yard_point,
+            max(case when stat_name = 'pass_yard_point' then points_per_unit end) as pass_yard_point,
             max(case when stat_name = 'pass_td' then points_per_unit end) as pass_td,
             max(case when stat_name = 'pass_int' then points_per_unit end) as pass_int,
-            max(
-                case when stat_name = 'pass_two_pt' then points_per_unit end
-            ) as pass_two_pt,
-            max(
-                case when stat_name = 'rush_yard_point' then points_per_unit end
-            ) as rush_yard_point,
+            max(case when stat_name = 'pass_two_pt' then points_per_unit end) as pass_two_pt,
+            max(case when stat_name = 'rush_yard_point' then points_per_unit end) as rush_yard_point,
             max(case when stat_name = 'rush_td' then points_per_unit end) as rush_td,
-            max(
-                case when stat_name = 'rush_lost_fumble' then points_per_unit end
-            ) as rush_lost_fumble,
-            max(
-                case when stat_name = 'rush_two_pt' then points_per_unit end
-            ) as rush_two_pt,
-            max(
-                case when stat_name = 'rec_reception' then points_per_unit end
-            ) as rec_reception,
-            max(
-                case when stat_name = 'rec_yard_point' then points_per_unit end
-            ) as rec_yard_point,
+            max(case when stat_name = 'rush_lost_fumble' then points_per_unit end) as rush_lost_fumble,
+            max(case when stat_name = 'rush_two_pt' then points_per_unit end) as rush_two_pt,
+            max(case when stat_name = 'rec_reception' then points_per_unit end) as rec_reception,
+            max(case when stat_name = 'rec_yard_point' then points_per_unit end) as rec_yard_point,
             max(case when stat_name = 'rec_td' then points_per_unit end) as rec_td,
-            max(
-                case when stat_name = 'rec_lost_fumble' then points_per_unit end
-            ) as rec_lost_fumble,
-            max(
-                case when stat_name = 'rec_two_pt' then points_per_unit end
-            ) as rec_two_pt,
-            max(
-                case when stat_name = 'idp_tackle' then points_per_unit end
-            ) as idp_tackle,
+            max(case when stat_name = 'rec_lost_fumble' then points_per_unit end) as rec_lost_fumble,
+            max(case when stat_name = 'rec_two_pt' then points_per_unit end) as rec_two_pt,
+            max(case when stat_name = 'idp_tackle' then points_per_unit end) as idp_tackle,
             max(case when stat_name = 'idp_sack' then points_per_unit end) as idp_sack,
-            max(
-                case when stat_name = 'idp_interception' then points_per_unit end
-            ) as idp_interception,
-            max(
-                case when stat_name = 'idp_forced_fumble' then points_per_unit end
-            ) as idp_forced_fumble,
+            max(case when stat_name = 'idp_interception' then points_per_unit end) as idp_interception,
+            max(case when stat_name = 'idp_forced_fumble' then points_per_unit end) as idp_forced_fumble,
             max(case when stat_name = 'idp_td' then points_per_unit end) as idp_td,
-            max(
-                case when stat_name = 'idp_safety' then points_per_unit end
-            ) as idp_safety
+            max(case when stat_name = 'idp_safety' then points_per_unit end) as idp_safety
         from scoring
     )
 

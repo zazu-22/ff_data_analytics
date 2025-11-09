@@ -40,9 +40,7 @@ with
             contract_total,
             contract_years,
             -- Calculate average annual value
-            case
-                when contract_years > 0 then contract_total / contract_years else 0
-            end as contract_apy
+            case when contract_years > 0 then contract_total / contract_years else 0 end as contract_apy
 
         from {{ ref("stg_sheets__transactions") }}
         where
@@ -67,10 +65,7 @@ with
             case
                 -- Historical format: "YYYY Rnd" (e.g., "2024 1st")
                 when regexp_matches(faad_compensation_text, '^\d{4} \d')
-                then
-                    cast(
-                        regexp_extract(faad_compensation_text, '^(\d{4})', 1) as integer
-                    )
+                then cast(regexp_extract(faad_compensation_text, '^(\d{4})', 1) as integer)
 
                 -- Prospective format: "Rnd to Owner" - draft is next year
                 when regexp_matches(faad_compensation_text, '^\d(?:st|nd|rd|th) to')
@@ -104,13 +99,7 @@ with
             -- Determine expected comp round based on contract AAV (per league
             -- constitution)
             case
-                when contract_apy >= 25
-                then 1
-                when contract_apy >= 15
-                then 2
-                when contract_apy >= 10
-                then 3
-                else 4  -- Below R3 threshold
+                when contract_apy >= 25 then 1 when contract_apy >= 15 then 2 when contract_apy >= 10 then 3 else 4  -- Below R3 threshold
             end as comp_round_expected_by_aav,
 
             -- Comp round threshold description
@@ -128,9 +117,7 @@ with
     ),
 
     -- Get franchise information for comp recipient
-    franchise_mapping as (
-        select franchise_id, owner_name from {{ ref("dim_franchise") }}
-    ),
+    franchise_mapping as (select franchise_id, owner_name from {{ ref("dim_franchise") }}),
 
     validated_comps as (
         select
@@ -157,8 +144,7 @@ with
             end as aav_validation_message
 
         from parsed_comps pc
-        left join
-            franchise_mapping fm on pc.comp_awarded_to_franchise_id = fm.franchise_id
+        left join franchise_mapping fm on pc.comp_awarded_to_franchise_id = fm.franchise_id
         where
             -- Filter to valid parsed records only
             pc.comp_season is not null and pc.comp_round is not null
@@ -169,14 +155,13 @@ select
     transaction_date,
     comp_season,
     comp_round,
+    faad_award_sequence,
     comp_source_player,
     comp_source_player_id,
     signing_franchise_id,
 
     -- Use verified franchise_id from franchise mapping, fallback to transaction data
-    coalesce(
-        comp_awarded_to_franchise_id_verified, comp_awarded_to_franchise_id
-    ) as comp_awarded_to_franchise_id,
+    coalesce(comp_awarded_to_franchise_id_verified, comp_awarded_to_franchise_id) as comp_awarded_to_franchise_id,
 
     comp_awarded_to_owner_name,
     comp_awarded_to_owner_verified,

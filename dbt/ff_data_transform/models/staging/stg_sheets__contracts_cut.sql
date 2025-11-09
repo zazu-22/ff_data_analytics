@@ -62,9 +62,7 @@ with
             dt as snapshot_date
 
         from
-            read_parquet(
-                '{{ var("external_root", "data/raw") }}/commissioner/contracts_cut/dt=*/contracts_cut.parquet'
-            )
+            read_parquet('{{ var("external_root", "data/raw") }}/commissioner/contracts_cut/dt=*/contracts_cut.parquet')
         where
             {{
                 latest_snapshot_only(
@@ -102,16 +100,10 @@ with
 
     with_alias as (
         -- Apply name alias corrections (typos → canonical names)
-        select
-            wf.*,
-            coalesce(
-                alias.canonical_name, wf.player_name_normalized
-            ) as player_name_canonical
+        select wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
         from with_franchise wf
-        left join
-            {{ ref("dim_name_alias") }} alias
-            on wf.player_name_normalized = alias.alias_name
+        left join {{ ref("dim_name_alias") }} alias on wf.player_name_normalized = alias.alias_name
     ),
 
     transaction_player_ids as (
@@ -142,9 +134,7 @@ with
                 then 100
 
                 -- Generic defensive positions map to specific ones
-                when
-                    wa.position in ('DB', 'DL', 'LB')
-                    and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
+                when wa.position in ('DB', 'DL', 'LB') and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
                 then 80
 
                 -- Active player check (exclude retired players)
@@ -176,11 +166,7 @@ with
         where match_score > 0
         group by player_name_canonical, source_position
         qualify
-            row_number() over (
-                partition by player_name_canonical, source_position
-                order by max(match_score) desc
-            )
-            = 1
+            row_number() over (partition by player_name_canonical, source_position order by max(match_score) desc) = 1
     ),
 
     with_player_id as (
@@ -197,9 +183,7 @@ with
             xwalk.canonical_name
 
         from with_alias wa
-        left join
-            transaction_player_ids txn
-            on lower(trim(wa.player_name_canonical)) = txn.player_name_lower
+        left join transaction_player_ids txn on lower(trim(wa.player_name_canonical)) = txn.player_name_lower
         left join
             best_crosswalk_match xwalk
             on wa.player_name_canonical = xwalk.player_name_canonical

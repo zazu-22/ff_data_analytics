@@ -120,7 +120,7 @@ repos:
         name: sqlfmt (SQL formatting)
         files: ^dbt/ff_data_transform/models/.*\.sql$
         exclude: ^dbt/ff_data_transform/tests/.*\.sql$
-        args: [--dialect, polyglot] # Polyglot mode supports DuckDB
+        args: [--dialect, polyglot, --config, pyproject.toml] # Polyglot mode supports DuckDB
 
   # SQL linting (selective - excludes DuckDB-specific syntax files)
   - repo: https://github.com/sqlfluff/sqlfluff
@@ -130,7 +130,7 @@ repos:
       # Excludes staging models and files with DuckDB-specific syntax
       - id: sqlfluff-lint
         name: sqlfluff-lint (dbt SQL - selective)
-        entry: bash -c 'DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" EXTERNAL_ROOT="$(pwd)/data/raw" sqlfluff lint "$@"' --
+        entry: bash -c 'DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" EXTERNAL_ROOT="$(pwd)/data/raw" uv run sqlfluff lint "$@"' --
         language: system
         files: ^dbt/ff_data_transform/models/.*\.(sql|sql\.j2)$
         exclude: |

@@ -24,9 +24,12 @@ from __future__ import annotations
 import csv
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import polars as pl
+
+from ff_analytics_utils.player_xref import get_player_xref
 
 _FALSE_CONDITION_MARKERS = {
     "",
@@ -1023,11 +1026,7 @@ def _map_player_names(player_df: pl.DataFrame) -> pl.DataFrame:
         DataFrame with added player_id column (-1 for unmapped)
 
     """
-    xref_path = Path("dbt/ff_data_transform/seeds/dim_player_id_xref.csv")
-    if not xref_path.exists():
-        raise FileNotFoundError(f"dim_player_id_xref seed not found at {xref_path}")
-
-    xref = pl.read_csv(xref_path)
+    xref = _player_xref().clone()
     has_position = "Position" in player_df.columns
 
     # Apply name aliases
@@ -1064,6 +1063,19 @@ def _map_player_names(player_df: pl.DataFrame) -> pl.DataFrame:
         ).drop(["player_id_exact", "player_id_fuzzy", "player_normalized"])
 
     return player_df
+
+
+@lru_cache(maxsize=1)
+def _player_xref() -> pl.DataFrame:
+    """Load the canonical player crosswalk, caching per process."""
+    try:
+        return get_player_xref()
+    except Exception as exc:  # pragma: no cover - depends on local env
+        raise RuntimeError(
+            "Unable to load dim_player_id_xref. Ensure `make dbt-xref` has been run "
+            "or set PLAYER_XREF_PARQUET_ROOT to a directory containing "
+            "nflverse/ff_playerids parquet snapshots."
+        ) from exc
 
 
 def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:

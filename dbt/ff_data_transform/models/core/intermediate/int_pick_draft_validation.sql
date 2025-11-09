@@ -25,7 +25,7 @@ Key Validation:
 - Flags any incomplete or over-complete rounds
 */
 with
-    base_picks_by_round as (
+    actual_picks_by_round as (
         select
             season,
             round,
@@ -33,10 +33,39 @@ with
             min(slot_number) as first_slot,
             max(slot_number) as last_slot,
             count(*) filter (where slot_number <= 12) as base_picks_count,
-            count(*) filter (where slot_number > 12) as comp_picks_count
+            count(*) filter (where slot_number > 12) as comp_picks_count,
+            'ACTUAL' as pick_source
+        from {{ ref("int_pick_draft_actual") }}
+        group by season, round
+    ),
+
+    generated_picks_by_round as (
+        select
+            season,
+            round,
+            count(*) as picks_in_round,
+            min(slot_number) as first_slot,
+            max(slot_number) as last_slot,
+            count(*) filter (where slot_number <= 12) as base_picks_count,
+            count(*) filter (where slot_number > 12) as comp_picks_count,
+            'GENERATED' as pick_source
         from {{ ref("int_pick_base") }}
         where season <= {{ var("latest_completed_draft_season") }}
         group by season, round
+    ),
+
+    combined as (
+        select
+            coalesce(a.season, g.season) as season,
+            coalesce(a.round, g.round) as round,
+            coalesce(a.picks_in_round, g.picks_in_round) as picks_in_round,
+            coalesce(a.first_slot, g.first_slot) as first_slot,
+            coalesce(a.last_slot, g.last_slot) as last_slot,
+            coalesce(a.base_picks_count, g.base_picks_count) as base_picks_count,
+            coalesce(a.comp_picks_count, g.comp_picks_count) as comp_picks_count,
+            coalesce(a.pick_source, g.pick_source) as pick_source
+        from actual_picks_by_round a
+        full outer join generated_picks_by_round g on a.season = g.season and a.round = g.round
     ),
 
     validation_flags as (
@@ -48,11 +77,10 @@ with
             last_slot,
             base_picks_count,
             comp_picks_count,
+            pick_source,
 
-            -- Validation: Must have exactly 12 base picks
             base_picks_count = 12 as has_complete_base_picks,
 
-            -- Validation status
             case
                 when base_picks_count < 12
                 then 'INCOMPLETE_BASE_PICKS'
@@ -61,7 +89,6 @@ with
                 else 'VALID'
             end as validation_status,
 
-            -- Diagnostic message
             case
                 when base_picks_count < 12
                 then
@@ -78,12 +105,9 @@ with
                     || base_picks_count::varchar
                     || ')'
                 else 'Complete: 12 base picks present'
-            end as validation_message,
+            end as validation_message
 
-            -- Source of picks (generated vs actual)
-            'GENERATED' as pick_source  -- v2: Will be 'ACTUAL' when draft transactions available
-
-        from base_picks_by_round
+        from combined
     )
 
 select

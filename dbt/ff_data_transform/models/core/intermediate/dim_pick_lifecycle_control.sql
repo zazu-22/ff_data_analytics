@@ -48,15 +48,9 @@ with
     ),
 
     actual_picks_created as (
-        -- Actual picks from drafts (future: will come from rookie_draft_selection)
-        -- For now, this is empty since we don't have actual draft data yet
-        select
-            season,
-            round,
-            cast(null as varchar) as actual_pick_id,
-            cast(null as integer) as draft_transaction_id,
-            cast(null as timestamp) as created_at
-        where 1 = 0  -- Empty until actual draft data available
+        -- Actual picks from completed drafts (rookie_draft_selection transactions)
+        select season, round, pick_id as actual_pick_id, draft_transaction_id, draft_timestamp as created_at
+        from {{ ref("int_pick_draft_actual") }}
     ),
 
     -- Match TBD picks to their actual pick replacements
@@ -66,16 +60,12 @@ with
             tbd.tbd_pick_id,
             tbd.season,
             tbd.round,
+            tbd.created_at,
             act.actual_pick_id as superseded_by_pick_id,
             act.created_at as superseded_at,
-            case
-                when act.actual_pick_id is not null then 'SUPERSEDED' else 'ACTIVE_TBD'
-            end as lifecycle_state
+            case when act.actual_pick_id is not null then 'SUPERSEDED' else 'ACTIVE_TBD' end as lifecycle_state
         from tbd_picks_created tbd
-        left join
-            actual_picks_created act
-            on tbd.season = act.season
-            and tbd.round = act.round
+        left join actual_picks_created act on tbd.season = act.season and tbd.round = act.round
     )
 
 select
@@ -89,8 +79,7 @@ select
 
     -- Audit flag for transactions still referencing TBD
     case
-        when lifecycle_state = 'SUPERSEDED'
-        then 'WARN: Transactions should migrate to ' || superseded_by_pick_id
+        when lifecycle_state = 'SUPERSEDED' then 'WARN: Transactions should migrate to ' || superseded_by_pick_id
     end as migration_note,
 
     -- v2 metadata

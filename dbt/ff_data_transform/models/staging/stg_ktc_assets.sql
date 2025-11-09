@@ -34,28 +34,12 @@ with
             positional_rank,
             market_scope,
             asof_date
-        from
-            read_parquet(
-                '{{ var("external_root", "data/raw") }}/ktc/players/dt=*/*.parquet',
-                hive_partitioning = true
-            )
+        from read_parquet('{{ var("external_root", "data/raw") }}/ktc/players/dt=*/*.parquet', hive_partitioning = true)
     ),
     picks_raw as (
         select
-            pick_name,
-            draft_year,
-            pick_tier,
-            pick_round,
-            asset_type,
-            rank,
-            value as ktc_value,
-            market_scope,
-            asof_date
-        from
-            read_parquet(
-                '{{ var("external_root", "data/raw") }}/ktc/picks/dt=*/*.parquet',
-                hive_partitioning = true
-            )
+            pick_name, draft_year, pick_tier, pick_round, asset_type, rank, value as ktc_value, market_scope, asof_date
+        from read_parquet('{{ var("external_root", "data/raw") }}/ktc/picks/dt=*/*.parquet', hive_partitioning = true)
     ),
     -- Map player names to canonical player_id via crosswalk
     players_mapped as (
@@ -91,16 +75,13 @@ with
             {{ ref("dim_player_id_xref") }} xref
             on lower(trim(p.player_name)) = lower(trim(xref.merge_name))
             or lower(trim(p.player_name)) = lower(trim(xref.name))
-        left join
-            {{ ref("dim_name_alias") }} alias
-            on lower(trim(p.player_name)) = lower(trim(alias.alias_name))
+        left join {{ ref("dim_name_alias") }} alias on lower(trim(p.player_name)) = lower(trim(alias.alias_name))
         left join
             {{ ref("dim_player_id_xref") }} alias_xref
             on alias.canonical_name is not null
             and (
                 lower(trim(alias.canonical_name)) = lower(trim(alias_xref.name))
-                or regexp_replace(lower(trim(alias.canonical_name)), '[^0-9a-z]', '')
-                = alias_xref.merge_name
+                or regexp_replace(lower(trim(alias.canonical_name)), '[^0-9a-z]', '') = alias_xref.merge_name
             )
     ),
     -- Picks don't need player mapping, create compatible structure

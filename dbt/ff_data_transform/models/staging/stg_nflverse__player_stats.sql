@@ -111,8 +111,7 @@ with
         from
             -- noqa: disable=references.qualification
             read_parquet(
-                '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet',
-                hive_partitioning = true
+                '{{ var("external_root", "data/raw") }}/nflverse/weekly/dt=*/*.parquet', hive_partitioning = true
             ) w
         -- noqa: enable=references.qualification
         -- Data quality filters: Exclude records missing required identifiers
@@ -156,8 +155,7 @@ with
                 else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
             end as player_key
         from base
-        left join
-            {{ ref("dim_player_id_xref") }} xref on base.gsis_id_raw = xref.gsis_id
+        left join {{ ref("dim_player_id_xref") }} xref on base.gsis_id_raw = xref.gsis_id
     ),
     unpivoted as (
         -- Unpivot all stats to long form
@@ -1316,8 +1314,7 @@ with
         from unpivoted
         qualify
             row_number() over (
-                partition by
-                    player_key, game_id, stat_name, provider, measure_domain, stat_kind
+                partition by player_key, game_id, stat_name, provider, measure_domain, stat_kind
                 order by season desc, week desc
             )
             = 1

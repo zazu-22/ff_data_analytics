@@ -93,11 +93,7 @@ with
 
             -- Normalize horizon enum
             case
-                when horizon = 'weekly'
-                then 'weekly'
-                when horizon = 'full_season'
-                then 'full_season'
-                else 'unknown'
+                when horizon = 'weekly' then 'weekly' when horizon = 'full_season' then 'full_season' else 'unknown'
             end as horizon,
 
             provider,

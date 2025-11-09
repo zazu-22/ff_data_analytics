@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -65,6 +67,31 @@ def _maybe_stage_inline_gcs_key(tmp_dir: str | None = None) -> None:
         return
 
 
+@dataclass(frozen=True)
+class UriEntry:
+    """Simple representation of a filesystem entry returned by PyArrow."""
+
+    path: str
+    is_dir: bool
+
+
+def _normalize_uri(uri: str) -> str:
+    """Return absolute POSIX path for local URIs; leave GCS URIs untouched."""
+    if is_gcs_uri(uri):
+        return uri
+    return Path(uri).expanduser().resolve().as_posix()
+
+
+def _filesystem_and_path(uri: str) -> tuple[pafs.FileSystem, str]:
+    """Return PyArrow filesystem + normalized path for the given URI."""
+    if pafs is None:  # pragma: no cover
+        raise RuntimeError("pyarrow is required for filesystem access")
+
+    _maybe_stage_inline_gcs_key()
+    normalized = _normalize_uri(uri)
+    return pafs.FileSystem.from_uri(normalized)
+
+
 def write_parquet_any(dataframe: Any, dest_uri: str) -> str:
     """Write a DataFrame-like object to Parquet at `dest_uri`.
 
@@ -109,13 +136,7 @@ def write_parquet_any(dataframe: Any, dest_uri: str) -> str:
 
     # Create parent dirs for local files
     _ensure_local_dir_for_uri(dest_uri)
-
-    # Convert relative paths to absolute paths for PyArrow
-    # PyArrow's from_uri requires either a URI scheme or an absolute path
-    if not is_gcs_uri(dest_uri):
-        dest_uri = Path(dest_uri).expanduser().resolve().as_posix()
-
-    filesystem, normalized_path = pafs.FileSystem.from_uri(dest_uri)
+    filesystem, normalized_path = _filesystem_and_path(dest_uri)
     pq.write_table(table, normalized_path, filesystem=filesystem)
     return dest_uri
 
@@ -130,13 +151,36 @@ def write_text_sidecar(text: str, dest_uri: str) -> str:
 
     _maybe_stage_inline_gcs_key()
     _ensure_local_dir_for_uri(dest_uri)
-
-    # Convert relative paths to absolute paths for PyArrow
-    # PyArrow's from_uri requires either a URI scheme or an absolute path
-    if not is_gcs_uri(dest_uri):
-        dest_uri = Path(dest_uri).expanduser().resolve().as_posix()
-
-    filesystem, normalized_path = pafs.FileSystem.from_uri(dest_uri)
+    filesystem, normalized_path = _filesystem_and_path(dest_uri)
     with filesystem.open_output_stream(normalized_path) as out:
         out.write(text.encode("utf-8"))
     return dest_uri
+
+
+def read_parquet_any(src_uri: str, columns: Sequence[str] | None = None):
+    """Read a Parquet file (local or GCS) into a Polars DataFrame or Arrow table."""
+    if pa is None or pq is None or pafs is None:  # pragma: no cover
+        raise RuntimeError("pyarrow is required to read parquet files")
+
+    filesystem, normalized_path = _filesystem_and_path(src_uri)
+    table = pq.read_table(normalized_path, filesystem=filesystem, columns=columns)
+    try:
+        import polars as pl  # type: ignore
+
+        return pl.from_arrow(table)
+    except Exception:
+        return table
+
+
+def list_uri_contents(uri: str, recursive: bool = False) -> list[UriEntry]:
+    """List files/directories for a URI (local path or gs:// bucket)."""
+    if pafs is None:  # pragma: no cover
+        raise RuntimeError("pyarrow is required to list files")
+
+    filesystem, normalized_path = _filesystem_and_path(uri)
+    selector = pafs.FileSelector(normalized_path, recursive=recursive)
+    entries: list[UriEntry] = []
+    for info in filesystem.get_file_info(selector):
+        is_dir = info.type == pafs.FileType.Directory
+        entries.append(UriEntry(path=info.path, is_dir=is_dir))
+    return entries

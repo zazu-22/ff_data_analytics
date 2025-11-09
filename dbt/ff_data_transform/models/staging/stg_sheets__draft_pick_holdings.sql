@@ -42,10 +42,7 @@ with
             and raw.year between fran.season_start and fran.season_end
     ),
 
-    classified as (
-        select *, lower(coalesce(acquisition_note, '')) as acquisition_note_lower
-        from with_franchise
-    ),
+    classified as (select *, lower(coalesce(acquisition_note, '')) as acquisition_note_lower from with_franchise),
 
     enriched as (
         select
@@ -64,11 +61,7 @@ with
                 else 'unknown'
             end as pick_category,
             case
-                when c.source_type = 'trade_out'
-                then false
-                when c.condition_flag
-                then false
-                else true
+                when c.source_type = 'trade_out' then false when c.condition_flag then false else true
             end as is_current_holding,
             case
                 when c.acquisition_note_lower like 'compensation%'
@@ -81,9 +74,7 @@ with
             -- raw data
             -- These will need franchise mapping at query time if needed
             c.trade_recipient as trade_recipient_key,
-            coalesce(
-                nullif(c.acquisition_note, ''), split_part(c.gm, ' ', 1)
-            ) as acquisition_owner_key
+            coalesce(nullif(c.acquisition_note, ''), split_part(c.gm, ' ', 1)) as acquisition_owner_key
         from classified c
     )
 

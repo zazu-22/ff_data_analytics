@@ -79,8 +79,7 @@ with
                 else coalesce(base.pfr_player_id, 'UNKNOWN_' || base.game_id)
             end as player_key
         from base
-        left join
-            {{ ref("dim_player_id_xref") }} xref on base.pfr_player_id = xref.pfr_id
+        left join {{ ref("dim_player_id_xref") }} xref on base.pfr_player_id = xref.pfr_id
     ),
 
     unpivoted as (
@@ -189,8 +188,7 @@ with
         from unpivoted
         qualify
             row_number() over (
-                partition by
-                    player_key, game_id, stat_name, provider, measure_domain, stat_kind
+                partition by player_key, game_id, stat_name, provider, measure_domain, stat_kind
                 order by season desc, week desc
             )
             = 1

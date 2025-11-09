@@ -15,37 +15,21 @@ League scoring: Half-PPR (no IDP in projections)
 with
     real_world as (select * from {{ ref("mart_real_world_projections") }}),
 
-    scoring as (
-        select stat_name, points_per_unit
-        from {{ ref("dim_scoring_rule") }}
-        where is_current = true
-    ),
+    scoring as (select stat_name, points_per_unit from {{ ref("dim_scoring_rule") }} where is_current = true),
 
     -- Pivot scoring rules into a single row for easy lookup
     scoring_pivoted as (
         select
-            max(
-                case when stat_name = 'pass_yard_point' then points_per_unit end
-            ) as pass_yard_point,
+            max(case when stat_name = 'pass_yard_point' then points_per_unit end) as pass_yard_point,
             max(case when stat_name = 'pass_td' then points_per_unit end) as pass_td,
             max(case when stat_name = 'pass_int' then points_per_unit end) as pass_int,
-            max(
-                case when stat_name = 'rush_yard_point' then points_per_unit end
-            ) as rush_yard_point,
+            max(case when stat_name = 'rush_yard_point' then points_per_unit end) as rush_yard_point,
             max(case when stat_name = 'rush_td' then points_per_unit end) as rush_td,
-            max(
-                case when stat_name = 'rush_lost_fumble' then points_per_unit end
-            ) as rush_lost_fumble,
-            max(
-                case when stat_name = 'rec_reception' then points_per_unit end
-            ) as rec_reception,
-            max(
-                case when stat_name = 'rec_yard_point' then points_per_unit end
-            ) as rec_yard_point,
+            max(case when stat_name = 'rush_lost_fumble' then points_per_unit end) as rush_lost_fumble,
+            max(case when stat_name = 'rec_reception' then points_per_unit end) as rec_reception,
+            max(case when stat_name = 'rec_yard_point' then points_per_unit end) as rec_yard_point,
             max(case when stat_name = 'rec_td' then points_per_unit end) as rec_td,
-            max(
-                case when stat_name = 'rec_lost_fumble' then points_per_unit end
-            ) as rec_lost_fumble
+            max(case when stat_name = 'rec_lost_fumble' then points_per_unit end) as rec_lost_fumble
         from scoring
     )
 

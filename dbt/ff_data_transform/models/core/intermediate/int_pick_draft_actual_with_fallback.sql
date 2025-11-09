@@ -26,6 +26,21 @@ Key Logic:
 - Future: Conditional on validation.has_complete_base_picks
 */
 with
+    actual_picks as (
+        select
+            pick_id,
+            season,
+            round,
+            overall_pick,
+            slot_number,
+            pick_type,
+            'ACTUAL' as pick_source,
+            draft_transaction_id,
+            drafted_player_name as player_drafted,
+            drafted_by_franchise_name as drafted_by_franchise
+        from {{ ref("int_pick_draft_actual") }}
+    ),
+
     base_picks_generated as (
         -- Generated base picks (12 teams × 5 rounds)
         select
@@ -45,28 +60,32 @@ with
 
     validation as (select * from {{ ref("int_pick_draft_validation") }}),
 
-    -- Future: When actual draft data exists, add draft_picks_actual CTE here
-    -- and conditionally UNION based on validation.has_complete_base_picks
-    picks_with_metadata as (
-        select
-            bp.*, v.validation_status, v.validation_message, v.has_complete_base_picks
+    actual_with_validation as (
+        select ap.*, v.validation_status, v.validation_message, v.has_complete_base_picks
+        from actual_picks ap
+        left join validation v on ap.season = v.season and ap.round = v.round
+    ),
+
+    generated_with_validation as (
+        select bp.*, v.validation_status, v.validation_message, v.has_complete_base_picks
         from base_picks_generated bp
         left join validation v on bp.season = v.season and bp.round = v.round
+    ),
+
+    generated_fallback as (
+        -- Only include generated picks not already covered by actual data
+        select g.*
+        from generated_with_validation g
+        left join actual_picks ap on g.pick_id = ap.pick_id
+        where ap.pick_id is null
     )
 
-select
-    pick_id,
-    season,
-    round,
-    overall_pick,
-    slot_number,
-    pick_type,
-    pick_source,
-    draft_transaction_id,
-    player_drafted,
-    drafted_by_franchise,
-    validation_status,
-    validation_message
+select *
+from actual_with_validation
 
-from picks_with_metadata
+union all
+
+select *
+from generated_fallback
+
 order by season, round, slot_number

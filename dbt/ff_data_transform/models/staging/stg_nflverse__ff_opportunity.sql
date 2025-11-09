@@ -124,8 +124,7 @@ with
                 else coalesce(base.gsis_id_raw, 'UNKNOWN_' || base.game_id)
             end as player_key
         from base
-        left join
-            {{ ref("dim_player_id_xref") }} xref on base.gsis_id_raw = xref.gsis_id
+        left join {{ ref("dim_player_id_xref") }} xref on base.gsis_id_raw = xref.gsis_id
     ),
 
     unpivoted as (

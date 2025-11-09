@@ -14,9 +14,13 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from ff_analytics_utils.player_xref import get_player_xref
 
 if TYPE_CHECKING:
     from polars import DataFrame
@@ -46,7 +50,7 @@ DEFAULT_POSITIONS = "QB,RB,WR,TE,K,DST,DL,LB,DB"
 # Default file paths (relative to repo root)
 DEFAULT_OUT_DIR = "data/raw/ffanalytics"
 DEFAULT_WEIGHTS_CSV = "config/projections/ffanalytics_projection_weights_mapped.csv"
-DEFAULT_PLAYER_XREF = "dbt/ff_data_transform/seeds/dim_player_id_xref.csv"
+DEFAULT_PLAYER_XREF: str | None = None
 
 # Fantasy season constants
 FANTASY_SEASON_END_WEEK = 17  # Week 18 excluded (teams rest starters)
@@ -134,6 +138,26 @@ def _parse_manifest_from_stdout(
 # ============================================================================
 
 
+@contextmanager
+def _player_xref_csv(player_xref: str | None):
+    """Yield a CSV path containing the player xref, writing temp files as needed."""
+    if player_xref:
+        yield Path(player_xref)
+        return
+
+    if pl is None:
+        raise ImportError("polars is required to materialize the player xref CSV")
+
+    df = get_player_xref()
+    temp_dir = tempfile.TemporaryDirectory()
+    try:
+        csv_path = Path(temp_dir.name) / "player_xref.csv"
+        df.write_csv(csv_path)
+        yield csv_path
+    finally:
+        temp_dir.cleanup()
+
+
 def load_projections(
     sources: str | list[str] | None = None,
     positions: str | list[str] = DEFAULT_POSITIONS,
@@ -141,7 +165,7 @@ def load_projections(
     week: int = 0,
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
-    player_xref: str = DEFAULT_PLAYER_XREF,
+    player_xref: str | None = DEFAULT_PLAYER_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Load fantasy football projections with weighted consensus (single week).
@@ -188,54 +212,55 @@ def load_projections(
         raise FileNotFoundError(f"R script not found: {r_script}")
 
     # Build command
-    cmd = [
-        "Rscript",
-        str(r_script),
-        "--sources",
-        sources,
-        "--positions",
-        positions,
-        "--season",
-        str(season),
-        "--week",
-        str(week),
-        "--out_dir",
-        out_dir,
-        "--weights_csv",
-        weights_csv,
-        "--player_xref",
-        player_xref,
-    ]
+    with _player_xref_csv(player_xref) as resolved_xref:
+        cmd = [
+            "Rscript",
+            str(r_script),
+            "--sources",
+            sources,
+            "--positions",
+            positions,
+            "--season",
+            str(season),
+            "--week",
+            str(week),
+            "--out_dir",
+            out_dir,
+            "--weights_csv",
+            weights_csv,
+            "--player_xref",
+            str(resolved_xref),
+        ]
 
-    # Run R script
-    try:
-        result = subprocess.run(  # noqa: S603
-            cmd,
-            cwd=str(repo_root),
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=600,  # 10 minute timeout
-        )
+        # Run R script
+        try:
+            result = subprocess.run(  # noqa: S603
+                cmd,
+                cwd=str(repo_root),
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=600,  # 10 minute timeout
+            )
 
-        # Parse JSON manifest from stdout (last line)
-        manifest = _parse_manifest_from_stdout(result.stdout, season, week, sources)
+            # Parse JSON manifest from stdout (last line)
+            manifest = _parse_manifest_from_stdout(result.stdout, season, week, sources)
 
-        # Add stdout/stderr for debugging
-        manifest["stdout"] = result.stdout
-        manifest["stderr"] = result.stderr
+            # Add stdout/stderr for debugging
+            manifest["stdout"] = result.stdout
+            manifest["stderr"] = result.stderr
 
-        return manifest
+            return manifest
 
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"FFanalytics R script failed (exit code {e.returncode}):\n"
-            f"STDOUT: {e.stdout}\n"
-            f"STDERR: {e.stderr}"
-        ) from e
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(
+                f"FFanalytics R script failed (exit code {e.returncode}):\n"
+                f"STDOUT: {e.stdout}\n"
+                f"STDERR: {e.stderr}"
+            ) from e
 
-    except subprocess.TimeoutExpired as e:
-        raise RuntimeError(f"FFanalytics R script timed out after {e.timeout} seconds") from e
+        except subprocess.TimeoutExpired as e:
+            raise RuntimeError(f"FFanalytics R script timed out after {e.timeout} seconds") from e
 
 
 def _scrape_week_projections(
@@ -246,7 +271,7 @@ def _scrape_week_projections(
     staging_dir: Path,
     dt: str,
     weights_csv: str,
-    player_xref: str,
+    player_xref: str | None,
 ) -> tuple[list[DataFrame], list[DataFrame], list[int], list[tuple[int, str]]]:
     """Scrape projections for a single week.
 
@@ -295,7 +320,7 @@ def _scrape_week_projections(
 
         if generic_consensus.exists():
             generic_consensus.rename(consensus_file)
-            df_consensus = pl.read_parquet(consensus_file)
+            df_consensus = _coerce_numeric_columns(pl.read_parquet(consensus_file))
             all_consensus_dfs.append(df_consensus)
             print(f"✓ {len(df_consensus)} rows")
         else:
@@ -303,7 +328,8 @@ def _scrape_week_projections(
 
         if generic_raw.exists():
             generic_raw.rename(raw_file)
-            all_raw_dfs.append(pl.read_parquet(raw_file))
+            df_raw = _coerce_numeric_columns(pl.read_parquet(raw_file))
+            all_raw_dfs.append(df_raw)
 
         scraped_weeks.append(week)
     except Exception as e:
@@ -320,7 +346,7 @@ def load_projections_multi_week(
     positions: str | list[str] = DEFAULT_POSITIONS,
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
-    player_xref: str = DEFAULT_PLAYER_XREF,
+    player_xref: str | None = DEFAULT_PLAYER_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Load projections for multiple weeks (e.g., rest-of-season) in a single snapshot.
@@ -483,31 +509,25 @@ def load_projections_multi_week(
 
 
 def _get_current_week(season: int, duckdb_path: str | None = None) -> int:
-    """Determine current fantasy week from dim_schedule.
+    """Determine current fantasy week from dim_schedule, enforcing prerequisites.
 
-    Returns the week after the last completed week (games before today).
-    If dim_schedule unavailable or no weeks completed, returns 1.
-
-    Args:
-        season: NFL season year
-        duckdb_path: Path to DuckDB database (default: dbt/ff_data_transform/target/dev.duckdb)
-
-    Returns:
-        int: Current fantasy week number (1-17)
-
+    Raises when dim_schedule is missing so ingest order stays correct.
     """
-    if duckdb is None:
-        print("⚠️  DuckDB not available, defaulting to week 1")
-        return 1
+    if duckdb is None:  # pragma: no cover - requires duckdb dependency missing
+        raise RuntimeError("DuckDB is not available. Install duckdb before ingesting FFanalytics.")
 
-    if duckdb_path is None:
-        # Default to dbt project database
-        repo_root = _get_repo_root()
-        duckdb_path = str(repo_root / "dbt" / "ff_data_transform" / "target" / "dev.duckdb")
+    repo_root = _get_repo_root()
+    db_path = duckdb_path or str(repo_root / "dbt" / "ff_data_transform" / "target" / "dev.duckdb")
+
+    if not Path(db_path).exists():
+        raise RuntimeError(
+            "DuckDB target database not found. Run `uv run dbt run --select dim_schedule` "
+            "before executing `make ingest-ffanalytics`."
+        )
 
     try:
-        conn = duckdb.connect(duckdb_path, read_only=True)
-        result = conn.execute(
+        conn = duckdb.connect(db_path, read_only=True)
+        row = conn.execute(
             """
             SELECT MAX(week) as max_completed_week
             FROM dim_schedule
@@ -517,19 +537,23 @@ def _get_current_week(season: int, duckdb_path: str | None = None) -> int:
             [season],
         ).fetchone()
         conn.close()
+    except Exception as exc:  # pragma: no cover - DuckDB runtime failure
+        raise RuntimeError(
+            "Failed to query dim_schedule. Run `uv run dbt run --select dim_schedule` "
+            "before ingesting FFanalytics projections."
+        ) from exc
 
-        if result and result[0] is not None:
-            max_completed = result[0]
-            current_week = max_completed + 1
-            print(f"📅 Detected: Week {max_completed} completed, loading from week {current_week}")
-            return current_week
-        else:
-            print(f"⚠️  No completed weeks found for season {season}, defaulting to week 1")
-            return 1
+    if not row or row[0] is None:
+        raise RuntimeError(
+            "dim_schedule has no completed weeks for season "
+            f"{season}. Run `uv run dbt run --select dim_schedule` to refresh schedule data "
+            "before running `make ingest-ffanalytics`."
+        )
 
-    except Exception as e:
-        print(f"⚠️  Could not query dim_schedule: {e}, defaulting to week 1")
-        return 1
+    max_completed = int(row[0])
+    current_week = min(max_completed + 1, FANTASY_SEASON_END_WEEK)
+    print(f"📅 Detected: Week {max_completed} completed, loading from week {current_week}")
+    return current_week
 
 
 def load_projections_ros(
@@ -540,7 +564,7 @@ def load_projections_ros(
     positions: str | list[str] = DEFAULT_POSITIONS,
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
-    player_xref: str = DEFAULT_PLAYER_XREF,
+    player_xref: str | None = DEFAULT_PLAYER_XREF,
     duckdb_path: str | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -651,3 +675,13 @@ def load_projections_ros(
         player_xref=player_xref,
         **kwargs,
     )
+
+
+def _coerce_numeric_columns(df: pl.DataFrame) -> pl.DataFrame:
+    """Cast all numeric columns to Float64 to avoid schema drift when concatenating."""
+    if pl is None:
+        return df
+    numeric_cols = [name for name, dtype in df.schema.items() if dtype.is_numeric()]
+    if not numeric_cols:
+        return df
+    return df.with_columns([pl.col(col).cast(pl.Float64, strict=False) for col in numeric_cols])

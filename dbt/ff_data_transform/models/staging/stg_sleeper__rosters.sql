@@ -4,11 +4,7 @@
 with
     raw_rosters as (
         select *
-        from
-            read_parquet(
-                '{{ var("external_root") }}/sleeper/rosters/dt=*/rosters_*.parquet',
-                hive_partitioning = true
-            )
+        from read_parquet('{{ var("external_root") }}/sleeper/rosters/dt=*/rosters_*.parquet', hive_partitioning = true)
     ),
 
     latest_snapshot as (select max(dt) as max_dt from raw_rosters),
@@ -21,12 +17,7 @@ with
     ),
 
     player_xref as (
-        select
-            player_id,
-            mfl_id,
-            sleeper_id,
-            coalesce(name, merge_name) as player_name,
-            position as xref_position
+        select player_id, mfl_id, sleeper_id, coalesce(name, merge_name) as player_name, position as xref_position
         from {{ ref("dim_player_id_xref") }}
     ),
 
@@ -42,9 +33,7 @@ with
             xref.player_name,
             xref.xref_position
         from expanded e
-        left join
-            player_xref xref
-            on xref.sleeper_id = try_cast(e.sleeper_player_id as integer)
+        left join player_xref xref on xref.sleeper_id = try_cast(e.sleeper_player_id as integer)
     )
 
 select

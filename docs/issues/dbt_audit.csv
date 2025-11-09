@@ -1,0 +1,7 @@
+dbt_project_name,severity,total_evaluated,passed,failed,percentage_passed
+ff_data_transform,must,266,191,75,71.80451127819549
+ff_data_transform,should,89,42,47,47.19101123595505
+
+dbt_project_name,severity,total_evaluated,passed,failed,percentage_passed
+ff_data_transform,must,269,193,76,71.74721189591078
+ff_data_transform,should,89,42,47,47.19101123595505

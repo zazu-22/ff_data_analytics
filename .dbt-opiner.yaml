@@ -6,6 +6,7 @@
 
 opinions_config:
   ignore_opinions: ""
+  ignore_files: {}
 
 files:
   sql: .*/dbt/ff_data_transform/(models|macros|snapshots)/.*\.sql$

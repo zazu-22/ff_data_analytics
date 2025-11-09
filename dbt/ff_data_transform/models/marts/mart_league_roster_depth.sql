@@ -8,17 +8,10 @@ Purpose: Provide league-wide context for FA target evaluation
 */
 with
     current_rosters as (
-        select
-            c.franchise_id,
-            c.player_id as player_key,
-            d.display_name as player_name,
-            d.position,
-            c.cap_hit
+        select c.franchise_id, c.player_id as player_key, d.display_name as player_name, d.position, c.cap_hit
         from {{ ref("stg_sheets__contracts_active") }} c
         inner join {{ ref("dim_player") }} d on c.player_id = d.player_id
-        where
-            c.obligation_year = year(current_date)
-            and d.position in ('QB', 'RB', 'WR', 'TE')
+        where c.obligation_year = year(current_date) and d.position in ('QB', 'RB', 'WR', 'TE')
     ),
 
     projections_ros as (
@@ -33,9 +26,7 @@ with
             and week > (
                 select max(week)
                 from {{ ref("dim_schedule") }}
-                where
-                    season = year(current_date)
-                    and cast(game_date as date) < current_date
+                where season = year(current_date) and cast(game_date as date) < current_date
             )
             and horizon = 'weekly'
         group by player_id
@@ -53,8 +44,7 @@ with
 
             -- Rank within franchise (depth chart)
             row_number() over (
-                partition by r.franchise_id, r.position
-                order by coalesce(p.projected_ppg_ros, 0.0) desc
+                partition by r.franchise_id, r.position order by coalesce(p.projected_ppg_ros, 0.0) desc
             ) as team_depth_rank,
 
             -- Rank across entire league
@@ -74,36 +64,48 @@ with
         left join projections_ros p on r.player_key = p.player_key
     ),
 
-    position_benchmarks as (
-        -- Calculate key benchmarks for each position
+    starter_stats as (
         select
             position,
+            percentile_cont(0.5) within group (order by projected_ppg_ros desc) as median_starter_ppg,
+            percentile_cont(0.25) within group (order by projected_ppg_ros desc) as weak_starter_ppg
+        from position_rankings
+        where league_rank_at_position <= 12
+        group by position
+    ),
 
-            -- Starter benchmarks (top players per league rules)
-            percentile_cont(0.5) within group (order by projected_ppg_ros desc) filter (
-                where league_rank_at_position <= 12
-            ) as median_starter_ppg,
-            percentile_cont(0.25) within group (
-                order by projected_ppg_ros desc
-            ) filter (where league_rank_at_position <= 12) as weak_starter_ppg,
+    flex_stats as (
+        select position, percentile_cont(0.5) within group (order by projected_ppg_ros desc) as median_flex_ppg
+        from position_rankings
+        where league_rank_at_position between 13 and 24
+        group by position
+    ),
 
-            -- FLEX benchmarks (next tier of RB/WR/TE)
-            percentile_cont(0.5) within group (order by projected_ppg_ros desc) filter (
-                where league_rank_at_position between 13 and 24
-            ) as median_flex_ppg,
-
-            -- Overall median
-            percentile_cont(0.5) within group (
-                order by projected_ppg_ros
-            ) as median_rostered_ppg,
-
-            -- Replacement level (bottom quartile of rostered players)
-            percentile_cont(0.75) within group (
-                order by projected_ppg_ros
-            ) as replacement_level_ppg
-
+    median_rostered_stats as (
+        select position, percentile_cont(0.5) within group (order by projected_ppg_ros) as median_rostered_ppg
         from position_rankings
         group by position
+    ),
+
+    replacement_level_stats as (
+        select position, percentile_cont(0.75) within group (order by projected_ppg_ros) as replacement_level_ppg
+        from position_rankings
+        group by position
+    ),
+
+    position_benchmarks as (
+        select
+            pr.position,
+            ss.median_starter_ppg,
+            ss.weak_starter_ppg,
+            fs.median_flex_ppg,
+            mr.median_rostered_ppg,
+            rl.replacement_level_ppg
+        from (select distinct position from position_rankings) pr
+        left join starter_stats ss on pr.position = ss.position
+        left join flex_stats fs on pr.position = fs.position
+        left join median_rostered_stats mr on pr.position = mr.position
+        left join replacement_level_stats rl on pr.position = rl.position
     )
 
 select

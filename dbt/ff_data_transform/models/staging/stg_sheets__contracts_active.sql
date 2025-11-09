@@ -57,10 +57,7 @@ with
             -- Snapshot metadata
             dt as snapshot_date
 
-        from
-            read_parquet(
-                '{{ var("external_root", "data/raw") }}/commissioner/contracts_active/dt=*/*.parquet'
-            )
+        from read_parquet('{{ var("external_root", "data/raw") }}/commissioner/contracts_active/dt=*/*.parquet')
         where
             {{
                 latest_snapshot_only(
@@ -100,25 +97,16 @@ with
 
     with_alias as (
         -- Apply name alias corrections (typos → canonical names)
-        select
-            wf.*,
-            coalesce(
-                alias.canonical_name, wf.player_name_normalized
-            ) as player_name_canonical
+        select wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
         from with_franchise wf
-        left join
-            {{ ref("dim_name_alias") }} alias
-            on wf.player_name_normalized = alias.alias_name
+        left join {{ ref("dim_name_alias") }} alias on wf.player_name_normalized = alias.alias_name
     ),
 
     with_defense as (
         -- Map defense names to team identifiers
         -- Defenses can be in D/ST, BN, or IDP BN roster slots
-        select
-            wa.*,
-            team.team_abbr as defense_team_abbr,
-            coalesce(team.team_abbr is not null, false) as is_defense
+        select wa.*, team.team_abbr as defense_team_abbr, coalesce(team.team_abbr is not null, false) as is_defense
 
         from with_alias wa
         left join {{ ref("dim_team") }} team on wa.player_name = team.team_name
@@ -128,8 +116,7 @@ with
         -- Get authoritative player_id from transaction history with position info
         -- Need position to disambiguate players with same name (e.g., Josh Allen QB
         -- vs DB)
-        select distinct
-            lower(trim(player_name)) as player_name_lower, player_id, position
+        select distinct lower(trim(player_name)) as player_name_lower, player_id, position
         from {{ ref("fact_league_transactions") }}
         where asset_type = 'player' and player_id is not null
     ),
@@ -167,13 +154,9 @@ with
                 then 90
 
                 -- IDP slots must be defensive
-                when
-                    wd.roster_slot = 'IDP BN'
-                    and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
+                when wd.roster_slot = 'IDP BN' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
                 then 80
-                when
-                    wd.roster_slot = 'IDP TAXI'
-                    and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
+                when wd.roster_slot = 'IDP TAXI' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
                 then 80
                 when wd.roster_slot = 'DB' and xref.position in ('DB', 'CB', 'S')
                 then 100
@@ -183,9 +166,7 @@ with
                 then 100
 
                 -- BN, TAXI, IR can be any position - prefer offensive
-                when
-                    wd.roster_slot in ('BN', 'TAXI', 'IR')
-                    and xref.position in ('QB', 'RB', 'WR', 'TE', 'K')
+                when wd.roster_slot in ('BN', 'TAXI', 'IR') and xref.position in ('QB', 'RB', 'WR', 'TE', 'K')
                 then 50
                 when wd.roster_slot in ('BN', 'TAXI', 'IR')
                 then 25
@@ -216,12 +197,7 @@ with
         from crosswalk_candidates
         where match_score > 0
         group by player_name_canonical, roster_slot
-        qualify
-            row_number() over (
-                partition by player_name_canonical, roster_slot
-                order by max(match_score) desc
-            )
-            = 1
+        qualify row_number() over (partition by player_name_canonical, roster_slot order by max(match_score) desc) = 1
     ),
 
     with_player_id as (
@@ -232,11 +208,7 @@ with
             -- Cascading player_id resolution:
             -- 1. Crosswalk (canonical player_id from dim_player_id_xref)
             -- 2. Transaction history (fallback only, may have stale IDs)
-            case
-                when wd.is_defense
-                then null
-                else coalesce(xwalk.player_id, txn.player_id)
-            end as player_id,
+            case when wd.is_defense then null else coalesce(xwalk.player_id, txn.player_id) end as player_id,
 
             xwalk.mfl_id,
             xwalk.canonical_name
@@ -280,19 +252,13 @@ with
             wd.player_name = ''  -- Keep all empty player name rows (don't deduplicate)
             or row_number() over (
                 partition by
-                    wd.player_name_canonical,
-                    wd.roster_slot,
-                    wd.gm_full_name,
-                    wd.obligation_year,
-                    wd.snapshot_date
+                    wd.player_name_canonical, wd.roster_slot, wd.gm_full_name, wd.obligation_year, wd.snapshot_date
                 order by
                     -- Prefer crosswalk-based player_id (authoritative mfl_id from
                     -- nflverse)
                     case when xwalk.player_id is not null then 1 else 2 end,
                     -- Tiebreaker: prefer offensive positions for flexible slots
-                    case
-                        when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2
-                    end
+                    case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
             )
             = 1
     ),
@@ -328,12 +294,7 @@ with
                     || '_'
                     || cast(
                         row_number() over (
-                            partition by
-                                franchise_id,
-                                roster_slot,
-                                obligation_year,
-                                snapshot_date
-                            order by cap_hit desc
+                            partition by franchise_id, roster_slot, obligation_year, snapshot_date order by cap_hit desc
                         ) as varchar
                     )
                 else coalesce(player_name, 'UNKNOWN_PLAYER')

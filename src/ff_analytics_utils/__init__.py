@@ -1,3 +1,8 @@
+from .duckdb_helper import (
+    fetch_table_as_polars,
+    get_duckdb_connection,
+    resolve_duckdb_path,
+)
 from .google_drive_helper import (
     build_drive,
     ensure_folder,
@@ -10,6 +15,7 @@ from .google_drive_helper import (
     move_file_to_folder,
     parse_rfc3339,
 )
+from .player_xref import get_player_xref
 
 __all__: list[str] = [
     "build_drive",
@@ -22,4 +28,8 @@ __all__: list[str] = [
     "folder_id_from_url",
     "is_shared_drive",
     "get_drive_info",
+    "get_duckdb_connection",
+    "resolve_duckdb_path",
+    "fetch_table_as_polars",
+    "get_player_xref",
 ]

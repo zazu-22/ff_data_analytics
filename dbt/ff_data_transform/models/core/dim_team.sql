@@ -12,10 +12,7 @@ Denormalized to include conference and division (Kimball pattern - avoid snowfla
 with
     base_teams as (
         select team, "full" as team_name, location as team_city, season
-        from
-            read_parquet(
-                '{{ env_var("RAW_NFLVERSE_TEAMS_GLOB", "data/raw/nflverse/teams/dt=*/*.parquet") }}'
-            )
+        from read_parquet('{{ env_var("RAW_NFLVERSE_TEAMS_GLOB", "data/raw/nflverse/teams/dt=*/*.parquet") }}')
         -- Deduplicate to ensure one row per team (take latest season if dataset
         -- partitioned by season)
         qualify row_number() over (partition by team order by season desc) = 1

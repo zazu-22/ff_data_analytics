@@ -40,30 +40,20 @@ with
             -- Recent performance (last 4 CALENDAR weeks before signing - current
             -- season only)
             avg(
-                case
-                    when mfa.week between fa.week - 4 and fa.week - 1
-                    then mfa.fantasy_points
-                end
+                case when mfa.week between fa.week - 4 and fa.week - 1 then mfa.fantasy_points end
             ) as fantasy_ppg_l4_weeks,
 
             -- Season average before signing
-            avg(
-                case when mfa.week < fa.week then mfa.fantasy_points end
-            ) as fantasy_ppg_season_before_signing,
+            avg(case when mfa.week < fa.week then mfa.fantasy_points end) as fantasy_ppg_season_before_signing,
 
             -- Usage metrics (calendar-based)
             avg(
-                case
-                    when mfa.week between fa.week - 4 and fa.week - 1
-                    then mfa.carries + mfa.targets
-                end
+                case when mfa.week between fa.week - 4 and fa.week - 1 then mfa.carries + mfa.targets end
             ) as touches_per_game_l4_weeks
 
         from fa_acquisitions fa
         left join
-            {{ ref("mart_fantasy_actuals_weekly") }} mfa
-            on fa.player_id = mfa.player_id
-            and fa.season = mfa.season
+            {{ ref("mart_fantasy_actuals_weekly") }} mfa on fa.player_id = mfa.player_id and fa.season = mfa.season
         group by 1
     ),
 
@@ -81,38 +71,25 @@ with
             mfa.targets,
             -- Rank games by recency (most recent = 1)
             row_number() over (
-                partition by fa.transaction_id_unique
-                order by mfa.season desc, mfa.week desc
+                partition by fa.transaction_id_unique order by mfa.season desc, mfa.week desc
             ) as game_rank
         from fa_acquisitions fa
         left join
             {{ ref("mart_fantasy_actuals_weekly") }} mfa
             on fa.player_id = mfa.player_id
             -- Games before signing (any season)
-            and (
-                fa.season > mfa.season
-                or (fa.season = mfa.season and fa.week > mfa.week)
-            )
+            and (fa.season > mfa.season or (fa.season = mfa.season and fa.week > mfa.week))
     ),
 
     player_performance_context_games as (
         select
             transaction_id_unique,
             -- Last 4 actual games played before signing
-            avg(
-                case when game_rank <= 4 then fantasy_points end
-            ) as fantasy_ppg_l4_games,
-            avg(
-                case when game_rank <= 4 then carries + targets end
-            ) as touches_per_game_l4_games,
+            avg(case when game_rank <= 4 then fantasy_points end) as fantasy_ppg_l4_games,
+            avg(case when game_rank <= 4 then carries + targets end) as touches_per_game_l4_games,
             -- Recency: estimate days since last game (approximate based on weeks)
             min(
-                case
-                    when game_rank = 1
-                    then
-                        (signed_season - game_season) * 365
-                        + (signed_week - game_week) * 7
-                end
+                case when game_rank = 1 then (signed_season - game_season) * 365 + (signed_week - game_week) * 7 end
             ) as days_since_last_game
         from player_games_ranked
         group by 1
@@ -127,9 +104,7 @@ with
             fa.week,
 
             -- Count quality FAs available (projected > replacement level)
-            count(
-                case when proj.projected_fantasy_points > 5.0 then 1 end
-            ) as quality_fas_available,
+            count(case when proj.projected_fantasy_points > 5.0 then 1 end) as quality_fas_available,
 
             -- Market depth indicator (0-1, lower = more scarce)
             count(case when proj.projected_fantasy_points > 5.0 then 1 end)
@@ -163,43 +138,28 @@ select
 
     -- Time context (in-season FASA only)
     case
-        when fa.week <= 4
-        then 'Early Season'
-        when fa.week between 5 and 12
-        then 'Mid Season'
-        else 'Late Season'
+        when fa.week <= 4 then 'Early Season' when fa.week between 5 and 12 then 'Mid Season' else 'Late Season'
     end as season_phase,
 
     -- Performance tier at signing (use games-based as primary, fallback to weeks)
     case
-        when
-            coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks)
-            >= 12.0
+        when coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks) >= 12.0
         then 'Elite'
-        when
-            coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks)
-            >= 8.0
+        when coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks) >= 8.0
         then 'Strong'
-        when
-            coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks)
-            >= 5.0
+        when coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks) >= 5.0
         then 'Viable'
         else 'Speculative'
     end as performance_tier,
 
     -- Bid efficiency metrics (use games-based as primary)
-    fa.bid_amount / nullif(
-        coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks), 0
-    ) as dollars_per_ppg,
+    fa.bid_amount
+    / nullif(coalesce(ppc_games.fantasy_ppg_l4_games, ppc_cal.fantasy_ppg_l4_weeks), 0) as dollars_per_ppg,
 
     -- Metadata
     current_date as asof_date
 
 from fa_acquisitions fa
-left join
-    player_performance_context_calendar ppc_cal
-    on fa.transaction_id_unique = ppc_cal.transaction_id_unique
-left join
-    player_performance_context_games ppc_games
-    on fa.transaction_id_unique = ppc_games.transaction_id_unique
+left join player_performance_context_calendar ppc_cal on fa.transaction_id_unique = ppc_cal.transaction_id_unique
+left join player_performance_context_games ppc_games on fa.transaction_id_unique = ppc_games.transaction_id_unique
 left join position_scarcity ps on fa.transaction_id_unique = ps.transaction_id_unique

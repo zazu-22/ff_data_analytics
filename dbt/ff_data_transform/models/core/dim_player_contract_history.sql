@@ -91,9 +91,7 @@ with
             end as contract_type,
 
             -- Rookie contract flag
-            coalesce(
-                transaction_type = 'rookie_draft_selection', false
-            ) as is_rookie_contract,
+            coalesce(transaction_type = 'rookie_draft_selection', false) as is_rookie_contract,
 
             -- Special transaction measures
             rfa_matched,
@@ -104,25 +102,18 @@ with
             -- standalone)
             case
                 when
-                    max(
-                        case
-                            when transaction_type = 'contract_extension' then 1 else 0
-                        end
-                    ) over (partition by player_id, transaction_date)
+                    max(case when transaction_type = 'contract_extension' then 1 else 0 end) over (
+                        partition by player_id, transaction_date
+                    )
                     = 1
-                    and max(
-                        case
-                            when transaction_type != 'contract_extension' then 1 else 0
-                        end
-                    ) over (partition by player_id, transaction_date)
+                    and max(case when transaction_type != 'contract_extension' then 1 else 0 end) over (
+                        partition by player_id, transaction_date
+                    )
                     = 1
                 then
-                    max(
-                        case
-                            when transaction_type = 'contract_extension'
-                            then transaction_id
-                        end
-                    ) over (partition by player_id, transaction_date)
+                    max(case when transaction_type = 'contract_extension' then transaction_id end) over (
+                        partition by player_id, transaction_date
+                    )
             end as extension_id_on_same_date
 
         from {{ ref("fact_league_transactions") }}
@@ -158,10 +149,7 @@ with
             case
                 when
                     ace.transaction_type = 'contract_extension'
-                    and len(
-                        cast(json_extract(ace.contract_split_json, '$') as integer[])
-                    )
-                    = 1
+                    and len(cast(json_extract(ace.contract_split_json, '$') as integer[])) = 1
                     and ace.contract_total in (24, 20, 16, 12, 8, 4)  -- 4th year option rates
                 then
                     (
@@ -169,8 +157,7 @@ with
                         from all_contract_events prev
                         where
                             prev.player_id = ace.player_id
-                            and prev.transaction_date_corrected
-                            < ace.transaction_date_corrected
+                            and prev.transaction_date_corrected < ace.transaction_date_corrected
                             and prev.contract_type = 'rookie'
                             and prev.contract_years = 3
                         order by prev.transaction_date_corrected desc
@@ -184,10 +171,7 @@ with
             case
                 when
                     ace.transaction_type = 'contract_extension'
-                    and len(
-                        cast(json_extract(ace.contract_split_json, '$') as integer[])
-                    )
-                    = 1
+                    and len(cast(json_extract(ace.contract_split_json, '$') as integer[])) = 1
                     and ace.contract_total in (24, 20, 16, 12, 8, 4)
                 then
                     (
@@ -210,8 +194,7 @@ with
                         from all_contract_events prev
                         where
                             prev.player_id = ace.player_id
-                            and prev.transaction_date_corrected
-                            < ace.transaction_date_corrected
+                            and prev.transaction_date_corrected < ace.transaction_date_corrected
                             and prev.contract_type = 'rookie'
                             and prev.contract_years = 3
                         order by prev.transaction_date_corrected desc
@@ -229,17 +212,13 @@ with
 
             -- Build full remaining schedule for incomplete extensions
             case
-                when
-                    ece.preceding_rookie_split_json is not null
-                    and ece.years_elapsed_since_rookie_start is not null
+                when ece.preceding_rookie_split_json is not null and ece.years_elapsed_since_rookie_start is not null
                 then
                     -- Slice remaining base years and append extension year
                     list_concat(
-                        cast(
-                            json_extract(
-                                ece.preceding_rookie_split_json, '$'
-                            ) as integer[]
-                        )[ece.years_elapsed_since_rookie_start + 1:],
+                        cast(json_extract(ece.preceding_rookie_split_json, '$') as integer[])[
+                            ece.years_elapsed_since_rookie_start + 1:
+                        ],
                         cast(json_extract(ece.contract_split_json, '$') as integer[])
                     )
                 else cast(json_extract(ece.contract_split_json, '$') as integer[])
@@ -247,20 +226,14 @@ with
 
             -- Update contract_split_json with merged array
             case
-                when
-                    ece.preceding_rookie_split_json is not null
-                    and ece.years_elapsed_since_rookie_start is not null
+                when ece.preceding_rookie_split_json is not null and ece.years_elapsed_since_rookie_start is not null
                 then
                     to_json(
                         list_concat(
-                            cast(
-                                json_extract(
-                                    ece.preceding_rookie_split_json, '$'
-                                ) as integer[]
-                            )[ece.years_elapsed_since_rookie_start + 1:],
-                            cast(
-                                json_extract(ece.contract_split_json, '$') as integer[]
-                            )
+                            cast(json_extract(ece.preceding_rookie_split_json, '$') as integer[])[
+                                ece.years_elapsed_since_rookie_start + 1:
+                            ],
+                            cast(json_extract(ece.contract_split_json, '$') as integer[])
                         )
                     )
                 else ece.contract_split_json
@@ -303,16 +276,12 @@ with
             -- For Pattern B (added only), use base season/period since we're
             -- concatenating
             case
-                when
-                    ext.contract_years
-                    < len(cast(json_extract(ext.contract_split_json, '$') as integer[]))
+                when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as integer[]))
                 then ext.transaction_season
                 else base.transaction_season
             end as transaction_season,
             case
-                when
-                    ext.contract_years
-                    < len(cast(json_extract(ext.contract_split_json, '$') as integer[]))
+                when ext.contract_years < len(cast(json_extract(ext.contract_split_json, '$') as integer[]))
                 then ext.period_type
                 else base.period_type
             end as period_type,
@@ -372,9 +341,7 @@ with
                     -- Pattern B: Concatenate arrays (fall back to parsed splits if
                     -- JSON-only)
                     coalesce(
-                        list_concat(
-                            base.contract_split_array, ext.contract_split_array
-                        ),
+                        list_concat(base.contract_split_array, ext.contract_split_array),
                         list_concat(base_splits.base_split, ext_splits.ext_split)
                     )
             end as contract_split_array,
@@ -392,19 +359,8 @@ with
             and base.transaction_type != 'contract_extension'
             and ext.transaction_type = 'contract_extension'
         cross join
-            lateral(
-                select
-                    cast(
-                        json_extract(base.contract_split_json, '$') as integer[]
-                    ) as base_split
-            ) base_splits
-        cross join
-            lateral(
-                select
-                    cast(
-                        json_extract(ext.contract_split_json, '$') as integer[]
-                    ) as ext_split
-            ) ext_splits
+            lateral(select cast(json_extract(base.contract_split_json, '$') as integer[]) as base_split) base_splits
+        cross join lateral(select cast(json_extract(ext.contract_split_json, '$') as integer[]) as ext_split) ext_splits
     ),
 
     standalone_contracts as (
@@ -480,8 +436,7 @@ with
             -- contracts
             -- Use transaction_date_corrected for chronologically correct sequencing
             row_number() over (
-                partition by ce.player_id
-                order by ce.transaction_date_corrected, ce.transaction_id
+                partition by ce.player_id order by ce.transaction_date_corrected, ce.transaction_id
             ) as contract_period,
 
             -- Validity dates (Type 2 SCD)
@@ -492,22 +447,15 @@ with
             -- deterministically
             -- Use transaction_date_corrected for chronologically correct sequencing
             lead(ce.transaction_date) over (
-                partition by ce.player_id
-                order by ce.transaction_date_corrected, ce.transaction_id
+                partition by ce.player_id order by ce.transaction_date_corrected, ce.transaction_id
             ) as next_contract_date,
 
             -- Get next contract's start season to check if it starts AFTER current
             -- contract ends
             lead(
-                case
-                    when ce.period_type = 'offseason'
-                    then ce.transaction_season + 1
-                    else ce.transaction_season
-                end
-            ) over (
-                partition by ce.player_id
-                order by ce.transaction_date_corrected, ce.transaction_id
-            ) as next_contract_start_season,
+                case when ce.period_type = 'offseason' then ce.transaction_season + 1 else ce.transaction_season end
+            ) over (partition by ce.player_id order by ce.transaction_date_corrected, ce.transaction_id)
+            as next_contract_start_season,
 
             -- Find termination date for this player+franchise (CUT or TRADE-AWAY)
             -- Get the minimum termination date that is AFTER contract start
@@ -521,10 +469,7 @@ with
                     and term.franchise_id = ce.franchise_id
                     and (
                         term.transaction_date > ce.transaction_date
-                        or (
-                            term.transaction_date = ce.transaction_date
-                            and term.transaction_id > ce.transaction_id
-                        )
+                        or (term.transaction_date = ce.transaction_date and term.transaction_id > ce.transaction_id)
                     )
             ) as termination_date,
 
@@ -536,46 +481,20 @@ with
             -- The contract_split_json already contains the correct year-by-year
             -- schedule for extensions
             case
-                when ce.period_type = 'offseason'
-                then ce.transaction_season + 1
-                else ce.transaction_season
+                when ce.period_type = 'offseason' then ce.transaction_season + 1 else ce.transaction_season
             end as contract_start_season,
-            (
-                case
-                    when ce.period_type = 'offseason'
-                    then ce.transaction_season + 1
-                    else ce.transaction_season
-                end
-            ) + (
-                coalesce(
-                    len(cast(json_extract(ce.contract_split_json, '$') as integer[])),
-                    ce.contract_years
-                )
-                - 1
+            (case when ce.period_type = 'offseason' then ce.transaction_season + 1 else ce.transaction_season end) + (
+                coalesce(len(cast(json_extract(ce.contract_split_json, '$') as integer[])), ce.contract_years) - 1
             ) as contract_end_season,
 
             -- Calculated measures (use actual years from split if available)
             case
-                when
-                    coalesce(
-                        len(
-                            cast(json_extract(ce.contract_split_json, '$') as integer[])
-                        ),
-                        ce.contract_years
-                    )
-                    > 0
+                when coalesce(len(cast(json_extract(ce.contract_split_json, '$') as integer[])), ce.contract_years) > 0
                 then
                     round(
                         cast(ce.contract_total as numeric) / cast(
                             coalesce(
-                                len(
-                                    cast(
-                                        json_extract(
-                                            ce.contract_split_json, '$'
-                                        ) as integer[]
-                                    )
-                                ),
-                                ce.contract_years
+                                len(cast(json_extract(ce.contract_split_json, '$') as integer[])), ce.contract_years
                             ) as numeric
                         ),
                         2
@@ -609,11 +528,7 @@ with
                 then cp.effective_date
                 -- Termination exists: use earlier of termination or natural end
                 when cp.termination_date is not null
-                then
-                    least(
-                        cp.termination_date - interval '1 day',
-                        make_date(cp.contract_end_season, 12, 31)
-                    )
+                then least(cp.termination_date - interval '1 day', make_date(cp.contract_end_season, 12, 31))
                 -- Next contract exists BUT starts in a future season (e.g., 4th year
                 -- option):
                 -- Let current contract expire at natural end, don't terminate early
@@ -625,11 +540,7 @@ with
                 -- Next contract exists and starts in same/earlier season: use earlier
                 -- of next_contract or natural end
                 when cp.next_contract_date is not null
-                then
-                    least(
-                        cp.next_contract_date - interval '1 day',
-                        make_date(cp.contract_end_season, 12, 31)
-                    )
+                then least(cp.next_contract_date - interval '1 day', make_date(cp.contract_end_season, 12, 31))
                 -- No next contract or termination: expire at natural end date
                 else make_date(cp.contract_end_season, 12, 31)
             end as expiration_date,
@@ -642,9 +553,7 @@ with
             case
                 when cp.next_contract_date is null and cp.termination_date is null
                 then true
-                when
-                    cp.termination_date is not null
-                    and cp.termination_date <= current_date
+                when cp.termination_date is not null and cp.termination_date <= current_date
                 then false
                 -- If next contract starts in future season, current contract is still
                 -- active (check end season)
@@ -654,9 +563,7 @@ with
                     and cp.next_contract_start_season > cp.contract_end_season
                 then cp.contract_end_season >= year(current_date)  -- Active if end season hasn't passed
                 -- Otherwise, not current if next contract already started
-                when
-                    cp.next_contract_date is not null
-                    and cp.next_contract_date <= current_date
+                when cp.next_contract_date is not null and cp.next_contract_date <= current_date
                 then false
                 else true
             end as is_current

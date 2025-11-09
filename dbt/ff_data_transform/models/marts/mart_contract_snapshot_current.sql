@@ -95,15 +95,11 @@ with
             -- Parse JSON array and unnest to create one row per year
             -- contract_split_json format: "[6, 6, 24]" or "[12, 8, 8, 8, 8]"
             -- Cast JSON to INTEGER[] list first, then unnest
-            unnest(
-                cast(json_extract(cc.contract_split_json, '$') as integer[])
-            ) as annual_cap_hit,
+            unnest(cast(json_extract(cc.contract_split_json, '$') as integer[])) as annual_cap_hit,
 
             -- Generate year position (1, 2, 3, ...) for each row
             unnest(
-                generate_series(
-                    1, len(cast(json_extract(cc.contract_split_json, '$') as integer[]))
-                )
+                generate_series(1, len(cast(json_extract(cc.contract_split_json, '$') as integer[])))
             ) as year_position
 
         from current_contracts cc
@@ -119,20 +115,14 @@ with
             (ey.contract_start_season + ey.year_position - 1) as obligation_year,
 
             -- Calculate years remaining from this year forward (including this year)
-            (
-                len(cast(json_extract(contract_split_json, '$') as integer[]))
-                - ey.year_position
-                + 1
-            ) as years_remaining,
+            (len(cast(json_extract(contract_split_json, '$') as integer[])) - ey.year_position + 1) as years_remaining,
 
             -- Join to cut liability schedule for dead cap calculation
             sch.dead_cap_pct,
             sch.notes as dead_cap_note
 
         from expanded_years ey
-        left join
-            {{ ref("dim_cut_liability_schedule") }} sch
-            on ey.year_position = sch.contract_year
+        left join {{ ref("dim_cut_liability_schedule") }} sch on ey.year_position = sch.contract_year
     ),
 
     with_remaining_value as (

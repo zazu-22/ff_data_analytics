@@ -108,27 +108,18 @@ with
             p.projected_fumbles_lost,
 
             -- Variance (actual - projected)
-            a.actual_passing_yards
-            - p.projected_passing_yards as passing_yards_variance,
+            a.actual_passing_yards - p.projected_passing_yards as passing_yards_variance,
             a.actual_passing_tds - p.projected_passing_tds as passing_tds_variance,
-            a.actual_interceptions
-            - p.projected_interceptions as interceptions_variance,
-            a.actual_rushing_yards
-            - p.projected_rushing_yards as rushing_yards_variance,
+            a.actual_interceptions - p.projected_interceptions as interceptions_variance,
+            a.actual_rushing_yards - p.projected_rushing_yards as rushing_yards_variance,
             a.actual_rushing_tds - p.projected_rushing_tds as rushing_tds_variance,
             a.actual_receptions - p.projected_receptions as receptions_variance,
-            a.actual_receiving_yards
-            - p.projected_receiving_yards as receiving_yards_variance,
-            a.actual_receiving_tds
-            - p.projected_receiving_tds as receiving_tds_variance,
+            a.actual_receiving_yards - p.projected_receiving_yards as receiving_yards_variance,
+            a.actual_receiving_tds - p.projected_receiving_tds as receiving_tds_variance,
             a.actual_fumbles_lost - p.projected_fumbles_lost as fumbles_lost_variance
 
         from actuals a
-        left join
-            projections p
-            on a.player_id = p.player_id
-            and a.season = p.season
-            and a.week = p.week
+        left join projections p on a.player_id = p.player_id and a.season = p.season and a.week = p.week
 
         -- Only include rows where we have both actuals AND projections
         where p.player_id is not null

@@ -149,3 +149,9 @@ models:
 
       - name: validation_notes
         description: "Explanation of validation issues"
+
+      - name: faad_award_sequence
+        description: |
+          Immutable FAAD award ordering (1-indexed per season) persisted during
+          ingestion. Keeps compensatory pick sequencing stable even if commissioner
+          transaction_ids are edited after the draft.

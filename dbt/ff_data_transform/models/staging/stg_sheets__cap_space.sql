@@ -12,8 +12,7 @@ with
     ),
 
     franchise_xref as (
-        select
-            franchise_id, gm_tab, season_start, coalesce(season_end, 9999) as season_end
+        select franchise_id, gm_tab, season_start, coalesce(season_end, 9999) as season_end
         from {{ ref("dim_franchise") }}
     )
 

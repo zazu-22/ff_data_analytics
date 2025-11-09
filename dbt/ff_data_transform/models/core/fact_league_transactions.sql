@@ -44,22 +44,15 @@ with
         -- Identify draft calendar year for each player to enable chronological
         -- safeguards
         -- Prevents impossible transaction sequences (e.g., traded before being drafted)
-        select
-            player_id,
-            min(transaction_date) as draft_date,
-            year(min(transaction_date)) as draft_calendar_year
+        select player_id, min(transaction_date) as draft_date, year(min(transaction_date)) as draft_calendar_year
         from {{ ref("stg_sheets__transactions") }}
-        where
-            transaction_type = 'rookie_draft_selection'
-            and asset_type = 'player'
-            and player_id is not null
+        where transaction_type = 'rookie_draft_selection' and asset_type = 'player' and player_id is not null
         group by player_id
     ),
 
     pick_xref as (
         -- Get canonical pick_ids from crosswalk for identity resolution
-        select transaction_id_unique, pick_id_canonical
-        from {{ ref("int_pick_transaction_xref") }}
+        select transaction_id_unique, pick_id_canonical from {{ ref("int_pick_transaction_xref") }}
     ),
 
     base_transactions as (

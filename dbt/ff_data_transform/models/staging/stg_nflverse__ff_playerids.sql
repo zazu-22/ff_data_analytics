@@ -98,17 +98,10 @@ with
                     sleeper_birth_date,
                     full_name,
                     position as sleeper_position,
-                    row_number() over (
-                        partition by sleeper_player_id order by dt desc
-                    ) as _rn
+                    row_number() over (partition by sleeper_player_id order by dt desc) as _rn
                 from
                     (
-                        select
-                            sleeper_player_id,
-                            birth_date as sleeper_birth_date,
-                            full_name,
-                            position,
-                            dt
+                        select sleeper_player_id, birth_date as sleeper_birth_date, full_name, position, dt
                         from
                             read_parquet(
                                 '{{ var("external_root", "data/raw") }}/sleeper/players/dt=*/players_*.parquet',
@@ -133,8 +126,7 @@ with
     -- Each family includes mappings in BOTH directions (xref→Sleeper and Sleeper→xref)
     position_families as (
         -- Safety: S (xref) ↔ SS, FS, DB (Sleeper)
-        select
-            'Safety' as position_family, 'S' as xref_position, 'SS' as sleeper_position
+        select 'Safety' as position_family, 'S' as xref_position, 'SS' as sleeper_position
         union all
         select 'Safety', 'S', 'FS'
         union all
@@ -320,18 +312,12 @@ with
             -- Rank duplicates to keep only one (even if birthdates match)
             case
                 when sd.sleeper_id is not null
-                then
-                    row_number() over (
-                        partition by ws.sleeper_id
-                        order by ws.draft_year desc nulls last, ws.name
-                    )
+                then row_number() over (partition by ws.sleeper_id order by ws.draft_year desc nulls last, ws.name)
                 else 1
             end as _sleeper_rank
         from with_status ws
         left join sleeper_duplicates sd on ws.sleeper_id = sd.sleeper_id
-        left join
-            sleeper_players sp
-            on ws.sleeper_id = try_cast(sp.sleeper_player_id as integer)
+        left join sleeper_players sp on ws.sleeper_id = try_cast(sp.sleeper_player_id as integer)
     ),
 
     -- Clear incorrect sleeper_id mappings (but keep the player!)
@@ -339,9 +325,7 @@ with
     -- Clear duplicates even if birthdates match (keep only one per sleeper_id)
     sleeper_deduped as (
         select
-            * exclude (
-                sleeper_birth_date, sleeper_id, xref_correction_status, _sleeper_rank
-            ),
+            * exclude (sleeper_birth_date, sleeper_id, xref_correction_status, _sleeper_rank),
             case
                 when xref_correction_status = 'cleared_sleeper_duplicate'
                 then -1  -- Sentinel value: indicates ID was cleared due to duplicate
@@ -432,10 +416,7 @@ with
             end as birthdate_match_score
         from sleeper_deduped sd
         cross join sleeper_players sp
-        left join
-            position_families pf
-            on sd.position = pf.xref_position
-            and sp.sleeper_position = pf.sleeper_position
+        left join position_families pf on sd.position = pf.xref_position and sp.sleeper_position = pf.sleeper_position
         where
             (sd.sleeper_id = -1 or sd.sleeper_id is null)  -- Cleared duplicates OR missing
             -- Name matching (exact or normalized) - REQUIRED
@@ -447,14 +428,10 @@ with
             and (sd.position = sp.sleeper_position or pf.position_family is not null)
             -- Birthdate matching is OPTIONAL (scoring bonus only, not required)
             -- Exclude candidates already used in xref (check current state)
-            and try_cast(sp.sleeper_player_id as integer) not in (
-                select sleeper_id
-                from sleeper_deduped
-                where sleeper_id != -1 and sleeper_id is not null
-            )
-            -- Exclude candidates in the duplicate set being resolved
             and try_cast(sp.sleeper_player_id as integer)
-            not in (select sleeper_id from sleeper_duplicates)
+            not in (select sleeper_id from sleeper_deduped where sleeper_id != -1 and sleeper_id is not null)
+            -- Exclude candidates in the duplicate set being resolved
+            and try_cast(sp.sleeper_player_id as integer) not in (select sleeper_id from sleeper_duplicates)
     ),
 
     -- Select best match per player using deterministic tiebreakers
@@ -474,19 +451,13 @@ with
                 birthdate_match_score
             ),
             candidate_sleeper_id as matched_sleeper_id,
-            name_match_score
-            + position_match_score
-            + birthdate_match_score as total_match_score
+            name_match_score + position_match_score + birthdate_match_score as total_match_score
         from sleeper_fallback_candidates
         where name_match_score + position_match_score >= 105  -- Require name + position (exact or family)
         qualify
             row_number() over (
                 partition by mfl_id, gsis_id, name, birthdate
-                order by
-                    name_match_score
-                    + position_match_score
-                    + birthdate_match_score desc,
-                    candidate_sleeper_id  -- Deterministic tiebreaker
+                order by name_match_score + position_match_score + birthdate_match_score desc, candidate_sleeper_id  -- Deterministic tiebreaker
             )
             = 1
     ),
@@ -494,15 +465,11 @@ with
     -- Ensure sleeper_id uniqueness: if multiple players matched to same sleeper_id,
     -- keep only the best match
     sleeper_fallback_deduped as (
-        select
-            * exclude (matched_sleeper_id, total_match_score),
-            matched_sleeper_id,
-            total_match_score
+        select * exclude (matched_sleeper_id, total_match_score), matched_sleeper_id, total_match_score
         from sleeper_fallback_matched
         qualify
             row_number() over (
-                partition by matched_sleeper_id
-                order by total_match_score desc, mfl_id, gsis_id, name  -- Deterministic tiebreaker for same score
+                partition by matched_sleeper_id order by total_match_score desc, mfl_id, gsis_id, name  -- Deterministic tiebreaker for same score
             )
             = 1
     ),
@@ -548,11 +515,7 @@ with
             swf.*,
             case
                 when gd.gsis_id is not null
-                then
-                    row_number() over (
-                        partition by swf.gsis_id
-                        order by swf.draft_year desc nulls last, swf.name
-                    )
+                then row_number() over (partition by swf.gsis_id order by swf.draft_year desc nulls last, swf.name)
                 else 1
             end as _gsis_rank
         from sleeper_with_fallback swf
@@ -593,11 +556,7 @@ with
             gd.*,
             case
                 when md.mfl_id is not null
-                then
-                    row_number() over (
-                        partition by gd.mfl_id
-                        order by gd.draft_year desc nulls last, gd.name
-                    )
+                then row_number() over (partition by gd.mfl_id order by gd.draft_year desc nulls last, gd.name)
                 else 1
             end as _mfl_rank
         from gsis_deduped gd
@@ -628,9 +587,7 @@ with
         select
             *,
             case
-                when name like '% %'
-                then split_part(name, ' ', 2) || ', ' || split_part(name, ' ', 1)
-                else name
+                when name like '% %' then split_part(name, ' ', 2) || ', ' || split_part(name, ' ', 1) else name
             end as name_last_first
         from mfl_deduped
     ),
@@ -644,11 +601,7 @@ with
             'sleeper_id' as id_type,
             sleeper_id as id_value,
             count(*) as duplicate_count,
-            string_agg(
-                mfl_id || '|' || coalesce(gsis_id, '') || '|' || name,
-                ', '
-                order by mfl_id
-            ) as player_keys
+            string_agg(mfl_id || '|' || coalesce(gsis_id, '') || '|' || name, ', ' order by mfl_id) as player_keys
         from with_name_variant
         where sleeper_id is not null and sleeper_id != -1  -- Exclude sentinel values
         group by sleeper_id
@@ -661,13 +614,7 @@ with
             cast(gsis_id as varchar) as id_value,
             count(*) as duplicate_count,
             string_agg(
-                mfl_id
-                || '|'
-                || coalesce(cast(sleeper_id as varchar), '')
-                || '|'
-                || name,
-                ', '
-                order by mfl_id
+                mfl_id || '|' || coalesce(cast(sleeper_id as varchar), '') || '|' || name, ', ' order by mfl_id
             ) as player_keys
         from with_name_variant
         where gsis_id is not null and gsis_id != 'DUPLICATE_CLEARED'  -- Exclude sentinel values
@@ -681,11 +628,7 @@ with
             cast(mfl_id as varchar) as id_value,
             count(*) as duplicate_count,
             string_agg(
-                coalesce(gsis_id, '')
-                || '|'
-                || coalesce(cast(sleeper_id as varchar), '')
-                || '|'
-                || name,
+                coalesce(gsis_id, '') || '|' || coalesce(cast(sleeper_id as varchar), '') || '|' || name,
                 ', '
                 order by gsis_id
             ) as player_keys
@@ -706,20 +649,13 @@ with
             sleeper_id,
             xref_correction_status
         from with_name_variant
-        where
-            sleeper_id = -1
-            and xref_correction_status
-            not in ('cleared_sleeper_duplicate', 'corrected_sleeper_id')
+        where sleeper_id = -1 and xref_correction_status not in ('cleared_sleeper_duplicate', 'corrected_sleeper_id')
 
         union all
 
         select
             'gsis_id_sentinel_mismatch' as violation_type,
-            mfl_id
-            || '|'
-            || coalesce(cast(sleeper_id as varchar), '')
-            || '|'
-            || name as player_key,
+            mfl_id || '|' || coalesce(cast(sleeper_id as varchar), '') || '|' || name as player_key,
             cast(gsis_id as varchar) as sleeper_id,
             xref_correction_status
         from with_name_variant
@@ -732,18 +668,11 @@ with
 
         select
             'mfl_id_sentinel_mismatch' as violation_type,
-            coalesce(gsis_id, '')
-            || '|'
-            || coalesce(cast(sleeper_id as varchar), '')
-            || '|'
-            || name as player_key,
+            coalesce(gsis_id, '') || '|' || coalesce(cast(sleeper_id as varchar), '') || '|' || name as player_key,
             cast(mfl_id as varchar) as sleeper_id,
             xref_correction_status
         from with_name_variant
-        where
-            mfl_id = -1
-            and xref_correction_status not like '%cleared%'
-            and xref_correction_status not like '%mfl%'
+        where mfl_id = -1 and xref_correction_status not like '%cleared%' and xref_correction_status not like '%mfl%'
     ),
 
     validate_at_least_one_id as (
@@ -772,10 +701,7 @@ with
 
     -- Assign sequential player_id (deterministic ordering for stability)
     -- Note: Data quality validations are performed via dbt tests, not inline filters
-    with_player_id as (
-        select *, row_number() over (order by mfl_id, gsis_id, name) as player_id
-        from with_name_variant
-    )
+    with_player_id as (select *, row_number() over (order by mfl_id, gsis_id, name) as player_id from with_name_variant)
 
 -- Select final columns matching seed schema (29 columns total)
 select

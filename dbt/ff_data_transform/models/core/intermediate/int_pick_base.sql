@@ -40,11 +40,7 @@ with
     base_picks as (
         select
             -- Pick ID format: YYYY_R#_P##
-            season
-            || '_R'
-            || round
-            || '_P'
-            || lpad(slot_number::varchar, 2, '0') as pick_id,
+            season || '_R' || round || '_P' || lpad(slot_number::varchar, 2, '0') as pick_id,
 
             season,
             round,

@@ -49,14 +49,7 @@ with
     ),
 
     canonical_picks as (
-        select
-            pick_id,
-            season,
-            round,
-            overall_pick,
-            slot_number,
-            pick_type,
-            is_compensatory
+        select pick_id, season, round, overall_pick, slot_number, pick_type, is_compensatory
 
         from {{ ref("dim_pick") }}
         where pick_type != 'tbd'  -- Match on finalized picks only
@@ -143,11 +136,8 @@ with
         where
             tp.pick_overall_number is not null
             -- Only for picks that didn't match by overall
-            and tp.transaction_id_unique not in (
-                select transaction_id_unique
-                from matched_by_overall
-                where has_canonical_match
-            )
+            and tp.transaction_id_unique
+            not in (select transaction_id_unique from matched_by_overall where has_canonical_match)
     ),
 
     -- Combine primary and fallback matches, prioritizing overall matches
@@ -217,11 +207,7 @@ with
     ),
 
     -- Handle TBD picks separately (match on season/round only, no overall pick yet)
-    tbd_picks_dim as (
-        select pick_id, season, round, pick_type
-        from {{ ref("dim_pick") }}
-        where pick_type = 'tbd'
-    ),
+    tbd_picks_dim as (select pick_id, season, round, pick_type from {{ ref("dim_pick") }} where pick_type = 'tbd'),
 
     matched_tbd as (
         select
@@ -248,12 +234,9 @@ with
             'TBD PICK' as match_status
 
         from transaction_picks tp
-        inner join
-            tbd_picks_dim tbd
-            on tp.pick_season = tbd.season
-            and tp.pick_round = tbd.round
+        inner join tbd_picks_dim tbd on tp.pick_season = tbd.season and tp.pick_round = tbd.round
         where tp.pick_overall_number is null  -- Only TBD transactions
-    )
+    ),
 
     -- Combine finalized and TBD picks
     all_matched as (
@@ -268,8 +251,7 @@ with
 
     -- v2: Add lifecycle mapping to migrate TBD references to actual picks
     lifecycle_control as (
-        select pick_id, lifecycle_state, superseded_by_pick_id
-        from {{ ref("dim_pick_lifecycle_control") }}
+        select pick_id, lifecycle_state, superseded_by_pick_id from {{ ref("dim_pick_lifecycle_control") }}
     ),
 
     picks_with_lifecycle as (

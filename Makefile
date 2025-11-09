@@ -1,11 +1,14 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics dbt-xref ingest-with-xref ingest-all
 
 help:
 	@echo "Available targets:"
 	@echo "  ingest-sheets        Ingest league sheets locally"
 	@echo "  ingest-sleeper-players  Ingest Sleeper player database (for crosswalk validation)"
+	@echo "  ingest-ffanalytics   Ingest FFanalytics projections (rest-of-season)"
+	@echo "  dbt-xref             Build dim_player_id_xref for ingestion dependencies"
+	@echo "  ingest-with-xref     Run dbt-xref, sheets, and FFanalytics ingestion in order"
 	@echo "  dbt-deps             Install dbt package dependencies"
 	@echo "  dbt-seed             Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
 	@echo "  dbt-run              Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
@@ -30,6 +33,27 @@ ingest-sheets:
 ingest-sleeper-players:
 	@echo "Ingesting Sleeper player database"
 	uv run python -m src.ingest.sleeper.loader players
+
+ingest-ffanalytics:
+	@echo "Ingesting FFanalytics projections (rest-of-season)"
+	uv run python -c "from src.ingest.ffanalytics.loader import load_projections_ros; load_projections_ros()"
+
+dbt-xref:
+	@echo "Building dim_player_id_xref"
+	@mkdir -p dbt/ff_data_transform/target
+	uv run env \
+		EXTERNAL_ROOT="$$(pwd)/data/raw" \
+		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
+		dbt run --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform --select dim_player_id_xref
+
+ingest-with-xref: dbt-xref
+	$(MAKE) ingest-sheets
+	$(MAKE) ingest-ffanalytics
+
+ingest-all: dbt-xref
+	$(MAKE) ingest-sheets
+	$(MAKE) ingest-ffanalytics
+	$(MAKE) ingest-sleeper-players
 
 dbt-deps:
 	@echo "Installing dbt package dependencies"

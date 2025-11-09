@@ -6,11 +6,7 @@ with
     latest_snapshot as (
         -- Get the most recent snapshot date
         select max(dt) as latest_dt
-        from
-            read_parquet(
-                '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
-                hive_partitioning = true
-            )
+        from read_parquet('{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet', hive_partitioning = true)
     ),
 
     fa_raw as (
@@ -18,29 +14,21 @@ with
         select fa.*
         from
             read_parquet(
-                '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet',
-                hive_partitioning = true
+                '{{ var("external_root") }}/sleeper/fa_pool/dt=*/fa_pool_*.parquet', hive_partitioning = true
             ) fa
         cross join latest_snapshot
         where fa.dt = latest_snapshot.latest_dt
     ),
 
     player_xref as (
-        select
-            player_id,
-            mfl_id,
-            sleeper_id,
-            coalesce(name, merge_name) as player_name,
-            position as xref_position
+        select player_id, mfl_id, sleeper_id, coalesce(name, merge_name) as player_name, position as xref_position
         from {{ ref("dim_player_id_xref") }}
     )
 
 select
     -- Identity (map sleeper_id → mfl_id)
     coalesce(
-        cast(xref.player_id as varchar),
-        cast(xref.mfl_id as varchar),
-        'sleeper_' || fa.sleeper_player_id
+        cast(xref.player_id as varchar), cast(xref.mfl_id as varchar), 'sleeper_' || fa.sleeper_player_id
     ) as player_key,
     xref.player_id,
     xref.mfl_id,
@@ -70,19 +58,4 @@ left join player_xref xref on fa.sleeper_player_id = xref.sleeper_id
 
 where
     -- Filter to fantasy-relevant positions
-    fa.position in (
-        'QB',
-        'RB',
-        'WR',
-        'TE',
-        'K',
-        'PK',
-        'DL',
-        'LB',
-        'DB',
-        'DEF',
-        'S',
-        'CB',
-        'DE',
-        'DT'
-    )
+    fa.position in ('QB', 'RB', 'WR', 'TE', 'K', 'PK', 'DL', 'LB', 'DB', 'DEF', 'S', 'CB', 'DE', 'DT')
