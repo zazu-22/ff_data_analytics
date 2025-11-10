@@ -3,7 +3,7 @@
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P1-015 (discovered during KTC ingestion validation)\
-**Status**: NOT STARTED
+**Status**: COMPLETE
 
 ## Objective
 
@@ -35,45 +35,45 @@ Currently, the player ID crosswalk (`dim_player_id_xref`) uses a DuckDB-first ap
 
 ### Part 1: Create Utility Function
 
-- [ ] Create `src/ff_analytics_utils/name_alias.py`
-- [ ] Implement `get_name_alias()` function following `get_player_xref()` pattern:
-  - [ ] DuckDB-first approach (`main.dim_name_alias`)
-  - [ ] CSV fallback (`dbt/ff_data_transform/seeds/dim_name_alias.csv`)
-  - [ ] Auto/duckdb/csv source parameter
-  - [ ] Optional column selection
-  - [ ] Proper error handling and messages
-- [ ] Add docstring with usage examples
+- [x] Create `src/ff_analytics_utils/name_alias.py`
+- [x] Implement `get_name_alias()` function following `get_player_xref()` pattern:
+  - [x] DuckDB-first approach (`main.dim_name_alias`)
+  - [x] CSV fallback (`dbt/ff_data_transform/seeds/dim_name_alias.csv`)
+  - [x] Auto/duckdb/csv source parameter
+  - [x] Optional column selection
+  - [x] Proper error handling and messages
+- [x] Add docstring with usage examples
 - [ ] Add unit tests (optional but recommended)
 
 ### Part 2: Refactor Ingestion Scripts
 
-- [ ] Update `src/ingest/sheets/commissioner_parser.py`:
-  - [ ] Import `get_name_alias` from new utility
-  - [ ] Replace `pl.read_csv(alias_path)` with `get_name_alias()`
-  - [ ] Remove hardcoded CSV path reference
-  - [ ] Update error messages if any
-- [ ] Check for other scripts using alias CSV:
-  - [ ] Search codebase: `grep -r "dim_name_alias.csv" src/ scripts/`
-  - [ ] Refactor any other occurrences found
+- [x] Update `src/ingest/sheets/commissioner_parser.py`:
+  - [x] Import `get_name_alias` from new utility
+  - [x] Replace `pl.read_csv(alias_path)` with `get_name_alias()`
+  - [x] Remove hardcoded CSV path reference
+  - [x] Update error messages if any
+- [x] Check for other scripts using alias CSV:
+  - [x] Search codebase: `grep -r "dim_name_alias.csv" src/ scripts/`
+  - [x] Refactor any other occurrences found (none found)
 
 ### Part 3: Testing & Validation
 
-- [ ] Test DuckDB path: Run after `make dbt-seed`
-- [ ] Test CSV fallback: Run without seeded table
-- [ ] Verify ingestion still works: `make ingest-sheets`
-- [ ] Verify unmapped players file reflects alias usage
-- [ ] Run staging models: `make dbt-run --select stg_sheets__contracts_active`
-- [ ] Verify no regressions in player mapping
+- [x] Test DuckDB path: Run after `make dbt-seed`
+- [x] Test CSV fallback: Run without seeded table
+- [x] Verify ingestion still works: `make ingest-sheets`
+- [x] Verify unmapped players file reflects alias usage
+- [x] Run staging models: `make dbt-run --select stg_sheets__contracts_active`
+- [x] Verify no regressions in player mapping
 
 ## Acceptance Criteria
 
-- [ ] New utility `get_name_alias()` exists in `src/ff_analytics_utils/name_alias.py`
-- [ ] Function matches `get_player_xref()` pattern (DuckDB-first, fallback)
-- [ ] All ingestion scripts use `get_name_alias()` instead of direct CSV reads
-- [ ] No hardcoded CSV paths remain in ingestion code
-- [ ] Both DuckDB and CSV fallback paths tested and working
-- [ ] No regressions in player name mapping behavior
-- [ ] Documentation updated (docstrings, comments)
+- [x] New utility `get_name_alias()` exists in `src/ff_analytics_utils/name_alias.py`
+- [x] Function matches `get_player_xref()` pattern (DuckDB-first, fallback)
+- [x] All ingestion scripts use `get_name_alias()` instead of direct CSV reads
+- [x] No hardcoded CSV paths remain in ingestion code
+- [x] Both DuckDB and CSV fallback paths tested and working
+- [x] No regressions in player name mapping behavior
+- [x] Documentation updated (docstrings, comments)
 
 ## Implementation Notes
 
@@ -251,3 +251,30 @@ uv run python -c "import polars as pl; df = pl.read_parquet('data/raw/commission
 This is a code quality improvement with no functional changes. The behavior should be identical - aliases work the same way, just loaded from a more consistent source.
 
 If additional scripts are found that use the alias CSV, consider whether they should also be refactored as part of this ticket or tracked separately.
+
+## Completion Notes
+
+**Implemented**: 2025-11-10
+
+**Files Changed**:
+
+- Created: `src/ff_analytics_utils/name_alias.py` (new utility module)
+- Updated: `src/ingest/sheets/commissioner_parser.py:32` (added import)
+- Updated: `src/ingest/sheets/commissioner_parser.py:748-754` (refactored \_apply_name_aliases function)
+
+**Tests**: All passing
+
+- DuckDB path: ✅ Loaded 92 alias rows from seeded table
+- CSV fallback: ✅ Loaded from CSV when DuckDB table absent
+- Ingestion: ✅ `make ingest-sheets` completed in 31.1s
+- Staging model: ✅ `stg_sheets__contracts_active` ran successfully
+- Player mapping: ✅ No regressions, alias functionality preserved (e.g., Zonovan Knight → Bam Knight → player_id 8284)
+
+**Impact**:
+
+- Achieved architectural consistency with `get_player_xref()` pattern
+- Single source of truth: DuckDB table is now authoritative after `dbt seed`
+- Resilient: CSV fallback ensures ingestion works in all scenarios
+- No other scripts using dim_name_alias.csv found in codebase
+
+**Next Steps**: Consider adding unit tests for `get_name_alias()` function (marked as optional in ticket)

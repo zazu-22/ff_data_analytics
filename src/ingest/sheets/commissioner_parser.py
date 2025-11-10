@@ -29,6 +29,7 @@ from pathlib import Path
 
 import polars as pl
 
+from ff_analytics_utils.name_alias import get_name_alias
 from ff_analytics_utils.player_xref import get_player_xref
 
 _FALSE_CONDITION_MARKERS = {
@@ -745,12 +746,12 @@ def _parse_contract_fields(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _apply_name_aliases(player_df: pl.DataFrame, has_position: bool) -> pl.DataFrame:
-    """Apply name alias corrections from seed file."""
-    alias_path = Path("dbt/ff_data_transform/seeds/dim_name_alias.csv")
-    if not alias_path.exists():
+    """Apply name alias corrections from DuckDB table (with CSV fallback)."""
+    try:
+        alias_seed = get_name_alias()
+    except RuntimeError:
+        # No aliases available - return unchanged
         return player_df
-
-    alias_seed = pl.read_csv(alias_path)
     alias_has_position = "position" in alias_seed.columns
 
     if alias_has_position and has_position:

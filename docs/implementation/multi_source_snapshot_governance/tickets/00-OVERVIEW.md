@@ -60,7 +60,7 @@ ______________________________________________________________________
 ### KTC Models (2 tickets)
 
 - [x] **P1-015** — Update stg_ktc_assets model (latest_only)
-- [ ] **P1-015b** — Refactor name alias loading to use DuckDB (architectural consistency)
+- [x] **P1-015b** — Refactor name alias loading to use DuckDB (architectural consistency)
 
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
@@ -148,10 +148,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 15/54 (28%)\
+**Completed**: 16/54 (30%)\
 **In Progress**: 0/54\
 **Blocked**: 0/54\
-**Remaining**: 39/54
+**Remaining**: 38/54
 
 **Notes**:
 
