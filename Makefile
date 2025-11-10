@@ -1,6 +1,6 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics ingest-ktc dbt-xref ingest-with-xref ingest-all ingest-nflverse
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics ingest-ktc dbt-xref ingest-with-xref ingest-all ingest-nflverse ingest-sheets ingest-sleeper-players
 
 help:
 	@echo "Available targets:"
@@ -10,7 +10,8 @@ help:
 	@echo "  ingest-ffanalytics   Ingest FFanalytics projections (rest-of-season)"
 	@echo "  ingest-ktc           Ingest KeepTradeCut dynasty market values (1QB)"
 	@echo "  dbt-xref             Build dim_player_id_xref for ingestion dependencies"
-	@echo "  ingest-with-xref     Run dbt-xref, sheets, and FFanalytics ingestion in order"
+	@echo "  ingest-with-xref     Run full ingestion workflow (nflverse → xref → all sources)"
+	@echo "  ingest-all           Alias for ingest-with-xref (deprecated, use ingest-with-xref)"
 	@echo "  dbt-deps             Install dbt package dependencies"
 	@echo "  dbt-seed             Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
 	@echo "  dbt-run              Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
@@ -68,15 +69,43 @@ dbt-xref:
 		DBT_DUCKDB_PATH="$$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
 		dbt run --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform --select dim_player_id_xref
 
-ingest-with-xref: dbt-xref
-	$(MAKE) ingest-sheets
-	$(MAKE) ingest-ffanalytics
-
-ingest-all: dbt-xref
+ingest-with-xref:
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Full Ingestion Workflow with Player Crosswalk"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "[1/6] Ingesting NFLverse data (provides player IDs)..."
+	@echo "───────────────────────────────────────────────────────────────"
 	$(MAKE) ingest-nflverse
+	@echo ""
+	@echo "[2/6] Building dim_player_id_xref (player name crosswalk)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) dbt-xref
+	@echo ""
+	@echo "[3/6] Ingesting Commissioner sheets (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
 	$(MAKE) ingest-sheets
-	$(MAKE) ingest-ffanalytics
+	@echo ""
+	@echo "[4/6] Ingesting Sleeper data (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
 	$(MAKE) ingest-sleeper-players
+	@echo ""
+	@echo "[5/6] Ingesting FFanalytics projections (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-ffanalytics
+	@echo ""
+	@echo "[6/6] Ingesting KTC dynasty values (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-ktc
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  ✅ Full ingestion workflow complete!"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+
+ingest-all: ingest-with-xref
+	@echo "Note: 'ingest-all' is now an alias for 'ingest-with-xref'"
 
 dbt-deps:
 	@echo "Installing dbt package dependencies"
