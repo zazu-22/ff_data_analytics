@@ -1,6 +1,6 @@
 ## Convenience tasks for local iteration
 
-.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics dbt-xref ingest-with-xref ingest-all ingest-nflverse
+.PHONY: help samples-nflverse dbt-run dbt-test dbt-seed quickstart-local sqlfix sqlfmt sqlfmt-check dbt-compile-check dbt-opiner-check sql-all validate-franchise-mapping ingest-ffanalytics ingest-ktc dbt-xref ingest-with-xref ingest-all ingest-nflverse
 
 help:
 	@echo "Available targets:"
@@ -8,6 +8,7 @@ help:
 	@echo "  ingest-sheets        Ingest league sheets locally"
 	@echo "  ingest-sleeper-players  Ingest Sleeper player database (for crosswalk validation)"
 	@echo "  ingest-ffanalytics   Ingest FFanalytics projections (rest-of-season)"
+	@echo "  ingest-ktc           Ingest KeepTradeCut dynasty market values (1QB)"
 	@echo "  dbt-xref             Build dim_player_id_xref for ingestion dependencies"
 	@echo "  ingest-with-xref     Run dbt-xref, sheets, and FFanalytics ingestion in order"
 	@echo "  dbt-deps             Install dbt package dependencies"
@@ -50,6 +51,14 @@ ingest-sleeper-players:
 ingest-ffanalytics:
 	@echo "Ingesting FFanalytics projections (rest-of-season)"
 	uv run python -c "from src.ingest.ffanalytics.loader import load_projections_ros; load_projections_ros()"
+
+ingest-ktc:
+	@echo "Ingesting KeepTradeCut dynasty market values (1QB)"
+	@echo "→ Ingesting players"
+	uv run python -c "from ingest.ktc.registry import load_players; load_players()"
+	@echo "→ Ingesting picks"
+	uv run python -c "from ingest.ktc.registry import load_picks; load_picks()"
+	@echo "✅ KTC ingestion complete"
 
 dbt-xref:
 	@echo "Building dim_player_id_xref"
