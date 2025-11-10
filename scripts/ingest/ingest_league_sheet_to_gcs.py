@@ -43,7 +43,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Define the owner tabs to export (avoiding TRANSACTIONS and other large tabs)
-# TODO: Update these based on actual league owner names
+# TODO: Extract hard-coded owner names; use 'gm_tab' from 'dim_franchise.csv' seed
 OWNER_TABS = [
     "Eric",
     "Gordon",
