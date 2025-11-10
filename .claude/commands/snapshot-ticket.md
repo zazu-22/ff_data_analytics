@@ -18,18 +18,19 @@ Execute ticket **$ARGUMENTS** following the implementation plan.
 
 1. **Ticket file** (your primary instructions):
 
-   ```
+   ```text
    docs/implementation/multi_source_snapshot_governance/tickets/$ARGUMENTS*.md
    ```
 
 2. **Epic overview** (for context if needed):
 
-   ```
+   ```text
    docs/implementation/multi_source_snapshot_governance/2025-11-07_README_v_2_0.md
    ```
 
 3. **Implementation plan** (for design decisions):
-   ```
+
+   ```text
    docs/implementation/multi_source_snapshot_governance/2025-11-07_plan_v_2_0.md
    ```
 
@@ -143,7 +144,7 @@ Then update the ticket's **Status** field at the top of the file, depending on t
 
 Create a commit with this format:
 
-```
+```text
 feat(snapshot): implement $ARGUMENTS - <model_name>
 
 - Replace dt=* pattern with snapshot_selection_strategy macro
