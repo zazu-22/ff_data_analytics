@@ -29,7 +29,7 @@ For detailed context on specific areas, see:
 - **Python Version**: 3.13.6 (managed via .python-version)
 - **dbt Version**: dbt-fusion 2.0.0-preview.32 (DuckDB adapter)
 
-See `Makefile` for all targets: `make help`
+See `justfile` for all targets: `just help` or `just --list`
 
 ## Key Components
 

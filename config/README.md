@@ -101,13 +101,13 @@ Each source has environment-specific globs that dbt models can reference via `en
 ## Best Practices
 
 1. **Never commit `.env`** - It's gitignored and contains user-specific values
-2. **Use `.env.template`** - Copy to `.env` and fill in your values
+2. **Use `.env.example`** - Copy to `.env` and fill in your values
 3. **Document overrides** - If you add new path variables, update `env_config.yaml` and this README
 4. **Test with defaults first** - Ensure zero-config works before adding overrides
 5. **Keep secrets in `config/secrets/`** - This directory is gitignored
 
 ## Related Documentation
 
-- `../.env.template` - Template for local environment variables
+- `../.env.example` - Template for local environment variables
 - `./env_config.yaml` - Multi-environment path configuration
 - `../docs/implementation/multi_source_snapshot_governance/` - Snapshot governance implementation

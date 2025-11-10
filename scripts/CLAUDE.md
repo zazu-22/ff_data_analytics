@@ -101,7 +101,7 @@ ______________________________________________________________________
 
 All ingest scripts require authentication via:
 
-- **Local**: `.env` file (see `.env.template`)
+- **Local**: `.env` file (see `.env.example`)
 - **CI**: GitHub repo secrets
 
 **Common variables**:

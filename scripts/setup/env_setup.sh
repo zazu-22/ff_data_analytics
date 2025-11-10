@@ -21,7 +21,7 @@ if [ -f .env ]; then
 fi
 
 # Copy template
-cp .env.template .env
+cp .env.example .env
 echo "✓ Created .env from template"
 
 # Get current GCP project if available

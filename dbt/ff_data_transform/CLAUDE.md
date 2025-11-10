@@ -29,11 +29,11 @@
 ## Quick Commands
 
 ```bash
-# From repo root - use Makefile (handles env vars automatically)
-make dbt-run    # dbt run with proper env setup
-make dbt-test   # dbt test with proper env setup
-make dbt-seed   # dbt seed with proper env setup
-make sqlfix     # Auto-fix SQL style issues
+# From repo root - use justfile (handles env vars automatically)
+just dbt-run    # dbt run with proper env setup
+just dbt-test   # dbt test with proper env setup
+just dbt-seed   # dbt seed with proper env setup
+just sql-fix     # Auto-fix SQL style issues
 
 # Run manually from repo root without make
 # NOTE: No UV_CACHE_DIR needed - uv uses ~/.cache/uv by default (shared across projects)
@@ -242,7 +242,7 @@ This project uses a **multi-tool approach** for SQL quality:
    - Handles DuckDB syntax correctly (polyglot mode)
    - Fast and opinionated (minimal configuration)
    - Uses 4-space indentation (default, non-configurable)
-   - Run: `make sqlfmt` (format) or `make sqlfmt-check` (check only)
+   - Run: `just sql-format` (format) or `just sql-format-check` (check only)
 
 2. **SQLFluff** (selective linting) - Style/quality checks on standard SQL models
 
@@ -253,13 +253,13 @@ This project uses a **multi-tool approach** for SQL quality:
      - Staging models (`stg_*.sql`) - use `read_parquet()` with named parameters
      - Core models with DuckDB functions (`dim_player_contract_history.sql`, `fct_league_transactions.sql`, `int_pick_*.sql`)
      - Mart models with DuckDB functions (`mrt_contract_snapshot_current.sql`, `mrt_real_world_actuals_weekly.sql`)
-   - Run: `make sqlcheck` (lint) or `make sqlfix` (auto-fix)
+   - Run: `just sql-lint` (lint) or `just sql-fix` (auto-fix)
 
 3. **dbt compile** (syntax validation) - Validates SQL syntax using actual DuckDB parser
 
    - Catches real syntax errors regardless of linting exclusions
    - Uses dbt's compilation process (validates after Jinja templating)
-   - Run: `make dbt-compile-check`
+   - Run: `just dbt-compile`
 
 4. **dbt-opiner** (dbt best practices) - Enforces dbt project conventions
 
@@ -267,10 +267,10 @@ This project uses a **multi-tool approach** for SQL quality:
    - **Configuration**: `.dbt-opiner.yaml` (optional - uses defaults if not present)
    - **Exclusions**: Test files (`tests/*.sql`) are excluded via pre-commit hook - they're not dbt project nodes
    - Separate from SQL syntax/style concerns
-   - Run: `make dbt-opiner-check`
+   - Run: `just dbt-lint`
    - **Note**: When using `--all-files`, dbt-opiner will report errors for test files (expected - they're excluded from linting)
 
-**All-in-one**: `make sql-all` runs all four checks in sequence.
+**All-in-one**: `just quality-sql` runs all four checks in sequence.
 
 **Pre-commit hooks**: All tools run automatically on commit (format → lint → validate → dbt practices).
 
@@ -293,7 +293,7 @@ When you commit SQL/YAML changes, hooks run in this **specific order**:
 **Run manually before committing** (recommended):
 
 ```bash
-make sql-all  # Runs all 4 checks at once - faster than waiting for pre-commit
+just quality-sql  # Runs all 4 checks at once - faster than waiting for pre-commit
 ```
 
 **Emergency override** (NOT recommended - use sparingly):
@@ -440,13 +440,13 @@ Run these commands **in order** before committing:
 
 ```bash
 # 1. Compile (validates Jinja and SQL syntax)
-make dbt-run --select <model_name>
+just dbt-run --select <model_name>
 
 # 2. Test (validates data quality)
-make dbt-test --select <model_name>
+just dbt-test --select <model_name>
 
 # 3. Check best practices (runs all quality checks)
-make sql-all
+just quality-sql
 ```
 
 **Pre-commit hooks will automatically run**:
@@ -738,7 +738,7 @@ ______________________________________________________________________
 **Run manually before committing**:
 
 ```bash
-make sql-all  # Runs all 4 checks at once
+just quality-sql  # Runs all 4 checks at once
 ```
 
 **Emergency only** (NOT recommended):
@@ -754,20 +754,20 @@ ______________________________________________________________________
 **Check which files are affected**:
 
 ```bash
-make dbt-opiner-check  # Shows all violations
+just dbt-lint  # Shows all violations
 ```
 
 **Validate a specific model**:
 
 ```bash
-make dbt-run --select <model_name>
-make dbt-test --select <model_name>
+just dbt-run --select <model_name>
+just dbt-test --select <model_name>
 ```
 
 **Common workflow**:
 
 1. Make changes to SQL/YAML
-2. Run `make sql-all` to check everything
+2. Run `just quality-sql` to check everything
 3. Fix any violations
 4. Commit (pre-commit will validate again)
 

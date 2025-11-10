@@ -16,7 +16,7 @@ This directory contains one-time setup and validation scripts for the FF Analyti
 
 **What it does**:
 
-- Copies `.env.template` to `.env`
+- Copies `.env.example` to `.env`
 - Prompts for your GCP project ID
 - Auto-detects current gcloud project
 - Updates the `.env` file with your values

@@ -40,8 +40,8 @@
 - Read Claude guide: `CLAUDE.md` (LLM/code assistant tips for this repo)
 - Follow repo conventions: `docs/dev/repo_conventions_and_structure.md`
 - Set up pre-commit: `uv run pre-commit install` then `uv run pre-commit run --all-files`
-- Useful make targets: `make samples-nflverse`, `make dbt-run`, `make dbt-test`, `make sqlfix`
-- `make dbt-run` / `make dbt-test` wrap `uv run` with the project env (EXTERNAL_ROOT + DuckDB path prewired).
+- Useful just commands: `just ingest-quick`, `just dbt-run`, `just dbt-test`, `just sql-fix` (run `just help` for full list)
+- `just dbt-run` / `just dbt-test` wrap `uv run` with the project env (EXTERNAL_ROOT + DuckDB path prewired).
 
 ## Cloud Storage (GCS) Output Support
 

@@ -23,7 +23,7 @@ ______________________________________________________________________
   - [x] Prefect Cloud access or local Prefect server setup
   - [x] Environment setup (Python 3.13.6, uv, dbt-fusion)
 - [x] Configure environment and path management:
-  - [x] Create `.env.template` with documented path overrides
+  - [x] Create `.env.example` with documented path overrides
   - [x] Create `config/env_config.yaml` with multi-environment paths (local, ci, cloud)
   - [x] Create `config/README.md` explaining environment switching
   - [x] Verify default globs in dbt models work without configuration

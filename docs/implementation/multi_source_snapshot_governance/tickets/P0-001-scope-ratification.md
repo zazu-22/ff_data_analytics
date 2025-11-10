@@ -30,7 +30,7 @@ Without this alignment, implementation could proceed on incorrect assumptions or
   - [x] Prefect Cloud access or local Prefect server setup
   - [x] Environment setup (Python 3.13.6, uv, dbt-fusion)
 - [x] Configure environment and path management:
-  - [x] Create `.env.template` with documented path overrides
+  - [x] Create `.env.example` with documented path overrides
   - [x] Create `config/env_config.yaml` with multi-environment paths (local, ci, cloud)
   - [x] Create `config/README.md` explaining environment switching
   - [x] Verify default globs in dbt models work without configuration
@@ -79,10 +79,10 @@ Add a "Phase 0 Decisions" section documenting:
 
 5. **Environment Configuration Setup**:
 
-   Create `.env.template` (version controlled):
+   Create `.env.example` (version controlled):
 
    ```bash
-   # .env.template - Copy to .env for local development
+   # .env.example - Copy to .env for local development
 
    # Environment selector (local, ci, cloud)
    FF_ENV=local
@@ -177,7 +177,7 @@ N/A - This is a planning/documentation ticket
 
    - `config/env_config.yaml` - Multi-environment path mappings for 15 datasets
    - `config/README.md` - Configuration priority and zero-config approach documentation
-   - `.env.template` - FF_ENV selector and snapshot glob overrides
+   - `.env.example` - FF_ENV selector and snapshot glob overrides
 
 5. **Documentation Updated**:
 
