@@ -10,8 +10,8 @@ help:
 	@echo "  ingest-ffanalytics   Ingest FFanalytics projections (rest-of-season)"
 	@echo "  ingest-ktc           Ingest KeepTradeCut dynasty market values (1QB)"
 	@echo "  dbt-xref             Build dim_player_id_xref for ingestion dependencies"
-	@echo "  ingest-with-xref     Run full ingestion workflow (nflverse → xref → all sources)"
-	@echo "  ingest-all           Alias for ingest-with-xref (deprecated, use ingest-with-xref)"
+	@echo "  ingest-with-xref     Fast ingestion workflow (nflverse → xref → sheets, sleeper, ktc)"
+	@echo "  ingest-all           Full ingestion workflow (includes ffanalytics - slow!)"
 	@echo "  dbt-deps             Install dbt package dependencies"
 	@echo "  dbt-seed             Seed dbt sources (use 'make dbt-seed ARGS=<dbt seed args>')"
 	@echo "  dbt-run              Run dbt models locally (DuckDB) (use 'make dbt-run ARGS=<dbt run args>')"
@@ -72,7 +72,40 @@ dbt-xref:
 ingest-with-xref:
 	@echo ""
 	@echo "═══════════════════════════════════════════════════════════════"
-	@echo "  Full Ingestion Workflow with Player Crosswalk"
+	@echo "  Fast Ingestion Workflow (excludes FFanalytics)"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "[1/5] Ingesting NFLverse data (provides player IDs)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-nflverse
+	@echo ""
+	@echo "[2/5] Building dim_player_id_xref (player name crosswalk)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) dbt-xref
+	@echo ""
+	@echo "[3/5] Ingesting Commissioner sheets (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-sheets
+	@echo ""
+	@echo "[4/5] Ingesting Sleeper data (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-sleeper-players
+	@echo ""
+	@echo "[5/5] Ingesting KTC dynasty values (requires xref)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-ktc
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  ✅ Fast ingestion complete!"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "Note: Run 'make ingest-ffanalytics' separately if needed (15-20 min)"
+	@echo ""
+
+ingest-all:
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Full Ingestion Workflow (includes FFanalytics - SLOW!)"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
 	@echo "[1/6] Ingesting NFLverse data (provides player IDs)..."
@@ -91,21 +124,18 @@ ingest-with-xref:
 	@echo "───────────────────────────────────────────────────────────────"
 	$(MAKE) ingest-sleeper-players
 	@echo ""
-	@echo "[5/6] Ingesting FFanalytics projections (requires xref)..."
-	@echo "───────────────────────────────────────────────────────────────"
-	$(MAKE) ingest-ffanalytics
-	@echo ""
-	@echo "[6/6] Ingesting KTC dynasty values (requires xref)..."
+	@echo "[5/6] Ingesting KTC dynasty values (requires xref)..."
 	@echo "───────────────────────────────────────────────────────────────"
 	$(MAKE) ingest-ktc
+	@echo ""
+	@echo "[6/6] Ingesting FFanalytics projections (⚠️  15-20 min)..."
+	@echo "───────────────────────────────────────────────────────────────"
+	$(MAKE) ingest-ffanalytics
 	@echo ""
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo "  ✅ Full ingestion workflow complete!"
 	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
-
-ingest-all: ingest-with-xref
-	@echo "Note: 'ingest-all' is now an alias for 'ingest-with-xref'"
 
 dbt-deps:
 	@echo "Installing dbt package dependencies"
