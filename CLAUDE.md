@@ -70,14 +70,22 @@ See `Makefile` for all targets: `make help`
 - **Idempotent**: All jobs retryable
 - **Failure handling**: Last-known-good (LKG) pattern
 
+**Testing Mindset**:
+
+- All test failures are your responsibility - broken windows theory applies
+- Never delete a failing test; fix the underlying issue or discuss with user
+- Tests must comprehensively cover functionality
+- Test output must be pristine to pass - no unexpected errors in logs
+
 **Debugging dbt Test Failures**:
 
-When dbt tests fail (duplicates, relationship violations, etc.), **assume the issue is in our transformation code, not the source data**. Check in order:
+When dbt tests fail, **assume the issue is in our transformation code, not the source data**. Use systematic debugging:
 
-1. Multiple snapshots being read (`dt=*` patterns without latest-only filtering)
-2. Join logic creating many-to-many relationships
-3. Missing deduplication (QUALIFY/DISTINCT) in staging models
-4. Only after ruling out code issues should you inspect source data quality
+1. Read the test failure message completely
+2. Check for multiple snapshots being read (`dt=*` patterns without latest-only filtering)
+3. Check join logic creating many-to-many relationships
+4. Check missing deduplication (QUALIFY/DISTINCT) in staging models
+5. Only after ruling out code issues should you inspect source data quality
 
 ## Critical Specifications
 
@@ -90,10 +98,21 @@ When dbt tests fail (duplicates, relationship violations, etc.), **assume the is
 
 ## Coding Conventions
 
-- **Python**: PEP 8, 4-space indent, type hints; snake_case for modules/functions, PascalCase for classes
-- **DataFrames**: Prefer Polars and PyArrow; write columnar Parquet
-- **Notebooks**: Pattern `topic_action.ipynb`
-- **Commits**: Conventional commits (`feat:`, `docs:`, `chore:`)
+**Python**:
+
+- Style: PEP 8, 4-space indent, type hints required
+- Naming: snake_case for modules/functions, PascalCase for classes
+- Avoid temporal names: No "new\_", "improved\_", "legacy\_" prefixes
+- DataFrames: Prefer Polars and PyArrow; write columnar Parquet
+
+**SQL/dbt**: See `dbt/ff_data_transform/CLAUDE.md` for comprehensive SQL style guide
+
+**Notebooks**: Pattern `topic_action.ipynb` (e.g., `projections_analysis.ipynb`)
+
+**Commits**: Conventional commits format (`feat:`, `fix:`, `docs:`, `chore:`)
+
+- One logical change per commit
+- Descriptive commit messages focusing on "why"
 
 ## Environment Variables & Security
 

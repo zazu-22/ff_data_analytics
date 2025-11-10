@@ -3,6 +3,8 @@
 **Location**: `dbt/ff_data_transform/`
 **Purpose**: DuckDB + external Parquet dimensional models following Kimball patterns
 
+**Before modifying SQL**: Read error messages completely, check for existing patterns in similar files, test incrementally.
+
 ## Configuration
 
 **IMPORTANT**: `profiles.yml` is in `.gitignore` - you cannot see it with `ls` or `find`, but it exists at `dbt/ff_data_transform/profiles.yml`.
@@ -19,7 +21,7 @@
 **Environment Variables** (set by Makefile or manually):
 
 - `EXTERNAL_ROOT` - Path to raw data (e.g., `$PWD/data/raw`)
-- `DBT_DUCKDB_PATH` - Path to DuckDB database file (e.g., `$PWD/dbt/ff_data_transform/target/dev.duckdb`)
+- `DBT_DUCKDB_PATH` - Path to DuckDB database file
 - `DBT_TARGET` - Target name (default: `local`)
 - `DBT_THREADS` - Thread count (default: 4)
 - `DBT_SCHEMA` - Schema name (default: `main`)
