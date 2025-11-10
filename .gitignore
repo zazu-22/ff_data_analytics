@@ -68,9 +68,9 @@ scripts/_debug/**/*
 scripts/troubleshooting/**/*
 
 # Archived and deprecated files
-**/_archive/**
+**/_archive*/**
 **/_deprecated/**
-**/.archive/**
+**/.archive*/**
 **/.deprecated/**
 **/.old/**
 
