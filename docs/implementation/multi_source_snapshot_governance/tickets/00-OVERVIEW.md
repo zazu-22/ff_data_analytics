@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 54 (includes 13 staging models + 6 data quality fixes + 1 architectural refactor)
+- **Total Tickets**: 56 (includes 13 staging models + 8 data quality fixes + 1 architectural refactor)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~160-200 hours (updated for expanded Phase 1 + data quality fixes)
+- **Estimated Total Effort**: ~170-210 hours (updated for expanded Phase 1 + data quality fixes)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -31,7 +31,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (22 tickets - 13 staging models + 6 data quality fixes + 1 architectural refactor)
+## Phase 1: Foundation (24 tickets - 13 staging models + 8 data quality fixes + 1 architectural refactor)
 
 ### Macro & Infrastructure
 
@@ -66,18 +66,20 @@ ______________________________________________________________________
 
 - [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
 
-### Data Quality Follow-ups (6 tickets) ⚠️ **Discovered during staging model updates**
+### Data Quality Follow-ups (8 tickets) ⚠️ **Discovered during comprehensive test analysis**
 
 **Recommended Execution Order** (sequential on main branch, no file conflicts):
 
-1. [ ] **P1-021** — Fix assert_canonical_player_key_alignment test error (Small: 1-2 hours - test infrastructure issue)
-2. [ ] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - grain investigation)
-3. [ ] **P1-022** — Resolve fct_league_transactions orphan pick references (Small: 2-3 hours - 5 orphans remaining)
-4. [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 17 discrepancies)
-5. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - R runner or staging fix)
-6. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - complex mart logic, 1,893 duplicates)
+1. [ ] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - 22 pick_ids)
+2. [ ] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours - 21 violations)
+3. [ ] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates)
+4. [ ] **P1-022** — Resolve orphan pick references (Small-Medium: 2-4 hours - 5 fact + 41 staging orphans)
+5. [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies)
+6. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
+7. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
+8. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
 
-**Rationale**: Start with smallest/easiest (P1-021, P1-020, P1-022) to build momentum, then tackle more complex data quality investigations (P1-019, P1-018, P1-017). All can be done on main branch - zero file conflicts between tickets.
+**Rationale**: Start with pick-related data integrity issues (P1-020, P1-023, P1-024, P1-022) to ensure foundation, then tackle cross-source reconciliation (P1-019), followed by projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). All can be done on main branch - zero file conflicts between tickets.
 
 ### Sample Cleanup & Validation
 
@@ -148,16 +150,17 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 16/54 (30%)\
-**In Progress**: 0/54\
-**Blocked**: 0/54\
-**Remaining**: 38/54
+**Completed**: 16/56 (29%)\
+**In Progress**: 0/56\
+**Blocked**: 0/56\
+**Remaining**: 40/56
 
 **Notes**:
 
-- P1-009: Snapshot governance fix complete; pre-existing roster parity test failure (17 discrepancies - separate ticket P1-019 created)
+- **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed
+- P1-009: Snapshot governance fix complete; pre-existing roster parity test failure (30 discrepancies - separate ticket P1-019 created)
 - P1-011: Snapshot governance fix complete; downstream testing revealed TBD pick duplicates (22 pick_ids - separate ticket P1-020 created)
-- P1-012: Snapshot governance fix complete; reduced orphan picks from 41→5 (87% improvement - separate ticket P1-022 created for remaining 5); also surfaced test environment issue (separate ticket P1-021 created)
+- P1-012: Snapshot governance fix complete; reduced orphan picks from 41→5 in fact table (87% improvement - separate ticket P1-022 created for remaining 5 + 41 staging orphans)
 - P1-013: Staging model fix complete, but downstream mart duplicates persist (separate ticket P1-017 created)
 - P1-016: Snapshot governance fix complete; reduced cross-snapshot duplicates from 33→17 (staging) and 162→101 (fact table). Remaining 17 duplicates are source data quality issues (player name variations: "DJ Moore" vs "Moore, D.J." - separate ticket P1-018 created)
 
@@ -172,7 +175,7 @@ The following tickets represent the critical path for achieving minimum viable g
 03. **P1-013, P1-016** → High-priority staging model updates
 04. **P1-002, P1-003, P1-004** → NFLverse baseline models
 05. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
-06. **P1-017, P1-018, P1-019, P1-020, P1-021, P1-022** → Data quality fixes (6 tickets addressing duplicates, test errors, and data integrity issues discovered during staging model updates)
+06. **P1-017, P1-018, P1-019, P1-020, P1-022, P1-023, P1-024, P1-025** → Data quality fixes (8 tickets addressing duplicates, orphan references, and data integrity issues discovered during comprehensive test analysis)
 07. **P2-001, P2-002** → Registry creation
 08. **P2-005** → Validation tooling
 09. **P2-006, P2-007** → Freshness tests
@@ -208,9 +211,9 @@ ______________________________________________________________________
 - **P1-020** (TBD pick duplicates) can run in parallel with P1-015
   - Dependency: P1-011 must be complete (to rule out staging as root cause)
   - Not blocking other work; data modeling issue separate from snapshot governance
-- **P1-021** (test environment issue) can run in parallel with any Phase 1 ticket
-  - No dependencies; test infrastructure/environment issue
-  - Not blocking other work; should be fixed before considering test suite complete
+- **P1-023, P1-024, P1-025** (new data quality tickets) can run in parallel with each other
+  - No dependencies; data validation and integrity issues
+  - Can be sequenced for efficiency (pick-related issues first)
 - **P1-022** (orphan pick references) can run in parallel with other Phase 1 tickets
   - Dependency: P1-012 must be complete (snapshot governance already reduced issue 87%)
   - Not blocking other work; low priority since only 5 orphans remain
@@ -231,10 +234,12 @@ Implementation is complete when:
   - [ ] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact)
   - [ ] Source data duplicates eliminated (P1-018: 17→0 staging, 101→0 fact)
   - [ ] Mart duplicates eliminated (P1-017: 1,893→0)
-  - [ ] Roster parity discrepancies investigated and resolved (P1-019: 17→0 or documented)
+  - [ ] Roster parity discrepancies investigated and resolved (P1-019: 30→0 or documented)
   - [ ] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0 or grain clarified)
-  - [ ] Test environment issues resolved (P1-021: canonical player key test passing)
-  - [ ] Orphan pick references resolved (P1-022: 5→0 or documented exceptions)
+  - [ ] Orphan pick references resolved (P1-022: 5 fact + 41 staging→0 or documented exceptions)
+  - [ ] Base picks per round validated (P1-023: 21 violations→0)
+  - [ ] Comp registry duplicates eliminated (P1-024: 19 duplicates→0)
+  - [ ] IDP source diversity validated (P1-025: 3 failures→0 or test downgraded to warning)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)

@@ -110,6 +110,39 @@ ______________________________________________________________________
   - [x] Verify duplicate fix (33→17, remaining are source data quality issues)
   - [x] Verify `fct_player_projections` duplicate fix (162→101, cascaded from staging)
 
+### Additional Data Quality Fixes ⚠️ **Priority: Discovered via comprehensive test analysis (2025-11-10)**
+
+**NOTE**: Comprehensive test analysis revealed 3 additional data quality issues beyond the original 6. See tickets P1-023, P1-024, P1-025 for details. The `assert_canonical_player_key_alignment` test (originally P1-021) is now passing and ticket was removed.
+
+- [ ] Fix `assert_12_base_picks_per_round` test failures (P1-023):
+
+  - [ ] Identify which season-round combinations have incorrect base pick counts (21 violations)
+  - [ ] Determine if issue is in seed data, model logic, or pick type classification
+  - [ ] Implement fix and verify all rounds have exactly 12 base picks
+
+- [ ] Fix `int_pick_comp_registry` duplicate transaction IDs (P1-024):
+
+  - [ ] Identify the 19 duplicate comp_faad_transaction_id values
+  - [ ] Determine if duplicates indicate one-to-many relationships or data errors
+  - [ ] Fix model logic or document exceptions
+
+- [ ] Investigate `assert_idp_source_diversity` failures (P1-025):
+
+  - [ ] Identify which IDP players/positions lack source diversity (3 failures)
+  - [ ] Determine if test expectations are realistic
+  - [ ] Either fix source coverage or downgrade test to warning (LOW PRIORITY)
+
+- [ ] Update roster parity test count (P1-019):
+
+  - [ ] Note: Test now shows 30 failures (was documented as 17)
+  - [ ] Investigate and categorize all 30 roster discrepancies
+
+- [ ] Expand orphan pick investigation (P1-022):
+
+  - [ ] Note: 41 orphan picks in `stg_sheets__transactions` (upstream of 5 fact orphans)
+  - [ ] Investigate both staging and fact table orphans
+  - [ ] Document relationship between layers
+
 ### Mart Data Quality ⚠️ **Priority: Fixes 1,893 mart duplicates**
 
 - [ ] Fix `mrt_fasa_targets` duplicate rows (discovered during P1-013):

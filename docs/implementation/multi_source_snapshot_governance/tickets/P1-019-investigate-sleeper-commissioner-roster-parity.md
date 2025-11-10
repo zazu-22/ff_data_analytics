@@ -7,7 +7,7 @@
 
 ## Objective
 
-Investigate and resolve 17 roster parity failures between Sleeper API data and Commissioner Google Sheet data, as detected by the `assert_sleeper_commissioner_roster_parity` test.
+Investigate and resolve 30 roster parity failures between Sleeper API data and Commissioner Google Sheet data, as detected by the `assert_sleeper_commissioner_roster_parity` test.
 
 ## Context
 
@@ -17,7 +17,7 @@ During P1-009 implementation (`stg_sheets__contracts_active`), we discovered a p
 
 ```
 assert_sleeper_commissioner_roster_parity
-Got 17 results, configured to fail if != 0
+Got 30 results, configured to fail if != 0
 ```
 
 This test compares active rosters from:
@@ -25,7 +25,7 @@ This test compares active rosters from:
 - **Sleeper API**: `stg_sleeper__rosters` (platform truth)
 - **Commissioner Sheet**: `stg_sheets__contracts_active` (manual tracking)
 
-The 17 discrepancies indicate players who appear on one roster but not the other, or with different roster positions/attributes.
+The 30 discrepancies indicate players who appear on one roster but not the other, or with different roster positions/attributes.
 
 **Why This Matters**:
 
@@ -44,7 +44,7 @@ The 17 discrepancies indicate players who appear on one roster but not the other
 
 ### Phase 1: Investigation
 
-- [ ] Run the assertion test in isolation to see the 17 failing rows:
+- [ ] Run the assertion test in isolation to see the 30 failing rows:
   ```bash
   dbt test --select assert_sleeper_commissioner_roster_parity --store-failures
   ```
@@ -61,7 +61,7 @@ The 17 discrepancies indicate players who appear on one roster but not the other
 
 ### Phase 2: Categorize Discrepancies
 
-Classify each of the 17 failures into categories:
+Classify each of the 30 failures into categories:
 
 - [ ] **Category A: Data Sync Lag** - Recent roster moves not yet in Commissioner Sheet
 - [ ] **Category B: Manual Entry Errors** - Typos, missing players, incorrect positions
@@ -88,7 +88,7 @@ Based on categorization, determine approach:
 
 ## Acceptance Criteria
 
-- [ ] All 17 discrepancies investigated and categorized
+- [ ] All 30 discrepancies investigated and categorized
 - [ ] Root causes documented with specific player examples
 - [ ] Resolution strategy defined for each category
 - [ ] Fixes implemented (data corrections, test logic updates, or documented exceptions)
@@ -182,7 +182,7 @@ WHERE s.player_id IS NULL OR c.player_id IS NULL OR s.roster_slot != c.roster_sl
 
 **Before Fix**:
 
-- 17 roster discrepancies between Sleeper and Commissioner Sheet
+- 30 roster discrepancies between Sleeper and Commissioner Sheet
 - Unclear which source is correct for each discrepancy
 - Potential analytics errors if relying on incorrect roster data
 - Test fails on every run, masking new issues
@@ -216,7 +216,7 @@ WHERE s.player_id IS NULL OR c.player_id IS NULL OR s.roster_slot != c.roster_sl
 
 **Why This Ticket Exists**:
 
-During P1-009 implementation, the `assert_sleeper_commissioner_roster_parity` test failed with 17 discrepancies. This is a **pre-existing data quality issue**, not caused by snapshot governance changes. However, it needs investigation to:
+During P1-009 implementation, the `assert_sleeper_commissioner_roster_parity` test failed with 30 discrepancies. This is a **pre-existing data quality issue**, not caused by snapshot governance changes. However, it needs investigation to:
 
 1. Ensure both roster data sources are accurate
 2. Understand if discrepancies are expected or errors

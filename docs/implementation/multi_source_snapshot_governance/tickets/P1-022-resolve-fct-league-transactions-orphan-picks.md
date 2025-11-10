@@ -1,26 +1,34 @@
 # Ticket P1-022: Resolve fct_league_transactions Orphan Pick References
 
 **Phase**: 1 - Foundation\
-**Estimated Effort**: Small (2-3 hours)\
+**Estimated Effort**: Small-Medium (2-4 hours)\
 **Dependencies**: P1-012 (transactions snapshot governance)\
-**Priority**: Low - Warning level test (5 orphan picks, down from 41)
+**Priority**: Medium - 5 fact table orphans (down from 41) + 41 staging orphans
 
 ## Objective
 
-Investigate and resolve the 5 remaining orphan pick references in `fct_league_transactions` where transaction records reference `pick_id` values that don't have matching records in `dim_pick`.
+Investigate and resolve orphan pick references where transaction records reference `pick_id` values that don't have matching records in `dim_pick`:
+
+1. **5 orphan picks** in `fct_league_transactions` (fact table)
+2. **41 orphan picks** in `stg_sheets__transactions` (staging table)
 
 ## Context
 
-During P1-012 downstream testing (`fct_league_transactions`), the `relationships_fct_league_transactions_pick_id__pick_id__ref_dim_pick_` test warned about 5 orphan picks.
+During comprehensive dbt test analysis (2025-11-10), two related orphan pick tests showed warnings:
 
-**Test Warning**:
+**Test Warnings**:
 
 ```
 WARN 5 relationships_fct_league_transactions_pick_id__pick_id__ref_dim_pick_
 Got 5 results, configured to warn if != 0
+
+WARN 41 relationships_stg_sheets__transactions_pick_id__pick_id__ref_dim_pick_
+Got 41 results, configured to warn if != 0
 ```
 
-**Good News**: This improved significantly from **41 orphan picks** (as documented in P1-012 ticket) to **5 orphan picks** after the snapshot governance fix. The P1-012 implementation reduced orphan picks by **87%**.
+**Good News**: The fact table improved significantly from **41 orphan picks** (pre-P1-012) to **5 orphan picks** (post-P1-012) after the snapshot governance fix. The P1-012 implementation reduced fact table orphan picks by **87%**.
+
+**Gap Identified**: The staging table `stg_sheets__transactions` still has **41 orphan picks** - these are the upstream source of the issue and need investigation.
 
 **Root Cause Hypothesis**:
 
@@ -45,7 +53,9 @@ Transaction records reference draft picks that either:
 
 ### Phase 1: Investigation
 
-- [ ] Identify the 5 orphan picks:
+**Fact Table (5 orphans)**:
+
+- [ ] Identify the 5 fact table orphan picks:
   ```bash
   EXTERNAL_ROOT="/Users/jason/code/ff_analytics/data/raw" \
   DBT_DUCKDB_PATH="/Users/jason/code/ff_analytics/dbt/ff_data_transform/target/dev.duckdb" \
@@ -77,6 +87,39 @@ Transaction records reference draft picks that either:
   - [ ] Check if transaction is old/legacy
   - [ ] Check if pick is compensatory or special type
 - [ ] Document each orphan with explanation
+
+**Staging Table (41 orphans)**:
+
+- [ ] Identify the 41 staging table orphan picks:
+  ```bash
+  EXTERNAL_ROOT="/Users/jason/code/ff_analytics/data/raw" \
+  DBT_DUCKDB_PATH="/Users/jason/code/ff_analytics/dbt/ff_data_transform/target/dev.duckdb" \
+  uv run dbt test --select relationships_stg_sheets__transactions_pick_id__pick_id__ref_dim_pick_ \
+    --store-failures \
+    --project-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform \
+    --profiles-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform
+  ```
+- [ ] Query the staging orphan pick details:
+  ```sql
+  SELECT
+    t.pick_id,
+    t.transaction_type,
+    t.transaction_date,
+    t.from_franchise_name,
+    t.to_franchise_name,
+    COUNT(*) as transaction_count
+  FROM main.stg_sheets__transactions t
+  LEFT JOIN main.dim_pick p ON t.pick_id = p.pick_id
+  WHERE t.pick_id IS NOT NULL
+    AND p.pick_id IS NULL
+  GROUP BY 1,2,3,4,5
+  ORDER BY t.transaction_date;
+  ```
+- [ ] Determine relationship between staging (41) and fact (5) orphans:
+  - [ ] Are the 5 fact orphans a subset of the 41 staging orphans?
+  - [ ] Why do 36 staging orphans not appear in fact table? (filtered out? aggregated?)
+- [ ] Categorize staging orphans by root cause (same categories as fact table)
+- [ ] Document overlap and differences
 
 ### Phase 2: Fix Strategy
 
@@ -128,25 +171,35 @@ Based on categorization, determine approach for each orphan:
 
 ## Acceptance Criteria
 
-- [ ] All 5 orphan picks investigated and categorized
+- [ ] All 5 fact table orphan picks investigated and categorized
+- [ ] All 41 staging table orphan picks investigated and categorized
+- [ ] Relationship between staging and fact orphans documented
 - [ ] Root cause documented for each orphan
 - [ ] Fix strategy implemented (data fix, logic fix, or documented exception)
-- [ ] Relationship test either PASS (0 orphans) or WARN with documented exceptions only
+- [ ] Both relationship tests either PASS (0 orphans) or WARN with documented exceptions only
 - [ ] No regression in transaction grain or other tests
 
 ## Implementation Notes
 
-**Test**: `dbt/ff_data_transform/models/core/_fct_league_transactions.yml`
+**Tests**:
 
-```yaml
-relationships_fct_league_transactions_pick_id__pick_id__ref_dim_pick_
-```
+1. Fact table: `dbt/ff_data_transform/models/core/_fct_league_transactions.yml`
+
+   ```yaml
+   relationships_fct_league_transactions_pick_id__pick_id__ref_dim_pick_
+   ```
+
+2. Staging table: `dbt/ff_data_transform/models/staging/_stg_sheets__transactions.yml`
+
+   ```yaml
+   relationships_stg_sheets__transactions_pick_id__pick_id__ref_dim_pick_
+   ```
 
 **Models**:
 
 - Fact: `dbt/ff_data_transform/models/core/fct_league_transactions.sql`
-- Dimension: `dbt/ff_data_transform/models/core/dim_pick.sql`
 - Staging: `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql` (P1-012)
+- Dimension: `dbt/ff_data_transform/models/core/dim_pick.sql`
 
 **Investigation Queries**:
 
@@ -226,15 +279,16 @@ WHERE pick_id LIKE '%[orphan_year]%'
 
 **Before Fix**:
 
-- 41 orphan picks (pre-P1-012)
-- 5 orphan picks (post-P1-012) ✅ 87% improvement!
-- Foreign key integrity warnings
+- **Fact table**: 41 orphan picks (pre-P1-012) → 5 orphan picks (post-P1-012) ✅ 87% improvement!
+- **Staging table**: 41 orphan picks (unchanged)
+- Foreign key integrity warnings at both layers
 - Incomplete trade analysis for affected picks
 
 **After Fix**:
 
-- 0 orphan picks (or documented exceptions) ✅
-- Full foreign key integrity ✅
+- **Fact table**: 0 orphan picks (or documented exceptions) ✅
+- **Staging table**: 0 orphan picks (or documented exceptions) ✅
+- Full foreign key integrity at both layers ✅
 - Complete trade history for all picks ✅
 - Pick valuation models have complete data ✅
 
