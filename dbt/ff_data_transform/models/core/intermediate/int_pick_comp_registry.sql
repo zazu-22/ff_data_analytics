@@ -117,13 +117,14 @@ with
     ),
 
     -- Get franchise information for comp recipient
-    franchise_mapping as (select franchise_id, owner_name from {{ ref("dim_franchise") }}),
+    franchise_mapping as (select franchise_id, owner_name, season_start, season_end from {{ ref("dim_franchise") }}),
 
     validated_comps as (
         select
             pc.*,
 
-            -- Join franchise data
+            -- Join franchise data with temporal filter
+            -- Match to owner at time of FAAD transaction (comp_season - 1)
             fm.franchise_id as comp_awarded_to_franchise_id_verified,
             fm.owner_name as comp_awarded_to_owner_verified,
 
@@ -144,7 +145,11 @@ with
             end as aav_validation_message
 
         from parsed_comps pc
-        left join franchise_mapping fm on pc.comp_awarded_to_franchise_id = fm.franchise_id
+        left join
+            franchise_mapping fm
+            on pc.comp_awarded_to_franchise_id = fm.franchise_id
+            -- Temporal join: match owner in season of FAAD transaction
+            and year(pc.transaction_date) between fm.season_start and coalesce(fm.season_end, 9999)
         where
             -- Filter to valid parsed records only
             pc.comp_season is not null and pc.comp_round is not null

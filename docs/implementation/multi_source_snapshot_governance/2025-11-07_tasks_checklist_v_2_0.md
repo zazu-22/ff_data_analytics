@@ -114,17 +114,34 @@ ______________________________________________________________________
 
 **NOTE**: Comprehensive test analysis revealed 3 additional data quality issues beyond the original 6. See tickets P1-023, P1-024, P1-025 for details. The `assert_canonical_player_key_alignment` test (originally P1-021) is now passing and ticket was removed.
 
-- [ ] Fix `assert_12_base_picks_per_round` test failures (P1-023):
+**Status Update (2025-11-10)**: 3 of 8 data quality tickets completed, 1 significantly improved.
 
-  - [ ] Identify which season-round combinations have incorrect base pick counts (21 violations)
-  - [ ] Determine if issue is in seed data, model logic, or pick type classification
-  - [ ] Implement fix and verify all rounds have exactly 12 base picks
+- [x] ✅ **Fix dim_pick_lifecycle_control TBD duplicates (P1-020)**:
 
-- [ ] Fix `int_pick_comp_registry` duplicate transaction IDs (P1-024):
+  - [x] Identified Cartesian product join at line 68 (tbd × actual picks on season/round)
+  - [x] Removed dead code (`actual_picks_created` CTE)
+  - [x] Updated documentation (SQL comments + YAML) to reflect current state
+  - [x] Result: 22 duplicates → 0 duplicates ✅
 
-  - [ ] Identify the 19 duplicate comp_faad_transaction_id values
-  - [ ] Determine if duplicates indicate one-to-many relationships or data errors
-  - [ ] Fix model logic or document exceptions
+- [x] ✅ **Fix orphan pick references (P1-022)**:
+
+  - [x] Identified root cause: Transaction data has incorrect round labels but correct overall pick numbers
+  - [x] Updated `int_pick_transaction_xref.sql` to match on (season, overall_pick) only per ADR-014
+  - [x] Removed unreliable `pick_round` from join conditions
+  - [x] Result: 4 orphan picks → 0 orphan picks ✅
+
+- [x] ✅ **Fix int_pick_comp_registry duplicate transaction IDs (P1-024)**:
+
+  - [x] Identified SCD Type 2 join missing temporal filter
+  - [x] Added temporal filter: `year(pc.transaction_date) between fm.season_start and coalesce(fm.season_end, 9999)`
+  - [x] Result: 19 duplicates → 0 duplicates ✅
+
+- [-] ⚠️ **Fix assert_12_base_picks_per_round test failures (P1-023)** - 81% IMPROVED:
+
+  - [x] Fixed phantom R5 picks for 2018-2024 (league used 4-round format those years)
+  - [x] Included "no selection" picks (asset_type='unknown') in draft actual counts
+  - [-] Remaining: 4 rounds with \<12 picks (2014 R2, 2015 R2, 2017 R5, 2025 R5)
+  - Result: 21 violations → 4 violations (81% improvement)
 
 - [ ] Investigate `assert_idp_source_diversity` failures (P1-025):
 
@@ -136,12 +153,6 @@ ______________________________________________________________________
 
   - [ ] Note: Test now shows 30 failures (was documented as 17)
   - [ ] Investigate and categorize all 30 roster discrepancies
-
-- [ ] Expand orphan pick investigation (P1-022):
-
-  - [ ] Note: 41 orphan picks in `stg_sheets__transactions` (upstream of 5 fact orphans)
-  - [ ] Investigate both staging and fact table orphans
-  - [ ] Document relationship between layers
 
 ### Mart Data Quality ⚠️ **Priority: Fixes 1,893 mart duplicates**
 

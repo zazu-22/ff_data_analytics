@@ -1,7 +1,8 @@
 # Ticket P1-020: Fix dim_pick_lifecycle_control TBD Pick Duplicates
 
+**Status**: ✅ **COMPLETE** (2025-11-10)\
 **Phase**: 1 - Foundation\
-**Estimated Effort**: Medium (3-5 hours)\
+**Estimated Effort**: Medium (3-5 hours) | **Actual**: 2 hours\
 **Dependencies**: P1-011 (to rule out staging model as root cause)\
 **Priority**: Medium - 22 duplicate pick_ids affecting 301 total rows
 
@@ -223,6 +224,58 @@ ORDER BY pick_id, effective_date;
 - Pick valuation models need accurate TBD pick tracking
 - Draft capital analysis uses pick availability data
 
+## Completion Notes
+
+**Implemented**: 2025-11-10\
+**Approach**: Option A - Remove dead code and document requirements
+
+### Root Cause
+
+The model had a Cartesian product join at line 68:
+
+```sql
+left join actual_picks_created act on tbd.season = act.season and tbd.round = act.round
+```
+
+This joined each TBD pick (e.g., `2023_R1_TBD`) to ALL actual picks in that season/round, creating duplicates:
+
+- `2023_R1_TBD` × 21 actual picks in 2023 R1 = 21 duplicate rows
+- Total: 22 TBD picks × varying actual pick counts = 301 total rows
+
+### Implementation
+
+1. **Removed dead code**: Deleted unused `actual_picks_created` CTE entirely (13 lines)
+2. **Simplified logic**: Renamed `tbd_to_actual_mapping` → `tbd_picks` CTE
+3. **Updated documentation**:
+   - SQL comments now document that TBD → Actual matching requires franchise ownership tracking (not yet implemented)
+   - All TBD picks remain in `ACTIVE_TBD` state indefinitely
+   - `superseded_by_pick_id` and `superseded_at` are always NULL
+4. **Updated YAML**: Model description reflects current state and future implementation needs
+
+### Why This Approach
+
+Proper TBD → Actual matching requires:
+
+- Determining which franchise owned the TBD pick at creation time
+- Matching to the actual pick that franchise received in that season/round
+- Cannot match on `(season, round)` alone - creates Cartesian products
+
+The functionality was incomplete, so we removed dead code and properly documented what's needed for future implementation.
+
+### Test Results
+
+- **Before**: 22 duplicate pick_ids, 301 total rows
+- **After**: 0 duplicates, 33 unique TBD picks ✅
+- All 17 downstream models still build successfully
+- Downstream models (dim_pick, int_pick_transaction_xref) handle NULL lifecycle fields correctly
+
+### Files Modified
+
+- `dbt/ff_data_transform/models/core/intermediate/dim_pick_lifecycle_control.sql`
+- `dbt/ff_data_transform/models/core/intermediate/_dim_pick_lifecycle_control.yml`
+
+______________________________________________________________________
+
 ## References
 
 - Model file: `dbt/ff_data_transform/models/core/intermediate/dim_pick_lifecycle_control.sql`
@@ -230,6 +283,7 @@ ORDER BY pick_id, effective_date;
 - Upstream: `stg_sheets__draft_pick_holdings.sql` (P1-011)
 - Related test: `unique_dim_pick_lifecycle_control_pick_id`
 - Discovery: During P1-011 downstream testing (2025-11-09)
+- Investigation: `docs/investigations/P1-020-through-P1-024_root_cause_analysis_2025-11-10.md`
 
 ## Notes
 

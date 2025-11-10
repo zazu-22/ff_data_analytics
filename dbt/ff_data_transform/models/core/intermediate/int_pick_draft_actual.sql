@@ -39,7 +39,11 @@ with
         from {{ ref("stg_sheets__transactions") }}
         where
             transaction_type = 'rookie_draft_selection'
-            and asset_type = 'player'
+            -- Include "no selection" picks (asset_type='unknown')
+            -- These are legitimate picks where franchise chose not to draft
+            -- (typically due to roster space constraints or lack of trade partners)
+            -- They occupy a position in draft order and count toward base picks
+            and asset_type in ('player', 'unknown')
             and season <= {{ var("latest_completed_draft_season") }}
     ),
 

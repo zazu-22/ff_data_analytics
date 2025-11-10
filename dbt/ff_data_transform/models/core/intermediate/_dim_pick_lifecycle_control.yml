@@ -6,25 +6,26 @@ models:
       Pick Lifecycle Control - Manages TBD → Actual Pick Transitions.
 
       Grain: One row per pick with lifecycle tracking (primarily TBD picks)
-      Source: int_pick_tbd + int_pick_draft_actual
+      Source: int_pick_tbd
 
       Tracks lifecycle states of draft picks, especially TBD picks that transition
       to actual picks when draft order is finalized.
 
-      Current State (v2 Phase 4):
-      - No actual draft transaction data yet
-      - All TBD picks remain in ACTIVE_TBD state
-      - Infrastructure ready for future actual draft data
+      Current State (P1-020 Fix):
+      - TBD → Actual matching NOT YET IMPLEMENTED
+      - All TBD picks remain in ACTIVE_TBD state indefinitely
+      - superseded_by_pick_id and superseded_at are always NULL
+      - Downstream models (dim_pick, int_pick_transaction_xref) handle NULL values correctly
 
-      Future State (when actual draft data available):
-      - TBD picks transition to SUPERSEDED when draft completes
-      - superseded_by_pick_id points to actual pick that replaced TBD
-      - Transactions can migrate from TBD to actual picks automatically
+      Implementation Needed:
+      TBD → Actual matching requires franchise ownership tracking to avoid Cartesian products.
+      Cannot match on (season, round) alone - would create duplicates (1 TBD × N actual picks).
+      Need to determine which franchise owned the TBD pick and match to their specific actual pick.
 
       Lifecycle States:
-      - ACTIVE_TBD: TBD pick currently in use (draft order not finalized)
-      - SUPERSEDED: TBD pick replaced by actual pick (soft-delete)
-      - ACTUAL: Pick from actual draft data (future state)
+      - ACTIVE_TBD: TBD pick currently in use (draft order not finalized) [ALL PICKS CURRENTLY]
+      - SUPERSEDED: TBD pick replaced by actual pick (soft-delete) [NOT IMPLEMENTED YET]
+      - ACTUAL: Pick from actual draft data (future state) [NOT IMPLEMENTED YET]
 
     columns:
       - name: pick_id
@@ -39,10 +40,10 @@ models:
           - not_null
 
       - name: superseded_by_pick_id
-        description: "Pick ID that replaced this TBD pick (null if still active)"
+        description: "Pick ID that replaced this TBD pick (always NULL - TBD matching not implemented)"
 
       - name: superseded_at
-        description: "Timestamp when TBD pick was replaced by actual pick"
+        description: "Timestamp when TBD pick was replaced by actual pick (always NULL - TBD matching not implemented)"
 
       - name: season
         description: "Draft year"

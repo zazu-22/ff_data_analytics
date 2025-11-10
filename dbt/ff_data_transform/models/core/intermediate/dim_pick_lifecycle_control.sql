@@ -6,15 +6,20 @@ Pick Lifecycle Control - Manages TBD → Actual Pick Transitions
 Purpose: Track lifecycle states of draft picks, especially TBD picks that
 transition to actual picks when draft order is finalized.
 
-Current State (v2 Phase 4):
-- We do NOT have actual draft transaction data yet
-- All TBD picks remain in ACTIVE_TBD state
-- Infrastructure ready for future actual draft data
+Current State (P1-020 Fix):
+- TBD → Actual matching NOT YET IMPLEMENTED
+- All TBD picks remain in ACTIVE_TBD state indefinitely
+- superseded_by_pick_id and superseded_at are always NULL
+- Downstream models (dim_pick, int_pick_transaction_xref) handle NULL values correctly
 
-Future State (when actual draft data available):
-- TBD picks transition to SUPERSEDED when draft completes
-- superseded_by_pick_id points to the actual pick that replaced TBD
-- Transactions can migrate from TBD to actual picks automatically
+Implementation Needed:
+TBD → Actual matching requires franchise ownership tracking:
+1. Determine which franchise owned the TBD pick at creation time
+2. Match to the actual pick that franchise received in that season/round
+3. Cannot match on (season, round) alone - creates Cartesian products (1 TBD × N actual picks)
+
+Example: 2023_R1_TBD cannot match to all 21 actual picks in 2023 R1
+         Need to know which franchise's R1 pick it was, then match to their specific pick
 
 Grain: One row per pick that has lifecycle tracking (primarily TBD picks)
 
@@ -34,8 +39,9 @@ Example Timeline:
   Post-Draft:  2025_R1_TBD superseded, superseded_by_pick_id = 2025_R1_P05
 */
 with
-    tbd_picks_created as (
+    tbd_picks as (
         -- All TBD picks ever created (from transaction references)
+        -- These remain in ACTIVE_TBD state until TBD → Actual matching is implemented
         select distinct
             pick_id as tbd_pick_id,
             season,
@@ -45,27 +51,6 @@ with
             cast(null as timestamp) as superseded_at,
             cast(null as varchar) as superseded_by_pick_id
         from {{ ref("int_pick_tbd") }}
-    ),
-
-    actual_picks_created as (
-        -- Actual picks from completed drafts (rookie_draft_selection transactions)
-        select season, round, pick_id as actual_pick_id, draft_transaction_id, draft_timestamp as created_at
-        from {{ ref("int_pick_draft_actual") }}
-    ),
-
-    -- Match TBD picks to their actual pick replacements
-    -- Currently no matches since actual_picks_created is empty
-    tbd_to_actual_mapping as (
-        select
-            tbd.tbd_pick_id,
-            tbd.season,
-            tbd.round,
-            tbd.created_at,
-            act.actual_pick_id as superseded_by_pick_id,
-            act.created_at as superseded_at,
-            case when act.actual_pick_id is not null then 'SUPERSEDED' else 'ACTIVE_TBD' end as lifecycle_state
-        from tbd_picks_created tbd
-        left join actual_picks_created act on tbd.season = act.season and tbd.round = act.round
     )
 
 select
@@ -77,7 +62,7 @@ select
     superseded_at,
     superseded_by_pick_id,
 
-    -- Audit flag for transactions still referencing TBD
+    -- Migration note (always NULL until TBD → Actual matching implemented)
     case
         when lifecycle_state = 'SUPERSEDED' then 'WARN: Transactions should migrate to ' || superseded_by_pick_id
     end as migration_note,
@@ -86,5 +71,5 @@ select
     'v2_lifecycle_control' as control_version,
     current_timestamp as last_updated
 
-from tbd_to_actual_mapping
+from tbd_picks
 order by season, round

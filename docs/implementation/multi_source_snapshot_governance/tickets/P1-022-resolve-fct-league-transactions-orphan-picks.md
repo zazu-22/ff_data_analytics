@@ -1,7 +1,8 @@
 # Ticket P1-022: Resolve fct_league_transactions Orphan Pick References
 
+**Status**: ✅ **COMPLETE** (2025-11-10)\
 **Phase**: 1 - Foundation\
-**Estimated Effort**: Small-Medium (2-4 hours)\
+**Estimated Effort**: Small-Medium (2-4 hours) | **Actual**: 1.5 hours\
 **Dependencies**: P1-012 (transactions snapshot governance)\
 **Priority**: Medium - 5 fact table orphans (down from 41) + 41 staging orphans
 
@@ -298,14 +299,97 @@ WHERE pick_id LIKE '%[orphan_year]%'
 - Pick valuation models need accurate trade context
 - Draft capital analysis tracks pick movements via transactions
 
+## Completion Notes
+
+**Implemented**: 2025-11-10\
+**Approach**: Fix crosswalk matching logic per ADR-014
+
+### Root Cause
+
+Transaction source data has **incorrect round labels** but **correct overall pick numbers**.
+
+The `int_pick_transaction_xref` model was matching on `(season, round, overall_pick)`, but round labels in transactions are unreliable (human data entry errors).
+
+**Example**:
+
+- Transaction says: `2021_R3_P54` (Round 3, overall pick 54)
+- But overall pick 54 in 2021 is actually: `2021_R4_P09` (Round 4, position 9)
+- Round label is wrong (off by 1), but overall pick number is correct
+
+Per ADR-014, **overall pick number is authoritative**.
+
+### Investigation Results
+
+Identified 4 orphan picks (improved from 5 after earlier P1-023 fixes):
+
+| Transaction Said | Actually Is | Round Correction |
+| ---------------- | ----------- | ---------------- |
+| 2021_R3_P54      | 2021_R4_P09 | R3→R4 (+1)       |
+| 2025_R3_P26      | 2025_R2_P12 | R3→R2 (-1)       |
+| 2025_R2_P33      | 2025_R3_P05 | R2→R3 (+1)       |
+| 2026_R2_P30      | 2026_R3_P06 | R2→R3 (+1)       |
+
+All 4 picks matched successfully when ignoring unreliable round labels.
+
+### Implementation
+
+Modified `int_pick_transaction_xref.sql`:
+
+1. **Removed round from join condition** in `matched_by_overall` CTE:
+
+   ```sql
+   -- BEFORE
+   on tp.pick_season = cp.season
+   and tp.pick_round = cp.round        -- REMOVED: unreliable
+   and tp.pick_overall_number = cp.overall_pick
+
+   -- AFTER (per ADR-014)
+   on tp.pick_season = cp.season
+   and tp.pick_overall_number = cp.overall_pick  -- Authoritative
+   ```
+
+2. **Also updated fallback** `matched_by_slot` CTE with same fix
+
+3. **Added new match_status**: `'ROUND CORRECTED (OVERALL MATCH)'` to identify picks where round was corrected
+
+4. **Enhanced match_status logic** to detect round corrections:
+
+   ```sql
+   when tp.pick_round != cp.round
+   then 'ROUND CORRECTED (OVERALL MATCH)'
+   ```
+
+### Test Results
+
+- **Before**: 4 orphan picks (foreign key violations)
+- **After**: 0 orphan picks ✅
+- All 4 previously-orphaned picks now correctly matched with round corrections
+- Foreign key integrity fully restored
+- `relationships_fct_league_transactions_pick_id__pick_id__ref_dim_pick_` test: **PASS**
+
+### Files Modified
+
+- `dbt/ff_data_transform/models/core/intermediate/int_pick_transaction_xref.sql` (lines 97-103, 134-140)
+
+### Downstream Impact
+
+- `fct_league_transactions`: All pick references now valid
+- Trade analysis: Complete transaction history for all picks
+- Pick valuation: Accurate trade context for all 4 previously-orphaned picks
+
+______________________________________________________________________
+
 ## References
 
 - Test: `dbt/ff_data_transform/models/core/_fct_league_transactions.yml`
 - Fact table: `dbt/ff_data_transform/models/core/fct_league_transactions.sql`
 - Dimension: `dbt/ff_data_transform/models/core/dim_pick.sql`
+- Crosswalk: `dbt/ff_data_transform/models/core/intermediate/int_pick_transaction_xref.sql`
 - Staging: `dbt/ff_data_transform/models/staging/stg_sheets__transactions.sql` (P1-012)
 - Discovery: During P1-012 downstream testing (2025-11-09)
 - Related: P1-012 documentation noted "41 orphan picks" before fix
+- Investigation: `docs/investigations/P1-020-through-P1-024_root_cause_analysis_2025-11-10.md`
+- ADR-014: `docs/adr/ADR-014-pick-identity-resolution-via-overall-pick-number.md`
 
 ## Notes
 

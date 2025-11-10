@@ -66,6 +66,10 @@ with
         from years
         cross join rounds
         cross join slots
+
+        -- Filter: Round 5 only existed 2012-2017 and 2025+
+        -- League used 4-round format 2018-2024
+        where not (round = 5 and season between 2018 and 2024)
     )
 
 select *

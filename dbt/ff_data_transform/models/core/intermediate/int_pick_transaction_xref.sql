@@ -55,7 +55,8 @@ with
         where pick_type != 'tbd'  -- Match on finalized picks only
     ),
 
-    -- Match finalized picks by (season, round, overall_pick)
+    -- Match finalized picks by (season, overall_pick) - ADR-014: overall_pick is authoritative
+    -- Round label in transactions is unreliable (data entry errors), so ignore it
     matched_by_overall as (
         select
             tp.transaction_id_unique,
@@ -84,6 +85,8 @@ with
                 then 'NO MATCH FOUND'
                 when tp.pick_id_raw = cp.pick_id
                 then 'EXACT MATCH'
+                when tp.pick_round != cp.round
+                then 'ROUND CORRECTED (OVERALL MATCH)'
                 when tp.pick_overall_number = cp.overall_pick
                 then 'OVERALL MATCH (ID CORRECTED)'
                 else 'MISMATCH'
@@ -95,8 +98,9 @@ with
         left join
             canonical_picks cp
             on tp.pick_season = cp.season
-            and tp.pick_round = cp.round
-            and tp.pick_overall_number = cp.overall_pick
+            -- P1-022 fix: Remove round from join - transactions have incorrect round labels
+            -- and tp.pick_round = cp.round  -- REMOVED: Round labels are unreliable
+            and tp.pick_overall_number = cp.overall_pick  -- ADR-014: overall_pick is authoritative
         where tp.pick_overall_number is not null  -- Only finalized picks
     ),
 
@@ -131,7 +135,8 @@ with
         inner join
             canonical_picks cp
             on tp.pick_season = cp.season
-            and tp.pick_round = cp.round
+            -- P1-022 fix: Also remove round from fallback slot matching
+            -- and tp.pick_round = cp.round  -- REMOVED: Round labels are unreliable
             and tp.pick_overall_number = cp.slot_number  -- KEY: Match overall_number to slot_number
         where
             tp.pick_overall_number is not null
