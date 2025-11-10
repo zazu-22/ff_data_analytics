@@ -10,7 +10,7 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 53 (expanded from 37 to cover all 13 staging models + 6 data quality fixes)
+- **Total Tickets**: 54 (includes 13 staging models + 6 data quality fixes + 1 architectural refactor)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
 - **Estimated Total Effort**: ~160-200 hours (updated for expanded Phase 1 + data quality fixes)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
@@ -31,7 +31,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (21 tickets - expanded to cover all 13 staging models + 6 data quality fixes)
+## Phase 1: Foundation (22 tickets - 13 staging models + 6 data quality fixes + 1 architectural refactor)
 
 ### Macro & Infrastructure
 
@@ -57,9 +57,10 @@ ______________________________________________________________________
 - [x] **P1-013** — Update stg_sleeper\_\_fa_pool model (latest_only) - ⚠️ See commit notes: duplicates persist, root cause in mart logic
 - [x] **P1-014** — Update stg_sleeper\_\_rosters model (latest_only)
 
-### KTC Models (1 ticket)
+### KTC Models (2 tickets)
 
 - [x] **P1-015** — Update stg_ktc_assets model (latest_only)
+- [ ] **P1-015b** — Refactor name alias loading to use DuckDB (architectural consistency)
 
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
@@ -147,10 +148,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 15/53 (28%)\
-**In Progress**: 0/53\
-**Blocked**: 0/53\
-**Remaining**: 38/53
+**Completed**: 15/54 (28%)\
+**In Progress**: 0/54\
+**Blocked**: 0/54\
+**Remaining**: 39/54
 
 **Notes**:
 
