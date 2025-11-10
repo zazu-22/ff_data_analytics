@@ -59,7 +59,7 @@ ______________________________________________________________________
 
 ### KTC Models (1 ticket)
 
-- [ ] **P1-015** — Update stg_ktc_assets model (latest_only)
+- [x] **P1-015** — Update stg_ktc_assets model (latest_only)
 
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
@@ -147,10 +147,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 14/53 (26%)\
+**Completed**: 15/53 (28%)\
 **In Progress**: 0/53\
 **Blocked**: 0/53\
-**Remaining**: 39/53
+**Remaining**: 38/53
 
 **Notes**:
 

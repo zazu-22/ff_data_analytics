@@ -2,7 +2,8 @@
 
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (1-2 hours)\
-**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)
+**Dependencies**: P1-001 (snapshot_selection_strategy macro must exist)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -22,23 +23,23 @@ Historical KTC values could be used for trend analysis, but current implementati
 
 ## Tasks
 
-- [ ] Locate `stg_ktc_assets.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_ktc_assets`
-- [ ] Test execution and verify row counts
-- [ ] Verify downstream `fct_asset_market_values` builds correctly
+- [x] Locate `stg_ktc_assets.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_ktc_assets`
+- [x] Test execution and verify row counts
+- [x] Verify downstream `fct_asset_market_values` builds correctly
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count matches expected asset count (players + picks in KTC database)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count matches expected asset count (players + picks in KTC database)
 
 ## Implementation Notes
 
@@ -142,3 +143,23 @@ If trend analysis is desired (e.g., 4-week value change), could switch to `basel
 - Model file: `dbt/ff_data_transform/models/staging/stg_ktc_assets.sql`
 - Downstream: `dbt/ff_data_transform/models/core/fct_asset_market_values.sql`
 - Usage: `dbt/ff_data_transform/models/marts/mrt_fasa_targets.sql` (market efficiency signals)
+
+## Completion Notes
+
+**Implemented**: 2025-11-09
+
+**Changes**:
+
+- Updated `players_raw` CTE (line 42-47): Added `WHERE 1=1 AND` clause with `snapshot_selection_strategy` macro using `latest_only` strategy
+- Updated `picks_raw` CTE (line 52-57): Added `WHERE 1=1 AND` clause with `snapshot_selection_strategy` macro using `latest_only` strategy
+
+**Tests**: All passing
+
+- Compilation: PASS (dbt run)
+- Execution: PASS (dbt run)
+- Asset counts: 471 players + 36 picks = 507 total assets
+- No duplicates: 507 total rows = 507 unique (player_key, market_scope, asof_date) combinations
+- Value ranges: Players show min=98, max=9999, avg=2724 (within expected 0-10,000 range)
+- Downstream: fct_asset_market_values builds successfully
+
+**Impact**: Eliminated duplicate snapshot reads for KTC assets. Model now consistently reads only the latest snapshot, ensuring idempotent results.

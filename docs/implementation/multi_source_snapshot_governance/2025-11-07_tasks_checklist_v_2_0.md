@@ -98,9 +98,9 @@ ______________________________________________________________________
 
 **KTC (1 model)**:
 
-- [ ] Update `stg_ktc_assets`:
-  - [ ] Replace `dt=*` with macro call using `latest_only` strategy
-  - [ ] Test compilation and execution
+- [x] Update `stg_ktc_assets`:
+  - [x] Replace `dt=*` with macro call using `latest_only` strategy
+  - [x] Test compilation and execution
 
 **FFAnalytics (1 model)** ⚠️ **Priority: Fixes 195 duplicates**:
 

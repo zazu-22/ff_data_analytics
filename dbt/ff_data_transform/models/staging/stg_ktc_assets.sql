@@ -40,11 +40,23 @@ with
             market_scope,
             asof_date
         from read_parquet('{{ var("external_root", "data/raw") }}/ktc/players/dt=*/*.parquet', hive_partitioning = true)
+        where
+            1 = 1
+            and {{ snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/ktc/players/dt=*/*.parquet',
+                strategy='latest_only'
+            ) }}
     ),
     picks_raw as (
         select
             pick_name, draft_year, pick_tier, pick_round, asset_type, rank, value as ktc_value, market_scope, asof_date
         from read_parquet('{{ var("external_root", "data/raw") }}/ktc/picks/dt=*/*.parquet', hive_partitioning = true)
+        where
+            1 = 1
+            and {{ snapshot_selection_strategy(
+                var("external_root", "data/raw") ~ '/ktc/picks/dt=*/*.parquet',
+                strategy='latest_only'
+            ) }}
     ),
     -- Map player names to canonical player_id via crosswalk
     players_mapped as (
