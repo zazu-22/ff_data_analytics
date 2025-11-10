@@ -103,6 +103,7 @@ seeds:
         description: "Alternate spelling/format"
         data_tests:
           - not_null
+          - unique
       - name: canonical_name
         description: "Canonical name from dim_player_id_xref"
         data_tests:
