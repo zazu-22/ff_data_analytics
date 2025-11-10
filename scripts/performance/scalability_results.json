@@ -1,0 +1,125 @@
+{
+  "current_growth": {
+    "current_total_rows": 7898809,
+    "current_players": 3482,
+    "current_games": 3924,
+    "current_stats": 109,
+    "season_range": "2020-2025",
+    "years_of_data": 6,
+    "avg_rows_per_year": 1316468,
+    "growth_by_season": [
+      {
+        "season": 2020,
+        "row_count": 1336031,
+        "player_count": 1807,
+        "game_count": 671,
+        "stat_count": 77
+      },
+      {
+        "season": 2021,
+        "row_count": 1436726,
+        "player_count": 1895,
+        "game_count": 706,
+        "stat_count": 77
+      },
+      {
+        "season": 2022,
+        "row_count": 1426804,
+        "player_count": 1795,
+        "game_count": 704,
+        "stat_count": 77
+      },
+      {
+        "season": 2023,
+        "row_count": 1415247,
+        "player_count": 1741,
+        "game_count": 706,
+        "stat_count": 77
+      },
+      {
+        "season": 2024,
+        "row_count": 1438167,
+        "player_count": 1781,
+        "game_count": 708,
+        "stat_count": 77
+      },
+      {
+        "season": 2025,
+        "row_count": 845834,
+        "player_count": 1604,
+        "game_count": 429,
+        "stat_count": 109
+      }
+    ]
+  },
+  "projection_10year": {
+    "projected_years": 10,
+    "years_to_add": 4,
+    "projected_additional_rows": 5265872,
+    "projected_total_rows": 13164681,
+    "growth_multiplier": 1.6666665822657567,
+    "current_db_size_gb": 1.31,
+    "projected_db_size_gb": 2.18,
+    "db_size_increase_pct": 66.7
+  },
+  "current_performance": {
+    "full_table_scan": {
+      "execution_time_sec": 0.019,
+      "row_count": 1,
+      "success": true
+    },
+    "multi_year_aggregation": {
+      "execution_time_sec": 0.075,
+      "row_count": 1975,
+      "success": true
+    },
+    "complex_join_aggregation": {
+      "execution_time_sec": 0.043,
+      "row_count": 500,
+      "success": true
+    },
+    "window_function_full": {
+      "execution_time_sec": 0.003,
+      "row_count": 0,
+      "success": true
+    }
+  },
+  "estimated_10year_performance": {
+    "full_table_scan": {
+      "current_time_sec": 0.019,
+      "projected_time_sec": 0.023,
+      "slowdown_factor": 1.23,
+      "meets_5sec_threshold": true
+    },
+    "multi_year_aggregation": {
+      "current_time_sec": 0.075,
+      "projected_time_sec": 0.092,
+      "slowdown_factor": 1.23,
+      "meets_5sec_threshold": true
+    },
+    "complex_join_aggregation": {
+      "current_time_sec": 0.043,
+      "projected_time_sec": 0.053,
+      "slowdown_factor": 1.23,
+      "meets_5sec_threshold": true
+    },
+    "window_function_full": {
+      "current_time_sec": 0.003,
+      "projected_time_sec": 0.004,
+      "slowdown_factor": 1.23,
+      "meets_5sec_threshold": true
+    }
+  },
+  "memory_analysis": {
+    "baseline_memory_mb": 548.0,
+    "peak_memory_mb": 982.9,
+    "memory_delta_mb": 434.9,
+    "system_memory_gb": 18.0,
+    "memory_available_gb": 5.5
+  },
+  "scalability_assessment": {
+    "can_handle_10year_volume": true,
+    "bottleneck_queries": [],
+    "recommendations": []
+  }
+}

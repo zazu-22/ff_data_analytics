@@ -1,0 +1,209 @@
+{
+  "database_stats": {
+    "database_size": {
+      "database_name": "dev",
+      "database_size": "1.3 GiB",
+      "block_size": 262144,
+      "total_blocks": 5334,
+      "used_blocks": 3606,
+      "free_blocks": 1728,
+      "wal_size": "0 bytes",
+      "memory_usage": "6.5 MiB",
+      "memory_limit": "14.3 GiB"
+    },
+    "tables": [
+      {
+        "table_name": "fct_player_stats",
+        "row_count": 7759123,
+        "column_count": 12
+      },
+      {
+        "table_name": "fact_player_stats",
+        "row_count": 7759123,
+        "column_count": 12
+      },
+      {
+        "table_name": "mrt_fantasy_actuals_weekly",
+        "row_count": 152090,
+        "column_count": 36
+      },
+      {
+        "table_name": "mrt_real_world_actuals_weekly",
+        "row_count": 152090,
+        "column_count": 35
+      },
+      {
+        "table_name": "mart_fantasy_actuals_weekly",
+        "row_count": 152090,
+        "column_count": 36
+      },
+      {
+        "table_name": "mart_real_world_actuals_weekly",
+        "row_count": 152090,
+        "column_count": 35
+      },
+      {
+        "table_name": "fact_player_projections",
+        "row_count": 70587,
+        "column_count": 15
+      },
+      {
+        "table_name": "fct_player_projections",
+        "row_count": 62520,
+        "column_count": 15
+      },
+      {
+        "table_name": "dim_asset",
+        "row_count": 10940,
+        "column_count": 12
+      },
+      {
+        "table_name": "stg_nflverse__ff_playerids",
+        "row_count": 9757,
+        "column_count": 29
+      },
+      {
+        "table_name": "dim_player_id_xref",
+        "row_count": 9757,
+        "column_count": 29
+      },
+      {
+        "table_name": "dim_player",
+        "row_count": 9734,
+        "column_count": 27
+      },
+      {
+        "table_name": "mart_fantasy_projections",
+        "row_count": 9457,
+        "column_count": 25
+      },
+      {
+        "table_name": "mart_real_world_projections",
+        "row_count": 9457,
+        "column_count": 24
+      },
+      {
+        "table_name": "mrt_real_world_projections",
+        "row_count": 9457,
+        "column_count": 24
+      },
+      {
+        "table_name": "mrt_fantasy_projections",
+        "row_count": 9457,
+        "column_count": 25
+      },
+      {
+        "table_name": "mrt_fasa_targets",
+        "row_count": 5273,
+        "column_count": 91
+      },
+      {
+        "table_name": "mart_fasa_targets",
+        "row_count": 5273,
+        "column_count": 91
+      },
+      {
+        "table_name": "fact_league_transactions",
+        "row_count": 3999,
+        "column_count": 40
+      },
+      {
+        "table_name": "fct_league_transactions",
+        "row_count": 3999,
+        "column_count": 40
+      }
+    ],
+    "fact_player_stats": {
+      "total_rows": 7759123,
+      "distinct_players": 4935,
+      "distinct_games": 3870,
+      "distinct_stats": 109,
+      "min_season": 2020,
+      "max_season": 2025
+    },
+    "index_count": "44",
+    "crosswalk": {
+      "total_rows": 9757,
+      "distinct_canonical_ids": 9757,
+      "distinct_mfl_ids": 9757,
+      "distinct_sleeper_ids": 6187,
+      "distinct_gsis_ids": 7665
+    }
+  },
+  "query_benchmarks": [
+    {
+      "name": "varchar_join_aggregation",
+      "error": "Binder Error: Table \"dp\" does not have a column named \"player_key\"\n\nCandidate bindings: : \"player_id\"\n\nLINE 8: ...            INNER JOIN main.dim_player dp ON fps.player_key = dp.player_key\n                                                                         ^"
+    },
+    {
+      "name": "simple_aggregation",
+      "error": "Binder Error: Table \"fps\" does not have a column named \"stat_value_num\"\n\nCandidate bindings: : \"stat_value\"\n\nLINE 7:                 AVG(fps.stat_value_num) as avg_value\n                            ^"
+    },
+    {
+      "name": "crosswalk_join",
+      "error": "Binder Error: Table \"xref\" does not have a column named \"player_key\"\n\nCandidate bindings: : \"player_id\"\n\nLINE 4:                 xref.player_key,\n                        ^"
+    }
+  ],
+  "parquet_reads": [
+    {
+      "file_path": "/Users/jason/code/ff_analytics/data/raw/sleeper/fa_pool/dt=2025-11-05/fa_pool_abc9fcd0.parquet",
+      "file_size_mb": 1.4768295288085938,
+      "read_time_sec": 0.03972887992858887,
+      "row_count": 7518,
+      "column_count": 54,
+      "memory_delta_mb": 27.78125,
+      "throughput_mb_per_sec": 37.172694812014285
+    },
+    {
+      "file_path": "/Users/jason/code/ff_analytics/data/raw/sleeper/fa_pool/dt=2025-10-27/fa_pool_f119c2a8.parquet",
+      "file_size_mb": 1.4658699035644531,
+      "read_time_sec": 0.008861780166625977,
+      "row_count": 7489,
+      "column_count": 53,
+      "memory_delta_mb": 13.796875,
+      "throughput_mb_per_sec": 165.41483494309773
+    },
+    {
+      "file_path": "/Users/jason/code/ff_analytics/data/raw/sleeper/fa_pool/dt=2025-11-09/fa_pool_a72701af.parquet",
+      "file_size_mb": 1.4551868438720703,
+      "read_time_sec": 0.008149147033691406,
+      "row_count": 7485,
+      "column_count": 54,
+      "memory_delta_mb": 2.171875,
+      "throughput_mb_per_sec": 178.56922176711527
+    },
+    {
+      "file_path": "/Users/jason/code/ff_analytics/data/raw/sleeper/fa_pool/dt=2025-10-30/fa_pool_723f30f9.parquet",
+      "file_size_mb": 1.474156379699707,
+      "read_time_sec": 0.008443832397460938,
+      "row_count": 7512,
+      "column_count": 54,
+      "memory_delta_mb": 13.1875,
+      "throughput_mb_per_sec": 174.58380393042694
+    },
+    {
+      "file_path": "/Users/jason/code/ff_analytics/data/raw/sleeper/users/dt=2025-11-05/users_0442ff62.parquet",
+      "file_size_mb": 0.013948440551757812,
+      "read_time_sec": 0.0017740726470947266,
+      "row_count": 13,
+      "column_count": 8,
+      "memory_delta_mb": 0.390625,
+      "throughput_mb_per_sec": 7.862384088160193
+    }
+  ],
+  "system": {
+    "memory": {
+      "rss_mb": 303.984375,
+      "vms_mb": 402969.875,
+      "percent": 1.6492207845052083
+    },
+    "cpu": {
+      "percent": 0.0,
+      "num_threads": 42
+    },
+    "disk_usage": {
+      "raw_data_mb": 46.732378005981445,
+      "database_mb": 1333.51171875
+    }
+  }
+}

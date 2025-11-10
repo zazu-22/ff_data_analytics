@@ -1,0 +1,101 @@
+[
+  {
+    "name": "varchar_player_key_join",
+    "avg_execution_time_sec": 0.029645681381225586,
+    "min_execution_time_sec": 0.029098033905029297,
+    "max_execution_time_sec": 0.03013300895690918,
+    "iterations": 3,
+    "row_count": 1000,
+    "column_count": 4,
+    "memory_delta_mb": 37.953125,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "int_player_id_join",
+    "avg_execution_time_sec": 0.03744856516520182,
+    "min_execution_time_sec": 0.03134608268737793,
+    "max_execution_time_sec": 0.04389786720275879,
+    "iterations": 3,
+    "row_count": 1000,
+    "column_count": 4,
+    "memory_delta_mb": 35.078125,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "crosswalk_join",
+    "avg_execution_time_sec": 0.002789576848347982,
+    "min_execution_time_sec": 0.0023412704467773438,
+    "max_execution_time_sec": 0.003491640090942383,
+    "iterations": 3,
+    "row_count": 4148,
+    "column_count": 7,
+    "memory_delta_mb": 0.3125,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "direct_dimension_query",
+    "avg_execution_time_sec": 0.002238670984903971,
+    "min_execution_time_sec": 0.0019719600677490234,
+    "max_execution_time_sec": 0.0025620460510253906,
+    "iterations": 3,
+    "row_count": 4148,
+    "column_count": 7,
+    "memory_delta_mb": 0.21875,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "simple_aggregation",
+    "avg_execution_time_sec": 0.0046698252360026045,
+    "min_execution_time_sec": 0.003547191619873047,
+    "max_execution_time_sec": 0.006651163101196289,
+    "iterations": 3,
+    "row_count": 0,
+    "column_count": 0,
+    "memory_delta_mb": 0.0,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "complex_multi_stat_aggregation",
+    "avg_execution_time_sec": 0.06353211402893066,
+    "min_execution_time_sec": 0.04227304458618164,
+    "max_execution_time_sec": 0.09902429580688477,
+    "iterations": 3,
+    "row_count": 1798,
+    "column_count": 9,
+    "memory_delta_mb": 7.875,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "full_table_scan",
+    "avg_execution_time_sec": 0.03740239143371582,
+    "min_execution_time_sec": 0.033206939697265625,
+    "max_execution_time_sec": 0.041249990463256836,
+    "iterations": 3,
+    "row_count": 1,
+    "column_count": 6,
+    "memory_delta_mb": 6.03125,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "window_functions_complex",
+    "avg_execution_time_sec": 0.06736437479654948,
+    "min_execution_time_sec": 0.0396120548248291,
+    "max_execution_time_sec": 0.11609792709350586,
+    "iterations": 3,
+    "row_count": 10000,
+    "column_count": 8,
+    "memory_delta_mb": 2.1875,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  },
+  {
+    "name": "mart_analytics_pattern",
+    "avg_execution_time_sec": 0.05288052558898926,
+    "min_execution_time_sec": 0.042765140533447266,
+    "max_execution_time_sec": 0.05805516242980957,
+    "iterations": 3,
+    "row_count": 500,
+    "column_count": 11,
+    "memory_delta_mb": 7.5625,
+    "execution_plan_summary": "     explain_key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+  }
+]
