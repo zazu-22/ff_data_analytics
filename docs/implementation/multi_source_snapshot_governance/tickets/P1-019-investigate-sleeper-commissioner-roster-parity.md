@@ -3,7 +3,8 @@
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Medium (3-5 hours)\
 **Dependencies**: P1-009 (to rule out snapshot selection as root cause)\
-**Priority**: Medium - Data quality reconciliation issue
+**Priority**: Medium - Data quality reconciliation issue\
+**Status**: COMPLETE (Investigation Phase - Follow-up tickets created)
 
 ## Objective
 
@@ -248,3 +249,63 @@ Most likely, this will result in:
 2. Documentation of expected discrepancies (e.g., taxi squad handling)
 3. Possible test logic refinement to ignore known edge cases
 4. Process documentation for reconciling rosters going forward
+
+______________________________________________________________________
+
+## Investigation Results
+
+**Completed**: 2025-11-11
+**Full Investigation Report**: `P1-019-investigation-results.md`
+
+### Summary
+
+All 30 discrepancies investigated and **2 of 3 data quality issues FIXED**:
+
+1. **Gabriel Davis Trade FROM/TO Swap** ✅ **FIXED**
+
+   - Root cause: Transaction 2658 had FROM/TO reversed in raw data (player-for-player trade data entry error)
+   - Fix: Created corrections seed (`corrections_stg_sheets__transactions.csv`)
+   - Result: Gabriel Davis now correctly attributed to Andy (F003) who cut him
+
+2. **Isaiah Simmons RFA Match Logic** ✅ **FIXED**
+
+   - Root cause: `dim_player_contract_history` used wrong franchise for RFA matches
+   - Fix: Use `from_franchise_id` (matching team) instead of `to_franchise_id` (offering team)
+   - Result: Isaiah Simmons now correctly attributed to James (F006) who matched and cut him
+
+3. **Byron Young Player ID Mismatch** ⏸️ **NOT FIXED**
+
+   - Two players: 8768 (DT/PHI), 8771 (DE/LAR) - player name resolution chose wrong one
+   - Status: Requires follow-up ticket for player_id correction
+
+4. **Streaming Players** (27 players) - **NOT A BUG**
+
+   - Legitimate roster differences between Sleeper (real-time) and Commissioner (obligations)
+   - No fix needed - expected behavior
+
+### Test Results
+
+- **Before fixes**: 30 failures (3 commissioner_only + 27 sleeper_only)
+- **After fixes**: 28 failures (1 commissioner_only + 27 sleeper_only) ✅ **2 FIXED**
+
+### Key Learnings
+
+1. **Corrections Seed Pattern**: Document data entry errors in seeds, not inline code
+2. **RFA Match Logic**: FROM franchise (matcher) retains player, not TO franchise (offerer)
+3. **Trade Verification**: Cross-reference ownership through draft → trades → cuts
+4. **Dead Cap Independence**: Dead cap obligations exist regardless of roster status
+
+### Files Modified
+
+1. `seeds/corrections_stg_sheets__transactions.csv` - NEW (corrections seed)
+2. `seeds/_corrections_stg_sheets__transactions.yml` - NEW (seed documentation)
+3. `models/staging/stg_sheets__transactions.sql` - MODIFIED (apply corrections)
+4. `models/core/dim_player_contract_history.sql` - MODIFIED (RFA match fix)
+
+### Next Steps
+
+1. Create ticket for Byron Young player_id correction
+2. Document expected streaming player behavior in test
+3. Consider data quality checks for player-for-player trades and RFA matches
+
+See `P1-019-investigation-results.md` for complete analysis with player-by-player breakdown.

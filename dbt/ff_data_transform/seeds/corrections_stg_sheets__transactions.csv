@@ -1,0 +1,5 @@
+transaction_id,correction_type,field_name,original_value,corrected_value,reason,discovered_date,notes
+2657,swap_from_to,from_franchise_id,F011,F003,Player-for-player trade FROM/TO entered backwards in Commissioner sheet,2025-11-11,"Karlaftis was drafted by Andy (F003) per txn 2201, then cut by Piper (F011) per txn 3422. Trade must be FROM Andy TO Piper."
+2657,swap_from_to,to_franchise_id,F003,F011,Player-for-player trade FROM/TO entered backwards in Commissioner sheet,2025-11-11,"Part of same correction as above"
+2658,swap_from_to,from_franchise_id,F003,F011,Player-for-player trade FROM/TO entered backwards in Commissioner sheet,2025-11-11,"Gabriel Davis signed by Piper (F011) per txn 2049, then cut by Andy (F003) per txn 3855. Trade must be FROM Piper TO Andy."
+2658,swap_from_to,to_franchise_id,F011,F003,Player-for-player trade FROM/TO entered backwards in Commissioner sheet,2025-11-11,"Part of same correction as above"

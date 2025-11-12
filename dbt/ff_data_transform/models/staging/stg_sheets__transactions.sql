@@ -214,111 +214,131 @@ with
         left join draft_boundaries next_draft on base.season + 1 = next_draft.draft_season  -- Join to NEXT season's draft
     ),
 
+    with_corrections as (
+        -- Apply data quality corrections from seed
+        -- Currently handles swap_from_to corrections (transactions 2657, 2658)
+        select wtf.*, coalesce(corr.correction_type = 'swap_from_to', false) as needs_from_to_swap
+        from with_timeframe wtf
+        left join
+            {{ ref('corrections_stg_sheets__transactions') }} corr
+            on wtf.transaction_id = corr.transaction_id
+            and corr.correction_type = 'swap_from_to'
+        -- For swap corrections, we only need one row per transaction (not per field)
+        qualify row_number() over (partition by wtf.transaction_id order by corr.transaction_id nulls last) = 1
+    ),
+
     final as (
         select
-            wtf.transaction_id_unique as transaction_id_unique,
-            wtf.transaction_id as transaction_id,
+            wc.transaction_id_unique as transaction_id_unique,
+            wc.transaction_id as transaction_id,
             case
-                when wtf.asset_type = 'player' and coalesce(wtf.player_id, -1) != -1
-                then cast(wtf.player_id as varchar)
-                when wtf.asset_type = 'player' and coalesce(wtf.player_id, -1) = -1
-                then coalesce(wtf.player_name, 'UNKNOWN_' || wtf.transaction_id_unique)
-                when wtf.asset_type = 'pick'
-                then coalesce(wtf.pick_id, 'PICK_' || wtf.transaction_id_unique)
-                when wtf.asset_type = 'defense'
-                then coalesce(wtf.player_name, 'DEFENSE_' || wtf.transaction_id_unique)
-                when wtf.asset_type = 'cap_space'
-                then 'CAP_' || wtf.transaction_id_unique
-                else 'UNKNOWN_' || wtf.transaction_id_unique
+                when wc.asset_type = 'player' and coalesce(wc.player_id, -1) != -1
+                then cast(wc.player_id as varchar)
+                when wc.asset_type = 'player' and coalesce(wc.player_id, -1) = -1
+                then coalesce(wc.player_name, 'UNKNOWN_' || wc.transaction_id_unique)
+                when wc.asset_type = 'pick'
+                then coalesce(wc.pick_id, 'PICK_' || wc.transaction_id_unique)
+                when wc.asset_type = 'defense'
+                then coalesce(wc.player_name, 'DEFENSE_' || wc.transaction_id_unique)
+                when wc.asset_type = 'cap_space'
+                then 'CAP_' || wc.transaction_id_unique
+                else 'UNKNOWN_' || wc.transaction_id_unique
             end as player_key,
-            wtf.transaction_type_refined as transaction_type,
-            wtf.asset_type as asset_type,
-            wtf.transaction_date as transaction_date,
-            extract(year from wtf.transaction_date) as transaction_year,
-            wtf.season as season,
-            wtf.period_type as period_type,
-            wtf.week as week,
-            wtf.sort_sequence as sort_sequence,
-            wtf.timeframe_string as timeframe_string,
-            from_fran.franchise_id as from_franchise_id,
-            from_fran.franchise_name as from_franchise_name,
-            to_fran.franchise_id as to_franchise_id,
-            to_fran.franchise_name as to_franchise_name,
-            wtf.player_id as player_id,
-            wtf.player_name as player_name,
-            wtf.position as position,
-            wtf.pick_id as pick_id,
-            wtf.pick_season as pick_season,
-            wtf.pick_round as pick_round,
-            wtf.pick_overall_number as pick_overall_number,
-            wtf.pick_id_raw as pick_id_raw,
-            wtf.pick_original_owner as pick_original_owner,
-            wtf.round as round,
-            wtf.pick_number as pick_number,
-            wtf.contract_total as contract_total,
-            wtf.contract_years as contract_years,
+            wc.transaction_type_refined as transaction_type,
+            wc.asset_type as asset_type,
+            wc.transaction_date as transaction_date,
+            extract(year from wc.transaction_date) as transaction_year,
+            wc.season as season,
+            wc.period_type as period_type,
+            wc.week as week,
+            wc.sort_sequence as sort_sequence,
+            wc.timeframe_string as timeframe_string,
+            -- Apply FROM/TO swap for corrections (transactions 2657, 2658)
             case
-                when wtf.split_array is not null then cast(wtf.split_array as json) else null
-            end as contract_split_json,
-            wtf.split_array as contract_split_array,
+                when wc.needs_from_to_swap then to_fran.franchise_id else from_fran.franchise_id
+            end as from_franchise_id,
             case
-                when wtf.contract_years is not null and wtf.split_array is not null
-                then len(wtf.split_array) != wtf.contract_years
+                when wc.needs_from_to_swap then to_fran.franchise_name else from_fran.franchise_name
+            end as from_franchise_name,
+            case
+                when wc.needs_from_to_swap then from_fran.franchise_id else to_fran.franchise_id
+            end as to_franchise_id,
+            case
+                when wc.needs_from_to_swap then from_fran.franchise_name else to_fran.franchise_name
+            end as to_franchise_name,
+            wc.player_id as player_id,
+            wc.player_name as player_name,
+            wc.position as position,
+            wc.pick_id as pick_id,
+            wc.pick_season as pick_season,
+            wc.pick_round as pick_round,
+            wc.pick_overall_number as pick_overall_number,
+            wc.pick_id_raw as pick_id_raw,
+            wc.pick_original_owner as pick_original_owner,
+            wc.round as round,
+            wc.pick_number as pick_number,
+            wc.contract_total as contract_total,
+            wc.contract_years as contract_years,
+            case when wc.split_array is not null then cast(wc.split_array as json) else null end as contract_split_json,
+            wc.split_array as contract_split_array,
+            case
+                when wc.contract_years is not null and wc.split_array is not null
+                then len(wc.split_array) != wc.contract_years
                 else false
             end as has_contract_length_mismatch,
             case
-                when wtf.contract_total is not null and wtf.split_array is not null
-                then list_sum(wtf.split_array) != wtf.contract_total
+                when wc.contract_total is not null and wc.split_array is not null
+                then list_sum(wc.split_array) != wc.contract_total
                 else false
             end as has_contract_sum_mismatch,
             case
                 when
-                    wtf.transaction_type_refined = 'contract_extension'
-                    and wtf.contract_years is not null
-                    and wtf.split_array is not null
-                    and len(wtf.split_array) > wtf.contract_years
+                    wc.transaction_type_refined = 'contract_extension'
+                    and wc.contract_years is not null
+                    and wc.split_array is not null
+                    and len(wc.split_array) > wc.contract_years
                 then 'Extension shows full remaining schedule (expected per league accounting)'
                 when
-                    wtf.contract_total is not null
-                    and wtf.split_array is not null
-                    and abs(list_sum(wtf.split_array) - wtf.contract_total) > 5
+                    wc.contract_total is not null
+                    and wc.split_array is not null
+                    and abs(list_sum(wc.split_array) - wc.contract_total) > 5
                 then 'Large sum mismatch (>$5) - review with commissioner'
                 when
-                    wtf.contract_total is not null
-                    and wtf.split_array is not null
-                    and list_sum(wtf.split_array) != wtf.contract_total
+                    wc.contract_total is not null
+                    and wc.split_array is not null
+                    and list_sum(wc.split_array) != wc.contract_total
                 then 'Minor rounding variance (±$1-2)'
                 else null
             end as validation_notes,
             case
-                when wtf.rfa_matched_raw = 'yes'
+                when wc.rfa_matched_raw = 'yes'
                 then true
-                when wtf.rfa_matched_raw = '-' or wtf.rfa_matched_raw is null
+                when wc.rfa_matched_raw = '-' or wc.rfa_matched_raw is null
                 then false
                 else null
             end as rfa_matched,
-            try_cast(nullif(wtf.faad_comp_raw, '-') as integer) as faad_compensation,
+            try_cast(nullif(wc.faad_comp_raw, '-') as integer) as faad_compensation,
             case
-                when wtf.faad_comp_raw != '-' and try_cast(wtf.faad_comp_raw as integer) is null
-                then wtf.faad_comp_raw
+                when wc.faad_comp_raw != '-' and try_cast(wc.faad_comp_raw as integer) is null
+                then wc.faad_comp_raw
                 else null
             end as faad_compensation_text,
-            wtf.contract_raw as contract_raw,
-            wtf.split_raw as split_raw,
-            wtf.transaction_type_raw as transaction_type_raw,
-            wtf.from_owner_name as from_owner_name,
-            wtf.to_owner_name as to_owner_name,
-            wtf.faad_award_sequence as faad_award_sequence
-        from with_timeframe wtf
+            wc.contract_raw as contract_raw,
+            wc.split_raw as split_raw,
+            wc.transaction_type_raw as transaction_type_raw,
+            wc.from_owner_name as from_owner_name,
+            wc.to_owner_name as to_owner_name,
+            wc.faad_award_sequence as faad_award_sequence
+        from with_corrections wc
         left join
             {{ ref("dim_franchise") }} from_fran
-            on wtf.from_owner_name = from_fran.owner_name
-            and case when wtf.period_type = 'offseason' then wtf.season + 1 else wtf.season end
+            on wc.from_owner_name = from_fran.owner_name
+            and case when wc.period_type = 'offseason' then wc.season + 1 else wc.season end
             between from_fran.season_start and from_fran.season_end
         left join
             {{ ref("dim_franchise") }} to_fran
-            on wtf.to_owner_name = to_fran.owner_name
-            and case when wtf.period_type = 'offseason' then wtf.season + 1 else wtf.season end
+            on wc.to_owner_name = to_fran.owner_name
+            and case when wc.period_type = 'offseason' then wc.season + 1 else wc.season end
             between to_fran.season_start and to_fran.season_end
     )
 

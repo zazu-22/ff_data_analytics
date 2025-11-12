@@ -74,7 +74,7 @@ ______________________________________________________________________
 2. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours - 21 violations) ⚠️ **81% IMPROVED** (21→4)
 3. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates) ✅ **COMPLETE**
 4. [x] **P1-022** — Resolve orphan pick references (Small-Medium: 2-4 hours - 5 fact + 41 staging orphans) ✅ **COMPLETE**
-5. [ ] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies)
+5. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies) ✅ **COMPLETE** (2/3 fixed: 30→28 failures)
 6. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
 7. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
 8. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)

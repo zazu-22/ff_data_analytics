@@ -63,8 +63,18 @@ with
             position,
 
             -- Franchise ownership
-            to_franchise_id as franchise_id,
-            to_franchise_name as franchise_name,
+            -- For RFA matches, the FROM franchise (matching team) retains the player
+            -- For all other acquisitions, the TO franchise gets the player
+            case
+                when transaction_type = 'faad_rfa_matched' and rfa_matched = true
+                then from_franchise_id
+                else to_franchise_id
+            end as franchise_id,
+            case
+                when transaction_type = 'faad_rfa_matched' and rfa_matched = true
+                then from_franchise_name
+                else to_franchise_name
+            end as franchise_name,
 
             -- Contract terms
             contract_total,

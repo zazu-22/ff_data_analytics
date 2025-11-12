@@ -1,0 +1,64 @@
+version: 2
+
+seeds:
+  - name: corrections_stg_sheets__transactions
+    description: |
+      Data quality corrections for transaction data errors discovered in the Commissioner sheet.
+
+      **Purpose**: Documents and corrects known data entry errors in the source transaction data.
+      Each row represents a field-level correction that should be applied during staging.
+
+      **Grain**: One row per field correction per transaction
+
+      **Common Correction Types**:
+      - `swap_from_to`: FROM and TO franchises were entered backwards (affects both fields)
+
+      **Usage**: Join this seed to `stg_sheets__transactions` to apply corrections based on
+      transaction_id and field_name.
+
+      **Discovered Issues**:
+      - Transactions 2657 & 2658 (2023 offseason): Player-for-player trade (Karlaftis <-> Gabriel Davis)
+        had FROM/TO reversed. Confirmed by tracing player ownership through draft → trade → cut sequences.
+
+    config:
+      enabled: true
+
+    columns:
+      - name: transaction_id
+        description: Transaction ID that needs correction
+        data_tests:
+          - not_null
+
+      - name: correction_type
+        description: |
+          Type of correction needed:
+          - swap_from_to: Swap FROM and TO franchise values
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['swap_from_to']
+
+      - name: field_name
+        description: Specific field that needs correction (from_franchise_id, to_franchise_id, etc)
+        data_tests:
+          - not_null
+
+      - name: original_value
+        description: Original (incorrect) value in raw data
+
+      - name: corrected_value
+        description: Corrected value that should be used
+
+      - name: reason
+        description: Brief explanation of why this correction is needed
+        data_tests:
+          - not_null
+
+      - name: discovered_date
+        description: Date the data quality issue was discovered (YYYY-MM-DD)
+        data_tests:
+          - not_null
+
+      - name: notes
+        description: Additional context, evidence, or investigation notes supporting the correction

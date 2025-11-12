@@ -149,10 +149,15 @@ ______________________________________________________________________
   - [ ] Determine if test expectations are realistic
   - [ ] Either fix source coverage or downgrade test to warning (LOW PRIORITY)
 
-- [ ] Update roster parity test count (P1-019):
+- [x] Update roster parity test count (P1-019):
 
-  - [ ] Note: Test now shows 30 failures (was documented as 17)
-  - [ ] Investigate and categorize all 30 roster discrepancies
+  - [x] Note: Test now shows 30 failures (was documented as 17)
+  - [x] Investigate and categorize all 30 roster discrepancies
+  - [x] Investigation complete - 3 data quality issues + 27 expected streaming players
+  - [x] Fix: Gabriel Davis trade FROM/TO swap (transaction 2658 data entry error) - FIXED
+  - [x] Fix: Isaiah Simmons RFA match logic (dim_player_contract_history) - FIXED
+  - [ ] Fix: Byron Young player_id mismatch (8768 vs 8771) - needs follow-up ticket
+  - [ ] Document: Streaming players as expected behavior (27 players)
 
 ### Mart Data Quality ⚠️ **Priority: Fixes 1,893 mart duplicates**
 
