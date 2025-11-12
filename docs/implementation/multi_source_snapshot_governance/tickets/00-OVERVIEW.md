@@ -1,7 +1,7 @@
 # Multi-Source Snapshot Governance — Ticket Tracking Overview
 
-**Version**: 2.0\
-**Date**: 2025-11-07\
+**Version**: 2.1\
+**Date**: 2025-11-12\
 **Status**: Active
 
 ______________________________________________________________________
@@ -10,11 +10,31 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 57 (includes 13 staging models + 9 data quality fixes + 1 architectural refactor)
+- **Total Tickets**: 58 (includes 13 staging models + 9 data quality fixes + 2 architectural refactors)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~172-212 hours (updated for expanded Phase 1 + data quality fixes)
+- **Estimated Total Effort**: ~176-218 hours (updated for expanded Phase 1 + P1-027)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
+
+## Recent Accomplishments (2025-11-12)
+
+🎉 **Major Breakthrough**: Streaming hypothesis VALIDATED and roster parity test fully resolved!
+
+**Completed This Session**:
+
+- ✅ **P1-019**: Roster parity investigation COMPLETE (30→0 failures, 100% success)
+  - Discovered and fixed 4 critical player_id resolution bugs
+  - Validated streaming hypothesis: weekly roster changes explain expected discrepancies
+  - Quick fixes applied; full refactor tracked in new ticket P1-027
+- ✅ **P1-026**: Fixed macro cartesian product regression (3,563 duplicates eliminated)
+- ✅ **P1-020**: Resolved TBD pick duplicates (22 pick_ids → 0)
+- ✅ **P1-022**: Resolved orphan pick references (46 orphans → 0)
+- ⚠️ **P1-023**: Base picks per round validation 81% improved (21→4 failures remain)
+- 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
+
+**Impact**: Phase 1 now 20/27 tickets complete (74%); Overall project 20/58 tickets complete (34%)
+
+______________________________________________________________________
 
 ## Ticket Status Legend
 
@@ -31,7 +51,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (25 tickets - 13 staging models + 9 data quality fixes + 1 architectural refactor)
+## Phase 1: Foundation (27 tickets - 13 staging models + 9 data quality fixes + 2 architectural refactors + 2 cleanup/validation)
 
 ### Macro & Infrastructure
 
@@ -62,27 +82,38 @@ ______________________________________________________________________
 - [x] **P1-015** — Update stg_ktc_assets model (latest_only)
 - [x] **P1-015b** — Refactor name alias loading to use DuckDB (architectural consistency)
 
+### Architectural Refactors (1 ticket)
+
+- [ ] **P1-027** — Refactor contracts models to use resolve_player_id_from_name macro (code deduplication, bug fixes)
+
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
 - [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
 
 ### Data Quality Follow-ups (9 tickets) ⚠️ **Discovered during comprehensive test analysis**
 
-**🚨 CRITICAL BLOCKER**: P1-026 must be fixed IMMEDIATELY - it's a regression introduced in P1-019 that causes 6.8x row duplication.
+**Recent Achievements** (2025-11-12):
 
-**Recommended Execution Order** (sequential on main branch, no file conflicts):
+- ✅ **P1-026 COMPLETE**: Macro cartesian product regression fixed (3,563 transaction duplicates eliminated)
+- ✅ **P1-019 COMPLETE**: Streaming hypothesis VALIDATED - All roster parity discrepancies resolved (30→0 failures)
+  - Root cause: 4 player_id resolution bugs (K→PK mapping, dual-eligibility, multi-position notation, position-aware aliases)
+  - Quick fixes applied to macro + inline logic; full refactor tracked in P1-027
+- ✅ **P1-020 COMPLETE**: TBD pick duplicates fixed (22 pick_ids → 0)
+- ✅ **P1-022 COMPLETE**: Orphan pick references resolved (46 orphans → 0)
 
-1. [x] **P1-026** — 🚨 **CRITICAL: Fix resolve_player_id_from_name macro cartesian product** (Small: 1-2 hours - 3,563 transaction duplicates) ✅ **COMPLETE**
-2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - 22 pick_ids) ✅ **COMPLETE**
-3. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours - 21 violations) ⚠️ **81% IMPROVED** (21→4)
-4. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates) ✅ **COMPLETE**
-5. [x] **P1-022** — Resolve orphan pick references (Small-Medium: 2-4 hours - 5 fact + 41 staging orphans) ✅ **COMPLETE**
-6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies) ✅ **COMPLETE** (2/3 fixed: 30→28 failures)
+**Recommended Execution Order** (remaining tickets):
+
+1. [x] **P1-026** — 🚨 Fix resolve_player_id_from_name macro cartesian product ✅ **COMPLETE** (2025-11-11)
+2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates ✅ **COMPLETE** (2025-11-11)
+3. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours) ⚠️ **81% IMPROVED** (21→4 failures remain)
+4. [ ] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates remain)
+5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
+6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
 7. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
 8. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
 9. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
 
-**Rationale**: P1-026 regression fixed (6.8x transaction duplication eliminated). Continue with pick-related data integrity issues (P1-020, P1-023, P1-024, P1-022) to ensure foundation, then tackle cross-source reconciliation (P1-019), followed by projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). All can be done on main branch - zero file conflicts between tickets.
+**Rationale**: Major progress on data quality! P1-026 regression fixed, roster parity fully resolved via player_id fixes (P1-019), and pick integrity issues resolved (P1-020, P1-022). Continue with remaining pick validation (P1-023, P1-024), then tackle projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). P1-027 tracks technical debt cleanup.
 
 ### Sample Cleanup & Validation
 
@@ -153,13 +184,26 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Completed**: 16/56 (29%)\
-**In Progress**: 0/56\
-**Blocked**: 0/56\
-**Remaining**: 40/56
+**Overall Project**: 20/58 tickets complete (34%)\
+**Phase 1 Foundation**: 20/27 tickets complete (74%)\
+**In Progress**: 1 ticket (P1-023)\
+**Blocked**: 0 tickets
 
-**Notes**:
+**Recent Progress** (2025-11-12):
 
+- ✅ **P1-019 COMPLETE**: Streaming hypothesis validated - roster parity test PASSING (30→0 failures)
+  - Discovered and fixed 4 critical player_id resolution bugs
+  - K→PK mapping, dual-eligibility, multi-position notation, position-aware aliases all fixed
+  - Created P1-027 to track full refactor (remove inline logic from contracts models)
+- ✅ **P1-026 COMPLETE**: Macro cartesian product regression fixed (3,563 duplicates → 0)
+- ✅ **P1-020 COMPLETE**: TBD pick duplicates resolved (22 pick_ids → 0)
+- ✅ **P1-022 COMPLETE**: Orphan pick references resolved (46 orphans → 0)
+- ⚠️ **P1-023 IN PROGRESS**: Base picks per round validation 81% improved (21→4 failures remain)
+
+**Historical Notes**:
+
+- **2025-11-12**: P1-019 streaming hypothesis validated with 4 critical player_id bugs fixed; P1-027 created to track full refactor of contracts models
+- **2025-11-11**: P1-026 cartesian product regression fixed; P1-020 and P1-022 resolved (TBD picks and orphan references)
 - **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed
 - P1-009: Snapshot governance fix complete; pre-existing roster parity test failure (30 discrepancies - separate ticket P1-019 created)
 - P1-011: Snapshot governance fix complete; downstream testing revealed TBD pick duplicates (22 pick_ids - separate ticket P1-020 created)
@@ -173,16 +217,26 @@ ______________________________________________________________________
 
 The following tickets represent the critical path for achieving minimum viable governance:
 
-01. **P0-001** → Scope confirmation
-02. **P1-001** → Macro foundation
-03. **P1-013, P1-016** → High-priority staging model updates
-04. **P1-002, P1-003, P1-004** → NFLverse baseline models
-05. **P1-007 through P1-015** → Remaining staging models (can be parallelized)
-06. **P1-017, P1-018, P1-019, P1-020, P1-022, P1-023, P1-024, P1-025** → Data quality fixes (8 tickets addressing duplicates, orphan references, and data integrity issues discovered during comprehensive test analysis)
-07. **P2-001, P2-002** → Registry creation
-08. **P2-005** → Validation tooling
-09. **P2-006, P2-007** → Freshness tests
-10. **P3-001** → SPEC update
+01. **P0-001** → Scope confirmation ✅
+02. **P1-001** → Macro foundation ✅
+03. **P1-013, P1-016** → High-priority staging model updates ✅
+04. **P1-002, P1-003, P1-004** → NFLverse baseline models ✅
+05. **P1-007 through P1-015** → Remaining staging models ✅
+06. **Data Quality Fixes** (9 tickets):
+    - **P1-026** → Macro cartesian product fix ✅ **COMPLETE**
+    - **P1-020** → TBD pick duplicates ✅ **COMPLETE**
+    - **P1-022** → Orphan pick references ✅ **COMPLETE**
+    - **P1-019** → Roster parity investigation ✅ **COMPLETE** - Streaming hypothesis validated
+    - **P1-023** → Base picks per round validation ⚠️ **IN PROGRESS** (81% improved)
+    - **P1-024** → Comp registry duplicates (pending)
+    - **P1-018** → Source data duplicates (pending)
+    - **P1-017** → Mart duplicates (pending)
+    - **P1-025** → IDP source diversity (low priority)
+07. **P1-027** → Refactor contracts models (architectural cleanup)
+08. **P2-001, P2-002** → Registry creation
+09. **P2-005** → Validation tooling
+10. **P2-006, P2-007** → Freshness tests
+11. **P3-001** → SPEC update
 
 ______________________________________________________________________
 
@@ -217,9 +271,13 @@ ______________________________________________________________________
 - **P1-023, P1-024, P1-025** (new data quality tickets) can run in parallel with each other
   - No dependencies; data validation and integrity issues
   - Can be sequenced for efficiency (pick-related issues first)
-- **P1-022** (orphan pick references) can run in parallel with other Phase 1 tickets
+- **P1-022** (orphan pick references) can run in parallel with other Phase 1 tickets ✅ **COMPLETE**
   - Dependency: P1-012 must be complete (snapshot governance already reduced issue 87%)
   - Not blocking other work; low priority since only 5 orphans remain
+- **P1-027** (refactor contracts models) should wait for P1-026 to be complete
+  - Dependency: P1-026 must be complete (macro with cartesian product fix)
+  - Technical debt cleanup - removes inline logic duplication
+  - Can be done in parallel with other Phase 1 tickets once P1-026 is done
 - All Phase 3 documentation tickets (P3-001 through P3-008) are independent
 - Phase 4 flow tickets (P4-003 through P4-006) can be done in parallel after P4-001
 - **Note**: P4-002a and P4-002 are sequential (copy flow before parse flow)
@@ -231,18 +289,19 @@ ______________________________________________________________________
 
 Implementation is complete when:
 
-- [ ] Zero hardcoded snapshot dates in all 13 staging models (P1-002 through P1-016)
-- [ ] All staging models use snapshot_selection_strategy macro (P1-001 through P1-016)
-- [ ] All current test failures resolved:
-  - [ ] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact)
+- [x] Zero hardcoded snapshot dates in all 13 staging models (P1-002 through P1-016) ✅
+- [x] All staging models use snapshot_selection_strategy macro (P1-001 through P1-016) ✅
+- [-] All current test failures resolved:
+  - [x] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact) ✅ **COMPLETE**
   - [ ] Source data duplicates eliminated (P1-018: 17→0 staging, 101→0 fact)
   - [ ] Mart duplicates eliminated (P1-017: 1,893→0)
-  - [ ] Roster parity discrepancies investigated and resolved (P1-019: 30→0 or documented)
-  - [ ] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0 or grain clarified)
-  - [ ] Orphan pick references resolved (P1-022: 5 fact + 41 staging→0 or documented exceptions)
-  - [ ] Base picks per round validated (P1-023: 21 violations→0)
+  - [x] Roster parity discrepancies resolved (P1-019: 30→0) ✅ **100% SUCCESS** - Streaming hypothesis validated
+  - [x] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0) ✅ **COMPLETE**
+  - [x] Orphan pick references resolved (P1-022: 46 orphans→0) ✅ **COMPLETE**
+  - [-] Base picks per round validated (P1-023: 21→4 violations) ⚠️ **81% IMPROVED** - In progress
   - [ ] Comp registry duplicates eliminated (P1-024: 19 duplicates→0)
   - [ ] IDP source diversity validated (P1-025: 3 failures→0 or test downgraded to warning)
+  - [ ] Player ID resolution refactored (P1-027: contracts models use macro consistently)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)
