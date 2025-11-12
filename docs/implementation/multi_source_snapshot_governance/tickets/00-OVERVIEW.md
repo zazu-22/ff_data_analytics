@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 56 (includes 13 staging models + 8 data quality fixes + 1 architectural refactor)
+- **Total Tickets**: 57 (includes 13 staging models + 9 data quality fixes + 1 architectural refactor)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~170-210 hours (updated for expanded Phase 1 + data quality fixes)
+- **Estimated Total Effort**: ~172-212 hours (updated for expanded Phase 1 + data quality fixes)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -31,7 +31,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (24 tickets - 13 staging models + 8 data quality fixes + 1 architectural refactor)
+## Phase 1: Foundation (25 tickets - 13 staging models + 9 data quality fixes + 1 architectural refactor)
 
 ### Macro & Infrastructure
 
@@ -66,20 +66,23 @@ ______________________________________________________________________
 
 - [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
 
-### Data Quality Follow-ups (8 tickets) ⚠️ **Discovered during comprehensive test analysis**
+### Data Quality Follow-ups (9 tickets) ⚠️ **Discovered during comprehensive test analysis**
+
+**🚨 CRITICAL BLOCKER**: P1-026 must be fixed IMMEDIATELY - it's a regression introduced in P1-019 that causes 6.8x row duplication.
 
 **Recommended Execution Order** (sequential on main branch, no file conflicts):
 
-1. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - 22 pick_ids) ✅ **COMPLETE**
-2. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours - 21 violations) ⚠️ **81% IMPROVED** (21→4)
-3. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates) ✅ **COMPLETE**
-4. [x] **P1-022** — Resolve orphan pick references (Small-Medium: 2-4 hours - 5 fact + 41 staging orphans) ✅ **COMPLETE**
-5. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies) ✅ **COMPLETE** (2/3 fixed: 30→28 failures)
-6. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
-7. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
-8. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
+1. [x] **P1-026** — 🚨 **CRITICAL: Fix resolve_player_id_from_name macro cartesian product** (Small: 1-2 hours - 3,563 transaction duplicates) ✅ **COMPLETE**
+2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates (Medium: 3-5 hours - 22 pick_ids) ✅ **COMPLETE**
+3. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours - 21 violations) ⚠️ **81% IMPROVED** (21→4)
+4. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates) ✅ **COMPLETE**
+5. [x] **P1-022** — Resolve orphan pick references (Small-Medium: 2-4 hours - 5 fact + 41 staging orphans) ✅ **COMPLETE**
+6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures (Medium: 3-5 hours - 30 discrepancies) ✅ **COMPLETE** (2/3 fixed: 30→28 failures)
+7. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
+8. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
+9. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
 
-**Rationale**: Start with pick-related data integrity issues (P1-020, P1-023, P1-024, P1-022) to ensure foundation, then tackle cross-source reconciliation (P1-019), followed by projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). All can be done on main branch - zero file conflicts between tickets.
+**Rationale**: P1-026 regression fixed (6.8x transaction duplication eliminated). Continue with pick-related data integrity issues (P1-020, P1-023, P1-024, P1-022) to ensure foundation, then tackle cross-source reconciliation (P1-019), followed by projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). All can be done on main branch - zero file conflicts between tickets.
 
 ### Sample Cleanup & Validation
 

@@ -1,4 +1,4 @@
-{{ config(materialized="view", unique_key='transaction_id_unique') }}
+{{ config(materialized="table", unique_key='transaction_id_unique') }}
 
 /*
 Stage Commissioner TRANSACTIONS sheet with dimension joins and validation flags.
@@ -10,9 +10,15 @@ Joins: dim_timeframe, dim_franchise (SCD Type 2 temporal), dim_player_id_xref
 Key Transformations:
 - Map timeframe_string → transaction_date
 - Map owner_name → franchise_id (temporal join on season)
+- Map player_name → player_id via resolve_player_id_from_name macro (position-aware)
 - Add player_key composite identifier (prevents grain violations from unmapped players)
 - Calculate contract validation flags
 - Cast split_array to JSON text for DuckDB compatibility
+
+Player ID Resolution:
+- Uses resolve_player_id_from_name macro for consistent disambiguation logic
+- Position column provides context (e.g., DL → matches both DE and DT)
+- Ensures all sheets staging models use identical player_id resolution
 
 Contract Validation Notes:
 - Extensions intentionally have len(split_array) > contract_years
@@ -21,45 +27,42 @@ Contract Validation Notes:
 */
 with
     raw_transactions as (
-        select *
+        select
+            transaction_id_unique,
+            transaction_id,
+            transaction_type_refined,
+            asset_type,
+            "Time Frame" as timeframe_string,
+            season,
+            period_type,
+            week,
+            sort_sequence,
+            "From" as from_owner_name,
+            "To" as to_owner_name,
+            "Original Order" as pick_original_owner,
+            "Round" as round,
+            "Pick" as pick_number,
+            "Position" as position,
+            "Player" as player_name,
+            pick_id,
+            pick_season,
+            pick_round,
+            pick_overall_number,
+            pick_id_raw,
+            "Contract" as contract_raw,
+            "Split" as split_raw,
+            total as contract_total,
+            years as contract_years,
+            split_array,
+            "RFA Matched" as rfa_matched_raw,
+            "FAAD Comp" as faad_comp_raw,
+            faad_award_sequence,
+            "Type" as transaction_type_raw
         from
             read_parquet(
                 '{{ var("external_root", "data/raw") }}/commissioner/transactions/dt=*/*.parquet',
                 hive_partitioning = true,
                 union_by_name = true
-            ) as raw(
-                transaction_id_unique,
-                transaction_id,
-                transaction_type_refined,
-                asset_type,
-                timeframe_string,
-                season,
-                period_type,
-                week,
-                sort_sequence,
-                from_owner_name,
-                to_owner_name,
-                pick_original_owner,
-                round,
-                pick_number,
-                position,
-                player_name,
-                player_id,
-                pick_id,
-                pick_season,
-                pick_round,
-                pick_overall_number,
-                pick_id_raw,
-                contract_raw,
-                split_raw,
-                contract_total,
-                contract_years,
-                split_array,
-                rfa_matched_raw,
-                faad_comp_raw,
-                faad_award_sequence,
-                transaction_type_raw,
-                dt
             )
         where
             1 = 1
@@ -98,7 +101,6 @@ with
             -- Asset identifiers
             rt.position as position,
             rt.player_name as player_name,
-            rt.player_id,  -- mfl_id from crosswalk (-1 if unmapped, null if not player)
 
             -- Pick identifiers (raw from sheet - will be canonicalized via xref)
             rt.pick_id,  -- Raw combined format (backward compat)
@@ -155,7 +157,6 @@ with
             base.pick_number as pick_number,
             base.position as position,
             base.player_name as player_name,
-            base.player_id as player_id,
             base.pick_id as pick_id,
             base.pick_season as pick_season,
             base.pick_round as pick_round,
@@ -227,118 +228,194 @@ with
         qualify row_number() over (partition by wtf.transaction_id order by corr.transaction_id nulls last) = 1
     ),
 
+    with_normalized_names as (
+        -- Normalize player names for matching
+        select
+            wc.*,
+            replace(
+                replace(replace(replace(wc.player_name, ' (RS)', ''), ' Jr.', ''), ' Jr', ''), '.', ''
+            ) as player_name_normalized
+        from with_corrections wc
+    ),
+
+    with_alias as (
+        -- Apply name alias corrections
+        select wn.*, coalesce(alias.canonical_name, wn.player_name_normalized) as player_name_canonical
+        from with_normalized_names wn
+        left join {{ ref("dim_name_alias") }} alias on wn.player_name_normalized = alias.alias_name
+    ),
+
+    -- Resolve player_id using macro with position context
+    {{ resolve_player_id_from_name(
+        source_cte='with_alias',
+        player_name_col='player_name_canonical',
+        position_context_col='position',
+        context_type='position'
+    ) }},
+
+    with_player_id as (
+        -- Merge player_id resolution back with source data
+        -- List all columns explicitly to preserve types (esp. split_array BIGINT[])
+        select
+            wa.transaction_id_unique,
+            wa.transaction_id,
+            wa.transaction_type_refined,
+            wa.asset_type,
+            wa.timeframe_string,
+            wa.season,
+            wa.period_type,
+            wa.week,
+            wa.sort_sequence,
+            wa.from_owner_name,
+            wa.to_owner_name,
+            wa.pick_original_owner,
+            wa.round,
+            wa.pick_number,
+            wa.position,
+            wa.player_name,
+            wa.pick_id,
+            wa.pick_season,
+            wa.pick_round,
+            wa.pick_overall_number,
+            wa.pick_id_raw,
+            wa.contract_raw,
+            wa.split_raw,
+            wa.contract_total,
+            wa.contract_years,
+            wa.split_array,
+            wa.rfa_matched_raw,
+            wa.faad_comp_raw,
+            wa.faad_award_sequence,
+            wa.transaction_type_raw,
+            wa.timeframe_canonical,
+            wa.next_draft_start_id,
+            wa.next_draft_end_id,
+            wa.transaction_date,
+            wa.needs_from_to_swap,
+            wa.player_name_normalized,
+            wa.player_name_canonical,
+            pid.player_id,
+            pid.mfl_id,
+            pid.canonical_name
+        from with_alias wa
+        left join
+            with_player_id_lookup pid
+            on wa.player_name_canonical = pid.player_name_canonical
+            and wa.position = pid.position
+    ),
+
     final as (
         select
-            wc.transaction_id_unique as transaction_id_unique,
-            wc.transaction_id as transaction_id,
+            wp.transaction_id_unique as transaction_id_unique,
+            wp.transaction_id as transaction_id,
             case
-                when wc.asset_type = 'player' and coalesce(wc.player_id, -1) != -1
-                then cast(wc.player_id as varchar)
-                when wc.asset_type = 'player' and coalesce(wc.player_id, -1) = -1
-                then coalesce(wc.player_name, 'UNKNOWN_' || wc.transaction_id_unique)
-                when wc.asset_type = 'pick'
-                then coalesce(wc.pick_id, 'PICK_' || wc.transaction_id_unique)
-                when wc.asset_type = 'defense'
-                then coalesce(wc.player_name, 'DEFENSE_' || wc.transaction_id_unique)
-                when wc.asset_type = 'cap_space'
-                then 'CAP_' || wc.transaction_id_unique
-                else 'UNKNOWN_' || wc.transaction_id_unique
+                when wp.asset_type = 'player' and wp.player_id is not null
+                then cast(wp.player_id as varchar)
+                when wp.asset_type = 'player' and wp.player_id is null
+                then coalesce(cast(wp.player_name as varchar), 'UNKNOWN_' || cast(wp.transaction_id_unique as varchar))
+                when wp.asset_type = 'pick'
+                then coalesce(cast(wp.pick_id as varchar), 'PICK_' || cast(wp.transaction_id_unique as varchar))
+                when wp.asset_type = 'defense'
+                then coalesce(cast(wp.player_name as varchar), 'DEFENSE_' || cast(wp.transaction_id_unique as varchar))
+                when wp.asset_type = 'cap_space'
+                then 'CAP_' || cast(wp.transaction_id_unique as varchar)
+                else 'UNKNOWN_' || cast(wp.transaction_id_unique as varchar)
             end as player_key,
-            wc.transaction_type_refined as transaction_type,
-            wc.asset_type as asset_type,
-            wc.transaction_date as transaction_date,
-            extract(year from wc.transaction_date) as transaction_year,
-            wc.season as season,
-            wc.period_type as period_type,
-            wc.week as week,
-            wc.sort_sequence as sort_sequence,
-            wc.timeframe_string as timeframe_string,
+            wp.transaction_type_refined as transaction_type,
+            wp.asset_type as asset_type,
+            wp.transaction_date as transaction_date,
+            extract(year from wp.transaction_date) as transaction_year,
+            wp.season as season,
+            wp.period_type as period_type,
+            wp.week as week,
+            wp.sort_sequence as sort_sequence,
+            wp.timeframe_string as timeframe_string,
             -- Apply FROM/TO swap for corrections (transactions 2657, 2658)
             case
-                when wc.needs_from_to_swap then to_fran.franchise_id else from_fran.franchise_id
+                when wp.needs_from_to_swap then to_fran.franchise_id else from_fran.franchise_id
             end as from_franchise_id,
             case
-                when wc.needs_from_to_swap then to_fran.franchise_name else from_fran.franchise_name
+                when wp.needs_from_to_swap then to_fran.franchise_name else from_fran.franchise_name
             end as from_franchise_name,
             case
-                when wc.needs_from_to_swap then from_fran.franchise_id else to_fran.franchise_id
+                when wp.needs_from_to_swap then from_fran.franchise_id else to_fran.franchise_id
             end as to_franchise_id,
             case
-                when wc.needs_from_to_swap then from_fran.franchise_name else to_fran.franchise_name
+                when wp.needs_from_to_swap then from_fran.franchise_name else to_fran.franchise_name
             end as to_franchise_name,
-            wc.player_id as player_id,
-            wc.player_name as player_name,
-            wc.position as position,
-            wc.pick_id as pick_id,
-            wc.pick_season as pick_season,
-            wc.pick_round as pick_round,
-            wc.pick_overall_number as pick_overall_number,
-            wc.pick_id_raw as pick_id_raw,
-            wc.pick_original_owner as pick_original_owner,
-            wc.round as round,
-            wc.pick_number as pick_number,
-            wc.contract_total as contract_total,
-            wc.contract_years as contract_years,
-            case when wc.split_array is not null then cast(wc.split_array as json) else null end as contract_split_json,
-            wc.split_array as contract_split_array,
+            wp.player_id as player_id,
+            wp.player_name as player_name,
+            wp.position as position,
+            wp.pick_id as pick_id,
+            wp.pick_season as pick_season,
+            wp.pick_round as pick_round,
+            wp.pick_overall_number as pick_overall_number,
+            wp.pick_id_raw as pick_id_raw,
+            wp.pick_original_owner as pick_original_owner,
+            wp.round as round,
+            wp.pick_number as pick_number,
+            try_cast(wp.contract_total as bigint) as contract_total,
+            try_cast(wp.contract_years as bigint) as contract_years,
+            case when wp.split_array is not null then cast(wp.split_array as json) else null end as contract_split_json,
+            wp.split_array as contract_split_array,
             case
-                when wc.contract_years is not null and wc.split_array is not null
-                then len(wc.split_array) != wc.contract_years
+                when try_cast(wp.contract_years as bigint) is not null and wp.split_array is not null
+                then len(wp.split_array) != try_cast(wp.contract_years as bigint)
                 else false
             end as has_contract_length_mismatch,
             case
-                when wc.contract_total is not null and wc.split_array is not null
-                then list_sum(wc.split_array) != wc.contract_total
+                when try_cast(wp.contract_total as bigint) is not null and wp.split_array is not null
+                then list_sum(wp.split_array) != try_cast(wp.contract_total as bigint)
                 else false
             end as has_contract_sum_mismatch,
             case
                 when
-                    wc.transaction_type_refined = 'contract_extension'
-                    and wc.contract_years is not null
-                    and wc.split_array is not null
-                    and len(wc.split_array) > wc.contract_years
+                    wp.transaction_type_refined = 'contract_extension'
+                    and try_cast(wp.contract_years as bigint) is not null
+                    and wp.split_array is not null
+                    and len(wp.split_array) > try_cast(wp.contract_years as bigint)
                 then 'Extension shows full remaining schedule (expected per league accounting)'
                 when
-                    wc.contract_total is not null
-                    and wc.split_array is not null
-                    and abs(list_sum(wc.split_array) - wc.contract_total) > 5
+                    try_cast(wp.contract_total as bigint) is not null
+                    and wp.split_array is not null
+                    and abs(list_sum(wp.split_array) - try_cast(wp.contract_total as bigint)) > 5
                 then 'Large sum mismatch (>$5) - review with commissioner'
                 when
-                    wc.contract_total is not null
-                    and wc.split_array is not null
-                    and list_sum(wc.split_array) != wc.contract_total
+                    try_cast(wp.contract_total as bigint) is not null
+                    and wp.split_array is not null
+                    and list_sum(wp.split_array) != try_cast(wp.contract_total as bigint)
                 then 'Minor rounding variance (±$1-2)'
                 else null
             end as validation_notes,
             case
-                when wc.rfa_matched_raw = 'yes'
+                when wp.rfa_matched_raw = 'yes'
                 then true
-                when wc.rfa_matched_raw = '-' or wc.rfa_matched_raw is null
+                when wp.rfa_matched_raw = '-' or wp.rfa_matched_raw is null
                 then false
                 else null
             end as rfa_matched,
-            try_cast(nullif(wc.faad_comp_raw, '-') as integer) as faad_compensation,
+            try_cast(nullif(wp.faad_comp_raw, '-') as integer) as faad_compensation,
             case
-                when wc.faad_comp_raw != '-' and try_cast(wc.faad_comp_raw as integer) is null
-                then wc.faad_comp_raw
+                when wp.faad_comp_raw != '-' and try_cast(wp.faad_comp_raw as integer) is null
+                then wp.faad_comp_raw
                 else null
             end as faad_compensation_text,
-            wc.contract_raw as contract_raw,
-            wc.split_raw as split_raw,
-            wc.transaction_type_raw as transaction_type_raw,
-            wc.from_owner_name as from_owner_name,
-            wc.to_owner_name as to_owner_name,
-            wc.faad_award_sequence as faad_award_sequence
-        from with_corrections wc
+            wp.contract_raw as contract_raw,
+            wp.split_raw as split_raw,
+            wp.transaction_type_raw as transaction_type_raw,
+            wp.from_owner_name as from_owner_name,
+            wp.to_owner_name as to_owner_name,
+            wp.faad_award_sequence as faad_award_sequence
+        from with_player_id wp
         left join
             {{ ref("dim_franchise") }} from_fran
-            on wc.from_owner_name = from_fran.owner_name
-            and case when wc.period_type = 'offseason' then wc.season + 1 else wc.season end
+            on wp.from_owner_name = from_fran.owner_name
+            and case when wp.period_type = 'offseason' then wp.season + 1 else wp.season end
             between from_fran.season_start and from_fran.season_end
         left join
             {{ ref("dim_franchise") }} to_fran
-            on wc.to_owner_name = to_fran.owner_name
-            and case when wc.period_type = 'offseason' then wc.season + 1 else wc.season end
+            on wp.to_owner_name = to_fran.owner_name
+            and case when wp.period_type = 'offseason' then wp.season + 1 else wp.season end
             between to_fran.season_start and to_fran.season_end
     )
 

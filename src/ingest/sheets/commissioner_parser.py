@@ -1140,8 +1140,10 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
         .alias("total")
     )
 
-    # Map player names to player_id using helper
-    transactions_df = _map_player_names(transactions_df)
+    # NOTE: Player_id resolution removed - now handled in dbt staging layer
+    # This keeps raw transaction data pure (player names only, no IDs)
+    # See: dbt/ff_data_transform/macros/resolve_player_id_from_name.sql
+    # transactions_df = _map_player_names(transactions_df)  # REMOVED
 
     # Map pick references to pick_id using helper (returns struct with multiple fields)
     def parse_pick_safe(x):
@@ -1232,7 +1234,7 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
             "Pick",
             "Position",
             "Player",
-            "player_id",
+            # "player_id",  # REMOVED - now resolved in dbt staging layer
             "pick_id",
             # New pick fields for matching to dim_pick
             "pick_season",
@@ -1252,9 +1254,8 @@ def parse_transactions(csv_path: Path) -> dict[str, pl.DataFrame]:
     )
 
     # QA tables
-    unmapped_players = transactions_df.filter(
-        (pl.col("asset_type") == "player") & (pl.col("player_id") == -1)
-    ).select(["Player", "Position", "Time Frame", "From", "To"])
+    # NOTE: unmapped_players now moved to dbt layer (can check after player_id resolution)
+    unmapped_players = pl.DataFrame()  # Empty DataFrame - QA moved to dbt
 
     unmapped_picks = transactions_df.filter(
         (pl.col("asset_type") == "pick") & (pl.col("pick_id").is_null())

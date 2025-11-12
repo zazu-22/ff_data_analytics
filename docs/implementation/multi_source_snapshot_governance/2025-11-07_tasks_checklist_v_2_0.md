@@ -114,7 +114,18 @@ ______________________________________________________________________
 
 **NOTE**: Comprehensive test analysis revealed 3 additional data quality issues beyond the original 6. See tickets P1-023, P1-024, P1-025 for details. The `assert_canonical_player_key_alignment` test (originally P1-021) is now passing and ticket was removed.
 
-**Status Update (2025-11-10)**: 3 of 8 data quality tickets completed, 1 significantly improved.
+**Status Update (2025-11-12)**: 4 of 9 data quality tickets completed, 1 significantly improved.
+
+- [x] 🚨 **CRITICAL: Fix resolve_player_id_from_name macro cartesian product (P1-026)**:
+
+  - [x] Identify root cause: `with_player_id_lookup` CTE pulls from source (all rows) instead of distinct players
+  - [x] Add `distinct_players` CTE to extract unique `(player_name_canonical, position)` combinations
+  - [x] Update `with_player_id_lookup` to select FROM `distinct_players` instead of source CTE
+  - [x] Test with `stg_sheets__transactions`: verify row count drops from 27,213 to ~4,000
+  - [x] Run `dbt test --select stg_sheets__transactions`: verify `unique_transaction_id_unique` passes (0 duplicates)
+  - [x] Verify no regressions in other staging models (`stg_sheets__contracts_active`, `stg_sheets__contracts_cut`)
+  - [x] Result: 3,563 transaction duplicates → 0 duplicates ✅ **COMPLETE**
+  - **Impact**: Eliminated 6.8x row duplication (27,213→3,999 rows), fixed data corruption in transaction history
 
 - [x] ✅ **Fix dim_pick_lifecycle_control TBD duplicates (P1-020)**:
 
