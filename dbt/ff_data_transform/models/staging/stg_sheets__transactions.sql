@@ -239,10 +239,13 @@ with
     ),
 
     with_alias as (
-        -- Apply name alias corrections
+        -- Apply name alias corrections with position-aware disambiguation
         select wn.*, coalesce(alias.canonical_name, wn.player_name_normalized) as player_name_canonical
         from with_normalized_names wn
-        left join {{ ref("dim_name_alias") }} alias on wn.player_name_normalized = alias.alias_name
+        left join
+            {{ ref("dim_name_alias") }} alias
+            on wn.player_name_normalized = alias.alias_name
+            and (alias.position is null or alias.position = wn.position)
     ),
 
     -- Resolve player_id using macro with position context

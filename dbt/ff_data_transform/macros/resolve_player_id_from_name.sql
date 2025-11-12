@@ -105,7 +105,7 @@
           when src.{{ position_context_col }} = 'RB' and xref.position = 'RB' then 100
           when src.{{ position_context_col }} = 'WR' and xref.position = 'WR' then 100
           when src.{{ position_context_col }} = 'TE' and xref.position = 'TE' then 100
-          when src.{{ position_context_col }} = 'K' and xref.position = 'K' then 100
+          when src.{{ position_context_col }} = 'K' and xref.position in ('K', 'PK') then 100
 
           -- FLEX must be RB/WR/TE
           when src.{{ position_context_col }} = 'FLEX' and xref.position in ('RB', 'WR', 'TE') then 90
@@ -113,9 +113,9 @@
           -- IDP roster slots
           when src.{{ position_context_col }} = 'IDP BN' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S') then 80
           when src.{{ position_context_col }} = 'IDP TAXI' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S') then 80
-          when src.{{ position_context_col }} = 'DB' and xref.position in ('DB', 'CB', 'S') then 100
-          when src.{{ position_context_col }} = 'DL' and xref.position in ('DL', 'DE', 'DT') then 100
-          when src.{{ position_context_col }} = 'LB' and xref.position = 'LB' then 100
+          when src.{{ position_context_col }} = 'DB' and xref.position in ('DB', 'CB', 'S', 'WR') then 100
+          when src.{{ position_context_col }} = 'DL' and xref.position in ('DL', 'DE', 'DT', 'LB') then 100
+          when src.{{ position_context_col }} = 'LB' and xref.position in ('LB', 'DL', 'DE', 'DT') then 100
 
           -- BN, TAXI, IR can be any position - prefer offensive
           when src.{{ position_context_col }} in ('BN', 'TAXI', 'IR') and xref.position in ('QB', 'RB', 'WR', 'TE', 'K') then 50
@@ -129,10 +129,19 @@
           -- Exact position match
           when src.{{ position_context_col }} = xref.position then 100
 
-          -- Generic defensive positions map to specific ones
-          when src.{{ position_context_col }} = 'DL' and xref.position in ('DL', 'DE', 'DT') then 90
+          -- Kicker position mapping (K in sheets → PK in crosswalk)
+          when src.{{ position_context_col }} = 'K' and xref.position in ('K', 'PK') then 100
+
+          -- Multi-position players (e.g., WR/DB for Travis Hunter)
+          when src.{{ position_context_col }} like '%/%' and (
+            xref.position = split_part(src.{{ position_context_col }}, '/', 1)
+            or xref.position = split_part(src.{{ position_context_col }}, '/', 2)
+          ) then 100
+
+          -- Generic defensive positions map to specific ones (with dual-eligibility)
+          when src.{{ position_context_col }} = 'DL' and xref.position in ('DL', 'DE', 'DT', 'LB') then 90
           when src.{{ position_context_col }} = 'DB' and xref.position in ('DB', 'CB', 'S') then 90
-          when src.{{ position_context_col }} = 'LB' and xref.position = 'LB' then 100
+          when src.{{ position_context_col }} = 'LB' and xref.position in ('LB', 'DL', 'DE', 'DT') then 90
 
           -- Active player check (exclude retired players)
           when xref.draft_year < extract(year from current_date) - 15 then 0

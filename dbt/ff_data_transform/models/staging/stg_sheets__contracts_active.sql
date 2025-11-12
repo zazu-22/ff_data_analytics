@@ -152,7 +152,7 @@ with
                 then 100
                 when wd.roster_slot = 'TE' and xref.position = 'TE'
                 then 100
-                when wd.roster_slot = 'K' and xref.position = 'K'
+                when wd.roster_slot = 'K' and xref.position in ('K', 'PK')
                 then 100
 
                 -- FLEX must be RB/WR/TE
@@ -164,11 +164,11 @@ with
                 then 80
                 when wd.roster_slot = 'IDP TAXI' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
                 then 80
-                when wd.roster_slot = 'DB' and xref.position in ('DB', 'CB', 'S')
+                when wd.roster_slot = 'DB' and xref.position in ('DB', 'CB', 'S', 'WR')
                 then 100
-                when wd.roster_slot = 'DL' and xref.position in ('DL', 'DE', 'DT')
+                when wd.roster_slot = 'DL' and xref.position in ('DL', 'DE', 'DT', 'LB')
                 then 100
-                when wd.roster_slot = 'LB' and xref.position = 'LB'
+                when wd.roster_slot = 'LB' and xref.position in ('LB', 'DL', 'DE', 'DT')
                 then 100
 
                 -- BN, TAXI, IR can be any position - prefer offensive
