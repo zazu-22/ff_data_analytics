@@ -4,7 +4,7 @@
 **Estimated Effort**: Medium (4-6 hours)\
 **Dependencies**: P1-026 (macro with cartesian product fix)\
 **Priority**: HIGH - Code duplication and inconsistency across sheets staging models\
-**Status**: OPEN
+**Status**: COMPLETE
 
 ## Objective
 
@@ -506,9 +506,38 @@ left join {{ ref("dim_name_alias") }} alias
 
    - Lines 245-247: Added position filter to alias join
 
+## Completion Notes
+
+**Implemented**: 2025-11-13
+
+**Changes Made**:
+
+1. **stg_sheets\_\_contracts_active.sql**: Removed ~140 lines of inline player_id resolution logic (transaction_player_ids, crosswalk_candidates, best_crosswalk_match CTEs), replaced with single macro call using `context_type='roster_slot'`
+2. **stg_sheets\_\_contracts_cut.sql**: Removed ~70 lines of inline player_id resolution logic, replaced with single macro call using `context_type='position'`
+3. **Both models**: Added `DISTINCT` to with_alias CTE to handle duplicate entries in dim_name_alias seed (Hollywood Brown/Marquise Brown)
+
+**Tests**: All passing (17/17)
+
+- ✅ Grain uniqueness tests (franchise_id, player_key, obligation_year, snapshot_date)
+- ✅ Roster parity test (0 failures - validates streaming hypothesis)
+- ✅ Player resolution verified: Kickers (Brandon Aubrey), dual-eligibility (Travis Hunter, Rashan Gary, Josh Hines-Allen), defenses (NULL player_id, DEF\_ player_key)
+- ✅ All downstream models rebuilt successfully (mrt_contract_snapshot_current and dependencies)
+
+**Impact**:
+
+- **Code Reduction**: ~210 lines of duplicated logic eliminated across 2 models
+- **Maintainability**: Single source of truth for player_id resolution - future fixes only need to update macro
+- **Bug Prevention**: Inline logic bugs (K→PK, dual-eligibility) now impossible - macro has comprehensive test coverage
+- **Consistency**: Both contracts models now use same resolution logic as transactions model
+
+**Known Issues**:
+
+- dim_name_alias seed has duplicate entry for "Hollywood Brown" → "Marquise Brown" (handled with DISTINCT)
+- Defense handling remains inline in contracts_active (considered for optional macro extraction but deemed low value vs. complexity)
+
 ## Next Steps
 
-1. **P1-027 Full Refactor**: Remove inline logic from contracts models, use macro consistently
-2. **Apply position-aware alias to ALL sheets models**: Audit `contracts_active`, `contracts_cut` for alias join pattern
-3. **Consider extracting defense handling**: Create `handle_defense_players` macro if duplicated across multiple models
-4. **Document position scoring differences**: Create guide explaining when to use `roster_slot` vs `position` context
+1. ~~**P1-027 Full Refactor**: Remove inline logic from contracts models, use macro consistently~~ ✅ **COMPLETE**
+2. **Fix dim_name_alias duplicates**: Remove duplicate "Hollywood Brown" entry from seed file (data quality cleanup)
+3. **Consider extracting defense handling**: Create `handle_defense_players` macro if duplicated across multiple models (LOW PRIORITY - only 10-15 lines, rarely changes)
+4. **Document position scoring differences**: Create guide explaining when to use `roster_slot` vs `position` context (DOCUMENTATION)

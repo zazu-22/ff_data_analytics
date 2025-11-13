@@ -106,94 +106,30 @@ with
 
     with_alias as (
         -- Apply name alias corrections (typos → canonical names)
-        select wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
+        -- DISTINCT to handle duplicate entries in dim_name_alias seed
+        select distinct wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
         from with_franchise wf
         left join {{ ref("dim_name_alias") }} alias on wf.player_name_normalized = alias.alias_name
     ),
 
-    transaction_player_ids as (
-        -- Get authoritative player_id from transaction history with position info
-        -- Need position to disambiguate players with same name (e.g., Josh Allen QB
-        -- vs DB)
-        -- DISTINCT ON player_name, player_id to handle position variations (e.g.,
-        -- Zaven Collins: LB/DL)
-        select distinct lower(trim(player_name)) as player_name_lower, player_id
-        from {{ ref("fct_league_transactions") }}
-        where asset_type = 'player' and player_id is not null
-    ),
-
-    crosswalk_candidates as (
-        -- Get all potential matches from crosswalk with position filtering
-        select
-            wa.player_name_canonical,
-            wa.position as source_position,
-            xref.player_id,
-            xref.mfl_id,
-            xref.name,
-            xref.position,
-
-            -- Position match scoring
-            case
-                -- Exact position match
-                when wa.position = xref.position
-                then 100
-
-                -- Generic defensive positions map to specific ones
-                when wa.position in ('DB', 'DL', 'LB') and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
-                then 80
-
-                -- Active player check (exclude retired players)
-                when xref.draft_year < extract(year from current_date) - 15
-                then 0
-
-                else 0
-            end as match_score
-
-        from with_alias wa
-        left join
-            {{ ref("dim_player_id_xref") }} xref
-            on (
-                lower(trim(wa.player_name_canonical)) = lower(trim(xref.name))
-                or lower(trim(wa.player_name_canonical)) = lower(trim(xref.merge_name))
-            )
-    ),
-
-    best_crosswalk_match as (
-        -- Select best match per player using position-aware tiebreakers
-        select
-            player_name_canonical,
-            source_position,
-            -- Use MAX(player_id) as final tiebreaker (newer/younger/active player)
-            max(player_id) as player_id,
-            max(mfl_id) as mfl_id,
-            max(name) as canonical_name
-        from crosswalk_candidates
-        where match_score > 0
-        group by player_name_canonical, source_position
-        qualify
-            row_number() over (partition by player_name_canonical, source_position order by max(match_score) desc) = 1
-    ),
+    -- Resolve player_id using centralized macro with position context
+    {{ resolve_player_id_from_name(
+        source_cte='with_alias',
+        player_name_col='player_name_canonical',
+        position_context_col='position',
+        context_type='position'
+    ) }},
 
     with_player_id as (
-        -- Combine transaction-based and crosswalk-based player_id resolution
-        select
-            wa.*,
-
-            -- Cascading player_id resolution:
-            -- 1. Transaction history (authoritative, position-aware)
-            -- 2. Crosswalk with position filtering (canonical player_id)
-            coalesce(txn.player_id, xwalk.player_id) as player_id,
-
-            xwalk.mfl_id,
-            xwalk.canonical_name
+        -- Join player data with player_id lookup from macro
+        select wa.*, pid.player_id, pid.mfl_id, pid.canonical_name
 
         from with_alias wa
-        left join transaction_player_ids txn on lower(trim(wa.player_name_canonical)) = txn.player_name_lower
         left join
-            best_crosswalk_match xwalk
-            on wa.player_name_canonical = xwalk.player_name_canonical
-            and wa.position = xwalk.source_position
+            with_player_id_lookup pid
+            on wa.player_name_canonical = pid.player_name_canonical
+            and wa.position = pid.position
     ),
 
     final as (

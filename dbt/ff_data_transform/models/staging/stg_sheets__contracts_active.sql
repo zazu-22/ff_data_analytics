@@ -103,7 +103,8 @@ with
 
     with_alias as (
         -- Apply name alias corrections (typos → canonical names)
-        select wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
+        -- DISTINCT to handle duplicate entries in dim_name_alias seed
+        select distinct wf.*, coalesce(alias.canonical_name, wf.player_name_normalized) as player_name_canonical
 
         from with_franchise wf
         left join {{ ref("dim_name_alias") }} alias on wf.player_name_normalized = alias.alias_name
@@ -118,155 +119,28 @@ with
         left join {{ ref("dim_team") }} team on wa.player_name = team.team_name
     ),
 
-    transaction_player_ids as (
-        -- Get authoritative player_id from transaction history with position info
-        -- Need position to disambiguate players with same name (e.g., Josh Allen QB
-        -- vs DB)
-        select distinct lower(trim(player_name)) as player_name_lower, player_id, position
-        from {{ ref("fct_league_transactions") }}
-        where asset_type = 'player' and player_id is not null
-    ),
-
-    crosswalk_candidates as (
-        -- Get all potential matches from crosswalk with position filtering
-        select
-            wd.player_name_canonical,
-            wd.roster_slot,
-            xref.player_id,
-            xref.mfl_id,
-            xref.name,
-            xref.position,
-
-            -- Cascading tiebreaker logic
-            case
-                -- Active player check (exclude retired players)
-                when xref.draft_year < extract(year from current_date) - 15
-                then 0
-
-                -- Position match based on roster slot
-                when wd.roster_slot = 'QB' and xref.position = 'QB'
-                then 100
-                when wd.roster_slot = 'RB' and xref.position = 'RB'
-                then 100
-                when wd.roster_slot = 'WR' and xref.position = 'WR'
-                then 100
-                when wd.roster_slot = 'TE' and xref.position = 'TE'
-                then 100
-                when wd.roster_slot = 'K' and xref.position in ('K', 'PK')
-                then 100
-
-                -- FLEX must be RB/WR/TE
-                when wd.roster_slot = 'FLEX' and xref.position in ('RB', 'WR', 'TE')
-                then 90
-
-                -- IDP slots must be defensive
-                when wd.roster_slot = 'IDP BN' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
-                then 80
-                when wd.roster_slot = 'IDP TAXI' and xref.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
-                then 80
-                when wd.roster_slot = 'DB' and xref.position in ('DB', 'CB', 'S', 'WR')
-                then 100
-                when wd.roster_slot = 'DL' and xref.position in ('DL', 'DE', 'DT', 'LB')
-                then 100
-                when wd.roster_slot = 'LB' and xref.position in ('LB', 'DL', 'DE', 'DT')
-                then 100
-
-                -- BN, TAXI, IR can be any position - prefer offensive
-                when wd.roster_slot in ('BN', 'TAXI', 'IR') and xref.position in ('QB', 'RB', 'WR', 'TE', 'K')
-                then 50
-                when wd.roster_slot in ('BN', 'TAXI', 'IR')
-                then 25
-
-                else 0
-            end as match_score
-
-        from with_defense wd
-        left join
-            {{ ref("dim_player_id_xref") }} xref
-            on (not wd.is_defense)
-            and (
-                lower(trim(wd.player_name_canonical)) = lower(trim(xref.name))
-                or lower(trim(wd.player_name_canonical)) = lower(trim(xref.merge_name))
-            )
-        where wd.is_defense = false
-    ),
-
-    best_crosswalk_match as (
-        -- Select best match per player using cascading tiebreakers
-        select
-            player_name_canonical,
-            roster_slot,
-            -- Use MAX(player_id) as final tiebreaker (newer/younger/active player)
-            max(player_id) as player_id,
-            max(mfl_id) as mfl_id,
-            max(name) as canonical_name
-        from crosswalk_candidates
-        where match_score > 0
-        group by player_name_canonical, roster_slot
-        qualify row_number() over (partition by player_name_canonical, roster_slot order by max(match_score) desc) = 1
-    ),
+    -- Resolve player_id using centralized macro with roster_slot context
+    {{ resolve_player_id_from_name(
+        source_cte='with_defense',
+        player_name_col='player_name_canonical',
+        position_context_col='roster_slot',
+        context_type='roster_slot'
+    ) }},
 
     with_player_id as (
-        -- Combine transaction-based and crosswalk-based player_id resolution
+        -- Join defense data with player_id lookup from macro
         select
             wd.*,
-
-            -- Cascading player_id resolution:
-            -- 1. Crosswalk (canonical player_id from dim_player_id_xref)
-            -- 2. Transaction history (fallback only, may have stale IDs)
-            case when wd.is_defense then null else coalesce(xwalk.player_id, txn.player_id) end as player_id,
-
-            xwalk.mfl_id,
-            xwalk.canonical_name
+            -- Defense handling: NULL player_id for defense teams
+            case when wd.is_defense then null else pid.player_id end as player_id,
+            pid.mfl_id,
+            pid.canonical_name
 
         from with_defense wd
         left join
-            transaction_player_ids txn
-            on lower(trim(wd.player_name_canonical)) = txn.player_name_lower
-            -- Add position filtering to prevent duplicate rows for same name (e.g.,
-            -- Josh Allen QB vs DB)
-            and (
-                -- Exact position match
-                (wd.roster_slot = txn.position)
-                -- FLEX can be RB/WR/TE
-                or (wd.roster_slot = 'FLEX' and txn.position in ('RB', 'WR', 'TE'))
-                -- IDP slots must be defensive
-                or (
-                    wd.roster_slot in ('IDP BN', 'IDP TAXI')
-                    and txn.position in ('DB', 'LB', 'DL', 'DE', 'DT', 'CB', 'S')
-                )
-                or (wd.roster_slot = 'DB' and txn.position in ('DB', 'CB', 'S'))
-                or (wd.roster_slot = 'DL' and txn.position in ('DL', 'DE', 'DT'))
-                or (wd.roster_slot = 'LB' and txn.position = 'LB')
-                -- BN, TAXI, IR can be any position - prefer offensive, but allow
-                -- defensive
-                or (wd.roster_slot in ('BN', 'TAXI', 'IR'))
-            )
-        left join
-            best_crosswalk_match xwalk
-            on wd.player_name_canonical = xwalk.player_name_canonical
-            and wd.roster_slot = xwalk.roster_slot
-        -- Deduplicate when a player matches multiple positions in transaction history
-        -- This occurs for flexible roster slots (BN, TAXI, IR) with multi-position
-        -- players
-        -- Example: Quincy Williams (LB/DB) on IR would match both positions
-        -- IMPORTANT: Skip deduplication for empty player names (weekly pickup
-        -- placeholders)
-        -- since multiple empty slots in same position are legitimate (e.g., two DB
-        -- slots unfilled)
-        qualify
-            wd.player_name = ''  -- Keep all empty player name rows (don't deduplicate)
-            or row_number() over (
-                partition by
-                    wd.player_name_canonical, wd.roster_slot, wd.gm_full_name, wd.obligation_year, wd.snapshot_date
-                order by
-                    -- Prefer crosswalk-based player_id (authoritative mfl_id from
-                    -- nflverse)
-                    case when xwalk.player_id is not null then 1 else 2 end,
-                    -- Tiebreaker: prefer offensive positions for flexible slots
-                    case when txn.position in ('QB', 'RB', 'WR', 'TE', 'K') then 1 else 2 end
-            )
-            = 1
+            with_player_id_lookup pid
+            on wd.player_name_canonical = pid.player_name_canonical
+            and wd.roster_slot = pid.roster_slot
     ),
 
     final as (

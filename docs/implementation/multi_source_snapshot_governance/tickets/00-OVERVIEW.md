@@ -85,7 +85,7 @@ ______________________________________________________________________
 
 ### Architectural Refactors (1 ticket)
 
-- [ ] **P1-027** — Refactor contracts models to use resolve_player_id_from_name macro (code deduplication, bug fixes)
+- [x] **P1-027** — Refactor contracts models to use resolve_player_id_from_name macro (code deduplication, bug fixes)
 
 ### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
 
@@ -185,13 +185,19 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 24/58 tickets complete (41%)\
-**Phase 1 Foundation**: 24/27 tickets complete (89%)\
+**Overall Project**: 25/58 tickets complete (43%)\
+**Phase 1 Foundation**: 25/27 tickets complete (93%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
 **Recent Progress** (2025-11-13):
 
+- ✅ **P1-027 COMPLETE**: Contracts models refactored to use resolve_player_id_from_name macro (architectural cleanup)
+  - Eliminated ~210 lines of duplicated player_id resolution logic across 2 models
+  - contracts_active: Removed inline CTEs, now uses macro with context_type='roster_slot'
+  - contracts_cut: Removed inline CTEs, now uses macro with context_type='position'
+  - All 17 tests passing including grain uniqueness and roster parity
+  - Downstream models rebuilt successfully (mrt_contract_snapshot_current)
 - ✅ **P1-017 COMPLETE**: Mart duplicates ELIMINATED (1,908→0 duplicates)
   - Fixed position_baselines UNION ALL creating duplicate IDP positions
   - Excluded IDP positions from offense CTE to prevent Cartesian product
@@ -215,7 +221,7 @@ ______________________________________________________________________
 
 **Historical Notes**:
 
-- **2025-11-13**: P1-017 mart duplicates fixed - excluded IDP from offense CTE, eliminating 1,908 duplicates; P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating 34 source data duplicates; P1-023 validation complete (100% success)
+- **2025-11-13**: P1-027 architectural refactor complete - eliminated ~210 lines of duplicated player_id resolution logic; P1-017 mart duplicates fixed - excluded IDP from offense CTE, eliminating 1,908 duplicates; P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating 34 source data duplicates; P1-023 validation complete (100% success)
 - **2025-11-12**: P1-019 streaming hypothesis validated with 4 critical player_id bugs fixed; P1-027 created to track full refactor of contracts models
 - **2025-11-11**: P1-026 cartesian product regression fixed; P1-020 and P1-022 resolved (TBD picks and orphan references)
 - **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed
@@ -243,10 +249,10 @@ The following tickets represent the critical path for achieving minimum viable g
     - **P1-019** → Roster parity investigation ✅ **COMPLETE** - Streaming hypothesis validated
     - **P1-023** → Base picks per round validation ✅ **COMPLETE** (100% resolved)
     - **P1-024** → Comp registry duplicates ✅ **COMPLETE** (2025-11-10)
-    - **P1-018** → Source data duplicates ✅ **COMPLETE** (2025-11-12)
-    - **P1-017** → Mart duplicates (pending) ✅ **COMPLETE** (2025-11-12)
+    - **P1-018** → Source data duplicates ✅ **COMPLETE** (2025-11-13)
+    - **P1-017** → Mart duplicates ✅ **COMPLETE** (2025-11-13)
     - **P1-025** → IDP source diversity (low priority)
-07. **P1-027** → Refactor contracts models (architectural cleanup)
+07. **P1-027** → Refactor contracts models ✅ **COMPLETE** (2025-11-13)
 08. **P2-001, P2-002** → Registry creation
 09. **P2-005** → Validation tooling
 10. **P2-006, P2-007** → Freshness tests
@@ -315,7 +321,7 @@ Implementation is complete when:
   - [x] Base picks per round validated (P1-023: 21→0 violations) ✅ **100% SUCCESS**
   - [x] Comp registry duplicates eliminated (P1-024: 19 duplicates→0) ✅ **COMPLETE** (2025-11-10)
   - [ ] IDP source diversity validated (P1-025: 3 failures→0 or test downgraded to warning)
-  - [ ] Player ID resolution refactored (P1-027: contracts models use macro consistently)
+  - [x] Player ID resolution refactored (P1-027: contracts models use macro consistently) ✅ **COMPLETE** (2025-11-13)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
 - [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)
