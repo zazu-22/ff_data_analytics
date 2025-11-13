@@ -33,7 +33,7 @@ This document provides a concise checklist for tracking completion of all implem
 - ✅ **P1-024**: Comp registry duplicates resolved (19→0 duplicates) - PREVIOUSLY COMPLETED (2025-11-10, commit d6eb65c)
 - 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
 
-**Impact**: Phase 1 now 22/27 tickets complete (81%); Overall project 22/58 tickets complete (38%)
+**Impact**: Phase 1 now 26/27 tickets complete (96%); Overall project 26/58 tickets complete (45%)
 
 ______________________________________________________________________
 
@@ -112,9 +112,9 @@ ______________________________________________________________________
 6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
 7. [x] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (34→0 duplicates, architectural fix)
 8. [x] **P1-017** — Fix mrt_fasa_targets duplicate rows ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (1,908→0 duplicates, IDP position filter)
-9. [ ] **P1-025** — Investigate and resolve assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
+9. [x] **P1-025** — Investigate and resolve assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY) ✅ **COMPLETE** (2025-11-13) - Downgraded to WARN (industry limitation, not config issue)
 
-**Rationale**: Major progress on data quality! P1-026 regression fixed, roster parity fully resolved via player_id fixes (P1-019), and pick integrity issues resolved (P1-020, P1-022). Continue with remaining pick validation (P1-023, P1-024), then tackle projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). P1-027 tracks technical debt cleanup.
+**Rationale**: Major progress on data quality! P1-026 regression fixed, roster parity fully resolved via player_id fixes (P1-019), and pick integrity issues resolved (P1-020, P1-022). Continue with remaining pick validation (P1-023, P1-024), then tackle projection/mart duplicates (P1-018, P1-017). P1-025 COMPLETE (test downgraded to warning). P1-027 tracks technical debt cleanup.
 
 ### Sample Cleanup & Validation
 
@@ -185,13 +185,19 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 25/58 tickets complete (43%)\
-**Phase 1 Foundation**: 25/27 tickets complete (93%)\
+**Overall Project**: 26/58 tickets complete (45%)\
+**Phase 1 Foundation**: 26/27 tickets complete (96%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
 **Recent Progress** (2025-11-13):
 
+- ✅ **P1-025 COMPLETE**: IDP source diversity test downgraded to WARN (industry limitation, not config issue)
+  - Confirmed we scrape ALL 9 sources for ALL positions (including IDP: DL, LB, DB)
+  - FantasySharks is ONLY source providing IDP stat projections (others have rankings only)
+  - Test status changed: FAIL 3 → WARN 3 (monitors without blocking)
+  - Added documentation to test SQL, R script, and ticket tracking
+  - Decision: Accept single-source IDP as expected industry behavior
 - ✅ **P1-027 COMPLETE**: Contracts models refactored to use resolve_player_id_from_name macro (architectural cleanup)
   - Eliminated ~210 lines of duplicated player_id resolution logic across 2 models
   - contracts_active: Removed inline CTEs, now uses macro with context_type='roster_slot'
@@ -320,7 +326,7 @@ Implementation is complete when:
   - [x] Orphan pick references resolved (P1-022: 46 orphans→0) ✅ **COMPLETE**
   - [x] Base picks per round validated (P1-023: 21→0 violations) ✅ **100% SUCCESS**
   - [x] Comp registry duplicates eliminated (P1-024: 19 duplicates→0) ✅ **COMPLETE** (2025-11-10)
-  - [ ] IDP source diversity validated (P1-025: 3 failures→0 or test downgraded to warning)
+  - [x] IDP source diversity validated (P1-025: COMPLETE - test downgraded to warning, industry limitation documented) ✅
   - [x] Player ID resolution refactored (P1-027: contracts models use macro consistently) ✅ **COMPLETE** (2025-11-13)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)

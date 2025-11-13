@@ -2,6 +2,21 @@
 # FFanalytics projections scraper with weighted consensus aggregation
 # Outputs both raw source projections AND weighted consensus
 # Maps player names to canonical player_id via dim_player_id_xref
+#
+# IMPORTANT: IDP (Individual Defensive Player) Data Limitation
+# -----------------------------------------------------------
+# We scrape from ALL 9 sources (FantasyPros, NumberFire, FantasySharks, ESPN,
+# FFToday, CBS, NFL, RTSports, Walterfootball) for ALL positions including IDP
+# (DL, LB, DB). However, FantasySharks is the ONLY source that provides IDP
+# stat projections - other sources only provide IDP rankings, not stat forecasts.
+#
+# This is an INDUSTRY limitation, not a configuration issue:
+#   - IDP leagues are ~10% of fantasy market
+#   - Most sites focus on offensive player projections (90%+ of users)
+#   - IDP performance is more volatile and harder to project
+#
+# Result: IDP positions will show source_count=1 (FantasySharks only)
+# See: docs/findings/2025-10-29_idp_source_investigation.md
 
 suppressPackageStartupMessages({
   library(optparse)
@@ -498,10 +513,13 @@ if (nrow(df) > 0) {
 
   # Calculate weighted consensus per player per stat
   # Note: player_normalized now contains canonical names after alias application above
+  # IMPORTANT: Group by id (provider ID) AND team_normalized to avoid merging different players
+  # - id: Different provider IDs = different players (e.g., Jordan Phillips BUF ID=12229 vs MIA ID=17196)
+  # - team: Disambiguates when same player appears on multiple teams in different sources
   consensus_df <- df_weighted %>%
     filter(weight > 0) %>% # Only use sources with weights
     filter(!is.na(player_normalized)) %>%
-    group_by(player_normalized, pos, season, week) %>%
+    group_by(player_normalized, pos, season, week, id, team_normalized) %>%
     summarise(
       across(
         all_of(stat_cols),
@@ -583,26 +601,35 @@ if (nrow(df) > 0) {
         # If no translation exists (e.g., QB, RB), use original position
         mutate(nfl_position = coalesce(nfl_position, pos))
 
-      # Try exact match on name + position first (highest priority)
+      # Try exact match on name + position + team first (highest priority)
       xref_exact_match <- player_xref %>%
-        select(name_normalized, position, player_id) %>%
-        rename(player_id_exact = player_id, position_exact = position)
+        select(name_normalized, position, team, player_id) %>%
+        rename(player_id_exact = player_id, position_exact = position, team_exact = team)
 
-      # Try merge_name + position as fallback
+      # Try merge_name + position + team as fallback
+      # IMPORTANT: DO NOT deduplicate - same name+position can have different teams (different players)
       xref_merge_match <- player_xref %>%
-        filter(!duplicated(paste(merge_name_normalized, position))) %>%
-        select(merge_name_normalized, position, player_id) %>%
-        rename(player_id_merge = player_id, position_merge = position)
+        select(merge_name_normalized, position, team, player_id) %>%
+        rename(player_id_merge = player_id, position_merge = position, team_merge = team)
 
-      # Join with position-aware matching
-      # Many-to-many can occur when position expansion creates duplicates
+      # Join with position + team matching
+      # CRITICAL: Include team in join to avoid mapping different players to same ID
+      # (e.g., Jordan Phillips BUF vs Jordan Phillips MIA)
       consensus_df <- consensus_with_pos %>%
         left_join(xref_exact_match,
-          by = c("player_normalized" = "name_normalized", "nfl_position" = "position_exact"),
+          by = c(
+            "player_normalized" = "name_normalized",
+            "nfl_position" = "position_exact",
+            "team" = "team_exact"
+          ),
           relationship = "many-to-many"
         ) %>%
         left_join(xref_merge_match,
-          by = c("player_normalized" = "merge_name_normalized", "nfl_position" = "position_merge"),
+          by = c(
+            "player_normalized" = "merge_name_normalized",
+            "nfl_position" = "position_merge",
+            "team" = "team_merge"
+          ),
           relationship = "many-to-many"
         ) %>%
         mutate(

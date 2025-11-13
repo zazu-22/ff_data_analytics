@@ -1,10 +1,16 @@
+{{ config(severity='warn') }}
+
 -- Test: Alert if IDP projections come from too few sources (single point of failure)
--- Fails if any IDP position has source_count < 2 for majority of players
+-- Warns (not fails) if any IDP position has source_count < 2 for majority of players
 --
 -- CONTEXT: As of 2025-10-29, FantasySharks is our ONLY IDP source (see docs/findings/2025-10-29_idp_source_investigation.md)
--- This test will WARN (not fail) until we add a second IDP source
+-- This is an INDUSTRY LIMITATION, not a configuration issue:
+--   - We scrape from ALL 9 sources (FantasyPros, NumberFire, FantasySharks, ESPN, FFToday, CBS, NFL, RTSports, Walterfootball)
+--   - Only FantasySharks provides IDP stat projections (other sources have rankings only)
+--   - IDP leagues are ~10% of fantasy market, so most sites don't invest in IDP projections
 --
 -- RISK: If FantasySharks goes down or changes format, we lose ALL IDP data
+-- MITIGATION: Monitor closely, consider paid alternatives (Fantasy Nerds, IDP Guru) if needed
 
 with latest_snapshot as (
   select max(dt) as latest_dt

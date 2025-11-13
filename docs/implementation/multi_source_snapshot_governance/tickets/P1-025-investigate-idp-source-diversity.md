@@ -1,9 +1,10 @@
 # Ticket P1-025: Investigate assert_idp_source_diversity Test Failures
 
+**Status**: IN PROGRESS\
 **Phase**: 1 - Foundation\
-**Estimated Effort**: Small (1-2 hours)\
+**Estimated Effort**: Medium (expanded to 3-4 hours due to critical bug discovery)\
 **Dependencies**: None (independent data quality check)\
-**Priority**: Low - 3 failures in IDP source diversity validation
+**Priority**: HIGH (upgraded from Low - critical data corruption bug discovered)
 
 ## Objective
 
@@ -239,3 +240,171 @@ If investigation shows that adding a secondary IDP source requires significant e
 1. Downgrading test from ERROR to WARN
 2. Documenting NFLverse as authoritative IDP source
 3. Deferring secondary source integration to future sprint
+
+______________________________________________________________________
+
+## Completion Notes
+
+**Implemented**: 2025-11-13
+**Strategy**: Option A - Accept Current State (Test Too Strict)
+
+### Root Cause Analysis
+
+**Configuration**: ✅ CORRECT
+
+- We ARE scraping from ALL 9 sources: FantasyPros, NumberFire, FantasySharks, ESPN, FFToday, CBS, NFL, RTSports, Walterfootball
+- We ARE requesting ALL positions including IDP: DL, LB, DB
+
+**Source Limitation**: This is an INDUSTRY limitation, not a configuration issue
+
+- FantasySharks is the ONLY source among those 9 that provides IDP stat projections
+- Other sources provide IDP *rankings* (ordinal lists), not stat projections (tackles, sacks, INTs)
+- FFAnalytics package scrapes stat projections, not rankings
+- IDP leagues are ~10% of fantasy market, so most sites don't invest in IDP projections
+
+### Test Results
+
+**Before Fix**:
+
+- Status: **FAIL 3** (Error severity)
+- Message: "Got 3 results, configured to fail if != 0"
+
+**Current Data**:
+
+- **DB** (Defensive Backs): 100% single-source (1825/1825 from FantasySharks)
+- **DL** (Defensive Line): 99.2% single-source (1672/1685 from FantasySharks)
+- **LB** (Linebackers): 100% single-source (1018/1018 from FantasySharks)
+
+**After Fix**:
+
+- Status: **WARN 3** (Warning severity) ✅
+- Message: "Got 3 results, configured to warn if != 0"
+- Test passes with warning (not error)
+
+### Changes Made
+
+1. **Test SQL** (`dbt/ff_data_transform/tests/assert_idp_source_diversity.sql`):
+
+   - Added `{{ config(severity='warn') }}` at top
+   - Enhanced comments explaining industry limitation
+   - Documented that we scrape ALL sources but only FantasySharks returns IDP
+
+2. **R Script** (`scripts/R/ffanalytics_run.R`):
+
+   - Added header comments documenting IDP limitation
+   - Clarified this is industry-wide, not our configuration
+   - References investigation document
+
+3. **Documentation**: All changes reference `docs/findings/2025-10-29_idp_source_investigation.md` for details
+
+### Decision
+
+**Accept single-source IDP as expected behavior**:
+
+- FantasySharks is authoritative IDP source (documented)
+- Test downgraded to WARN (monitors situation without blocking)
+- Alternative sources (Fantasy Nerds, IDP Guru) deferred to future sprint if needed
+- Risk: Acknowledged and documented in test comments
+
+______________________________________________________________________
+
+## CRITICAL FOLLOW-UP: Player Name Collision Bug Discovered
+
+**Date**: 2025-11-13 (same session as P1-025 completion)
+
+### Discovery
+
+While investigating `source_count=2` for IDP players (Jordan Phillips, Byron Young), discovered these were **NOT** legitimate multi-source data but rather **TWO DIFFERENT PLAYERS** being incorrectly merged by the FFAnalytics R script.
+
+### The Bug
+
+**File**: `scripts/R/ffanalytics_run.R` line 519 (before fix)
+
+**Problem**: Consensus grouping excluded `team`, causing different players with same name to merge:
+
+```r
+group_by(player_normalized, pos, season, week) %>%  # team NOT included!
+```
+
+**Impact**:
+
+- **Jordan Phillips (DT)**: Veteran (BUF, player_id=5505) + Rookie (MIA, player_id=9559) merged
+  - Result: Rookie COMPLETELY MISSING, veteran has averaged/corrupted stats
+- **Byron Young (DE)**: LAR player (ID 16276) + PHI player (ID 16273) merged
+  - Result: PHI player COMPLETELY MISSING, LAR player has corrupted stats
+
+### Fix Applied
+
+**Line 521 (after fix)**:
+
+```r
+group_by(player_normalized, pos, season, week, team_normalized) %>%  # team INCLUDED!
+```
+
+**Test Validation**: ✅ Tested with existing raw data (see `scripts/R/test_name_collision_fix.R`)
+
+- 4 separate rows maintained (each player-team combo preserved)
+- source_count = 1 (correct for single-source IDP)
+- No data averaging/corruption
+
+### Next Steps
+
+**IMMEDIATE** (before using projections data):
+
+1. ✅ Fix implemented and tested (BOTH provider ID + team)
+2. ✅ Re-run FFAnalytics ingestion (~15 min): `just ingest-ffanalytics` (COMPLETE)
+3. ✅ Rebuild staging: `just dbt-run --select stg_ffanalytics__projections` (COMPLETE)
+4. ✅ Verify both Jordan Phillips players appear separately in staging (VERIFIED: player_id 5505 BUF + 9559 MIA)
+5. ✅ Verify Byron Young players appear separately (VERIFIED: player_id 8768 PHI + 8771 LAR)
+6. ✅ Run new validation test: `just dbt-test --select assert_no_name_collision_merging` (PASSED)
+7. ⏭️ Rebuild all downstream marts
+
+**FOLLOW-UP** (audit other data sources):
+7\. ⏭️ **Check other ingestion sources for similar team-based de-duplication errors**:
+
+- **NFLverse** (`src/ingest/nflverse/`): Check player stats aggregation/grouping
+- **Sleeper** (`src/ingest/sleeper/`): Check roster and player data handling
+- **Sheets** (`src/ingest/sheets/`): Check commissioner data parsing
+- **KTC** (`src/ingest/ktc/`): Check asset valuation data
+
+**Goal**: Identify any code that groups/aggregates by `(player_name, position)` WITHOUT `team`
+
+**Risk**: Silent de-duplication where same-name, same-position players on different teams
+get merged into single records (same bug pattern as FFAnalytics)
+
+**Method**:
+
+- Search for `group_by` patterns in Python/R code
+- Check if `team` is included in grouping keys
+- Verify staging models preserve team distinctions
+- Add validation tests where needed
+
+**MONITORING**:
+New dbt test created to catch future name collisions:
+
+- **Test**: `tests/assert_no_name_collision_merging.sql`
+- **Purpose**: Detect when same player_name + position has multiple teams but same player_id
+- **Severity**: ERROR (will fail builds if name collision merging occurs)
+- **Coverage**: All positions (IDP + offensive)
+
+Quick manual check:
+
+```sql
+-- Should return 0 rows (no name collision merging)
+SELECT * FROM stg_ffanalytics__projections
+WHERE position IN ('DT', 'DE', 'DL', 'LB', 'DB', 'S', 'CB')
+  AND source_count > 1;
+```
+
+### Documentation
+
+**Full writeup**: `docs/findings/2025-11-13_ffanalytics_name_collision_bug.md`
+
+### Severity
+
+**CRITICAL** - This bug:
+
+- Causes data loss (missing players)
+- Corrupts projection stats (averaging different players)
+- Affects IDP (confirmed) and potentially offensive players
+- Has been active since FFAnalytics integration began
