@@ -360,24 +360,38 @@ group_by(player_normalized, pos, season, week, team_normalized) %>%  # team INCL
 7. ⏭️ Rebuild all downstream marts
 
 **FOLLOW-UP** (audit other data sources):
-7\. ⏭️ **Check other ingestion sources for similar team-based de-duplication errors**:
+7\. ✅ **Check other ingestion sources for similar team-based de-duplication errors** (COMPLETE):
 
-- **NFLverse** (`src/ingest/nflverse/`): Check player stats aggregation/grouping
-- **Sleeper** (`src/ingest/sleeper/`): Check roster and player data handling
-- **Sheets** (`src/ingest/sheets/`): Check commissioner data parsing
-- **KTC** (`src/ingest/ktc/`): Check asset valuation data
+**Audit Results** (2025-11-13):
 
-**Goal**: Identify any code that groups/aggregates by `(player_name, position)` WITHOUT `team`
+✅ **NFLverse** (`src/ingest/nflverse/`): SAFE
 
-**Risk**: Silent de-duplication where same-name, same-position players on different teams
-get merged into single records (same bug pattern as FFAnalytics)
+- No grouping operations - data passes through from libraries as-is
+- Primary keys include player_id or (season, week, player_id, team)
 
-**Method**:
+✅ **Sleeper** (`src/ingest/sleeper/`): SAFE
 
-- Search for `group_by` patterns in Python/R code
-- Check if `team` is included in grouping keys
-- Verify staging models preserve team distinctions
-- Add validation tests where needed
+- Pure API fetching with filtering only, no aggregation
+- Team field preserved in all outputs
+
+✅ **Sheets** (`src/ingest/sheets/`): SAFE
+
+- Pure parsing (CSV → DataFrames), no grouping
+- Uses position-aware matching to handle same-name players
+
+✅ **KTC** (`src/ingest/ktc/`): SAFE
+
+- Web scraping with filtering only, no aggregation
+- Team field preserved in player data
+
+✅ **Staging Models**: SAFE
+
+- `stg_nflverse__player_stats.sql`: Uses `player_key` (player_id or gsis_id)
+- Other models: Limited grouping for ID deduplication or date ranges only
+
+**Conclusion**: No additional team-based de-duplication bugs found. FFAnalytics was unique because it performs cross-provider consensus aggregation. All other sources fetch raw data or use unique IDs for deduplication.
+
+**Full Report**: `docs/findings/2025-11-13_team_deduplication_audit.md`
 
 **MONITORING**:
 New dbt test created to catch future name collisions:
