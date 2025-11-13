@@ -141,11 +141,12 @@ ______________________________________________________________________
   - [x] Removed unreliable `pick_round` from join conditions
   - [x] Result: 4 orphan picks → 0 orphan picks ✅
 
-- [x] ✅ **Fix int_pick_comp_registry duplicate transaction IDs (P1-024)**:
+- [x] ✅ **Fix int_pick_comp_registry duplicate transaction IDs (P1-024)** - COMPLETE (2025-11-10, commit d6eb65c):
 
   - [x] Identified SCD Type 2 join missing temporal filter
   - [x] Added temporal filter: `year(pc.transaction_date) between fm.season_start and coalesce(fm.season_end, 9999)`
   - [x] Result: 19 duplicates → 0 duplicates ✅
+  - [x] All 7 tests passing (verified 2025-11-12)
 
 - [-] ⚠️ **Fix assert_12_base_picks_per_round test failures (P1-023)** - 81% IMPROVED:
 

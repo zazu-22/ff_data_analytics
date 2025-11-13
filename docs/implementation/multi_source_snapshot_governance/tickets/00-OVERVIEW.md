@@ -30,9 +30,10 @@ This document provides a concise checklist for tracking completion of all implem
 - ✅ **P1-020**: Resolved TBD pick duplicates (22 pick_ids → 0)
 - ✅ **P1-022**: Resolved orphan pick references (46 orphans → 0)
 - ✅ **P1-023**: Base picks per round validation COMPLETE (4→0 failures, 100% success)
+- ✅ **P1-024**: Comp registry duplicates resolved (19→0 duplicates) - PREVIOUSLY COMPLETED (2025-11-10, commit d6eb65c)
 - 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
 
-**Impact**: Phase 1 now 21/27 tickets complete (78%); Overall project 21/58 tickets complete (36%)
+**Impact**: Phase 1 now 22/27 tickets complete (81%); Overall project 22/58 tickets complete (38%)
 
 ______________________________________________________________________
 
@@ -106,7 +107,7 @@ ______________________________________________________________________
 1. [x] **P1-026** — 🚨 Fix resolve_player_id_from_name macro cartesian product ✅ **COMPLETE** (2025-11-11)
 2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates ✅ **COMPLETE** (2025-11-11)
 3. [x] **P1-023** — Fix assert_12_base_picks_per_round failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (4→0 failures)
-4. [ ] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates remain)
+4. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs ✅ **COMPLETE** (2025-11-10) - **100% SUCCESS** (19→0 duplicates)
 5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
 6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
 7. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
@@ -227,8 +228,8 @@ The following tickets represent the critical path for achieving minimum viable g
     - **P1-020** → TBD pick duplicates ✅ **COMPLETE**
     - **P1-022** → Orphan pick references ✅ **COMPLETE**
     - **P1-019** → Roster parity investigation ✅ **COMPLETE** - Streaming hypothesis validated
-    - **P1-023** → Base picks per round validation ⚠️ **IN PROGRESS** (81% improved)
-    - **P1-024** → Comp registry duplicates (pending)
+    - **P1-023** → Base picks per round validation ✅ **COMPLETE** (100% resolved)
+    - **P1-024** → Comp registry duplicates ✅ **COMPLETE** (2025-11-10)
     - **P1-018** → Source data duplicates (pending)
     - **P1-017** → Mart duplicates (pending)
     - **P1-025** → IDP source diversity (low priority)
@@ -298,8 +299,8 @@ Implementation is complete when:
   - [x] Roster parity discrepancies resolved (P1-019: 30→0) ✅ **100% SUCCESS** - Streaming hypothesis validated
   - [x] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0) ✅ **COMPLETE**
   - [x] Orphan pick references resolved (P1-022: 46 orphans→0) ✅ **COMPLETE**
-  - [-] Base picks per round validated (P1-023: 21→4 violations) ⚠️ **81% IMPROVED** - In progress
-  - [ ] Comp registry duplicates eliminated (P1-024: 19 duplicates→0)
+  - [x] Base picks per round validated (P1-023: 21→0 violations) ✅ **100% SUCCESS**
+  - [x] Comp registry duplicates eliminated (P1-024: 19 duplicates→0) ✅ **COMPLETE** (2025-11-10)
   - [ ] IDP source diversity validated (P1-025: 3 failures→0 or test downgraded to warning)
   - [ ] Player ID resolution refactored (P1-027: contracts models use macro consistently)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
