@@ -31,6 +31,69 @@ For detailed context on specific areas, see:
 
 See `justfile` for all targets: `just help` or `just --list`
 
+### Running dbt Commands
+
+**CRITICAL**: ALWAYS use `just` commands for dbt/duckdb operations. NEVER run `uv run dbt` commands directly.
+
+#### Command Rules:
+
+1. **Use `just` commands ONLY** - Never run `uv run dbt` directly
+2. **Run from repo root** - All commands assume you're in `/Users/jason/code/ff_data_analytics`
+3. **Never set environment variables manually** - The justfile handles `EXTERNAL_ROOT` and `DBT_DUCKDB_PATH` automatically
+4. **Pass arguments after the command** - Example: `just dbt-run --select model_name`
+
+#### Available Commands:
+
+- `just dbt-run [args]` - Run dbt models
+- `just dbt-test [args]` - Run dbt tests
+- `just dbt-compile` - Validate SQL syntax
+- `just dbt-seed [args]` - Load seed data
+- `just dbt-xref` - Build player ID crosswalk
+
+#### Why Use Just?
+
+The justfile automatically:
+
+- Sets `EXTERNAL_ROOT` to absolute path (`$PROJECT_ROOT/data/raw`)
+- Sets `DBT_DUCKDB_PATH` to absolute path (`$PROJECT_ROOT/dbt/ff_data_transform/target/dev.duckdb`)
+- Loads `.env` variables via `dotenv-load`
+- Creates target directories if missing
+- Uses correct project/profiles directories
+
+#### Wrong vs Right:
+
+❌ **WRONG - Never do this:**
+
+```bash
+# Don't manually set environment variables
+EXTERNAL_ROOT="$(pwd)/data/raw" DBT_DUCKDB_PATH="..." uv run dbt run
+
+# Don't cd into subdirectories
+cd dbt/ff_data_transform && uv run dbt run
+
+# Don't export variables manually
+export EXTERNAL_ROOT="$(pwd)/data/raw" && uv run dbt run
+
+# Don't use raw uv run dbt commands
+uv run dbt run --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform
+```
+
+✅ **RIGHT - Always do this:**
+
+```bash
+# Simple - from repo root
+just dbt-run
+
+# With model selection
+just dbt-run --select stg_sheets__contracts_active
+
+# Run tests
+just dbt-test
+
+# Compile only
+just dbt-compile
+```
+
 ## Key Components
 
 | Component       | Location                 | Purpose                                                    |

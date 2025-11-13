@@ -28,32 +28,63 @@
 
 ## Quick Commands
 
-```bash
-# From repo root - use justfile (handles env vars automatically)
-just dbt-run    # dbt run with proper env setup
-just dbt-test   # dbt test with proper env setup
-just dbt-seed   # dbt seed with proper env setup
-just sql-fix     # Auto-fix SQL style issues
+**ALWAYS use `just` commands for dbt operations.** The justfile handles all environment setup automatically.
 
-# Run manually from repo root without make
-# NOTE: No UV_CACHE_DIR needed - uv uses ~/.cache/uv by default (shared across projects)
+### Standard Workflow:
+
+```bash
+# All commands run from repo root (/Users/jason/code/ff_data_analytics)
+just dbt-run              # Run all models
+just dbt-test             # Run all tests
+just dbt-compile          # Validate SQL syntax
+just dbt-seed             # Load seed data
+just dbt-xref             # Build player ID crosswalk
+
+# Model selection
+just dbt-run --select stg_sheets__contracts_active
+just dbt-test --select stg_sheets__contracts_active+
+
+# SQL quality checks
+just sql-fix              # Auto-fix SQL style issues
+just sql-lint             # Check SQL style
+just quality-sql          # Run all quality checks
+
+# Query database directly with DuckDB CLI (from repo root)
+duckdb dbt/ff_data_transform/target/dev.duckdb
+# Within DuckDB: SELECT * FROM main.mrt_contract_snapshot_current LIMIT 10;
+```
+
+<details>
+<summary><strong>Manual command reference (DO NOT USE - for understanding only)</strong></summary>
+
+The manual command syntax shown below is for **REFERENCE ONLY** to understand what `just` does internally.
+
+**DO NOT use these commands directly** - they are error-prone and require manual environment management:
+
+```bash
+# This is what `just dbt-run` does internally - DON'T run this yourself:
 uv run env \
     EXTERNAL_ROOT="$(pwd)/data/raw" \
     DBT_DUCKDB_PATH="$(pwd)/dbt/ff_data_transform/target/dev.duckdb" \
     dbt run --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform
 
-# IMPORTANT: When running dbt commands in Bash tool, use $(pwd) NOT $PWD
-# $PWD doesn't expand correctly in the Bash tool environment, causing "/.uv-cache" errors
-
-# Query database directly with DuckDB CLI (from repo root)
-duckdb dbt/ff_data_transform/target/dev.duckdb
-# Within DuckDB: SELECT * FROM main.mrt_contract_snapshot_current LIMIT 10;
-
-# Run compiled dbt analysis SQL (from repo root)
+# Run compiled dbt analysis SQL (advanced use case)
 EXTERNAL_ROOT="$(pwd)/data/raw" \
   dbt compile --select <analysis_name> --project-dir dbt/ff_data_transform --profiles-dir dbt/ff_data_transform
 duckdb dbt/ff_data_transform/target/dev.duckdb < dbt/ff_data_transform/target/compiled/ff_data_transform/analyses/<analysis_name>.sql
 ```
+
+**Why NOT to use manual commands:**
+
+- Requires setting `EXTERNAL_ROOT` and `DBT_DUCKDB_PATH` manually
+- Error-prone with `$(pwd)` vs `$PWD` issues
+- Must specify `--project-dir` and `--profiles-dir` every time
+- No automatic target directory creation
+- Easy to run from wrong directory
+
+**The justfile is simpler, safer, and handles absolute paths correctly.**
+
+</details>
 
 ## Model Organization
 
