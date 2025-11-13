@@ -91,16 +91,16 @@ ______________________________________________________________________
 
 - [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
 
-### Data Quality Follow-ups (9 tickets) ⚠️ **Discovered during comprehensive test analysis**
+### Data Quality Follow-ups (13 tickets) ⚠️ **Discovered during comprehensive test analysis**
 
 **Recent Achievements** (2025-11-12):
 
-- ✅ **P1-026 COMPLETE**: Macro cartesian product regression fixed (3,563 transaction duplicates eliminated)
-- ✅ **P1-019 COMPLETE**: Streaming hypothesis VALIDATED - All roster parity discrepancies resolved (30→0 failures)
+- [x] **P1-026 COMPLETE**: Macro cartesian product regression fixed (3,563 transaction duplicates eliminated)
+- [x] **P1-019 COMPLETE**: Streaming hypothesis VALIDATED - All roster parity discrepancies resolved (30→0 failures)
   - Root cause: 4 player_id resolution bugs (K→PK mapping, dual-eligibility, multi-position notation, position-aware aliases)
   - Quick fixes applied to macro + inline logic; full refactor tracked in P1-027
-- ✅ **P1-020 COMPLETE**: TBD pick duplicates fixed (22 pick_ids → 0)
-- ✅ **P1-022 COMPLETE**: Orphan pick references resolved (46 orphans → 0)
+- [x] **P1-020 COMPLETE**: TBD pick duplicates fixed (22 pick_ids → 0)
+- [x] **P1-022 COMPLETE**: Orphan pick references resolved (46 orphans → 0)
 
 **Recommended Execution Order** (remaining tickets):
 
@@ -111,8 +111,8 @@ ______________________________________________________________________
 5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
 6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
 7. [x] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (34→0 duplicates, architectural fix)
-8. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
-9. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
+8. [x] **P1-017** — Fix mrt_fasa_targets duplicate rows ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (1,908→0 duplicates, IDP position filter)
+9. [ ] **P1-025** — Investigate and resolve assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
 
 **Rationale**: Major progress on data quality! P1-026 regression fixed, roster parity fully resolved via player_id fixes (P1-019), and pick integrity issues resolved (P1-020, P1-022). Continue with remaining pick validation (P1-023, P1-024), then tackle projection/mart duplicates (P1-018, P1-017). P1-025 is lowest priority (data quality warning). P1-027 tracks technical debt cleanup.
 
@@ -185,13 +185,18 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 23/58 tickets complete (40%)\
-**Phase 1 Foundation**: 23/27 tickets complete (85%)\
+**Overall Project**: 24/58 tickets complete (41%)\
+**Phase 1 Foundation**: 24/27 tickets complete (89%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
 **Recent Progress** (2025-11-13):
 
+- ✅ **P1-017 COMPLETE**: Mart duplicates ELIMINATED (1,908→0 duplicates)
+  - Fixed position_baselines UNION ALL creating duplicate IDP positions
+  - Excluded IDP positions from offense CTE to prevent Cartesian product
+  - All 18 mart tests passing including grain test
+  - Row count reduced from 5,308 → 3,400 (1,908 duplicates eliminated)
 - ✅ **P1-018 COMPLETE**: FFAnalytics source data duplicates ELIMINATED (34→0 duplicates)
   - Architectural fix: moved alias application BEFORE consensus aggregation
   - All 12 staging tests passing including grain test
@@ -210,7 +215,7 @@ ______________________________________________________________________
 
 **Historical Notes**:
 
-- **2025-11-13**: P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating all 34 source data duplicates; P1-023 validation complete (100% success)
+- **2025-11-13**: P1-017 mart duplicates fixed - excluded IDP from offense CTE, eliminating 1,908 duplicates; P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating 34 source data duplicates; P1-023 validation complete (100% success)
 - **2025-11-12**: P1-019 streaming hypothesis validated with 4 critical player_id bugs fixed; P1-027 created to track full refactor of contracts models
 - **2025-11-11**: P1-026 cartesian product regression fixed; P1-020 and P1-022 resolved (TBD picks and orphan references)
 - **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed
@@ -238,8 +243,8 @@ The following tickets represent the critical path for achieving minimum viable g
     - **P1-019** → Roster parity investigation ✅ **COMPLETE** - Streaming hypothesis validated
     - **P1-023** → Base picks per round validation ✅ **COMPLETE** (100% resolved)
     - **P1-024** → Comp registry duplicates ✅ **COMPLETE** (2025-11-10)
-    - **P1-018** → Source data duplicates (pending)
-    - **P1-017** → Mart duplicates (pending)
+    - **P1-018** → Source data duplicates ✅ **COMPLETE** (2025-11-12)
+    - **P1-017** → Mart duplicates (pending) ✅ **COMPLETE** (2025-11-12)
     - **P1-025** → IDP source diversity (low priority)
 07. **P1-027** → Refactor contracts models (architectural cleanup)
 08. **P2-001, P2-002** → Registry creation
@@ -303,7 +308,7 @@ Implementation is complete when:
 - [-] All current test failures resolved:
   - [x] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact) ✅ **COMPLETE**
   - [x] Source data duplicates eliminated (P1-018: 34→0 duplicates, architectural fix) ✅ **100% SUCCESS**
-  - [ ] Mart duplicates eliminated (P1-017: 1,893→0)
+  - [x] Mart duplicates eliminated (P1-017: 1,908→0 duplicates, IDP position filter) ✅ **100% SUCCESS**
   - [x] Roster parity discrepancies resolved (P1-019: 30→0) ✅ **100% SUCCESS** - Streaming hypothesis validated
   - [x] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0) ✅ **COMPLETE**
   - [x] Orphan pick references resolved (P1-022: 46 orphans→0) ✅ **COMPLETE**
