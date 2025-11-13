@@ -110,7 +110,7 @@ ______________________________________________________________________
 4. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs ✅ **COMPLETE** (2025-11-10) - **100% SUCCESS** (19→0 duplicates)
 5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
 6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
-7. [ ] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates (Medium: 3-5 hours - 17 staging duplicates)
+7. [x] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (34→0 duplicates, architectural fix)
 8. [ ] **P1-017** — Fix mrt_fasa_targets duplicate rows (Medium: 4-6 hours - 1,893 mart duplicates)
 9. [ ] **P1-025** — Investigate assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY)
 
@@ -185,12 +185,20 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 20/58 tickets complete (34%)\
-**Phase 1 Foundation**: 20/27 tickets complete (74%)\
-**In Progress**: 1 ticket (P1-023)\
+**Overall Project**: 23/58 tickets complete (40%)\
+**Phase 1 Foundation**: 23/27 tickets complete (85%)\
+**In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
-**Recent Progress** (2025-11-12):
+**Recent Progress** (2025-11-13):
+
+- ✅ **P1-018 COMPLETE**: FFAnalytics source data duplicates ELIMINATED (34→0 duplicates)
+  - Architectural fix: moved alias application BEFORE consensus aggregation
+  - All 12 staging tests passing including grain test
+  - Consensus rows reduced from 9,249 → 9,188 (61 duplicates deduplicated at source)
+- ✅ **P1-023 COMPLETE**: Base picks per round validation 100% resolved (4→0 failures)
+
+**Previous Progress** (2025-11-12):
 
 - ✅ **P1-019 COMPLETE**: Streaming hypothesis validated - roster parity test PASSING (30→0 failures)
   - Discovered and fixed 4 critical player_id resolution bugs
@@ -199,10 +207,10 @@ ______________________________________________________________________
 - ✅ **P1-026 COMPLETE**: Macro cartesian product regression fixed (3,563 duplicates → 0)
 - ✅ **P1-020 COMPLETE**: TBD pick duplicates resolved (22 pick_ids → 0)
 - ✅ **P1-022 COMPLETE**: Orphan pick references resolved (46 orphans → 0)
-- ⚠️ **P1-023 IN PROGRESS**: Base picks per round validation 81% improved (21→4 failures remain)
 
 **Historical Notes**:
 
+- **2025-11-13**: P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating all 34 source data duplicates; P1-023 validation complete (100% success)
 - **2025-11-12**: P1-019 streaming hypothesis validated with 4 critical player_id bugs fixed; P1-027 created to track full refactor of contracts models
 - **2025-11-11**: P1-026 cartesian product regression fixed; P1-020 and P1-022 resolved (TBD picks and orphan references)
 - **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed
@@ -294,7 +302,7 @@ Implementation is complete when:
 - [x] All staging models use snapshot_selection_strategy macro (P1-001 through P1-016) ✅
 - [-] All current test failures resolved:
   - [x] Snapshot governance duplicates eliminated (P1-016: 33→17 staging, 162→101 fact) ✅ **COMPLETE**
-  - [ ] Source data duplicates eliminated (P1-018: 17→0 staging, 101→0 fact)
+  - [x] Source data duplicates eliminated (P1-018: 34→0 duplicates, architectural fix) ✅ **100% SUCCESS**
   - [ ] Mart duplicates eliminated (P1-017: 1,893→0)
   - [x] Roster parity discrepancies resolved (P1-019: 30→0) ✅ **100% SUCCESS** - Streaming hypothesis validated
   - [x] TBD pick duplicates eliminated (P1-020: 22 pick_ids→0) ✅ **COMPLETE**

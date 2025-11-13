@@ -1,7 +1,7 @@
 # scripts/R/ffanalytics_run.R
 # FFanalytics projections scraper with weighted consensus aggregation
 # Outputs both raw source projections AND weighted consensus
-# Maps player names to canonical mfl_id via dim_player_id_xref seed
+# Maps player names to canonical player_id via dim_player_id_xref
 
 suppressPackageStartupMessages({
   library(optparse)
@@ -35,7 +35,18 @@ normalize_player_name <- function(name_vec) {
     )
   )
 
+  # Lowercase and normalize whitespace
   normalized <- str_to_lower(str_squish(normalized))
+
+  # Strip periods to handle initials consistently (A.J. -> aj, D.J. -> dj)
+  # This ensures "A.J. Brown" and "Brown, A.J." normalize to the same value
+  normalized <- str_replace_all(normalized, "\\.", "")
+
+  # Strip common suffixes to improve player ID mapping
+  # Handles: Jr., Sr., II, III, IV, V (with optional trailing period)
+  # Examples: "Patrick Mahomes II" -> "patrick mahomes", "Brian Thomas Jr" -> "brian thomas"
+  normalized <- str_replace_all(normalized, "\\s+(jr|sr|ii|iii|iv|v)\\s*$", "")
+
   normalized
 }
 
@@ -173,6 +184,11 @@ option_list <- list(
     type = "character",
     default = "dbt/ff_data_transform/seeds/dim_position_translation.csv",
     help = "Path to position translation seed"
+  ),
+  make_option(c("--name_alias"),
+    type = "character",
+    default = "dbt/ff_data_transform/seeds/dim_name_alias.csv",
+    help = "Path to player name alias seed"
   )
 )
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -433,7 +449,55 @@ if (nrow(df) > 0) {
 
   cat(sprintf("Found %d stat columns to aggregate\n", length(stat_cols)))
 
+  # ============================================================
+  # APPLY NAME ALIASES BEFORE CONSENSUS AGGREGATION
+  # This prevents duplicates by normalizing name variants before grouping
+  # ============================================================
+
+  # Load player name alias mapping (nickname/typo → canonical name)
+  name_alias <- tryCatch(
+    {
+      read.csv(opt$name_alias, stringsAsFactors = FALSE)
+    },
+    error = function(e) {
+      cat(sprintf("Warning: Could not load name alias from %s\n", opt$name_alias))
+      cat("Proceeding without alias mapping.\n")
+      NULL
+    }
+  )
+
+  # Apply name alias mapping to df_weighted BEFORE consensus aggregation
+  if (!is.null(name_alias)) {
+    # Normalize alias names for matching (same logic as player normalization)
+    name_alias <- name_alias %>%
+      mutate(
+        alias_name_normalized = str_to_lower(str_squish(alias_name)),
+        canonical_name_normalized = str_to_lower(str_squish(canonical_name))
+      )
+
+    # Join weighted data with aliases and replace player names where aliases exist
+    # This ensures consensus grouping uses canonical names, preventing duplicates
+    df_weighted <- df_weighted %>%
+      left_join(name_alias %>% select(alias_name_normalized, canonical_name, canonical_name_normalized),
+        by = c("player_normalized" = "alias_name_normalized")
+      ) %>%
+      mutate(
+        player = ifelse(!is.na(canonical_name),
+          canonical_name, # Use PROPER-CASED canonical if alias found
+          player
+        ), # Keep original if no alias
+        player_normalized = ifelse(!is.na(canonical_name_normalized),
+          canonical_name_normalized, # Use normalized for matching
+          player_normalized
+        )
+      ) %>%
+      select(-canonical_name, -canonical_name_normalized) # Clean up temp columns
+
+    cat(sprintf("Applied name alias mapping from %s (before consensus aggregation)\n", opt$name_alias))
+  }
+
   # Calculate weighted consensus per player per stat
+  # Note: player_normalized now contains canonical names after alias application above
   consensus_df <- df_weighted %>%
     filter(weight > 0) %>% # Only use sources with weights
     filter(!is.na(player_normalized)) %>%
