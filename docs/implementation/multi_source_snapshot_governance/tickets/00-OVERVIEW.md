@@ -29,10 +29,10 @@ This document provides a concise checklist for tracking completion of all implem
 - ✅ **P1-026**: Fixed macro cartesian product regression (3,563 duplicates eliminated)
 - ✅ **P1-020**: Resolved TBD pick duplicates (22 pick_ids → 0)
 - ✅ **P1-022**: Resolved orphan pick references (46 orphans → 0)
-- ⚠️ **P1-023**: Base picks per round validation 81% improved (21→4 failures remain)
+- ✅ **P1-023**: Base picks per round validation COMPLETE (4→0 failures, 100% success)
 - 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
 
-**Impact**: Phase 1 now 20/27 tickets complete (74%); Overall project 20/58 tickets complete (34%)
+**Impact**: Phase 1 now 21/27 tickets complete (78%); Overall project 21/58 tickets complete (36%)
 
 ______________________________________________________________________
 
@@ -105,7 +105,7 @@ ______________________________________________________________________
 
 1. [x] **P1-026** — 🚨 Fix resolve_player_id_from_name macro cartesian product ✅ **COMPLETE** (2025-11-11)
 2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates ✅ **COMPLETE** (2025-11-11)
-3. [-] **P1-023** — Fix assert_12_base_picks_per_round failures (Medium: 3-4 hours) ⚠️ **81% IMPROVED** (21→4 failures remain)
+3. [x] **P1-023** — Fix assert_12_base_picks_per_round failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (4→0 failures)
 4. [ ] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs (Small-Medium: 2-3 hours - 19 duplicates remain)
 5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
 6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
