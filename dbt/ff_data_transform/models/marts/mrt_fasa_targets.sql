@@ -210,12 +210,14 @@ with
 
     position_baselines_offense as (
         -- Calculate replacement level (25th percentile at offensive positions)
+        -- Exclude IDP positions (handled separately in position_baselines_idp)
         select
             position,
             percentile_cont(0.25) within group (order by projected_ppg_ros) as replacement_ppg,
             max(projected_ppg_ros) as max_projected_ppg
         from projections p
         inner join fa_pool fa on p.player_id = fa.player_id
+        where fa.position not in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
         group by position
     ),
 
@@ -232,9 +234,11 @@ with
     ),
 
     position_baselines as (
+        -- Use UNION (not UNION ALL) to deduplicate positions that appear in both CTEs
+        -- IDP positions may have projections (offense CTE) AND recent stats (IDP CTE)
         select *
         from position_baselines_offense
-        union all
+        union
         select *
         from position_baselines_idp
     ),

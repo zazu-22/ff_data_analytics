@@ -211,3 +211,126 @@ The model may need to choose between:
 - `player_id` grain (as tested) - aligns with other marts using canonical player_id
 
 This decision should be made during investigation based on how the mart is actually used downstream.
+
+## Implementation Summary (2025-11-13)
+
+**Status**: ✅ **COMPLETE** - Zero duplicates achieved
+
+### Root Cause
+
+The `position_baselines` CTE used `UNION ALL` to combine two separate baseline calculations:
+
+1. **`position_baselines_offense`** (lines 211-222): Calculated replacement level from projections - NO position filter, included ALL positions
+2. **`position_baselines_idp`** (lines 224-232): Calculated replacement level from recent stats - Filtered for IDP positions only
+
+**The Bug**: IDP positions (CB, LB, DT, DE, S) appeared in BOTH CTEs with DIFFERENT values:
+
+- `offense_cte`: IDP projections (low/zero values: 0.0-5.4 PPG)
+- `idp_cte`: IDP recent stats (higher values: 0.25-11.9 PPG)
+
+When `UNION ALL` combined them, it created **2 rows per IDP position** (UNION only deduplicates exact duplicates, but these had different values).
+
+The join on line 988:
+
+```sql
+left join position_baselines pb on fa.position = pb.position
+```
+
+Joined on `position` ONLY (not grain keys), causing a **Cartesian product**: each IDP player matched 2 position baseline rows → 1,908 duplicate rows.
+
+**Evidence**:
+
+- ✅ ONLY IDP positions had duplicates (CB, LB, DT, DE, S)
+- ✅ EVERY IDP player had EXACTLY 1 duplicate (100% duplication rate)
+- ✅ NO offensive positions (QB, RB, WR, TE) had duplicates
+- ✅ Total duplicates: 465 + 452 + 380 + 313 + 298 = 1,908 ✅
+
+### Fix Implemented
+
+Added WHERE clause to `position_baselines_offense` CTE (line 220):
+
+```sql
+where fa.position not in ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
+```
+
+This excludes IDP positions from the offense baseline calculations, eliminating the overlap.
+
+**Also added** comments explaining the UNION behavior (lines 235-236) for future maintainability.
+
+### Results
+
+| Metric                            | Before       | After          | Change             |
+| --------------------------------- | ------------ | -------------- | ------------------ |
+| **Total rows**                    | 5,308        | 3,400          | **-1,908 rows** ✅ |
+| **Unique (player_id, asof_date)** | 3,400        | 3,400          | No change ✅       |
+| **Duplicate rows**                | 1,908        | **0**          | **-1,908** ✅      |
+| **Grain test**                    | FAIL (1,893) | **PASS**       | Fixed ✅           |
+| **All tests (18 total)**          | Mixed        | **18/18 PASS** | 100% ✅            |
+
+**Validation Queries**:
+
+```sql
+-- Before fix: 5,308 rows with 1,908 duplicates
+-- After fix: 3,400 rows with 0 duplicates
+SELECT
+    COUNT(*) as total_rows,
+    COUNT(DISTINCT player_id) as unique_players,
+    COUNT(DISTINCT (player_id, asof_date)) as unique_player_date_combos,
+    COUNT(*) - COUNT(DISTINCT (player_id, asof_date)) as duplicate_rows
+FROM main.mrt_fasa_targets;
+-- Result: 3,400 total = 3,400 unique = 0 duplicates ✅
+
+-- Verify no position has duplicates
+SELECT
+    position,
+    COUNT(*) as total_rows,
+    COUNT(DISTINCT player_id) as unique_players,
+    COUNT(*) - COUNT(DISTINCT player_id) as duplicate_count
+FROM main.mrt_fasa_targets
+GROUP BY position
+HAVING COUNT(*) > COUNT(DISTINCT player_id);
+-- Result: 0 rows ✅
+```
+
+**dbt Test Results**:
+
+```bash
+$ dbt test -s mrt_fasa_targets
+Done. PASS=18 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=18
+
+Including critical grain test:
+✅ dbt_utils_unique_combination_of_columns_mrt_fasa_targets_player_id__asof_date
+```
+
+### Files Modified
+
+- `dbt/ff_data_transform/models/marts/mrt_fasa_targets.sql`:
+  - Line 220: Added WHERE clause to exclude IDP positions from offense CTE
+  - Lines 235-236: Added explanatory comments about UNION behavior
+  - Line 239: Changed `union all` to `union` for extra safety
+
+### Why This Fix is Correct
+
+1. ✅ **Eliminates overlap** - IDP positions now calculated ONLY in IDP CTE
+2. ✅ **Preserves offense baselines** - QB/RB/WR/TE baselines unchanged
+3. ✅ **IDP baselines use correct source** - Recent stats (not projections) for IDP
+4. ✅ **No performance impact** - WHERE clause is simple position filter
+5. ✅ **Maintainable** - Clear comments explain the logic
+
+### Grain Decision
+
+**Kept `player_id` grain** (not `sleeper_player_id`) because:
+
+- The mart is consumed by downstream analytics using canonical `player_id`
+- Test expectation was always `(player_id, asof_date)` grain
+- Model config `unique_key` is vestigial from Sleeper-specific logic (can be updated)
+- The `fa_pool` CTE already deduplicates by `sleeper_player_id` (line 34)
+
+### Acceptance Criteria Status
+
+- ✅ Root cause identified and documented (position_baselines UNION ALL overlap)
+- ✅ Fix implemented in `mrt_fasa_targets.sql` (line 220)
+- ✅ Model compiles and executes successfully
+- ✅ **Critical**: Grain uniqueness test passes (0 duplicates)
+- ✅ Spot-check confirms consistent metrics per player
+- ✅ Row count matches expected: 5,308 → 3,400 (1,908 duplicates eliminated)
