@@ -204,6 +204,11 @@ option_list <- list(
     type = "character",
     default = "dbt/ff_data_transform/seeds/dim_name_alias.csv",
     help = "Path to player name alias seed"
+  ),
+  make_option(c("--defense_xref"),
+    type = "character",
+    default = "dbt/ff_data_transform/seeds/seed_team_defense_xref.csv",
+    help = "Path to team defense crosswalk seed"
   )
 )
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -572,6 +577,18 @@ if (nrow(df) > 0) {
     }
   )
 
+  # Load team defense crosswalk (team abbrev → defense_id)
+  defense_xref <- tryCatch(
+    {
+      read.csv(opt$defense_xref, stringsAsFactors = FALSE)
+    },
+    error = function(e) {
+      cat(sprintf("Warning: Could not load defense xref from %s\n", opt$defense_xref))
+      cat("Proceeding without DST mapping.\n")
+      NULL
+    }
+  )
+
   if (!is.null(player_xref)) {
     # Ensure normalized name column exists for downstream matching
     if (!("player_normalized" %in% colnames(consensus_df))) {
@@ -709,7 +726,116 @@ if (nrow(df) > 0) {
       mapped_count, total_count, mapping_coverage * 100
     ))
 
-    # For unmapped players, use -1 as sentinel
+    # ============================================================
+    # DST (TEAM DEFENSE) MAPPING
+    # Map unmapped defense projections to defense_id from seed
+    # ============================================================
+
+    dst_mapped_count <- 0
+    dst_unmapped_count <- 0
+
+    if (!is.null(defense_xref)) {
+      # Identify unmapped DST projections (all position aliases)
+      dst_positions <- c("D", "DST", "D/ST", "DEF")
+      unmapped_dst <- consensus_df %>%
+        filter(is.na(player_id) & pos %in% dst_positions)
+
+      if (nrow(unmapped_dst) > 0) {
+        cat("\n--- DST Team Defense Mapping ---\n")
+        cat(sprintf("Found %d unmapped DST projections\n", nrow(unmapped_dst)))
+
+        # Prepare defense xref for matching - normalize team abbreviations
+        # Gather all name aliases into a long format for flexible matching
+        defense_xref_long <- defense_xref %>%
+          # Normalize all team name columns
+          mutate(across(starts_with("team_name"), ~ str_to_lower(str_squish(.)))) %>%
+          # Create long format with all team name variations
+          pivot_longer(
+            cols = starts_with("team_name"),
+            names_to = "name_type",
+            values_to = "team_name_variant",
+            values_drop_na = TRUE
+          ) %>%
+          select(defense_id, team_abbrev, team_name_variant) %>%
+          distinct()
+
+        # Try matching unmapped DST projections to defense xref
+        # Match strategy: normalize team name from projection player column
+        # and match against any team_name variant in defense xref
+        dst_matches <- unmapped_dst %>%
+          mutate(
+            # Normalize player name for team matching
+            # Handle formats: "49ers, San Francisco", "Cardinals, Arizona", "Bills, Buffalo"
+            team_name_normalized = str_to_lower(str_squish(player)),
+            # Also try team abbreviation from consensus
+            team_abbrev_normalized = normalize_team_abbrev(team)
+          ) %>%
+          # Try matching by team abbreviation first (most reliable)
+          left_join(
+            defense_xref %>% select(defense_id, team_abbrev),
+            by = c("team_abbrev_normalized" = "team_abbrev")
+          ) %>%
+          rename(defense_id_abbrev = defense_id) %>%
+          # If no abbrev match, try team name variants
+          left_join(
+            defense_xref_long,
+            by = c("team_name_normalized" = "team_name_variant"),
+            relationship = "many-to-one"
+          ) %>%
+          rename(defense_id_name = defense_id) %>%
+          # Prefer abbrev match over name match
+          mutate(defense_id_matched = coalesce(defense_id_abbrev, defense_id_name)) %>%
+          select(
+            -defense_id_abbrev, -defense_id_name, -team_name_normalized,
+            -team_abbrev_normalized, -team_abbrev
+          )
+
+        # Count successful DST mappings
+        dst_mapped_count <- sum(!is.na(dst_matches$defense_id_matched))
+        dst_unmapped_count <- sum(is.na(dst_matches$defense_id_matched))
+
+        # Update consensus_df with DST mappings
+        # Use left_join to preserve all rows, then coalesce player_id
+        consensus_df <- consensus_df %>%
+          left_join(
+            dst_matches %>%
+              filter(!is.na(defense_id_matched)) %>%
+              select(player, pos, team, season, week, defense_id_matched),
+            by = c("player", "pos", "team", "season", "week")
+          ) %>%
+          mutate(player_id = coalesce(player_id, defense_id_matched)) %>%
+          select(-defense_id_matched)
+
+        cat(sprintf(
+          "DST Mapping: %d / %d defenses mapped (%.1f%% coverage)\n",
+          dst_mapped_count, nrow(unmapped_dst),
+          (dst_mapped_count / nrow(unmapped_dst)) * 100
+        ))
+
+        if (dst_unmapped_count > 0) {
+          cat(sprintf("  WARNING: %d DST projections remain unmapped\n", dst_unmapped_count))
+          # Log unmapped DST for debugging
+          unmapped_dst_list <- dst_matches %>%
+            filter(is.na(defense_id_matched)) %>%
+            select(player, pos, team) %>%
+            distinct()
+          cat("  Unmapped DST teams:\n")
+          for (i in seq_len(min(10, nrow(unmapped_dst_list)))) {
+            cat(sprintf(
+              "    - %s (pos=%s, team=%s)\n",
+              unmapped_dst_list$player[i],
+              unmapped_dst_list$pos[i],
+              unmapped_dst_list$team[i]
+            ))
+          }
+        }
+      } else {
+        cat("\n--- DST Team Defense Mapping ---\n")
+        cat("No unmapped DST projections found (all DST already mapped or not present)\n")
+      }
+    }
+
+    # For remaining unmapped players (non-DST or unmatched DST), use -1 as sentinel
     consensus_df <- consensus_df %>%
       mutate(player_id = ifelse(is.na(player_id), -1, player_id))
   } else {
@@ -781,8 +907,18 @@ meta <- list(
   raw_rows = nrow(df),
   consensus_rows = nrow(consensus_df),
   player_mapping = mapping_stats,
+  dst_mapping = list(
+    mapped_defenses = dst_mapped_count,
+    unmapped_defenses = dst_unmapped_count,
+    mapping_coverage = if ((dst_mapped_count + dst_unmapped_count) > 0) {
+      round(dst_mapped_count / (dst_mapped_count + dst_unmapped_count), 4)
+    } else {
+      0
+    }
+  ),
   weights_file = opt$weights_csv,
   player_xref_file = opt$player_xref,
+  defense_xref_file = opt$defense_xref,
   output_files = output_files
 )
 
