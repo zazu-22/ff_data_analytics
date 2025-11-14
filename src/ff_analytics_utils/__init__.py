@@ -1,3 +1,4 @@
+from .defense_xref import get_defense_xref
 from .duckdb_helper import (
     fetch_table_as_polars,
     get_duckdb_connection,
@@ -31,5 +32,6 @@ __all__: list[str] = [
     "get_duckdb_connection",
     "resolve_duckdb_path",
     "fetch_table_as_polars",
+    "get_defense_xref",
     "get_player_xref",
 ]

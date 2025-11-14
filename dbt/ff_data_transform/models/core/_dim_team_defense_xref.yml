@@ -1,0 +1,210 @@
+version: 2
+
+models:
+  - name: dim_team_defense_xref
+    description: |
+      NFL team defense crosswalk mapping defense player_ids to team abbreviations and name variations.
+
+      **Grain**: One row per team defense (32 current NFL teams + 4 historical teams = 36 total)
+
+      **Purpose**: Enable mapping of FFAnalytics DST projections to canonical player_id values.
+      Supports multiple name formats from various projection providers (CBS, ESPN, FantasyPros, etc.).
+
+      **Defense ID Strategy** (90001-90036):
+
+      This model uses the **90,000 range** for defense_id values to ensure clear separation from
+      individual player IDs and prevent collision as the player ID sequence grows.
+
+      - **Current player IDs**: 1-9,757 (sequential, from dim_player_id_xref)
+      - **Maximum expected player IDs**: ~28,000 (complete NFL history)
+      - **Defense IDs**: 90,001-90,036 (36 teams including historical)
+      - **Buffer**: ~80,000 IDs between max player and min defense
+
+      **Rationale for 90,000 range**:
+      - Clear separation: No collision risk even with full NFL player history
+      - Natural sort order: Players (1-89,999) group separately from defenses (90,000+)
+      - Consistent with ADR-011 sequential surrogate key pattern
+      - Future extensibility: 80,000-89,999 available for other entity types
+      - Positive integers: Universally compatible, no special handling needed
+
+      **Historical teams** (relocated franchises):
+      - 90033: LA (Los Angeles Rams, pre-STL move) - maps to LAR
+      - 90034: OAK (Oakland Raiders) - maps to LV
+      - 90035: SD (San Diego Chargers) - maps to LAC
+      - 90036: STL (St. Louis Rams) - maps to LAR
+
+      These enable mapping of historical NFLverse data that uses old team codes.
+
+      **Name alias strategy**: Captures 4 common formats from FFAnalytics providers:
+      - Full name: "Arizona Cardinals"
+      - Reversed: "Cardinals, Arizona"
+      - Nickname only: "Cardinals"
+      - City only: "Arizona"
+      - With D/ST suffix: "Cardinals D/ST"
+
+      **Position alias strategy**: Covers all position code variations:
+      - DST (standard)
+      - D (some providers)
+      - D/ST (some providers)
+      - DEF (some providers)
+
+      **Source**: seed_team_defense_xref.csv (version-controlled, manually maintained)
+
+      **Maintenance**: Update when NFL teams relocate or rebrand (rare, ~1-2 per decade)
+
+      **Related**:
+      - ADR-011: Sequential Surrogate Key for player_id
+      - P1-028: Add DST team defense seed for FFAnalytics mapping
+      - src/ff_analytics_utils/defense_xref.py: Python accessor function
+      - scripts/R/ffanalytics_run.R: R runner that uses this for DST mapping
+
+    config:
+      unique_key: defense_id
+
+    columns:
+      - name: defense_id
+        description: |
+          Canonical defense player_id (90001-90036 range).
+
+          **Design Decision**: Uses 90,000 range to ensure clear separation from individual
+          player IDs (1-9,757 currently, max ~28,000 with full NFL history).
+
+          Provides ~80,000 buffer to prevent collision as player ID sequence grows.
+
+          See model description for full rationale.
+        data_tests:
+          - not_null
+          - unique
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 90001
+                max_value: 90036
+              config:
+                severity: error
+
+      - name: team_abbrev
+        description: |
+          Canonical 3-letter NFL team code (matches dim_team_conference_division and NFLverse data).
+
+          Examples: ARI, ATL, BAL, BUF, etc.
+
+          Historical codes (OAK, SD, STL, LA) map to current teams via this field.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - ARI
+                  - ATL
+                  - BAL
+                  - BUF
+                  - CAR
+                  - CHI
+                  - CIN
+                  - CLE
+                  - DAL
+                  - DEN
+                  - DET
+                  - GB
+                  - HOU
+                  - IND
+                  - JAX
+                  - KC
+                  - LAC
+                  - LAR
+                  - LV
+                  - MIA
+                  - MIN
+                  - NE
+                  - 'NO'
+                  - NYG
+                  - NYJ
+                  - PHI
+                  - PIT
+                  - SEA
+                  - SF
+                  - TB
+                  - TEN
+                  - WAS
+                  - LA
+                  - OAK
+                  - SD
+                  - STL
+              config:
+                severity: error
+
+      - name: team_name_primary
+        description: |
+          Primary full team name (City + Nickname format).
+
+          Examples: "Arizona Cardinals", "Baltimore Ravens"
+
+          Matches format used by most FFAnalytics projection providers.
+        data_tests:
+          - not_null
+
+      - name: team_name_alias_1
+        description: |
+          Name alias format 1: "Nickname, City" (reversed format).
+
+          Examples: "Cardinals, Arizona", "Ravens, Baltimore"
+
+          Used by some FFAnalytics providers (particularly for position=D).
+
+      - name: team_name_alias_2
+        description: |
+          Name alias format 2: Nickname only.
+
+          Examples: "Cardinals", "Ravens"
+
+      - name: team_name_alias_3
+        description: |
+          Name alias format 3: City only.
+
+          Examples: "Arizona", "Baltimore"
+
+      - name: team_name_alias_4
+        description: |
+          Name alias format 4: Nickname with " D/ST" suffix.
+
+          Examples: "Cardinals D/ST", "Ravens D/ST"
+
+          Common format in fantasy football platforms.
+
+      - name: position_primary
+        description: |
+          Primary position code (always "DST" for team defenses).
+
+          Normalized position value used in staging models.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DST']
+
+      - name: position_alias_1
+        description: |
+          Position alias 1: "D"
+
+          Used by some FFAnalytics projection providers.
+
+      - name: position_alias_2
+        description: |
+          Position alias 2: "D/ST"
+
+          Common fantasy football position code.
+
+      - name: position_alias_3
+        description: |
+          Position alias 3: "DEF"
+
+          Used by some FFAnalytics projection providers.
+
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - defense_id
+          config:
+            severity: error
+            error_if: ">0"

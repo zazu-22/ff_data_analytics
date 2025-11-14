@@ -1,0 +1,37 @@
+defense_id,team_abbrev,team_name_primary,team_name_alias_1,team_name_alias_2,team_name_alias_3,team_name_alias_4,position_primary,position_alias_1,position_alias_2,position_alias_3
+90001,ARI,Arizona Cardinals,"Cardinals, Arizona",Cardinals,Arizona,Cardinals D/ST,DST,D,D/ST,DEF
+90002,ATL,Atlanta Falcons,"Falcons, Atlanta",Falcons,Atlanta,Falcons D/ST,DST,D,D/ST,DEF
+90003,BAL,Baltimore Ravens,"Ravens, Baltimore",Ravens,Baltimore,Ravens D/ST,DST,D,D/ST,DEF
+90004,BUF,Buffalo Bills,"Bills, Buffalo",Bills,Buffalo,Bills D/ST,DST,D,D/ST,DEF
+90005,CAR,Carolina Panthers,"Panthers, Carolina",Panthers,Carolina,Panthers D/ST,DST,D,D/ST,DEF
+90006,CHI,Chicago Bears,"Bears, Chicago",Bears,Chicago,Bears D/ST,DST,D,D/ST,DEF
+90007,CIN,Cincinnati Bengals,"Bengals, Cincinnati",Bengals,Cincinnati,Bengals D/ST,DST,D,D/ST,DEF
+90008,CLE,Cleveland Browns,"Browns, Cleveland",Browns,Cleveland,Browns D/ST,DST,D,D/ST,DEF
+90009,DAL,Dallas Cowboys,"Cowboys, Dallas",Cowboys,Dallas,Cowboys D/ST,DST,D,D/ST,DEF
+90010,DEN,Denver Broncos,"Broncos, Denver",Broncos,Denver,Broncos D/ST,DST,D,D/ST,DEF
+90011,DET,Detroit Lions,"Lions, Detroit",Lions,Detroit,Lions D/ST,DST,D,D/ST,DEF
+90012,GB,Green Bay Packers,"Packers, Green Bay",Packers,Green Bay,Packers D/ST,DST,D,D/ST,DEF
+90013,HOU,Houston Texans,"Texans, Houston",Texans,Houston,Texans D/ST,DST,D,D/ST,DEF
+90014,IND,Indianapolis Colts,"Colts, Indianapolis",Colts,Indianapolis,Colts D/ST,DST,D,D/ST,DEF
+90015,JAX,Jacksonville Jaguars,"Jaguars, Jacksonville",Jaguars,Jacksonville,Jaguars D/ST,DST,D,D/ST,DEF
+90016,KC,Kansas City Chiefs,"Chiefs, Kansas City",Chiefs,Kansas City,Chiefs D/ST,DST,D,D/ST,DEF
+90017,LAC,Los Angeles Chargers,"Chargers, Los Angeles",Chargers,Los Angeles,Chargers D/ST,DST,D,D/ST,DEF
+90018,LAR,Los Angeles Rams,"Rams, Los Angeles",Rams,Los Angeles,Rams D/ST,DST,D,D/ST,DEF
+90019,LV,Las Vegas Raiders,"Raiders, Las Vegas",Raiders,Las Vegas,Raiders D/ST,DST,D,D/ST,DEF
+90020,MIA,Miami Dolphins,"Dolphins, Miami",Dolphins,Miami,Dolphins D/ST,DST,D,D/ST,DEF
+90021,MIN,Minnesota Vikings,"Vikings, Minnesota",Vikings,Minnesota,Vikings D/ST,DST,D,D/ST,DEF
+90022,NE,New England Patriots,"Patriots, New England",Patriots,New England,Patriots D/ST,DST,D,D/ST,DEF
+90023,NO,New Orleans Saints,"Saints, New Orleans",Saints,New Orleans,Saints D/ST,DST,D,D/ST,DEF
+90024,NYG,New York Giants,"Giants, New York",Giants,New York,Giants D/ST,DST,D,D/ST,DEF
+90025,NYJ,New York Jets,"Jets, New York",Jets,New York,Jets D/ST,DST,D,D/ST,DEF
+90026,PHI,Philadelphia Eagles,"Eagles, Philadelphia",Eagles,Philadelphia,Eagles D/ST,DST,D,D/ST,DEF
+90027,PIT,Pittsburgh Steelers,"Steelers, Pittsburgh",Steelers,Pittsburgh,Steelers D/ST,DST,D,D/ST,DEF
+90028,SEA,Seattle Seahawks,"Seahawks, Seattle",Seahawks,Seattle,Seahawks D/ST,DST,D,D/ST,DEF
+90029,SF,San Francisco 49ers,"49ers, San Francisco",49ers,San Francisco,49ers D/ST,DST,D,D/ST,DEF
+90030,TB,Tampa Bay Buccaneers,"Buccaneers, Tampa Bay",Buccaneers,Tampa Bay,Buccaneers D/ST,DST,D,D/ST,DEF
+90031,TEN,Tennessee Titans,"Titans, Tennessee",Titans,Tennessee,Titans D/ST,DST,D,D/ST,DEF
+90032,WAS,Washington Commanders,"Commanders, Washington",Commanders,Washington,Commanders D/ST,DST,D,D/ST,DEF
+90033,LA,Los Angeles Rams (historical),"Rams, Los Angeles (LA code)",LA Rams,LA,LA D/ST,DST,D,D/ST,DEF
+90034,OAK,Oakland Raiders (historical),"Raiders, Oakland",Oakland Raiders,Oakland,Raiders (Oakland),DST,D,D/ST,DEF
+90035,SD,San Diego Chargers (historical),"Chargers, San Diego",San Diego Chargers,San Diego,Chargers (San Diego),DST,D,D/ST,DEF
+90036,STL,St. Louis Rams (historical),"Rams, St. Louis",St. Louis Rams,STL,Rams (St. Louis),DST,D,D/ST,DEF

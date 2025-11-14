@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ff_analytics_utils.defense_xref import get_defense_xref
 from ff_analytics_utils.player_xref import get_player_xref
 
 if TYPE_CHECKING:
@@ -51,6 +52,7 @@ DEFAULT_POSITIONS = "QB,RB,WR,TE,K,DST,DL,LB,DB"
 DEFAULT_OUT_DIR = "data/raw/ffanalytics"
 DEFAULT_WEIGHTS_CSV = "config/projections/ffanalytics_projection_weights_mapped.csv"
 DEFAULT_PLAYER_XREF: str | None = None
+DEFAULT_DEFENSE_XREF: str | None = None
 
 # Fantasy season constants
 FANTASY_SEASON_END_WEEK = 17  # Week 18 excluded (teams rest starters)
@@ -158,6 +160,26 @@ def _player_xref_csv(player_xref: str | None):
         temp_dir.cleanup()
 
 
+@contextmanager
+def _defense_xref_csv(defense_xref: str | None):
+    """Yield a CSV path containing the defense xref, writing temp files as needed."""
+    if defense_xref:
+        yield Path(defense_xref)
+        return
+
+    if pl is None:
+        raise ImportError("polars is required to materialize the defense xref CSV")
+
+    df = get_defense_xref()
+    temp_dir = tempfile.TemporaryDirectory()
+    try:
+        csv_path = Path(temp_dir.name) / "defense_xref.csv"
+        df.write_csv(csv_path)
+        yield csv_path
+    finally:
+        temp_dir.cleanup()
+
+
 def load_projections(
     sources: str | list[str] | None = None,
     positions: str | list[str] = DEFAULT_POSITIONS,
@@ -166,6 +188,7 @@ def load_projections(
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
     player_xref: str | None = DEFAULT_PLAYER_XREF,
+    defense_xref: str | None = DEFAULT_DEFENSE_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Load fantasy football projections with weighted consensus (single week).
@@ -189,6 +212,8 @@ def load_projections(
         out_dir: Output directory for Parquet files
         weights_csv: Path to site weights CSV
         player_xref: Path to player ID crosswalk seed
+        defense_xref: Path to team defense ID crosswalk seed
+            (maps DST names to defense_id 90001-90036)
         **kwargs: Additional arguments (unused, for API compatibility)
 
     Returns:
@@ -211,8 +236,11 @@ def load_projections(
     if not r_script.exists():
         raise FileNotFoundError(f"R script not found: {r_script}")
 
-    # Build command
-    with _player_xref_csv(player_xref) as resolved_xref:
+    # Build command with nested context managers for both player and defense xrefs
+    with (
+        _player_xref_csv(player_xref) as resolved_player_xref,
+        _defense_xref_csv(defense_xref) as resolved_defense_xref,
+    ):
         cmd = [
             "Rscript",
             str(r_script),
@@ -229,7 +257,9 @@ def load_projections(
             "--weights_csv",
             weights_csv,
             "--player_xref",
-            str(resolved_xref),
+            str(resolved_player_xref),
+            "--defense_xref",
+            str(resolved_defense_xref),
         ]
 
         # Run R script
@@ -272,6 +302,7 @@ def _scrape_week_projections(
     dt: str,
     weights_csv: str,
     player_xref: str | None,
+    defense_xref: str | None,
 ) -> tuple[list[DataFrame], list[DataFrame], list[int], list[tuple[int, str]]]:
     """Scrape projections for a single week.
 
@@ -295,6 +326,7 @@ def _scrape_week_projections(
             out_dir=str(staging_dir),
             weights_csv=weights_csv,
             player_xref=player_xref,
+            defense_xref=defense_xref,
         )
 
         # CRITICAL: Files must be week-specific to avoid overwriting
@@ -347,6 +379,7 @@ def load_projections_multi_week(
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
     player_xref: str | None = DEFAULT_PLAYER_XREF,
+    defense_xref: str | None = DEFAULT_DEFENSE_XREF,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Load projections for multiple weeks (e.g., rest-of-season) in a single snapshot.
@@ -400,6 +433,8 @@ def load_projections_multi_week(
         out_dir: Output directory for Parquet files
         weights_csv: Path to site weights CSV (defines available sources and weights)
         player_xref: Path to player ID crosswalk seed
+        defense_xref: Path to team defense ID crosswalk seed
+            (maps DST names to defense_id 90001-90036)
         **kwargs: Additional arguments
 
     Returns:
@@ -436,7 +471,15 @@ def load_projections_multi_week(
     # Scrape each week individually
     for week in sorted(weeks):
         consensus_dfs, raw_dfs, success, failures = _scrape_week_projections(
-            week, season, sources, positions, staging_dir, dt, weights_csv, player_xref
+            week,
+            season,
+            sources,
+            positions,
+            staging_dir,
+            dt,
+            weights_csv,
+            player_xref,
+            defense_xref,
         )
         all_consensus_dfs.extend(consensus_dfs)
         all_raw_dfs.extend(raw_dfs)
@@ -565,6 +608,7 @@ def load_projections_ros(
     out_dir: str = DEFAULT_OUT_DIR,
     weights_csv: str = DEFAULT_WEIGHTS_CSV,
     player_xref: str | None = DEFAULT_PLAYER_XREF,
+    defense_xref: str | None = DEFAULT_DEFENSE_XREF,
     duckdb_path: str | None = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -620,6 +664,8 @@ def load_projections_ros(
         out_dir: Output directory for Parquet files
         weights_csv: Path to site weights CSV
         player_xref: Path to player ID crosswalk seed
+        defense_xref: Path to team defense ID crosswalk seed
+            (maps DST names to defense_id 90001-90036)
         duckdb_path: Path to DuckDB database for week detection (default: dbt target)
         **kwargs: Additional arguments passed to load_projections_multi_week
 
@@ -673,6 +719,7 @@ def load_projections_ros(
         out_dir=out_dir,
         weights_csv=weights_csv,
         player_xref=player_xref,
+        defense_xref=defense_xref,
         **kwargs,
     )
 
