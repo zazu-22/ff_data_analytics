@@ -2,7 +2,8 @@
 
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Medium (2-3 hours)\
-**Dependencies**: None (can be done in parallel with other Phase 1 work)
+**Dependencies**: None (can be done in parallel with other Phase 1 work)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -221,3 +222,28 @@ def get_output_path(source, dataset, dt, samples=True):
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 1 Sample Relocation (lines 55-63)
 - Tool: `tools/make_samples.py`
 - Tests: `tests/test_nflverse_samples_pk.py`
+
+## Completion Notes
+
+**Implemented**: 2025-11-14
+
+**Findings**:
+- No archival actions required in current environment
+- `data/raw/` directory does not exist (gitignored runtime data)
+- Only one sample snapshot found: `samples/ffanalytics/projections/dt=2025-10-25` (kept per policy - ffanalytics still in development)
+- Test fixtures in `samples/` directory are working correctly and committed to git
+- Tests passing: `tests/test_nflverse_samples_pk.py` (2/2 passed)
+
+**Actions Completed**:
+- ✅ Investigated all sample data locations
+- ✅ Verified test fixtures work correctly (pytest passes)
+- ✅ Updated `tools/make_samples.py` documentation with sample usage and archival policy
+- ✅ Documented when to archive samples (when source is production-ready)
+- ✅ Verified dbt models use `external_root` variable correctly (no hardcoded sample paths)
+
+**Impact**:
+- Documentation updated to prevent future sample/production data mixing
+- Clear policy established: archive samples when source is fully integrated with production data
+- No changes needed to test fixtures or dbt compilation
+
+**Note**: This ticket addresses a scenario where `data/raw/` contains old sample snapshots mixed with production data. In environments where `data/raw/` doesn't exist or contains only production snapshots, no archival is needed. The committed `samples/` directory remains unchanged and is used for test fixtures.

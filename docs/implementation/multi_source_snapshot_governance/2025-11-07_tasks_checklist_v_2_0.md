@@ -190,13 +190,17 @@ ______________________________________________________________________
 
 ### Sample Archival
 
-- [ ] Archive legacy NFLverse samples:
-  - [ ] Archive `data/raw/nflverse/weekly/dt=2024-01-01/` → `data/_archived_samples/2025-11-07/nflverse/weekly/dt=2024-01-01/`
-  - [ ] Archive root-level CSV/Parquet samples to `data/_archived_samples/2025-11-07/`
-  - [ ] Archive sheets samples similarly
-- [ ] Preserve sample generation tool (`tools/make_samples.py`) for new source exploration
-- [ ] Create archive README documenting what was archived and why
-- [ ] Verify dbt globs don't match archived samples (test with `dbt compile`)
+- [x] Archive legacy NFLverse samples:
+  - [x] No archival needed - `data/raw/` directory doesn't exist in current environment
+  - [x] Verified `samples/` directory contains only test fixtures (committed to git)
+  - [x] Confirmed only one sample snapshot exists: `samples/ffanalytics/projections/dt=2025-10-25` (kept per policy)
+- [x] Preserve sample generation tool (`tools/make_samples.py`) for new source exploration
+  - [x] Updated docstring with sample usage and archival policy
+  - [x] Documented when to archive: when source is production-ready with real data
+- [x] Archive policy documented (no README needed - no archival performed)
+- [x] Verify dbt globs don't match archived samples (test with `dbt compile`)
+  - [x] Verified dbt models use `external_root` variable correctly
+  - [x] Test fixtures passing: `tests/test_nflverse_samples_pk.py` (2/2 tests)
 
 ### Performance Profiling
 
