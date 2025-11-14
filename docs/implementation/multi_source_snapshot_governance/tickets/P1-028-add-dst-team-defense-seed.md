@@ -1,5 +1,6 @@
 # Ticket P1-028: Add DST Team Defense Seed for FFAnalytics Mapping
 
+**Status**: IN PROGRESS (Phases 1-4 complete, Phase 5 pending)
 **Phase**: Tech Debt
 **Estimated Effort**: Small (2-3 hours)
 **Dependencies**: P1-018 (FFAnalytics source duplicates fix)
@@ -33,53 +34,64 @@ Ravens, Baltimore          pos=DST
 
 ## Tasks
 
-### Phase 1: Create DST Seed CSV
+### Phase 1: Create DST Seed CSV ✅ COMPLETE
 
-- [ ] Create `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv`
-- [ ] Include columns:
-  - [ ] `defense_id` (sequential 10001-10032 for 32 NFL teams, avoiding player_id collision)
-  - [ ] `team_abbrev` (canonical 3-letter code: ARI, ATL, BAL, etc.)
-  - [ ] `team_name_primary` (e.g., "Arizona Cardinals")
-  - [ ] `team_name_alias_1` (e.g., "Cardinals, Arizona")
-  - [ ] `team_name_alias_2` (e.g., "Cardinals")
-  - [ ] `position_primary` (always "DST")
-  - [ ] `position_alias_1` (e.g., "D")
-  - [ ] `position_alias_2` (e.g., "D/ST")
-  - [ ] `position_alias_3` (e.g., "DEF")
-- [ ] Populate all 32 NFL teams with common name variations
-- [ ] Use same team abbreviations as `dim_franchise` for consistency
+- [x] Create `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv`
+- [x] Include columns:
+  - [x] `defense_id` (90001-90036 for 36 teams - 32 current + 4 historical)
+  - [x] `team_abbrev` (canonical 3-letter code: ARI, ATL, BAL, etc.)
+  - [x] `team_name_primary` (e.g., "Arizona Cardinals")
+  - [x] `team_name_alias_1` (e.g., "Cardinals, Arizona")
+  - [x] `team_name_alias_2` (e.g., "Cardinals")
+  - [x] `team_name_alias_3` (e.g., "Arizona")
+  - [x] `team_name_alias_4` (e.g., "Cardinals D/ST")
+  - [x] `position_primary` (always "DST")
+  - [x] `position_alias_1` (e.g., "D")
+  - [x] `position_alias_2` (e.g., "D/ST")
+  - [x] `position_alias_3` (e.g., "DEF")
+- [x] Populate all 36 teams (32 current + 4 historical: LA, OAK, SD, STL)
+- [x] Use consistent team abbreviations with dim_team_conference_division
 
-### Phase 2: Create dbt Model
+### Phase 2: Create dbt Model ✅ COMPLETE
 
-- [ ] Create `dbt/ff_data_transform/models/core/dim_team_defense_xref.sql`
-- [ ] Model references seed: `SELECT * FROM {{ ref('seed_team_defense_xref') }}`
-- [ ] Add any transformations needed (e.g., computed columns, normalization)
-- [ ] Configure as table materialization
-- [ ] Create YAML schema file `_dim_team_defense_xref.yml`:
-  - [ ] Document grain: one row per team defense
-  - [ ] Add unique test on `defense_id`
-  - [ ] Add not_null tests on key columns
-  - [ ] Document all columns
+- [x] Create `dbt/ff_data_transform/models/core/dim_team_defense_xref.sql`
+- [x] Model references seed: `SELECT * FROM {{ ref('seed_team_defense_xref') }}`
+- [x] Configure as table materialization with unique_key
+- [x] Create YAML schema file `_dim_team_defense_xref.yml`:
+  - [x] Document grain: one row per team defense (36 total)
+  - [x] Add unique test on `defense_id`
+  - [x] Add not_null tests on key columns
+  - [x] Document all columns with 90K range rationale
+  - [x] Add range validation test (90001-90036)
+  - [x] Add accepted_values test for team_abbrev
+- [x] All 9 tests passing
 
-### Phase 3: Update Python Utility Function
+### Phase 3: Update Python Utility Function ✅ COMPLETE
 
-- [ ] Create `src/ff_analytics_utils/defense_xref.py` with `get_defense_xref()` function
-- [ ] Implement **DuckDB-first with CSV fallback** pattern (consistent with `get_name_alias()`)
-  - [ ] Default to `source='auto'` (try DuckDB, fall back to CSV)
-  - [ ] DuckDB path: Query `main.dim_team_defense_xref` table
-  - [ ] CSV fallback: Read `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv`
-  - [ ] Support optional `columns` parameter for selective loading
-- [ ] Return as Polars DataFrame
-- [ ] Add comprehensive docstring with examples
-- [ ] Include error handling with clear messages
+- [x] Create `src/ff_analytics_utils/defense_xref.py` with `get_defense_xref()` function
+- [x] Implement **DuckDB-first with CSV fallback** pattern (consistent with `get_player_xref()`)
+  - [x] Default to `source='auto'` (try DuckDB, fall back to CSV)
+  - [x] DuckDB path: Query `main.dim_team_defense_xref` table
+  - [x] CSV fallback: Read `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv`
+  - [x] Support optional `columns` parameter for selective loading
+- [x] Return as Polars DataFrame
+- [x] Add comprehensive docstring with examples
+- [x] Include error handling with clear messages
+- [x] Add to `ff_analytics_utils.__init__` exports
+- [x] Tested: successfully loads 36 teams from DuckDB
 
-### Phase 4: Update Python Loader
+### Phase 4: Update Python Loader ✅ COMPLETE
 
-- [ ] Modify `src/ingest/ffanalytics/loader.py`:
-  - [ ] Add `_defense_xref_csv` context manager (mirrors `_player_xref_csv` pattern)
-  - [ ] Materializes temp CSV from `get_defense_xref()` query
-  - [ ] Update `load_projections()` to pass defense xref temp file to R runner
-  - [ ] Add `--defense_xref` parameter to R subprocess call
+- [x] Modify `src/ingest/ffanalytics/loader.py`:
+  - [x] Add `_defense_xref_csv` context manager (mirrors `_player_xref_csv` pattern)
+  - [x] Materializes temp CSV from `get_defense_xref()` query
+  - [x] Update `load_projections()` to pass defense xref temp file to R runner
+  - [x] Update `load_projections_multi_week()` to pass defense_xref
+  - [x] Update `load_projections_ros()` to pass defense_xref
+  - [x] Update `_scrape_week_projections()` helper function
+  - [x] Add `--defense_xref` parameter to R subprocess call
+  - [x] Add `defense_xref` parameter to all function signatures
+  - [x] Update all docstrings
 
 ### Phase 5: Update R Runner to Use DST Table
 
@@ -241,3 +253,137 @@ ORDER BY pos, player;
 - Python loader: `src/ingest/ffanalytics/loader.py`
 - Player xref: `dbt/ff_data_transform/models/core/dim_player_id_xref.sql`
 - Staging model: `dbt/ff_data_transform/models/staging/stg_ffanalytics__projections.sql`
+
+______________________________________________________________________
+
+## Completion Notes
+
+### Session 1: 2025-11-13 (Phases 1-4)
+
+**Status**: Phases 1-4 COMPLETE, Phases 5-7 PENDING
+
+**Implemented**: 2025-11-13
+**Commit**: `752ed21` - feat(snapshot): implement P1-028 phases 1-4 - DST defense seed and Python integration
+
+#### Accomplishments
+
+**Phase 1: DST Seed CSV** ✅
+
+- Created `seed_team_defense_xref.csv` with 36 teams (32 current + 4 historical)
+- **Defense ID Range Decision**: Changed from 10,001-10,032 to **90,001-90,036**
+  - **Rationale**: Current player IDs at 9,757, max NFL history ~28K players
+  - **Buffer**: ~80,000 IDs between max expected players and min defense IDs
+  - **Benefits**: Clear separation in sort order, no collision risk, future extensibility
+- 5 name aliases per team: full name, reversed, nickname, city, with D/ST suffix
+- 4 position aliases: DST, D, D/ST, DEF
+- Historical teams: LA (pre-STL Rams), OAK (pre-LV Raiders), SD (pre-LAC Chargers), STL (pre-LA Rams)
+
+**Phase 2: dbt Model & Schema** ✅
+
+- Created `dim_team_defense_xref.sql` model (table materialization)
+- Created `_dim_team_defense_xref.yml` with comprehensive documentation
+- **90K Range Rationale Documented**: Clear explanation of defense_id strategy in YAML
+- All 9 tests passing:
+  - Uniqueness on defense_id
+  - Not null on key columns
+  - Accepted values for team_abbrev (quoted 'NO' to avoid YAML boolean issue)
+  - Range validation (90001-90036)
+  - Position validation (DST only)
+- Seed and model built successfully in DuckDB
+
+**Phase 3: Python Utility Function** ✅
+
+- Created `src/ff_analytics_utils/defense_xref.py` (122 lines)
+- Implemented DuckDB-first + CSV fallback pattern (consistent with `get_player_xref()`)
+- Added to `ff_analytics_utils` exports
+- Tested: successfully loads 36 teams from DuckDB
+
+**Phase 4: Python Loader Integration** ✅
+
+- Added `_defense_xref_csv()` context manager to `loader.py`
+- Updated all 4 projection loading functions:
+  - `load_projections()` - base single-week loader
+  - `_scrape_week_projections()` - internal helper
+  - `load_projections_multi_week()` - multi-week batch loader
+  - `load_projections_ros()` - production ROS loader
+- Nested context managers pass both `player_xref` AND `defense_xref` to R subprocess
+- All function signatures and docstrings updated
+- **No Breaking Changes**: R script will receive `--defense_xref` parameter but can safely ignore it until Phase 5
+
+#### Files Changed (6 files, +463/-4 lines)
+
+1. `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv` (NEW - 37 lines)
+2. `dbt/ff_data_transform/models/core/dim_team_defense_xref.sql` (NEW - 43 lines)
+3. `dbt/ff_data_transform/models/core/_dim_team_defense_xref.yml` (NEW - 284 lines)
+4. `src/ff_analytics_utils/defense_xref.py` (NEW - 122 lines)
+5. `src/ff_analytics_utils/__init__.py` (MODIFIED - added export)
+6. `src/ingest/ffanalytics/loader.py` (MODIFIED - +40 lines)
+
+#### Testing Performed
+
+- ✅ dbt seed loaded: 36 teams
+- ✅ dbt model built: all tests passing
+- ✅ Python utility: successfully queries DuckDB and loads 36 teams
+- ✅ All pre-commit hooks passing (ruff, mypy, sqlfmt, sqlfluff, dbt-compile, dbt-opiner)
+
+______________________________________________________________________
+
+### Next Session: Phase 5-7 (R Integration + Validation)
+
+**Remaining Work**:
+
+#### Phase 5: Update R Runner (Estimated: 2-3 hours)
+
+**File**: `scripts/R/ffanalytics_run.R`
+
+**Tasks**:
+
+1. Add CLI parameter `--defense_xref` (receives temp CSV path from Python)
+2. Load defense xref CSV (lines ~467-479, similar to existing player_xref loading pattern)
+3. **Update player mapping logic** (lines 467-639) to handle DST:
+   - After individual player matching, attempt DST team matching
+   - Normalize team names using existing `normalize_team_abbrev()` function
+   - Match against all position aliases (D, DST, D/ST, DEF)
+   - Match against all team name aliases (5 variations)
+   - Assign `player_id = defense_id` (90001-90036) for matched DST
+   - Retain `player_id = -1` for unmapped DST (log as warning)
+4. Update metadata to separately track DST mapping stats (success vs. unmapped)
+
+**Key Implementation Notes**:
+
+- R script already has `normalize_team_abbrev()` function with team_alias_map
+- Can reuse existing player_xref loading pattern for defense_xref
+- Team name matching logic needs to handle multiple name formats from different FFAnalytics providers
+- Position normalization already exists - just need to match DST variations
+
+**Expected Complexity**: Moderate - requires ~100-150 lines of R logic changes
+
+#### Phase 6: Validation Testing (Estimated: 1 hour)
+
+1. Run `just dbt-seed --select seed_team_defense_xref` (already done)
+2. Re-run FFAnalytics ingestion with DST support: `just ingest-ffanalytics` or equivalent
+3. Verify unmapped count reduction: ~138 → ~10-15 (or ~90 → ~10-15 post-P1-018)
+4. Check DST projections have valid `player_id` values (90001-90036, not -1)
+5. Query staging model to confirm DST records included
+6. Validate downstream marts include DST projections
+
+#### Phase 7: Documentation Updates (Estimated: 30 min)
+
+1. Update `dbt/ff_data_transform/seeds/README.md`:
+   - Add DST seed documentation
+   - Document columns and maintenance process
+   - Note about keeping seed in sync with NFL team changes (relocations)
+2. Update `scripts/R/CLAUDE.md`:
+   - Document DST mapping logic
+   - Explain defense_xref parameter
+3. Update ticket tracking:
+   - Mark ticket as COMPLETE in 00-OVERVIEW.md
+   - Update tasks checklist
+
+**Success Criteria**:
+
+- [ ] R runner accepts `--defense_xref` parameter
+- [ ] DST projections mapped to defense_id 90001-90036 (not -1)
+- [ ] FFAnalytics mapping coverage improves to ~98% (unmapped ~10-15)
+- [ ] All staging/mart tests passing
+- [ ] Documentation complete
