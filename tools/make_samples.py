@@ -45,6 +45,16 @@ Notes:
   with a small sidecar _meta.json recording source + params.
 - Random sampling uses a fixed seed for determinism.
 
+Sample Usage and Archival Policy:
+- Use samples/ directory for new source exploration and testing
+- Keep samples for sources still in development (ktc, sleeper, ffanalytics)
+- Archive samples when source is production-ready with real data:
+  * nflverse: Fully integrated (2020-2025 seasons) - samples archived
+  * sheets: Fully integrated with Commissioner data - samples archived
+- Samples in samples/ are committed to git for test fixtures
+- Runtime data lives in data/raw/ (gitignored) and should never mix samples with production
+- If data/raw/ contains old samples, archive to data/_archived_samples/YYYY-MM-DD/
+
 """
 
 from __future__ import annotations
