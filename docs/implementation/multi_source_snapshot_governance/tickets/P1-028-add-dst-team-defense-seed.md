@@ -63,10 +63,15 @@ Ravens, Baltimore          pos=DST
 
 ### Phase 3: Update Python Utility Function
 
-- [ ] Add `get_defense_xref()` function to `src/ff_analytics_utils/` (or appropriate module)
-- [ ] Query DuckDB for `dim_team_defense_xref` model
-- [ ] Return as polars/pandas DataFrame
-- [ ] Mirror pattern from existing `get_player_xref()` function
+- [ ] Create `src/ff_analytics_utils/defense_xref.py` with `get_defense_xref()` function
+- [ ] Implement **DuckDB-first with CSV fallback** pattern (consistent with `get_name_alias()`)
+  - [ ] Default to `source='auto'` (try DuckDB, fall back to CSV)
+  - [ ] DuckDB path: Query `main.dim_team_defense_xref` table
+  - [ ] CSV fallback: Read `dbt/ff_data_transform/seeds/seed_team_defense_xref.csv`
+  - [ ] Support optional `columns` parameter for selective loading
+- [ ] Return as Polars DataFrame
+- [ ] Add comprehensive docstring with examples
+- [ ] Include error handling with clear messages
 
 ### Phase 4: Update Python Loader
 
@@ -120,23 +125,51 @@ Ravens, Baltimore          pos=DST
 
 ## Implementation Notes
 
-**Architecture: Seed → Model → Python → R**
+### Architecture: Seed → Model → Python → R
 
-This follows the same pattern as `dim_player_id_xref`:
+This follows the same pattern as `dim_name_alias` and `dim_player_id_xref`:
 
 1. **CSV seed** (`seed_team_defense_xref.csv`) - Version-controlled source of truth
 2. **dbt model** (`dim_team_defense_xref`) - References seed, applies transformations
-3. **Python utility** (`get_defense_xref()`) - Queries DuckDB model, returns DataFrame
+3. **Python utility** (`get_defense_xref()`) - **DuckDB-first with CSV fallback**
 4. **Python loader** (`_defense_xref_csv` context manager) - Materializes temp CSV for R
 5. **R runner** - Receives temp CSV path, loads defense mapping
 
+### DuckDB-First with CSV Fallback Pattern
+
+**Why this pattern?**
+
+- **Performance**: DuckDB queries are faster than CSV parsing (~9,000 projections processed)
+- **Consistency**: All code uses same dbt-transformed data
+- **Robustness**: CSV fallback ensures first-run works without `dbt seed`
+- **No hard dependency**: Ingestion layer can operate independently
+
+**Access Pattern**:
+
+```python
+# Default: Try DuckDB first, fall back to CSV
+defense_xref = get_defense_xref()  # source='auto'
+
+# Force CSV (for testing or first run)
+defense_xref = get_defense_xref(source='csv')
+
+# Force DuckDB (fails if table doesn't exist)
+defense_xref = get_defense_xref(source='duckdb')
+```
+
+**Bootstrap Process**:
+
+1. First run: `make ingest-ffanalytics` uses CSV fallback (slower but works)
+2. Then: `dbt seed --select seed_team_defense_xref` materializes CSV into DuckDB
+3. Subsequent runs: Use DuckDB (faster)
+
 **Benefits**:
 
-- No downstream dependencies on raw CSV files
-- Seed CSV is manually maintained (appropriate for slowly changing dimension)
-- dbt model can apply transformations, add computed columns
-- Python layer provides abstraction and temp file management
-- R runner receives data via standard CSV interface
+- CSV seed is single source of truth (no duplication)
+- dbt seed materializes it into DuckDB for performance
+- Python utility queries DuckDB (fast) with CSV fallback (robust)
+- No hard circular dependency, just optimization
+- Consistent with existing `get_name_alias()` and `get_player_xref()` patterns
 
 **DST player_id assignment strategy:**
 

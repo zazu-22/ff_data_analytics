@@ -148,6 +148,76 @@ This project uses a **multi-tool approach** for SQL quality assurance:
 - Shim/loader: unified entrypoint (e.g., `ingest/nflverse/shim.py`).
 - Normalization only where required to maintain stable schemas; otherwise preserve raw field names for staging.
 
+### Utility Helpers: DuckDB-First with Fallback Pattern
+
+For crosswalks and reference data needed during ingestion (e.g., player IDs, name aliases, team mappings):
+
+**Pattern**: DuckDB-first with source fallback (CSV or Parquet)
+
+**Why this pattern?**
+
+- **Performance**: DuckDB queries are faster than file parsing
+- **Consistency**: All code uses same dbt-transformed data
+- **Robustness**: Fallback ensures first-run works without `dbt seed`/`dbt run`
+- **No hard dependency**: Ingestion layer can operate independently
+
+**Implementation** (`src/ff_analytics_utils/<resource>_xref.py`):
+
+```python
+def get_<resource>_xref(
+    *,
+    source: str = "auto",  # 'duckdb', '<file_type>', or 'auto'
+    duckdb_table: str = "main.dim_<resource>_xref",
+    db_path: str | Path | None = None,
+    <file>_path: str | Path | None = None,
+    columns: Sequence[str] | None = None,
+) -> pl.DataFrame:
+    """Return crosswalk as Polars DataFrame.
+
+    Args:
+        source: 'duckdb', '<file_type>', or 'auto' (DuckDB first, fallback to file)
+        duckdb_table: Fully qualified DuckDB table name
+        db_path: Override DuckDB path (defaults to DBT_DUCKDB_PATH)
+        <file>_path: Path to fallback file (CSV/Parquet)
+        columns: Optional column subset
+    """
+    if source in {"auto", "duckdb"}:
+        try:
+            return fetch_table_as_polars(duckdb_table, columns=columns, db_path=db_path)
+        except Exception as exc:
+            if source == "duckdb":
+                raise RuntimeError(...) from exc
+
+    if source in {"auto", "<file_type>"}:
+        try:
+            # Read from CSV/Parquet fallback
+            ...
+        except Exception as exc:
+            if source == "<file_type>":
+                raise RuntimeError(...) from exc
+
+    raise RuntimeError("Unable to load from DuckDB or fallback source")
+```
+
+**Examples**:
+
+- `player_xref.py`: DuckDB → Parquet fallback (ingested data from NFLverse)
+- `name_alias.py`: DuckDB → CSV fallback (manual seed)
+- `defense_xref.py`: DuckDB → CSV fallback (manual seed) - *planned in P1-028*
+
+**Bootstrap Process**:
+
+1. First run: Ingestion uses file fallback (slower but works)
+2. Then: `dbt seed` (for seeds) or `dbt run` (for models) materializes into DuckDB
+3. Subsequent runs: Use DuckDB (faster)
+
+**Benefits**:
+
+- File is single source of truth (no duplication)
+- dbt materializes it into DuckDB for performance
+- Python utilities query DuckDB (fast) with file fallback (robust)
+- No hard circular dependency, just optimization
+
 ## Config Organization
 
 - `config/projections/` → projections YAML + site weights CSV.

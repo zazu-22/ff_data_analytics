@@ -89,6 +89,39 @@ data/raw/<provider>/<dataset>/dt=YYYY-MM-DD/
 └── _meta.json
 ```
 
+### Utility Helpers: DuckDB-First with Fallback
+
+For reference data needed during ingestion (player crosswalks, name aliases, team mappings):
+
+**Pattern**: Query DuckDB first, fall back to source files
+
+```python
+from ff_analytics_utils.player_xref import get_player_xref
+from ff_analytics_utils.name_alias import get_name_alias
+
+# Default: Try DuckDB, fall back to Parquet/CSV
+player_xref = get_player_xref()  # source='auto'
+name_aliases = get_name_alias()  # source='auto'
+
+# Force file fallback (for first run, testing)
+player_xref = get_player_xref(source='parquet')
+name_aliases = get_name_alias(source='csv')
+```
+
+**Why?**
+
+- **Performance**: DuckDB queries faster than file parsing
+- **Robustness**: File fallback ensures first-run works without `dbt seed`/`dbt run`
+- **No hard dependency**: Ingestion can operate independently of dbt
+
+**Available helpers**:
+
+- `get_player_xref()` - DuckDB → Parquet (NFLverse ff_playerids)
+- `get_name_alias()` - DuckDB → CSV (manual seed)
+- `get_defense_xref()` - DuckDB → CSV (manual seed, planned in P1-028)
+
+See `docs/dev/repo_conventions_and_structure.md` for full pattern documentation.
+
 ## Adding a New Provider
 
 ### 1. Create provider package

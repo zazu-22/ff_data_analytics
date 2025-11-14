@@ -149,54 +149,54 @@ Consider extracting defense detection logic into a separate macro `handle_defens
 - [x] Identify all models with inline player_id resolution
 - [x] Document differences between inline logic and macro
 - [x] Assess risk of regression
-- [ ] Review defense handling logic for macro extraction feasibility
+- [x] Review defense handling logic for macro extraction feasibility
 
 ### contracts_active Refactor
 
-- [ ] Back up current model (git stash or branch)
-- [ ] Remove inline CTEs: `transaction_player_ids`, `crosswalk_candidates`, `best_crosswalk_match`
-- [ ] Add macro call with `context_type='roster_slot'`
-- [ ] Update `with_player_id` CTE to join macro results
-- [ ] Preserve defense handling logic (is_defense flag)
-- [ ] Test compilation: `dbt compile --select stg_sheets__contracts_active`
-- [ ] Test execution: `dbt run --select stg_sheets__contracts_active`
-- [ ] Verify row count matches baseline
-- [ ] Run all contracts_active tests: `dbt test --select stg_sheets__contracts_active`
-- [ ] Verify specific players resolve correctly:
+- [x] Back up current model (git stash or branch)
+- [x] Remove inline CTEs: `transaction_player_ids`, `crosswalk_candidates`, `best_crosswalk_match`
+- [x] Add macro call with `context_type='roster_slot'`
+- [x] Update `with_player_id` CTE to join macro results
+- [x] Preserve defense handling logic (is_defense flag)
+- [x] Test compilation: `dbt compile --select stg_sheets__contracts_active`
+- [x] Test execution: `dbt run --select stg_sheets__contracts_active`
+- [x] Verify row count matches baseline
+- [x] Run all contracts_active tests: `dbt test --select stg_sheets__contracts_active`
+- [x] Verify specific players resolve correctly:
   - Brandon Aubrey (K) → player_id 8908
   - Travis Hunter (WR/DB) → player_id 9438
   - Rashan Gary (DE/LB) → player_id 7101
 
 ### contracts_cut Refactor
 
-- [ ] Back up current model
-- [ ] Apply same refactor as contracts_active
-- [ ] Test compilation and execution
-- [ ] Run all contracts_cut tests
-- [ ] Verify player_id resolution
+- [x] Back up current model
+- [x] Apply same refactor as contracts_active
+- [x] Test compilation and execution
+- [x] Run all contracts_cut tests
+- [x] Verify player_id resolution
 
 ### Integration Testing
 
-- [ ] Run full staging test suite: `dbt test --select stg_sheets__*`
-- [ ] Rebuild downstream models: `dbt run --select +mrt_contract_snapshot_current`
-- [ ] Run roster parity test: `dbt test --select assert_sleeper_commissioner_roster_parity`
-- [ ] Verify 12 "sleeper_only" failures → 0-2 failures (validate streaming hypothesis)
+- [x] Run full staging test suite: `dbt test --select stg_sheets__*`
+- [x] Rebuild downstream models: `dbt run --select +mrt_contract_snapshot_current`
+- [x] Run roster parity test: `dbt test --select assert_sleeper_commissioner_roster_parity`
+- [x] Verify 12 "sleeper_only" failures → 0-2 failures (validate streaming hypothesis)
 
 ### Defense Macro (Optional)
 
-- [ ] Extract defense handling to `handle_defense_players` macro
-- [ ] Update both contracts models to use defense macro
-- [ ] Test and verify no regressions
+- [defer] Extract defense handling to `handle_defense_players` macro
+- [defer] Update both contracts models to use defense macro
+- [defer] Test and verify no regressions
 
 ## Acceptance Criteria
 
-- [ ] Both contracts models use `resolve_player_id_from_name` macro (no inline logic)
-- [ ] All existing tests pass (no regressions)
-- [ ] Kickers resolve correctly (K → PK mapping works)
-- [ ] Dual-eligibility players resolve correctly (Travis Hunter, Rashan Gary, etc.)
-- [ ] Defense handling preserved (is_defense flag still works)
-- [ ] Roster parity test improves (12 failures → near 0)
-- [ ] Code is cleaner and more maintainable (100 fewer lines per model)
+- [x] Both contracts models use `resolve_player_id_from_name` macro (no inline logic)
+- [x] All existing tests pass (no regressions)
+- [x] Kickers resolve correctly (K → PK mapping works)
+- [x] Dual-eligibility players resolve correctly (Travis Hunter, Rashan Gary, etc.)
+- [x] Defense handling preserved (is_defense flag still works)
+- [x] Roster parity test improves (12 failures → near 0)
+- [x] Code is cleaner and more maintainable (100 fewer lines per model)
 
 ## Testing
 

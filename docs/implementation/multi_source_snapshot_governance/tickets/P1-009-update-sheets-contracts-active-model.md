@@ -17,23 +17,23 @@ This model feeds into `dim_player_contract_history` and contract-related analyse
 
 ## Tasks
 
-- [ ] Locate `stg_sheets__contracts_active.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sheets__contracts_active`
-- [ ] Test execution and verify row counts
-- [ ] Verify downstream `dim_player_contract_history` builds correctly
+- [x] Locate `stg_sheets__contracts_active.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sheets__contracts_active`
+- [x] Test execution and verify row counts
+- [x] Verify downstream `dim_player_contract_history` builds correctly
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count reasonable (active contracts across all franchises)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count reasonable (active contracts across all franchises)
 
 ## Implementation Notes
 

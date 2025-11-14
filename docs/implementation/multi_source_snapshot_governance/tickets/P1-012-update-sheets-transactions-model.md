@@ -29,11 +29,11 @@ Transaction history is append-only operational data where new transactions are a
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count matches expected transaction count (cumulative league history)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count matches expected transaction count (cumulative league history)
 
 ## Implementation Notes
 

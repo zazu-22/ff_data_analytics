@@ -10,9 +10,9 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 58 (includes 13 staging models + 9 data quality fixes + 2 architectural refactors)
+- **Total Tickets**: 61 (includes 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 tech debt)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~176-218 hours (updated for expanded Phase 1 + P1-027)
+- **Estimated Total Effort**: ~182-229 hours (updated for expanded Phase 1 + P1-027 + P1-028 + P1-028b)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
@@ -33,7 +33,7 @@ This document provides a concise checklist for tracking completion of all implem
 - ✅ **P1-024**: Comp registry duplicates resolved (19→0 duplicates) - PREVIOUSLY COMPLETED (2025-11-10, commit d6eb65c)
 - 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
 
-**Impact**: Phase 1 now 26/27 tickets complete (96%); Overall project 26/58 tickets complete (45%)
+**Impact**: Phase 1 now 27/30 tickets complete (90%); Overall project 27/61 tickets complete (44%)
 
 ______________________________________________________________________
 
@@ -43,6 +43,8 @@ ______________________________________________________________________
 - `[-]` In Progress
 - `[x]` Complete
 - `[~]` Blocked (with blocker noted)
+- `[N/A]` Rejected alternative (considered but not chosen)
+- `[defer]` Deferred optional task (may do later - tracked in BACKLOG.md)
 
 ______________________________________________________________________
 
@@ -52,7 +54,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 1: Foundation (27 tickets - 13 staging models + 9 data quality fixes + 2 architectural refactors + 2 cleanup/validation)
+## Phase 1: Foundation (30 tickets - 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 cleanup/validation + 2 tech debt)
 
 ### Macro & Infrastructure
 
@@ -87,11 +89,13 @@ ______________________________________________________________________
 
 - [x] **P1-027** — Refactor contracts models to use resolve_player_id_from_name macro (code deduplication, bug fixes)
 
-### FFAnalytics Models (1 ticket) ⚠️ **Priority: Fixes 195 duplicates**
+### FFAnalytics Models (3 tickets)
 
-- [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only)
+- [x] **P1-016** — Update stg_ffanalytics\_\_projections model (latest_only) ⚠️ **Fixed 195 duplicates**
+- [ ] **P1-028** — Add DST team defense seed for FFAnalytics mapping (improves coverage ~89% → ~98%)
+- [ ] **P1-028b** — Refactor contracts models to use defense macro (apply P1-028 seed to contracts)
 
-### Data Quality Follow-ups (13 tickets) ⚠️ **Discovered during comprehensive test analysis**
+### Data Quality Follow-ups (10 tickets) ⚠️ **Discovered during comprehensive test analysis**
 
 **Recent Achievements** (2025-11-12):
 
@@ -104,15 +108,16 @@ ______________________________________________________________________
 
 **Recommended Execution Order** (remaining tickets):
 
-1. [x] **P1-026** — 🚨 Fix resolve_player_id_from_name macro cartesian product ✅ **COMPLETE** (2025-11-11)
-2. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates ✅ **COMPLETE** (2025-11-11)
-3. [x] **P1-023** — Fix assert_12_base_picks_per_round failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (4→0 failures)
-4. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs ✅ **COMPLETE** (2025-11-10) - **100% SUCCESS** (19→0 duplicates)
-5. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
-6. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
-7. [x] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (34→0 duplicates, architectural fix)
-8. [x] **P1-017** — Fix mrt_fasa_targets duplicate rows ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (1,908→0 duplicates, IDP position filter)
-9. [x] **P1-025** — Investigate and resolve assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY) ✅ **COMPLETE** (2025-11-13) - Downgraded to WARN (industry limitation, not config issue)
+01. [x] **P1-026** — 🚨 Fix resolve_player_id_from_name macro cartesian product ✅ **COMPLETE** (2025-11-11)
+02. [x] **P1-020** — Fix dim_pick_lifecycle_control TBD pick duplicates ✅ **COMPLETE** (2025-11-11)
+03. [x] **P1-023** — Fix assert_12_base_picks_per_round failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (4→0 failures)
+04. [x] **P1-024** — Fix int_pick_comp_registry duplicate transaction IDs ✅ **COMPLETE** (2025-11-10) - **100% SUCCESS** (19→0 duplicates)
+05. [x] **P1-022** — Resolve orphan pick references ✅ **COMPLETE** (2025-11-11)
+06. [x] **P1-019** — Investigate Sleeper-Commissioner roster parity failures ✅ **COMPLETE** (2025-11-12) - **100% SUCCESS** (30→0 failures)
+07. [x] **P1-018** — Fix stg_ffanalytics\_\_projections source data duplicates ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (34→0 duplicates, architectural fix)
+08. [x] **P1-017** — Fix mrt_fasa_targets duplicate rows ✅ **COMPLETE** (2025-11-13) - **100% SUCCESS** (1,908→0 duplicates, IDP position filter)
+09. [x] **P1-021** — Fix assert_canonical_player_key_alignment test error ✅ **COMPLETE** (2025-11-10) - Test resolved automatically, no action needed
+10. [x] **P1-025** — Investigate and resolve assert_idp_source_diversity failures (Small: 1-2 hours - 3 failures, LOW PRIORITY) ✅ **COMPLETE** (2025-11-13) - Downgraded to WARN (industry limitation, not config issue)
 
 **Rationale**: Major progress on data quality! P1-026 regression fixed, roster parity fully resolved via player_id fixes (P1-019), and pick integrity issues resolved (P1-020, P1-022). Continue with remaining pick validation (P1-023, P1-024), then tackle projection/mart duplicates (P1-018, P1-017). P1-025 COMPLETE (test downgraded to warning). P1-027 tracks technical debt cleanup.
 
@@ -185,8 +190,8 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 27/58 tickets complete (47%)\
-**Phase 1 Foundation**: 27/27 tickets complete (100%)\
+**Overall Project**: 27/61 tickets complete (44%)\
+**Phase 1 Foundation**: 27/30 tickets complete (90%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
@@ -200,6 +205,7 @@ ______________________________________________________________________
 
 **Previous Progress** (2025-11-13):
 
+- 📝 **P1-028b CREATED**: Refactor contracts models to use defense macro (promoted from backlog DB-002 due to P1-028 defense_id strategy change)
 - ✅ **P1-025 COMPLETE**: IDP source diversity test downgraded to WARN (industry limitation, not config issue)
   - Confirmed we scrape ALL 9 sources for ALL positions (including IDP: DL, LB, DB)
   - FantasySharks is ONLY source providing IDP stat projections (others have rankings only)
@@ -235,7 +241,7 @@ ______________________________________________________________________
 
 **Historical Notes**:
 
-- **2025-11-13**: P1-027 architectural refactor complete - eliminated ~210 lines of duplicated player_id resolution logic; P1-017 mart duplicates fixed - excluded IDP from offense CTE, eliminating 1,908 duplicates; P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating 34 source data duplicates; P1-023 validation complete (100% success)
+- **2025-11-13**: P1-028b created (promoted from backlog DB-002) - defense player_id strategy change in P1-028 triggered promotion criteria; P1-027 architectural refactor complete - eliminated ~210 lines of duplicated player_id resolution logic; P1-017 mart duplicates fixed - excluded IDP from offense CTE, eliminating 1,908 duplicates; P1-018 architectural fix complete - moved alias application before consensus aggregation, eliminating 34 source data duplicates; P1-023 validation complete (100% success)
 - **2025-11-12**: P1-019 streaming hypothesis validated with 4 critical player_id bugs fixed; P1-027 created to track full refactor of contracts models
 - **2025-11-11**: P1-026 cartesian product regression fixed; P1-020 and P1-022 resolved (TBD picks and orphan references)
 - **2025-11-10**: Comprehensive test analysis revealed 3 new data quality issues requiring tickets (P1-023, P1-024, P1-025); P1-021 now passing and removed

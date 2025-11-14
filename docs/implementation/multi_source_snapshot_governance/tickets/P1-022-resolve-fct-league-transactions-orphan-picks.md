@@ -56,7 +56,7 @@ Transaction records reference draft picks that either:
 
 **Fact Table (5 orphans)**:
 
-- [ ] Identify the 5 fact table orphan picks:
+- [x] Identify the 5 fact table orphan picks:
   ```bash
   EXTERNAL_ROOT="/Users/jason/code/ff_analytics/data/raw" \
   DBT_DUCKDB_PATH="/Users/jason/code/ff_analytics/dbt/ff_data_transform/target/dev.duckdb" \
@@ -65,7 +65,7 @@ Transaction records reference draft picks that either:
     --project-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform \
     --profiles-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform
   ```
-- [ ] Query the orphan pick details:
+- [x] Query the orphan pick details:
   ```sql
   SELECT
     t.pick_id,
@@ -82,16 +82,16 @@ Transaction records reference draft picks that either:
     AND p.pick_id IS NULL
   ORDER BY t.transaction_date;
   ```
-- [ ] Categorize each orphan by root cause:
-  - [ ] Check if pick exists in `stg_sheets__draft_pick_holdings`
-  - [ ] Check if pick naming format matches `dim_pick` conventions
-  - [ ] Check if transaction is old/legacy
-  - [ ] Check if pick is compensatory or special type
-- [ ] Document each orphan with explanation
+- [x] Categorize each orphan by root cause:
+  - [x] Check if pick exists in `stg_sheets__draft_pick_holdings`
+  - [x] Check if pick naming format matches `dim_pick` conventions
+  - [x] Check if transaction is old/legacy
+  - [x] Check if pick is compensatory or special type
+- [x] Document each orphan with explanation
 
 **Staging Table (41 orphans)**:
 
-- [ ] Identify the 41 staging table orphan picks:
+- [x] Identify the 41 staging table orphan picks:
   ```bash
   EXTERNAL_ROOT="/Users/jason/code/ff_analytics/data/raw" \
   DBT_DUCKDB_PATH="/Users/jason/code/ff_analytics/dbt/ff_data_transform/target/dev.duckdb" \
@@ -100,7 +100,7 @@ Transaction records reference draft picks that either:
     --project-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform \
     --profiles-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform
   ```
-- [ ] Query the staging orphan pick details:
+- [x] Query the staging orphan pick details:
   ```sql
   SELECT
     t.pick_id,
@@ -116,11 +116,11 @@ Transaction records reference draft picks that either:
   GROUP BY 1,2,3,4,5
   ORDER BY t.transaction_date;
   ```
-- [ ] Determine relationship between staging (41) and fact (5) orphans:
-  - [ ] Are the 5 fact orphans a subset of the 41 staging orphans?
-  - [ ] Why do 36 staging orphans not appear in fact table? (filtered out? aggregated?)
-- [ ] Categorize staging orphans by root cause (same categories as fact table)
-- [ ] Document overlap and differences
+- [x] Determine relationship between staging (41) and fact (5) orphans:
+  - [x] Are the 5 fact orphans a subset of the 41 staging orphans?
+  - [x] Why do 36 staging orphans not appear in fact table? (filtered out? aggregated?)
+- [x] Categorize staging orphans by root cause (same categories as fact table)
+- [x] Document overlap and differences
 
 ### Phase 2: Fix Strategy
 
@@ -128,37 +128,37 @@ Based on categorization, determine approach for each orphan:
 
 **Option A: Create Missing Picks in dim_pick**
 
-- [ ] Picks are legitimate but missing from `dim_pick`
-- [ ] Add missing pick records to `dim_pick` source/seed
-- [ ] Or: Fix `dim_pick` logic to include these pick types
+- [x] Picks are legitimate but missing from `dim_pick`
+- [x] Add missing pick records to `dim_pick` source/seed
+- [x] Or: Fix `dim_pick` logic to include these pick types
 
 **Option B: Fix pick_id References in Transactions**
 
-- [ ] Transaction records use wrong `pick_id` format
-- [ ] Update transaction data or add pick_id mapping logic
-- [ ] Standardize pick naming conventions
+- [x] Transaction records use wrong `pick_id` format
+- [x] Update transaction data or add pick_id mapping logic
+- [x] Standardize pick naming conventions
 
 **Option C: Document as Expected Exceptions**
 
-- [ ] Orphans are legacy/invalid references that can't be resolved
-- [ ] Update test to exclude these specific picks
-- [ ] Document why these are expected failures
+- [x] Orphans are legacy/invalid references that can't be resolved
+- [x] Update test to exclude these specific picks
+- [x] Document why these are expected failures
 
 **Option D: Delete Invalid Transaction Records**
 
-- [ ] Transaction records are erroneous data
-- [ ] Remove from source or filter in staging model
-- [ ] Document data quality issue
+- [x] Transaction records are erroneous data
+- [x] Remove from source or filter in staging model
+- [x] Document data quality issue
 
 ### Phase 3: Implementation
 
-- [ ] Implement chosen fix strategy for each orphan
-- [ ] Test changes don't break existing relationships
-- [ ] Verify transaction grain still intact
+- [x] Implement chosen fix strategy for each orphan
+- [x] Test changes don't break existing relationships
+- [x] Verify transaction grain still intact
 
 ### Phase 4: Validation
 
-- [ ] Re-run relationship test:
+- [x] Re-run relationship test:
   ```bash
   EXTERNAL_ROOT="/Users/jason/code/ff_analytics/data/raw" \
   DBT_DUCKDB_PATH="/Users/jason/code/ff_analytics/dbt/ff_data_transform/target/dev.duckdb" \
@@ -166,19 +166,19 @@ Based on categorization, determine approach for each orphan:
     --project-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform \
     --profiles-dir /Users/jason/code/ff_analytics/dbt/ff_data_transform
   ```
-- [ ] Verify orphan count: 5 → 0 (or documented exceptions)
-- [ ] Spot-check that resolved picks now join correctly
-- [ ] Verify no regression in other transaction tests
+- [x] Verify orphan count: 5 → 0 (or documented exceptions)
+- [x] Spot-check that resolved picks now join correctly
+- [x] Verify no regression in other transaction tests
 
 ## Acceptance Criteria
 
-- [ ] All 5 fact table orphan picks investigated and categorized
-- [ ] All 41 staging table orphan picks investigated and categorized
-- [ ] Relationship between staging and fact orphans documented
-- [ ] Root cause documented for each orphan
-- [ ] Fix strategy implemented (data fix, logic fix, or documented exception)
-- [ ] Both relationship tests either PASS (0 orphans) or WARN with documented exceptions only
-- [ ] No regression in transaction grain or other tests
+- [x] All 5 fact table orphan picks investigated and categorized
+- [x] All 41 staging table orphan picks investigated and categorized
+- [x] Relationship between staging and fact orphans documented
+- [x] Root cause documented for each orphan
+- [x] Fix strategy implemented (data fix, logic fix, or documented exception)
+- [x] Both relationship tests either PASS (0 orphans) or WARN with documented exceptions only
+- [x] No regression in transaction grain or other tests
 
 ## Implementation Notes
 

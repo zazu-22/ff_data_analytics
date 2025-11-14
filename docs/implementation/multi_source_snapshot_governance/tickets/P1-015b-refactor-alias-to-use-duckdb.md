@@ -43,7 +43,7 @@ Currently, the player ID crosswalk (`dim_player_id_xref`) uses a DuckDB-first ap
   - [x] Optional column selection
   - [x] Proper error handling and messages
 - [x] Add docstring with usage examples
-- [ ] Add unit tests (optional but recommended)
+- [defer] Add unit tests (optional but recommended - not required for completion)
 
 ### Part 2: Refactor Ingestion Scripts
 

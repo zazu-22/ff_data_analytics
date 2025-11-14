@@ -17,23 +17,23 @@ Cut liability rules are relatively static reference data that define dead cap ca
 
 ## Tasks
 
-- [ ] Locate `stg_sheets__contracts_cut.sql` model
-- [ ] Find the `read_parquet()` call with `dt=*` pattern
-- [ ] Replace with `snapshot_selection_strategy` macro call
-- [ ] Configure macro parameters:
-  - [ ] Use `latest_only` strategy
-  - [ ] Pass source glob path to macro
-- [ ] Test compilation: `make dbt-run --select stg_sheets__contracts_cut`
-- [ ] Test execution and verify row counts
-- [ ] Verify downstream `dim_cut_liability_schedule` builds correctly
+- [x] Locate `stg_sheets__contracts_cut.sql` model
+- [x] Find the `read_parquet()` call with `dt=*` pattern
+- [x] Replace with `snapshot_selection_strategy` macro call
+- [x] Configure macro parameters:
+  - [x] Use `latest_only` strategy
+  - [x] Pass source glob path to macro
+- [x] Test compilation: `make dbt-run --select stg_sheets__contracts_cut`
+- [x] Test execution and verify row counts
+- [x] Verify downstream `dim_cut_liability_schedule` builds correctly
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count matches cut liability rule count (typically 15-20 rules)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count matches cut liability rule count (typically 15-20 rules)
 
 ## Implementation Notes
 

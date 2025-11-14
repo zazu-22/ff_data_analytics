@@ -42,7 +42,7 @@ In a 12-franchise league, each draft round in each season should have exactly 12
 
 ### Phase 1: Investigation
 
-- [ ] Run the test query to identify which season-round combinations are failing:
+- [x] Run the test query to identify which season-round combinations are failing:
   ```sql
   -- Test query (from tests/assert_12_base_picks_per_round.sql)
   SELECT season, round, COUNT(*) as base_pick_count
@@ -52,11 +52,11 @@ In a 12-franchise league, each draft round in each season should have exactly 12
   HAVING COUNT(*) != 12
   ORDER BY season, round;
   ```
-- [ ] Analyze failure patterns:
-  - [ ] Are certain seasons consistently affected? (e.g., historical vs future)
-  - [ ] Are certain rounds consistently affected? (e.g., only R5)
-  - [ ] Are counts too high (>12) or too low (\<12)?
-- [ ] Check for duplicate base picks in affected rounds:
+- [x] Analyze failure patterns:
+  - [x] Are certain seasons consistently affected? (e.g., historical vs future)
+  - [x] Are certain rounds consistently affected? (e.g., only R5)
+  - [x] Are counts too high (>12) or too low (\<12)?
+- [x] Check for duplicate base picks in affected rounds:
   ```sql
   SELECT season, round, pick_id, COUNT(*) as dup_count
   FROM main.dim_pick
@@ -69,7 +69,7 @@ In a 12-franchise league, each draft round in each season should have exactly 12
   GROUP BY season, round, pick_id
   HAVING COUNT(*) > 1;
   ```
-- [ ] Check for missing franchise assignments:
+- [x] Check for missing franchise assignments:
   ```sql
   SELECT season, round, original_franchise_id, COUNT(*) as pick_count
   FROM main.dim_pick
@@ -78,7 +78,7 @@ In a 12-franchise league, each draft round in each season should have exactly 12
   GROUP BY season, round, original_franchise_id
   ORDER BY season, round, original_franchise_id;
   ```
-- [ ] Document root cause with SQL evidence
+- [x] Document root cause with SQL evidence
 
 ### Phase 2: Determine Fix Strategy
 
@@ -86,44 +86,44 @@ Based on investigation, choose approach:
 
 **Option A: Fix Seed Data (dim_draft_order_base.csv)**
 
-- [ ] Seed has incorrect number of picks per round
-- [ ] Update seed file to include exactly 12 picks per round
-- [ ] Re-seed: `make dbt-seed`
+- [N/A] Seed has incorrect number of picks per round
+- [N/A] Update seed file to include exactly 12 picks per round
+- [N/A] Re-seed: `make dbt-seed`
 
-**Option B: Fix dim_pick Model Logic**
+**Option B: Fix dim_pick Model Logic** ✅ SELECTED
 
-- [ ] Model incorrectly filters or transforms base picks
-- [ ] Fix WHERE clause or join logic
-- [ ] Ensure all base picks from seed are included
+- [x] Model incorrectly filters or transforms base picks
+- [x] Fix WHERE clause or join logic
+- [x] Ensure all base picks from seed are included
 
 **Option C: Fix Pick Type Classification**
 
-- [ ] Some base picks incorrectly marked as 'compensatory' or 'tbd'
-- [ ] Fix pick_type logic in model
-- [ ] Ensure proper classification
+- [N/A] Some base picks incorrectly marked as 'compensatory' or 'tbd'
+- [N/A] Fix pick_type logic in model
+- [N/A] Ensure proper classification
 
 **Option D: Fix Historical Data Gaps**
 
-- [ ] Historical seasons legitimately have different pick counts (e.g., league expansion)
-- [ ] Update test to allow exceptions for specific seasons
-- [ ] Document exceptions in test comments
+- [N/A] Historical seasons legitimately have different pick counts (e.g., league expansion)
+- [N/A] Update test to allow exceptions for specific seasons
+- [N/A] Document exceptions in test comments
 
 ### Phase 3: Implementation
 
-- [ ] Implement chosen fix strategy
-- [ ] If seed change: Update `dbt/ff_data_transform/seeds/dim_draft_order_base.csv`
-- [ ] If model change: Update `dbt/ff_data_transform/models/core/dim_pick.sql`
-- [ ] Test compilation: `make dbt-run --select dim_pick`
-- [ ] Verify row counts and pick distribution
+- [x] Implement chosen fix strategy
+- [N/A] If seed change: Update `dbt/ff_data_transform/seeds/dim_draft_order_base.csv`
+- [x] If model change: Update `dbt/ff_data_transform/models/core/dim_pick.sql`
+- [x] Test compilation: `make dbt-run --select dim_pick`
+- [x] Verify row counts and pick distribution
 
 ### Phase 4: Validation
 
-- [ ] Run base picks test:
+- [x] Run base picks test:
   ```bash
   make dbt-test --select assert_12_base_picks_per_round
   # Expect: PASS (0 failures)
   ```
-- [ ] Verify total pick counts make sense:
+- [x] Verify total pick counts make sense:
   ```sql
   SELECT season,
          COUNT(*) FILTER (WHERE pick_type = 'base') as base_picks,
@@ -134,16 +134,16 @@ Based on investigation, choose approach:
   GROUP BY season
   ORDER BY season;
   ```
-- [ ] Spot-check a few rounds to ensure 12 unique franchises per round
+- [x] Spot-check a few rounds to ensure 12 unique franchises per round
 
 ## Acceptance Criteria
 
-- [ ] Root cause identified and documented
-- [ ] Fix implemented (seed, model, or test)
-- [ ] Model compiles and executes successfully
-- [ ] **Critical**: `assert_12_base_picks_per_round` test passes (0 failures)
-- [ ] All rounds in all seasons have exactly 12 base picks (or documented exceptions)
-- [ ] No duplicate base picks in any round
+- [x] Root cause identified and documented
+- [x] Fix implemented (seed, model, or test)
+- [x] Model compiles and executes successfully
+- [x] **Critical**: `assert_12_base_picks_per_round` test passes (0 failures)
+- [x] All rounds in all seasons have exactly 12 base picks (or documented exceptions)
+- [x] No duplicate base picks in any round
 
 ## Implementation Notes
 

@@ -29,11 +29,11 @@ Pick holdings change frequently via trades and must reflect the most current own
 
 ## Acceptance Criteria
 
-- [ ] `dt=*` pattern removed from model
-- [ ] `snapshot_selection_strategy` macro call added with `latest_only` strategy
-- [ ] Model compiles successfully
-- [ ] Model executes successfully
-- [ ] Row count reasonable (60 picks per season × future seasons tracked)
+- [x] `dt=*` pattern removed from model
+- [x] `snapshot_selection_strategy` macro call added with `latest_only` strategy
+- [x] Model compiles successfully
+- [x] Model executes successfully
+- [x] Row count reasonable (60 picks per season × future seasons tracked)
 
 ## Implementation Notes
 

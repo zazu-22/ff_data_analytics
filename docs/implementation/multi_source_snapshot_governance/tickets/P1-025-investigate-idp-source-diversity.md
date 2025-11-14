@@ -1,6 +1,6 @@
 # Ticket P1-025: Investigate assert_idp_source_diversity Test Failures
 
-**Status**: IN PROGRESS\
+**Status**: COMPLETE\
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Medium (expanded to 3-4 hours due to critical bug discovery)\
 **Dependencies**: None (independent data quality check)\
@@ -40,7 +40,7 @@ IDP statistics should be available from multiple data providers to:
 
 ### Phase 1: Investigation
 
-- [ ] Run test query to identify which IDP players/positions lack source diversity:
+- [x] Run test query to identify which IDP players/positions lack source diversity:
   ```sql
   -- Example query structure (actual query in test file)
   SELECT player_id, player_name, position,
@@ -52,67 +52,67 @@ IDP statistics should be available from multiple data providers to:
   HAVING COUNT(DISTINCT provider) < 2
   ORDER BY player_id;
   ```
-- [ ] Check which providers are available for IDP:
+- [x] Check which providers are available for IDP:
   ```sql
   SELECT DISTINCT provider, COUNT(*) as stat_count
   FROM main.fct_player_stats
   WHERE position IN ('DL', 'DE', 'DT', 'LB', 'DB', 'S', 'CB')
   GROUP BY provider;
   ```
-- [ ] Determine if failures are:
-  - [ ] Specific players missing from secondary providers
-  - [ ] Entire position groups missing from secondary providers
-  - [ ] Seasonal gaps (e.g., rookies only in primary source)
-- [ ] Review test expectations:
-  - [ ] Is requiring 2+ sources realistic for all IDP players?
-  - [ ] Should test allow exceptions for specific scenarios?
-- [ ] Document root cause with SQL evidence
+- [x] Determine if failures are:
+  - [x] Specific players missing from secondary providers
+  - [x] Entire position groups missing from secondary providers
+  - [x] Seasonal gaps (e.g., rookies only in primary source)
+- [x] Review test expectations:
+  - [x] Is requiring 2+ sources realistic for all IDP players?
+  - [x] Should test allow exceptions for specific scenarios?
+- [x] Document root cause with SQL evidence
 
 ### Phase 2: Determine Fix Strategy
 
 Based on investigation, choose approach:
 
-**Option A: Accept Current State (Test Too Strict)**
+**Option A: Accept Current State (Test Too Strict)** ✅ SELECTED
 
-- [ ] Test expectation of 2+ sources is unrealistic
-- [ ] NFLverse is primary/only IDP source
-- [ ] Update test to warn instead of fail
-- [ ] Document known single-source IDP players
+- [x] Test expectation of 2+ sources is unrealistic
+- [x] NFLverse is primary/only IDP source
+- [x] Update test to warn instead of fail
+- [x] Document known single-source IDP players
 
 **Option B: Add Secondary IDP Source**
 
-- [ ] Additional IDP data provider available but not integrated
-- [ ] Integrate secondary source (e.g., Pro Football Reference, Sleeper)
-- [ ] Update ingestion to include IDP from new source
+- [N/A] Additional IDP data provider available but not integrated
+- [N/A] Integrate secondary source (e.g., Pro Football Reference, Sleeper)
+- [N/A] Update ingestion to include IDP from new source
 
 **Option C: Fix Source Attribution**
 
-- [ ] IDP data from multiple sources but incorrectly attributed
-- [ ] Fix provider field in staging models
-- [ ] Ensure proper source labeling
+- [N/A] IDP data from multiple sources but incorrectly attributed
+- [N/A] Fix provider field in staging models
+- [N/A] Ensure proper source labeling
 
 **Option D: Document Exceptions**
 
-- [ ] 3 failures are legitimate exceptions (e.g., practice squad, recent signings)
-- [ ] Update test to exclude these specific cases
-- [ ] Add comments explaining exceptions
+- [N/A] 3 failures are legitimate exceptions (e.g., practice squad, recent signings)
+- [N/A] Update test to exclude these specific cases
+- [N/A] Add comments explaining exceptions
 
 ### Phase 3: Implementation
 
-- [ ] Implement chosen fix strategy
-- [ ] If test change: Update `tests/assert_idp_source_diversity.sql`
-- [ ] If model change: Update IDP staging models
-- [ ] If ingestion change: Add new IDP provider (out of P1 scope, defer to later)
-- [ ] Test compilation if models changed
+- [x] Implement chosen fix strategy
+- [x] If test change: Update `tests/assert_idp_source_diversity.sql`
+- [N/A] If model change: Update IDP staging models
+- [N/A] If ingestion change: Add new IDP provider (out of P1 scope, defer to later)
+- [x] Test compilation if models changed
 
 ### Phase 4: Validation
 
-- [ ] Run IDP diversity test:
+- [x] Run IDP diversity test:
   ```bash
   make dbt-test --select assert_idp_source_diversity
   # Expect: PASS (0 failures) or WARN (if downgraded)
   ```
-- [ ] Verify IDP coverage:
+- [x] Verify IDP coverage:
   ```sql
   SELECT position,
          COUNT(DISTINCT player_id) as unique_players,
@@ -122,15 +122,15 @@ Based on investigation, choose approach:
   GROUP BY position
   ORDER BY position;
   ```
-- [ ] Spot-check that offensive players still have expected diversity
+- [x] Spot-check that offensive players still have expected diversity
 
 ## Acceptance Criteria
 
-- [ ] Root cause identified and documented
-- [ ] Fix strategy chosen and implemented
-- [ ] Test passes (0 failures) OR updated to warn instead of fail
-- [ ] IDP coverage documented (single-source vs multi-source)
-- [ ] Decision logged: accept single-source or add secondary source (future work)
+- [x] Root cause identified and documented
+- [x] Fix strategy chosen and implemented
+- [x] Test passes (0 failures) OR updated to warn instead of fail
+- [x] IDP coverage documented (single-source vs multi-source)
+- [x] Decision logged: accept single-source or add secondary source (future work)
 
 ## Implementation Notes
 
@@ -357,10 +357,10 @@ group_by(player_normalized, pos, season, week, team_normalized) %>%  # team INCL
 4. ✅ Verify both Jordan Phillips players appear separately in staging (VERIFIED: player_id 5505 BUF + 9559 MIA)
 5. ✅ Verify Byron Young players appear separately (VERIFIED: player_id 8768 PHI + 8771 LAR)
 6. ✅ Run new validation test: `just dbt-test --select assert_no_name_collision_merging` (PASSED)
-7. ⏭️ Rebuild all downstream marts
+7. ✅ Rebuild all downstream marts (COMPLETE)
 
 **FOLLOW-UP** (audit other data sources):
-7\. ✅ **Check other ingestion sources for similar team-based de-duplication errors** (COMPLETE):
+8\. ✅ **Check other ingestion sources for similar team-based de-duplication errors** (COMPLETE):
 
 **Audit Results** (2025-11-13):
 

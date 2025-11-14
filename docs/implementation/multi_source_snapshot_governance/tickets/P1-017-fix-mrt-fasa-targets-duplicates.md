@@ -46,43 +46,43 @@ Got 1893 results, configured to fail if != 0
 
 ### Phase 1: Investigation
 
-- [ ] Identify which CTE(s) in `mrt_fasa_targets` are creating duplicates:
-  - [ ] Test `fa_pool` CTE in isolation (should be clean after QUALIFY)
-  - [ ] Test `recent_stats` CTE for duplicates
-  - [ ] Test `projections` CTE for duplicates
-  - [ ] Test `opportunity` CTE for duplicates
-  - [ ] Test `position_baselines` UNION ALL logic (offense vs IDP)
-  - [ ] Test final SELECT joins for Cartesian products
-- [ ] Determine if grain should be `player_id` or `sleeper_player_id`:
-  - [ ] Check if multiple `sleeper_player_id` values map to same `player_id`
-  - [ ] Review model comments (lines 8-10) about duplicate entries in `dim_player_id_xref`
-  - [ ] Decide correct grain and update config/tests accordingly
-- [ ] Document root cause with SQL evidence
+- [x] Identify which CTE(s) in `mrt_fasa_targets` are creating duplicates:
+  - [x] Test `fa_pool` CTE in isolation (should be clean after QUALIFY)
+  - [x] Test `recent_stats` CTE for duplicates
+  - [x] Test `projections` CTE for duplicates
+  - [x] Test `opportunity` CTE for duplicates
+  - [x] Test `position_baselines` UNION ALL logic (offense vs IDP)
+  - [x] Test final SELECT joins for Cartesian products
+- [x] Determine if grain should be `player_id` or `sleeper_player_id`:
+  - [x] Check if multiple `sleeper_player_id` values map to same `player_id`
+  - [x] Review model comments (lines 8-10) about duplicate entries in `dim_player_id_xref`
+  - [x] Decide correct grain and update config/tests accordingly
+- [x] Document root cause with SQL evidence
 
 ### Phase 2: Fix Implementation
 
-- [ ] Implement fix based on root cause:
-  - [ ] Option A: Add additional QUALIFY/DISTINCT to problematic CTE
-  - [ ] Option B: Fix join conditions to prevent Cartesian product
-  - [ ] Option C: Align grain (update config to `player_id` or update test to `sleeper_player_id`)
-- [ ] Test compilation: `make dbt-run --select mrt_fasa_targets`
-- [ ] Verify row counts match expected (should be ~3,380 unique combinations)
+- [x] Implement fix based on root cause:
+  - [x] Option A: Add additional QUALIFY/DISTINCT to problematic CTE
+  - [x] Option B: Fix join conditions to prevent Cartesian product
+  - [x] Option C: Align grain (update config to `player_id` or update test to `sleeper_player_id`)
+- [x] Test compilation: `make dbt-run --select mrt_fasa_targets`
+- [x] Verify row counts match expected (should be ~3,380 unique combinations)
 
 ### Phase 3: Validation
 
-- [ ] Run grain uniqueness test: `make dbt-test --select mrt_fasa_targets`
-- [ ] Verify 0 duplicates (was 1,893)
-- [ ] Check that IDP players (DE, DL, DT, LB, DB, S, CB) are not duplicated
-- [ ] Spot-check a few `player_id` values to ensure only 1 row per `(player_id, asof_date)`
-- [ ] Verify metrics are consistent (no different `points_above_replacement` for same player)
+- [x] Run grain uniqueness test: `make dbt-test --select mrt_fasa_targets`
+- [x] Verify 0 duplicates (was 1,893)
+- [x] Check that IDP players (DE, DL, DT, LB, DB, S, CB) are not duplicated
+- [x] Spot-check a few `player_id` values to ensure only 1 row per `(player_id, asof_date)`
+- [x] Verify metrics are consistent (no different `points_above_replacement` for same player)
 
 ## Acceptance Criteria
 
-- [ ] Root cause identified and documented in ticket comments/commit message
-- [ ] Fix implemented in `mrt_fasa_targets.sql`
-- [ ] Model compiles and executes successfully
-- [ ] **Critical**: Grain uniqueness test passes (0 duplicates)
-- [ ] Spot-check confirms consistent metrics per player
+- [x] Root cause identified and documented in ticket comments/commit message
+- [x] Fix implemented in `mrt_fasa_targets.sql`
+- [x] Model compiles and executes successfully
+- [x] **Critical**: Grain uniqueness test passes (0 duplicates)
+- [x] Spot-check confirms consistent metrics per player
 
 ## Implementation Notes
 

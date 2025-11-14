@@ -45,56 +45,56 @@ The 30 discrepancies indicate players who appear on one roster but not the other
 
 ### Phase 1: Investigation
 
-- [ ] Run the assertion test in isolation to see the 30 failing rows:
+- [x] Run the assertion test in isolation to see the 30 failing rows:
   ```bash
   dbt test --select assert_sleeper_commissioner_roster_parity --store-failures
   ```
-- [ ] Examine the failed rows to identify patterns:
-  - [ ] Are they specific franchises?
-  - [ ] Are they specific player types (rookies, IR, taxi squad)?
-  - [ ] Are they recent adds/drops with sync lag?
-  - [ ] Are they data entry errors (typos, missing players)?
-- [ ] Check test definition to understand matching logic:
-  - [ ] Review `tests/assert_sleeper_commissioner_roster_parity.sql`
-  - [ ] Understand join keys and filters
-  - [ ] Verify grain expectations
-- [ ] Document root causes with SQL evidence and examples
+- [x] Examine the failed rows to identify patterns:
+  - [x] Are they specific franchises?
+  - [x] Are they specific player types (rookies, IR, taxi squad)?
+  - [x] Are they recent adds/drops with sync lag?
+  - [x] Are they data entry errors (typos, missing players)?
+- [x] Check test definition to understand matching logic:
+  - [x] Review `tests/assert_sleeper_commissioner_roster_parity.sql`
+  - [x] Understand join keys and filters
+  - [x] Verify grain expectations
+- [x] Document root causes with SQL evidence and examples
 
 ### Phase 2: Categorize Discrepancies
 
 Classify each of the 30 failures into categories:
 
-- [ ] **Category A: Data Sync Lag** - Recent roster moves not yet in Commissioner Sheet
-- [ ] **Category B: Manual Entry Errors** - Typos, missing players, incorrect positions
-- [ ] **Category C: Roster Slot Differences** - Taxi/IR/PS handling differences between platforms
-- [ ] **Category D: Test Logic Issues** - Matching logic doesn't handle edge cases
-- [ ] **Category E: Legitimate Differences** - Expected divergence between sources
+- [x] **Category A: Data Sync Lag** - Recent roster moves not yet in Commissioner Sheet (27 streaming players - expected)
+- [x] **Category B: Manual Entry Errors** - Typos, missing players, incorrect positions (2 fixed: Gabriel Davis, Isaiah Simmons)
+- [x] **Category C: Roster Slot Differences** - Taxi/IR/PS handling differences between platforms (N/A)
+- [x] **Category D: Test Logic Issues** - Matching logic doesn't handle edge cases (4 player_id resolution bugs fixed)
+- [x] **Category E: Legitimate Differences** - Expected divergence between sources (streaming players validated)
 
 ### Phase 3: Resolution Strategy
 
 Based on categorization, determine approach:
 
-- [ ] **For Category A**: Document as expected lag, no fix needed (or automate sync)
-- [ ] **For Category B**: Fix Commissioner Sheet data (manual update or script)
-- [ ] **For Category C**: Adjust test to account for legitimate roster slot differences
-- [ ] **For Category D**: Fix test matching logic
-- [ ] **For Category E**: Update test expectations or add exclusions
+- [x] **For Category A**: Document as expected lag, no fix needed (or automate sync) - VALIDATED streaming hypothesis
+- [x] **For Category B**: Fix Commissioner Sheet data (manual update or script) - Created corrections seed for Gabriel Davis trade
+- [x] **For Category C**: Adjust test to account for legitimate roster slot differences - N/A
+- [x] **For Category D**: Fix test matching logic - Fixed 4 critical bugs in resolve_player_id_from_name macro
+- [x] **For Category E**: Update test expectations or add exclusions - Documented streaming behavior as expected
 
 ### Phase 4: Implementation
 
-- [ ] Implement fixes based on resolution strategy
-- [ ] Re-run test to verify fixes
-- [ ] Document any permanent exclusions or expected discrepancies
-- [ ] Update test YAML or SQL if logic changes needed
+- [x] Implement fixes based on resolution strategy
+- [x] Re-run test to verify fixes (30→0 failures, 100% success)
+- [x] Document any permanent exclusions or expected discrepancies (streaming behavior documented)
+- [x] Update test YAML or SQL if logic changes needed (macro updated with 4 bug fixes)
 
 ## Acceptance Criteria
 
-- [ ] All 30 discrepancies investigated and categorized
-- [ ] Root causes documented with specific player examples
-- [ ] Resolution strategy defined for each category
-- [ ] Fixes implemented (data corrections, test logic updates, or documented exceptions)
-- [ ] Test passes with 0 failures OR expected failures are documented and excluded
-- [ ] Reconciliation process documented for future roster moves
+- [x] All 30 discrepancies investigated and categorized
+- [x] Root causes documented with specific player examples
+- [x] Resolution strategy defined for each category
+- [x] Fixes implemented (data corrections, test logic updates, or documented exceptions)
+- [x] Test passes with 0 failures OR expected failures are documented and excluded (0 failures achieved)
+- [x] Reconciliation process documented for future roster moves (streaming hypothesis validated)
 
 ## Implementation Notes
 
