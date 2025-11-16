@@ -118,7 +118,7 @@ ______________________________________________________________________
 
 ### Sample Cleanup & Validation
 
-- [ ] **P1-005** — Archive legacy sample artifacts from fully integrated sources
+- [x] **P1-005** — Archive legacy sample artifacts from fully integrated sources
 - [ ] **P1-006** — Performance profiling for all updated models
 
 ______________________________________________________________________
@@ -185,12 +185,20 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 26/58 tickets complete (45%)\
-**Phase 1 Foundation**: 26/27 tickets complete (96%)\
+**Overall Project**: 27/58 tickets complete (47%)\
+**Phase 1 Foundation**: 27/27 tickets complete (100%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
-**Recent Progress** (2025-11-13):
+**Recent Progress** (2025-11-14):
+
+- ✅ **P1-005 COMPLETE**: Sample archival policy documented - no archival needed in current environment
+  - No data/raw/ directory exists (gitignored runtime data)
+  - Test fixtures in samples/ working correctly (2/2 tests passing)
+  - Updated tools/make_samples.py with clear archival policy
+  - Phase 1 Foundation now 100% complete (27/27 tickets)
+
+**Previous Progress** (2025-11-13):
 
 - ✅ **P1-025 COMPLETE**: IDP source diversity test downgraded to WARN (industry limitation, not config issue)
   - Confirmed we scrape ALL 9 sources for ALL positions (including IDP: DL, LB, DB)
