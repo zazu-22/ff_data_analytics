@@ -12,15 +12,30 @@ set shell := ["bash", "-uc"]
 # Common DBT paths - using justfile_directory() for absolute paths
 project_root := justfile_directory()
 dbt_project_dir := "dbt/ff_data_transform"
-dbt_target_dir := dbt_project_dir + "/target"
+dbt_project_path := project_root + "/" + dbt_project_dir
+dbt_target_dir := dbt_project_path + "/target"
 external_root := project_root + "/data/raw"
-dbt_db_path := project_root + "/" + dbt_target_dir + "/dev.duckdb"
+dbt_db_path := dbt_target_dir + "/dev.duckdb"
 
 # Helper function to run dbt commands with standard environment
 _dbt_run command *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    mkdir -p {{dbt_target_dir}}
+    mkdir -p "{{dbt_target_dir}}"
+    cd "{{project_root}}"
+
+    cleanup_seed_link() {
+        if [[ -n "${SEED_LINK_CREATED:-}" ]]; then
+            rm -f seeds
+        fi
+    }
+    trap cleanup_seed_link EXIT
+
+    if [[ ! -e seeds ]]; then
+        ln -s "{{dbt_project_dir}}/seeds" seeds
+        SEED_LINK_CREATED=1
+    fi
+
     uv run env \
         EXTERNAL_ROOT="{{external_root}}" \
         DBT_DUCKDB_PATH="{{dbt_db_path}}" \
