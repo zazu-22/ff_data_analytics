@@ -124,7 +124,7 @@ ______________________________________________________________________
 ### Sample Cleanup & Validation
 
 - [x] **P1-005** — Archive legacy sample artifacts from fully integrated sources
-- [ ] **P1-006** — Performance profiling for all updated models
+- [x] **P1-006** — Performance profiling for all updated models -- See `docs/reviews/PERFORMANCE_ANALYSIS_REPORT.md`
 
 ______________________________________________________________________
 

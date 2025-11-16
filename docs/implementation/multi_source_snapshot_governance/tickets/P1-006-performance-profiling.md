@@ -1,5 +1,7 @@
 # Ticket P1-006: Performance Profiling and Baseline Documentation
 
+Completed during comprehensive code review. See `docs/reviews/PERFORMANCE_ANALYSIS_REPORT.md`
+
 **Phase**: 1 - Foundation\
 **Estimated Effort**: Small (2 hours)\
 **Dependencies**: P1-002, P1-003, P1-004 (all three staging models must be updated first)
@@ -122,16 +124,19 @@ select * from read_parquet(
 # Performance Baseline - Phase 1 Foundation
 
 ## Date
+
 2025-11-07
 
 ## Models Profiled
-- stg_nflverse__player_stats (baseline_plus_latest)
-- stg_nflverse__snap_counts (baseline_plus_latest)
-- stg_nflverse__ff_opportunity (latest_only)
+
+- stg_nflverse\_\_player_stats (baseline_plus_latest)
+- stg_nflverse\_\_snap_counts (baseline_plus_latest)
+- stg_nflverse\_\_ff_opportunity (latest_only)
 
 ## Results
 
-### stg_nflverse__player_stats
+### stg_nflverse\_\_player_stats
+
 - Strategy: baseline_plus_latest (UNION of 2 partitions)
 - Compilation time: X seconds
 - Execution time: X seconds
@@ -140,11 +145,13 @@ select * from read_parquet(
 - Query plan: [UNION strategy, filter pushdown details]
 - Recommendation: [none|consider materialization]
 
-### stg_nflverse__snap_counts
+### stg_nflverse\_\_snap_counts
+
 - Strategy: baseline_plus_latest (UNION of 2 partitions)
 - [same structure]
 
-### stg_nflverse__ff_opportunity
+### stg_nflverse\_\_ff_opportunity
+
 - Strategy: latest_only (single partition)
 - Compilation time: X seconds (expected: fastest)
 - Execution time: X seconds (expected: fastest)
@@ -156,15 +163,18 @@ select * from read_parquet(
 ## Performance Comparison
 
 ### UNION Overhead
+
 - baseline_plus_latest vs latest_only execution time difference
 - Memory usage comparison
 - Query plan differences
 
 ## Observations
+
 - [Any notable patterns or issues]
 - UNION overhead acceptable? (<10% overhead is good)
 
 ## Recommendations
+
 - [Actionable next steps]
 - Materialization needed? (if any query >30s)
 ```
