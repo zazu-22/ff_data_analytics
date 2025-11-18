@@ -347,9 +347,7 @@ seeds:
         description: "Latest season in snapshot (nullable for non-seasonal data)"
 
       - name: row_count
-        description: "Total rows for validation purposes"
-        data_tests:
-          - not_null
+        description: "Total rows for validation purposes (nullable when _meta.json manifests unavailable)"
 
       - name: notes
         description: "Freeform description and context"
