@@ -21,7 +21,10 @@ This PRD defines the analytical infrastructure layer that will power sophisticat
 
 **MVP Scope:** Core analytical engines that consume existing dbt models and produce analytics marts - NOT user-facing decision support tools (those come in Phase 2).
 
-**Success Metric:** Backtested projection accuracy \<20% MAE, 10+ identified market inefficiencies vs KTC consensus.
+**Success Metrics:**
+
+- **Technical:** Backtested projection accuracy \<20% MAE, 10+ identified market inefficiencies vs KTC consensus
+- **Product:** "Top 5 Roster Optimization Moves" dashboard showing highest-impact decisions ranked by championship probability delta (2026-2028 window)
 
 ______________________________________________________________________
 
@@ -87,37 +90,141 @@ ______________________________________________________________________
 
 ## 2. Problem Statement & Opportunity
 
-### Current Pain Points
+### 2.1 Root Problem: Lack of Systematic Decision Framework
 
-**1. No Unified Valuation Framework**
+**Current State:** Dynasty franchise decisions are made inconsistently under time pressure because there is no systematic decision framework. This manifests across three critical decision types that determine championship competitiveness.
 
-- **Problem:** Player value assessed inconsistently across decisions (FASA bids, trades, roster cuts)
-- **Impact:** Suboptimal resource allocation, missing arbitrage opportunities
-- **Example:** Cannot answer "Is this $10/year RB worth more than that $15/year WR?" without manual analysis
+### 2.2 Critical Decision Moments (Prioritized by Impact)
 
-**2. Point-In-Time Projections Miss Multi-Year Dynamics**
+**DECISION TYPE 1: Contract Extensions (2026 Decision Crunch) - HIGH IMPACT**
 
-- **Problem:** FFAnalytics provides rest-of-season only; no 2026-2029 trajectory modeling
-- **Impact:** Cannot evaluate aging veterans vs young players on similar timelines
-- **Example:** Trading for 29-year-old RB looks good this year, catastrophic in Year 2-3
+**Decision Context:**
 
-**3. Cap Space Planning is Manual Spreadsheet Hell**
+- **Players Expiring:** Stroud, Achane, Anderson, Nabers
+- **Decision Window:** Next 6-12 months (before RFA/FAAD market reset)
+- **Frequency:** 4-6 extension decisions per season
+- **Decision Stakes:** $15-25M cap savings vs market-rate extensions OR costly mistakes locking in declining players
 
-- **Problem:** Multi-year cap scenarios require complex Excel with pro-rating rules, dead cap calculations
-- **Impact:** Time-consuming, error-prone, difficult to explore "what-if" scenarios
-- **Example:** "If I cut Player X and sign Player Y at $Z for 3 years with back-loading, what's my 2027 cap?" = 30+ minutes of manual work
+**Current Approach:**
 
-**4. Market Inefficiencies Invisible Without Systematic Comparison**
+- Manual cap scenarios in spreadsheet
+- Point-in-time KTC comparison (no multi-year value projection)
+- Gut-feel on extension timing (extend now vs wait for RFA)
 
-- **Problem:** No automated detection of under/overvalued assets vs market consensus (KTC)
-- **Impact:** Missing buy-low/sell-high opportunities that sophisticated dynasty managers exploit
-- **Example:** Player valued $8,000 internally but KTC says $6,000 = selling opportunity, but only visible with systematic comparison
+**Gap - Missing Analytics:**
 
-**5. Decision Quality Varies by Analytical Rigor Applied**
+- No multi-year value projection with age-adjusted uncertainty
+- No extension vs RFA cost modeling (when to lock in value before market reset)
+- No optimal contract structure calculator (front-load vs back-load given 2027 cap explosion)
 
-- **Problem:** Sometimes use rigorous VoR analysis, sometimes gut feel, depending on time available
-- **Impact:** Inconsistent decision quality, regression to mean in competitive advantage
-- **Example:** FASA week with 10 targets = rushed decisions, trades during slow periods = thorough analysis
+**Infrastructure Requirements:**
+
+- Multi-year projections (Epic 2) - project player value 2026-2029
+- Cap modeling (Epic 3) - scenario analysis for extension structures
+- Dynasty value composite (Epic 4) - internal valuation vs projected market value
+
+**Expected Value if Solved:**
+
+- **Quantified Impact:** Lock in 3 core players at 20% below predicted RFA cost = $15-25M total cap savings
+- **Risk Mitigation:** Avoid overpaying for aging players entering decline phase
+- **Example:** Extend Stroud now at $18M/year vs waiting for RFA market reset at $25M/year
+
+______________________________________________________________________
+
+**DECISION TYPE 2: FASA Weekly Bidding - HIGH FREQUENCY**
+
+**Decision Context:**
+
+- **Frequency:** 26 weeks × 3-5 serious targets = 78-130 bidding decisions per season
+- **Decision Stakes:** Avoid overpays (save $8-12M cap waste/season) while acquiring undervalued talent
+
+**Current Approach:**
+
+- Rest-of-season projections (FFAnalytics)
+- Manual contract efficiency comparison ($/projected points)
+- Instinct on contract structure (1-year vs 3-year, front-loaded vs back-loaded)
+- Time-constrained analysis (3-4 hours/week during season)
+
+**Gap - Missing Analytics:**
+
+- No contract efficiency benchmarking ($/WAR vs league median)
+- No optimal contract structure calculator (balance 2025-2026 cap constraints with 2027 flexibility)
+- No drop candidate ranking (who to cut if I win bid)
+- No multi-year value assessment (Year 1 production vs Year 2-3 decline)
+
+**Infrastructure Requirements:**
+
+- VoR/WAR engine (Epic 1) - contract efficiency ($/WAR)
+- Multi-year projections (Epic 2) - avoid overpaying for aging veterans
+- Cap modeling (Epic 3) - optimal contract structures
+- Dynasty value composite (Epic 4) - internal valuation vs market
+
+**Expected Value if Solved:**
+
+- **Quantified Impact:** Reduce overpays from 30% of bids to 10% = save $8-12M cap space per season
+- **Time Savings:** FASA analysis 3-4 hours/week → 1 hour/week (automated filtering + recommendations)
+- **Example:** Bid $10/year for RB based on contract efficiency vs gut-feel $13/year (save $3M/year × 3 years = $9M)
+
+______________________________________________________________________
+
+**DECISION TYPE 3: Trade Evaluation - MEDIUM IMPACT, OPPORTUNISTIC**
+
+**Decision Context:**
+
+- **Frequency:** 8-12 serious trade opportunities per season
+- **Decision Stakes:** 2-3 better trades = $12-18K roster value improvement
+
+**Current Approach:**
+
+- Point-in-time KTC values (no multi-year trajectory)
+- Gut feel on competitive window alignment
+- Manual assessment of position needs (no portfolio optimization framework)
+
+**Gap - Missing Analytics:**
+
+- No portfolio rebalancing logic (position allocation, age distribution)
+- No competitive window alignment (acquire youth when rebuilding, veterans when contending)
+- No multi-objective evaluation (value, positional fit, cap impact, championship probability)
+
+**Infrastructure Requirements:**
+
+- Dynasty value composite (Epic 4) - unified valuation metric
+- Multi-year projections (Epic 2) - trajectory alignment with competitive window
+- Cap modeling (Epic 3) - cap impact of incoming/outgoing contracts
+
+**Expected Value if Solved:**
+
+- **Quantified Impact:** 2-3 better trade decisions/season = $12-18K roster value improvement
+- **Strategic Alignment:** Portfolio rebalancing toward 2027-2028 championship window
+- **Example:** Trade aging veteran for youth + pick because multi-year projections show veteran cliff in Year 2
+
+### 2.3 Quantified Current-State Costs
+
+**Time Waste (Manual Analysis Burden):**
+
+- **FASA bidding analysis:** 3-4 hours/week × 26 weeks = 78-104 hours/season
+- **Cap scenario modeling:** 30-45 min/scenario × 20 scenarios/season = 10-15 hours/season
+- **Trade evaluation:** 1-2 hours/trade × 12 trades = 12-24 hours/season
+- **Multi-year roster planning:** 20-30 hours/off-season (spreadsheet scenarios, aging curve guesswork)
+- **TOTAL:** ~100-140 hours/season of manual analysis that could be automated
+
+**Decision Quality Variance:**
+
+- **High-quality decisions** (adequate time, rigorous analysis): 60% of opportunities
+- **Rushed decisions** (time-constrained, gut feel): 40% of opportunities
+- **Estimated cost of variance:** 2-3 bad FASA overpays/season = $8-12M wasted cap space
+
+**Missed Opportunities (Invisible Without Systematic Comparison):**
+
+- **Market inefficiencies undetected:** ~15-20 arbitrage opportunities/season (no systematic internal vs KTC comparison)
+- **Extension timing suboptimal:** ~2 players/year extended reactively (at market reset) vs proactively (before market reset) = $5-8M overpaid
+- **Portfolio imbalance:** Unknown (no quantified position/age allocation targets vs current state)
+
+**Strategic Risks:**
+
+- **2026 Extension Crunch:** 4 core players expiring without multi-year value framework = risk of overpaying OR losing talent
+- **2027 Cap Explosion Waste:** $158M cap space without strategic acquisition plan = suboptimal deployment
+- **Competitive Window Mistiming:** Pivot to compete too early (waste picks) or too late (aging roster) without probabilistic modeling
 
 ### Why Now?
 
@@ -207,7 +314,76 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**Journey 2: Market Inefficiency Detection (Analytical)**
+**Journey 2: FASA Bidding Decision Support (High-Frequency Tactical)**
+
+**Trigger:** FASA week opens (weekly during season), 8 free agent targets available
+
+**User Story:** "As a dynasty manager, I need to evaluate FASA targets efficiently and determine optimal bids/contracts so I acquire undervalued talent without overpaying."
+
+**Detailed Decision Tree:**
+
+**DECISION NODE 1: Which players to analyze in depth?**
+
+- **Current State:** Review all 8 targets manually (3-4 hours total)
+- **With Infrastructure:** Auto-filter by dynasty value threshold (15 minutes)
+  - Dynasty value composite pre-calculated (Epic 4 output)
+  - Filter: `dynasty_value > $3,000 AND contract_efficiency_potential > league_median`
+  - **Output:** Focus analysis on top 3-4 targets only (save 2-3 hours)
+
+**DECISION NODE 2: What's the maximum bid I should make?**
+
+- **Current State:** Gut-feel based on KTC value + rest-of-season projection
+- **With Infrastructure:** Contract efficiency ceiling calculation
+  - Calculate maximum acceptable $/WAR (e.g., $8/WAR = league median efficiency)
+  - Multi-year projection shows Year 2-3 value (avoid overpaying for aging players)
+  - **Example Output:** "Player X: Max bid $12/year or walk away" (based on $8/WAR threshold × 1.5 projected WAR)
+  - **Rationale:** Bidding $15/year would put contract at $10/WAR (below-median efficiency = overpay)
+
+**DECISION NODE 3: What contract structure should I offer?**
+
+- **Current State:** Copy last year's structure (1-year vs 3-year heuristic, no optimization)
+- **With Infrastructure:** Optimal contract structure calculator
+  - Cap space scenario analysis shows 2025-2026 tight ($71M), 2027+ open ($158M+)
+  - **Recommendation:** 3-year back-loaded contract
+    - Year 1: $8M (conserve tight 2025 cap)
+    - Year 2: $12M (bridge year)
+    - Year 3: $18M (utilize 2027 cap explosion)
+  - Validate 150% pro-rating constraints automatically (Year 3 = 225% of Year 1, ILLEGAL) → adjust to legal structure
+  - **Corrected Legal Structure:** Year 1: $10M, Year 2: $12M, Year 3: $15M (Year 3 = 150% of Year 1, LEGAL)
+
+**DECISION NODE 4: Who do I drop if I win the bid?**
+
+- **Current State:** Eyeball lowest-value rostered player (5-10 minutes gut feel)
+- **With Infrastructure:** Drop candidate ranking (pre-calculated)
+  - Contract efficiency analysis identifies negative-value players ($/WAR > 2x league median)
+  - Dead cap calculator shows manageable vs prohibitive dead cap obligations
+  - **Example Output:** "Drop Player Z ($2M dead cap, frees $6M cap space, -0.3 WAR) vs Player Y ($5M dead cap, frees $8M, -0.1 WAR)"
+  - **Recommendation:** Drop Player Z (better cap efficiency, minimal production loss)
+
+**DECISION NODE 5: Should I make a contingent bid? (Backup plan if I lose primary target)**
+
+- **Current State:** No systematic contingency planning
+- **With Infrastructure:** Contingent bid optimizer
+  - If primary target (RB1) loses, auto-evaluate secondary targets (RB2, RB3)
+  - Dynasty value comparison: RB2 at $8/year (better value) vs RB1 at $12/year (lost bid)
+  - **Output:** "Contingent bid: $9/year for RB2 if RB1 bid fails"
+
+**Outcome Measurement (Post-FASA):**
+
+- **Time Savings:** Decision made in 30 minutes vs 2 hours (75% reduction)
+- **Cap Efficiency:** Bid $10/year vs gut-feel $13/year (save $3M/year × 3 years = $9M total cap space)
+- **Contract Optimization:** Back-loaded structure aligned with 2027 cap explosion (maximized flexibility)
+- **Backtesting Loop:** Track actual performance vs projection (did Player X outperform? Update model if systematic bias detected)
+
+**Success Criteria:**
+
+- Reduce FASA analysis time from 3-4 hours/week to \<1 hour/week
+- Achieve 80% of winning bids within ±15% of optimal contract efficiency threshold
+- Avoid "buyer's remorse" overpays (players acquired perform within 80% of projected value in Year 1)
+
+______________________________________________________________________
+
+**Journey 2B: Market Inefficiency Detection (Analytical)**
 
 **Trigger:** Weekly/bi-weekly market monitoring
 
@@ -453,12 +629,15 @@ ______________________________________________________________________
 - Naming convention: `mrt_player_valuation`, `mrt_multi_year_projections`, `mrt_cap_scenarios`, `mrt_dynasty_value_composite`
 - **Acceptance Criteria:** Analytics output tables appear in dbt documentation, downstream notebooks consume marts (not Python objects), dbt tests validate mart grain/uniqueness
 
-**FR-INT-003: Orchestration Readiness**
+**FR-INT-003: Prefect Orchestration (Day 1)**
 
-- Analytics pipeline designed for Prefect DAG integration (future work)
+- All analytics tasks decorated as `@task` (Prefect-native from start)
+- Flows orchestrate VoR → Projections → Cap → Composite pipeline with dependencies
+- Backtesting runs as separate scheduled flow (weekly validation, cron-triggered)
+- Discord notifications on model regression or pipeline failures
 - Idempotent execution (re-running produces same results)
-- Logging/monitoring hooks (metrics, errors, runtime)
-- **Acceptance Criteria:** Analytics code can be called from command line with parameters (no interactive prompts), logs to structured format (JSON), exits with status codes (0=success, 1=error)
+- Logging/monitoring via Prefect UI and structured logs
+- **Acceptance Criteria:** Analytics run as Prefect flows (not standalone scripts), backtesting flow triggers weekly and sends Discord alerts on regression, Prefect UI shows task dependencies and runtime metrics
 
 **FR-INT-004: Historical Data Access**
 
@@ -542,6 +721,90 @@ ______________________________________________________________________
 - **Measurement:** Log timestamp deltas (start → analytics complete → marts materialized)
 - **Baseline:** Manual analysis ~4-6 hours for equivalent depth
 
+### 5.2 Decision Outcome Metrics
+
+**Purpose:** Track whether analytical infrastructure actually improves **decision quality**, not just technical accuracy. These metrics measure real-world impact on roster management effectiveness.
+
+**FASA Bidding Quality:**
+
+- **Leading Indicator: Contract Efficiency at Acquisition**
+
+  - **Measurement:** % of winning bids within ±15% of optimal contract efficiency threshold ($/WAR vs league median)
+  - **Target:** 80% of winning bids within efficiency threshold
+  - **How to Measure:** Post-FASA, calculate actual $/WAR vs predicted at time of bid
+  - **Baseline (Current State):** Unknown - no systematic tracking (estimated 50-60%)
+
+- **Lagging Indicator: Acquired Players Outperform Projections**
+
+  - **Measurement:** Year-end actual PPG vs projection at time of bid
+  - **Target:** 70% of acquisitions meet/exceed projected value (>30% bust rate = bad process)
+  - **How to Measure:** Compare actual Year 1 performance to projection used during bidding
+  - **Baseline (Current State):** Unknown - no systematic tracking
+
+**Extension Decision Quality:**
+
+- **Leading Indicator: Extensions Below Predicted Market Value**
+
+  - **Measurement:** Extension AAV vs projected RFA/FAAD market reset value
+  - **Target:** 4 extensions over 2 years, average 20% savings vs predicted market
+  - **How to Measure:** Extension AAV compared to "wait for market" projection
+  - **Example:** Extend Stroud at $18M/year vs projected RFA market of $24M/year = 25% savings
+
+- **Lagging Indicator: Extended Players Justify Contracts**
+
+  - **Measurement:** Year 2-3 actual $/WAR vs league median contract efficiency
+  - **Target:** 60% of extensions remain above-median efficiency in Year 2-3
+  - **How to Measure:** Track contract efficiency 2-3 years post-extension
+  - **Baseline (Current State):** Unknown - league 'Transactions' data has extension history, but hasn't been analyzed or evaluated
+
+**Trade Evaluation Quality:**
+
+- **Leading Indicator: Accepted Trades Improve Dynasty Value**
+
+  - **Measurement:** Roster dynasty value score before/after trade
+  - **Target:** 90% of accepted trades increase dynasty value (10% allowance for "intangibles" like competitive window alignment)
+  - **How to Measure:** Calculate dynasty value delta immediately post-trade
+  - **Baseline (Current State):** ~70% (rough estimate based on trade history)
+
+- **Lagging Indicator: Trades Align With Competitive Window**
+
+  - **Measurement:** 2027 projected roster strength vs 2025 baseline
+  - **Target:** Roster value +25% by championship window (2027-2028)
+  - **How to Measure:** Multi-year projection of roster value trajectory
+  - **Rationale:** Trading for youth now should compound value into 2027-2028 competitive window
+
+**Meta-Metric: Infrastructure ROI**
+
+- **Time Investment vs Time Savings:**
+
+  - **Upfront Cost:** 238 hours (6 weeks) to build infrastructure
+  - **Ongoing Savings:** 100-140 hours/season → 30 hours/season (70% reduction)
+  - **Payback Period:** ~2.5 seasons (238 hours / 90 hours saved per season)
+
+- **Decision Quality Improvement:**
+
+  - **Current State:** 60% high-quality decisions (adequate time + rigor)
+  - **Target State:** 85% high-quality decisions (systematic process + automation)
+  - **Impact:** Fewer rushed/gut-feel decisions during time-constrained periods (FASA weeks)
+
+- **Championship Probability (Ultimate Outcome):**
+
+  - **Baseline:** 8.3% (1/12 teams, assuming equal probability)
+  - **Target:** 15%+ championship probability by 2027-2028 (competitive edge from superior analytics)
+  - **How to Measure:** Monte Carlo simulation of season outcomes based on roster projections
+  - **Caveat:** Championship outcomes are noisy (injuries, luck), so track 3-year rolling average
+
+**Tracking Mechanism:**
+
+- **Decision Log:** Record all FASA bids, extensions, trades with:
+  - Projected value at time of decision
+  - Actual contract terms
+  - Dynasty value scores (internal + KTC)
+  - Rationale/notes
+- **Quarterly Review:** Assess leading indicators (contract efficiency, value deltas)
+- **Annual Review:** Assess lagging indicators (Year 1 performance, trade outcomes)
+- **Backtesting Loop:** Update models if systematic bias detected (e.g., consistently over-projecting RBs)
+
 ### 5.3 Validation Framework
 
 **Time-Series Cross-Validation:**
@@ -581,35 +844,49 @@ Source Data (Sleeper, FFAnalytics, nflverse, KTC, Sheets)
   ↓
 dbt Staging Models (existing - 15 models)
   ↓
-Python Analytics Layer (NEW - this PRD)
-  ├─ src/ff_analytics_utils/valuation/
-  │   ├─ vor.py (VoR calculation)
-  │   ├─ war.py (WAR estimation)
-  │   ├─ baselines.py (replacement levels)
-  │   └─ positional_value.py (scarcity adjustments)
+Prefect Orchestration Layer (NEW - this PRD)
   │
-  ├─ src/ff_analytics_utils/projections/
-  │   ├─ multi_year.py (2025-2029 projections)
-  │   ├─ aging_curves.py (position-specific trajectories)
-  │   └─ opportunity.py (usage trend adjustments)
+  ├─ Python Analytics Tasks (@task-decorated)
+  │   ├─ src/ff_analytics_utils/valuation/
+  │   │   ├─ vor.py (VoR calculation)
+  │   │   ├─ war.py (WAR estimation)
+  │   │   ├─ baselines.py (replacement levels)
+  │   │   └─ positional_value.py (scarcity adjustments)
+  │   │
+  │   ├─ src/ff_analytics_utils/projections/
+  │   │   ├─ multi_year.py (2025-2029 projections)
+  │   │   ├─ aging_curves.py (position-specific trajectories)
+  │   │   └─ opportunity.py (usage trend adjustments)
+  │   │
+  │   ├─ src/ff_analytics_utils/cap_modeling/
+  │   │   ├─ scenarios.py (multi-year cap space)
+  │   │   ├─ contracts.py (pro-rating, structure optimization)
+  │   │   └─ dead_cap.py (50%/50%/25%/25%/25% schedule)
+  │   │
+  │   └─ src/ff_analytics_utils/composite/
+  │       └─ dynasty_value.py (6-factor composite score)
   │
-  ├─ src/ff_analytics_utils/cap_modeling/
-  │   ├─ scenarios.py (multi-year cap space)
-  │   ├─ contracts.py (pro-rating, structure optimization)
-  │   └─ dead_cap.py (50%/50%/25%/25%/25% schedule)
+  ↓ (Writes Parquet files)
   │
-  └─ src/ff_analytics_utils/composite/
-      └─ dynasty_value.py (6-factor composite score)
+Parquet Files (data/analytics/)
+  ├─ player_valuation/latest.parquet
+  ├─ multi_year_projections/latest.parquet
+  ├─ cap_scenarios/latest.parquet
+  └─ dynasty_value_composite/latest.parquet
   ↓
-Database Tables (DuckDB - analytics results)
+dbt Source Tables (analytics schema, external Parquet)
+  ├─ source('analytics', 'player_valuation')
+  ├─ source('analytics', 'multi_year_projections')
+  ├─ source('analytics', 'cap_scenarios')
+  └─ source('analytics', 'dynasty_value_composite')
   ↓
-dbt Analytics Marts (NEW - 4 models)
+dbt Analytics Marts (NEW - 4 models, external Parquet)
   ├─ mrt_player_valuation (VoR/WAR by player)
   ├─ mrt_multi_year_projections (2025-2029 forecasts)
   ├─ mrt_cap_scenarios (multi-year cap space)
   └─ mrt_dynasty_value_composite (final composite scores)
   ↓
-Jupyter Notebooks (existing consumption pattern)
+Jupyter Notebooks (consume external Parquet marts)
 ```
 
 **Architecture Principles:**
@@ -854,14 +1131,6 @@ ______________________________________________________________________
 
 **Rationale:** Diminishing returns. Research shows well-engineered features + simple models often outperform complex models. Start simple, add complexity only if validated need.
 
-**Orchestration Integration:**
-
-- ❌ Prefect DAG integration (future work)
-- ❌ Automated scheduling (weekly/daily refreshes)
-- ❌ Monitoring/alerting infrastructure
-
-**Rationale:** `multi_source_snapshot_governance` team building Prefect orchestration for source ELT. Analytics integration happens after both pieces stable.
-
 ### Future Phases (Roadmap)
 
 **Phase 2: Decision Support Tools (3-4 months post-MVP)**
@@ -880,10 +1149,10 @@ ______________________________________________________________________
 
 **Phase 4: Platform Maturity (12+ months post-MVP)**
 
-- Orchestration integration (Prefect DAG)
 - Real-time data pipelines (injury tracking, standings, matchup results)
 - Web dashboard (visualization layer for non-technical consumption)
 - API layer (RESTful interface for external tool integration)
+- Multi-user support (league-wide analytics for all 12 franchises)
 
 ______________________________________________________________________
 
@@ -1083,13 +1352,14 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-**Orchestration Independence:**
+**Orchestration Integration:**
 
-- **Assumption:** `multi_source_snapshot_governance` Prefect work proceeds independently
-- **Dependency:** Analytics infrastructure does NOT block on orchestration completion
-- **Future Integration:** Analytics pipeline added to Prefect DAG post-MVP (Phase 4)
+- **Prerequisite:** Prefect infrastructure built FIRST (Week 1-2) before analytics (Week 3-8)
+- **Architecture:** Analytics designed as Prefect-native from Day 1 (@task decorators, flow orchestration)
+- **Template Patterns:** Snapshot governance Prefect flows provide proven patterns for analytics flows (Discord notifications, error handling, retry logic)
+- **Cloud Infrastructure:** Prefect Cloud (SaaS) for orchestration, flows run locally during development, GCS storage for production Parquet
 
-**Dependency Risk:** None (confirmed parallel tracks)
+**Dependency Risk:** Low (Prefect foundation straightforward, snapshot governance flows provide working examples)
 
 ______________________________________________________________________
 
@@ -1200,6 +1470,61 @@ This section provides a tactical breakdown of the analytical infrastructure MVP 
 
 ______________________________________________________________________
 
+### Epic 0: Prefect Foundation Setup
+
+**Epic Goal:** Establish Prefect orchestration infrastructure before building analytics tasks. This foundation enables analytics to be built as Prefect-native from Day 1.
+
+**Success Criteria:**
+
+- Prefect Cloud workspace configured and tested
+- Discord webhook block created for analytics alerts
+- Task/flow decorator templates validated with working examples
+- Local development environment proven (flows run successfully on Mac)
+- Integration patterns documented from snapshot governance flows
+
+**Dependencies:** None (foundation work, prerequisite for all other epics)
+
+**Stories:**
+
+**E0-S1: Prefect Cloud Workspace Setup**
+
+- **Task:** Create Prefect Cloud workspace, configure authentication, test deployment
+- **Outputs:** Workspace URL, API keys stored securely in environment variables
+- **Acceptance:** Can deploy and trigger simple test flow from local Mac environment
+- **Estimate:** 2 hours
+
+**E0-S2: Discord Notification Block**
+
+- **Task:** Create and configure DiscordWebhook block for analytics alerts
+- **Outputs:** Block saved in Prefect Cloud (`ff-analytics-alerts`), tested with sample alert
+- **Acceptance:** Discord message successfully received in designated channel with formatted alert
+- **Estimate:** 1 hour
+
+**E0-S3: Analytics Flow Templates**
+
+- **Task:** Create reusable @task and @flow decorator templates for analytics patterns
+- **Outputs:**
+  - Template for data loading tasks (read dbt marts, return Polars DataFrames)
+  - Template for analytics computation tasks (Pydantic schema validation)
+  - Template for Parquet writer tasks (write to `data/analytics/`)
+  - Template for dbt runner tasks (trigger `just dbt-run --select <model>`)
+- **Acceptance:** All templates validated with working "hello world" examples that execute successfully
+- **Estimate:** 4 hours
+
+**E0-S4: Snapshot Governance Flow Integration Review**
+
+- **Task:** Review existing snapshot governance Prefect flows to extract proven patterns
+- **Outputs:**
+  - Documented integration points (how analytics fits with snapshot ingestion → dbt staging → analytics pipeline)
+  - Identified reusable patterns (error handling, retry logic, Discord notifications, artifact tracking)
+  - Sequence diagram showing full data flow: Snapshot ingest → dbt staging → analytics → dbt analytics marts
+- **Acceptance:** Clear architectural understanding of how analytics flows integrate with existing orchestration
+- **Estimate:** 3 hours
+
+**Epic 0 Total Estimate:** 10 hours (~1-2 days)
+
+______________________________________________________________________
+
 ### Epic 1: VoR/WAR Valuation Engine
 
 **Epic Goal:** Build the foundational player valuation engine calculating Value over Replacement (VoR) and Wins Above Replacement (WAR) for all players.
@@ -1213,6 +1538,7 @@ ______________________________________________________________________
 
 **Dependencies:**
 
+- Epic 0: Prefect Foundation Setup (prerequisite - tasks must be Prefect-decorated)
 - Existing dbt models: `mrt_fantasy_actuals_weekly`, `mrt_contract_snapshot_current`
 
 **Stories:**
@@ -1522,30 +1848,35 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-### Epic 5: Integration & Pipeline Orchestration
+### Epic 5: Integration & End-to-End Validation
 
-**Epic Goal:** Integrate Python analytics with dbt, build end-to-end pipeline, and validate consumption by notebooks.
+**Epic Goal:** Validate end-to-end Prefect flow integration, dbt mart materialization, and notebook consumption patterns.
 
 **Success Criteria:**
 
-- End-to-end pipeline runs without errors (Python analytics → database → dbt marts)
+- End-to-end Prefect flow runs without errors (Python analytics → Parquet → dbt source → dbt marts)
 - Pipeline runtime \<30 minutes
-- Notebooks successfully consume analytics marts
+- Notebooks successfully consume external Parquet analytics marts
 - dbt documentation complete for all analytics models
+- Backtesting flow runs on schedule and sends Discord alerts
 
 **Dependencies:**
 
-- Epics 1-4 complete (all analytics engines built)
+- Epic 0: Prefect Foundation (prerequisite)
+- Epics 1-4 complete (all analytics engines built as Prefect tasks)
 
 **Stories:**
 
-**E5-S1: Python → DuckDB Writer**
+**E5-S1: Parquet Writer Validation**
 
-- **Task:** Implement database writer for analytics outputs (Polars DataFrame → DuckDB tables)
-- **Inputs:** Analytics results (player_valuation, multi_year_projections, cap_scenarios, dynasty_value_composite)
-- **Outputs:** Database tables in `analytics` schema
-- **Acceptance:** Tables created with correct schema, data persisted
-- **Estimate:** 6 hours
+- **Task:** Validate Python analytics → Parquet → dbt source pattern end-to-end
+- **Workflow:**
+  1. Prefect task executes analytics (e.g., VoR calculation)
+  2. Task writes Polars DataFrame to Parquet (`data/analytics/player_valuation/latest.parquet`)
+  3. dbt source table reads Parquet as external table
+  4. dbt mart materializes from source
+- **Acceptance:** Complete flow works (Prefect task → Parquet write → dbt source read → dbt mart materialized)
+- **Estimate:** 4 hours
 
 **E5-S2: dbt Mart Materialization**
 
@@ -1563,13 +1894,16 @@ ______________________________________________________________________
 - **Acceptance:** `dbt test` passes, `dbt docs generate` produces comprehensive docs
 - **Estimate:** 8 hours
 
-**E5-S4: End-to-End Pipeline Script**
+**E5-S4: Analytics Pipeline Flow Orchestration**
 
-- **Task:** Create orchestration script (e.g., `scripts/run_analytics_pipeline.sh`)
-- **Workflow:** Run VoR engine → projections → cap modeling → composite → dbt marts
-- **Logging:** Structured logs (JSON), runtime metrics, error handling
-- **Acceptance:** Single command runs full pipeline, exits with status code (0=success)
-- **Estimate:** 8 hours
+- **Task:** Create main analytics flow orchestrating all tasks (VoR → Projections → Cap → Composite → dbt)
+- **Workflow:**
+  - @flow decorator wraps entire pipeline
+  - Task dependencies properly chained (VoR completes before Projections starts, etc.)
+  - Error handling and retry logic configured
+  - Prefect artifacts track intermediate results
+- **Acceptance:** Single `analytics_pipeline_flow()` execution runs all tasks in correct order, Prefect UI shows task graph and timing
+- **Estimate:** 6 hours
 
 **E5-S5: Integration Testing**
 
@@ -1592,46 +1926,72 @@ ______________________________________________________________________
 - **Acceptance:** Pipeline completes in target time, no obvious inefficiencies
 - **Estimate:** 6 hours
 
-**E5-S8: Documentation & README**
+**E5-S8: Backtesting Flow & Continuous Validation**
+
+- **Task:** Create scheduled backtesting flow with Discord alerts on model regression
+- **Workflow:**
+  - Separate @flow for backtesting (independent of main analytics pipeline)
+  - TimeSeriesSplit validation (train on 2020-2021, test on 2022, etc.)
+  - Calculate MAE by position, compare to thresholds
+  - Discord alert if MAE exceeds threshold (e.g., RB MAE > 20%)
+  - Schedule via Prefect deployment (`cron="0 9 * * 1"` for weekly Monday 9am runs)
+- **Acceptance:** Backtesting flow executes successfully, Discord alert received on regression test, Prefect schedule confirmed active
+- **Estimate:** 8 hours
+
+**E5-S9: Documentation & README**
 
 - **Task:** Write comprehensive README for analytics infrastructure
 - **Content:** Architecture diagram, usage instructions, validation results, troubleshooting
 - **Acceptance:** New user can understand and run pipeline from README alone
 - **Estimate:** 4 hours
 
-**Epic 5 Total Estimate:** 50 hours (~1.5 weeks)
+**Epic 5 Total Estimate:** 54 hours (~1.5 weeks)
 
 ______________________________________________________________________
 
 ### Implementation Timeline
 
-**Total Estimate:** 238 hours (~6 weeks at 40 hours/week, ~4-5 weeks aggressive)
+**Total Estimate:** 252 hours (~6.5 weeks at 40 hours/week, ~5 weeks aggressive)
+
+- Epic 0: 10 hours
+- Epic 1: 36 hours
+- Epic 2: 54 hours
+- Epic 3: 52 hours
+- Epic 4: 46 hours
+- Epic 5: 54 hours
 
 **Phased Delivery:**
 
-**Weeks 1-2: Foundation (Epics 1-2)**
+**Week 1: Prefect Foundation + VoR Engine (Epic 0 + Epic 1 Start)**
 
-- Week 1: Epic 1 (VoR/WAR engine)
-- Week 2: Epic 2 (Multi-year projections + backtesting)
-- **Checkpoint:** Projection accuracy validation (\<20% MAE target)
+- Days 1-2: Epic 0 (Prefect Cloud setup, Discord integration, flow templates)
+- Days 3-5: Epic 1 begins (VoR/WAR engine as Prefect tasks)
+- **Checkpoint:** Prefect flows working, first analytics task executes successfully
 
-**Weeks 3-4: Cap & Composite (Epics 3-4)**
+**Weeks 2-3: Core Analytics (Epic 1 Complete + Epic 2)**
 
-- Week 3: Epic 3 (Cap space modeling)
-- Week 4: Epic 4 (Dynasty value composite)
-- **Checkpoint:** Commissioner validation (cap calculations match)
+- Week 2: Complete Epic 1 (VoR/WAR), start Epic 2 (Multi-year projections)
+- Week 3: Complete Epic 2 (Projections + backtesting flow)
+- **Checkpoint:** Projection accuracy \<20% MAE validated, backtesting flow sends Discord alerts on schedule
 
-**Weeks 5-6: Integration & Polish (Epic 5)**
+**Weeks 4-5: Advanced Analytics (Epics 3-4)**
 
-- Week 5: Epic 5 (Integration, testing, pipeline)
-- Week 6: Documentation, optimization, user acceptance
-- **Checkpoint:** End-to-end pipeline demonstration
+- Week 4: Epic 3 (Cap space modeling as Prefect tasks)
+- Week 5: Epic 4 (Dynasty value composite with dependencies orchestrated)
+- **Checkpoint:** Dynasty value scores diverge from KTC (10+ arbitrage opportunities identified)
 
-**Aggressive Path (4-5 weeks):**
+**Weeks 5.5-6.5: Integration & Validation (Epic 5)**
 
-- Parallel development (VoR + Projections concurrently)
+- Week 5.5-6: Integration testing, dbt source tables, analytics pipeline flow
+- Week 6.5: Notebook validation, documentation, performance optimization
+- **Checkpoint:** End-to-end Prefect flow demonstration (analytics → Parquet → dbt marts → notebooks)
+
+**Aggressive Path (5 weeks):**
+
+- Parallel development (VoR + Projections concurrently in Weeks 2-3)
 - Reduce testing/documentation time (ship MVP, iterate)
-- User (Jason) performs UAT during Week 4-5 (early feedback loop)
+- User (Jason) performs UAT during Week 5 (early feedback loop)
+- Prefect foundation completed in 1.5 days instead of 2 (fast-track)
 
 ______________________________________________________________________
 

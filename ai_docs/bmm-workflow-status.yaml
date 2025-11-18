@@ -64,10 +64,10 @@ workflow_status:
 
   phase_1_planning:
     - id: prd
-      status: required
+      status: ai_docs/prd.md
       agent: pm
       command: /bmad:bmm:workflows:prd
-      note: "Product Requirements Document for next phase features"
+      note: "Product Requirements Document - Analytics Infrastructure Platform (reviewed 2025-11-18, decision-centric framework, Prefect-first architecture)"
 
     - id: create-design
       status: conditional
