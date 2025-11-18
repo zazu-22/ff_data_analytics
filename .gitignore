@@ -76,3 +76,6 @@ scripts/troubleshooting/**/*
 
 # Executed notebook outputs (generated during runs)
 notebooks/*_executed.ipynb
+.bmad
+.cursor/rules/bmad
+.claude/commands/bmad
