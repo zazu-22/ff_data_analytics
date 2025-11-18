@@ -27,6 +27,110 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+import polars as pl
+
+# Delta thresholds for anomaly detection (configurable)
+DELTA_THRESHOLDS = {
+    "nflverse": {
+        "weekly": {"min_pct": -5, "max_pct": 20},  # Allow 20% growth during season
+        "snap_counts": {"min_pct": -5, "max_pct": 20},
+    },
+    "sheets": {
+        "roster": {"min_pct": -10, "max_pct": 30},  # Trades can cause swings
+        "transactions": {"min_pct": 0, "max_pct": 100},  # Cumulative, always grows
+        "cap_space": {"min_pct": -10, "max_pct": 10},
+        "contracts_active": {"min_pct": -10, "max_pct": 30},
+        "contracts_cut": {"min_pct": 0, "max_pct": 100},  # Cumulative
+        "draft_picks": {"min_pct": -10, "max_pct": 30},
+        "draft_pick_conditions": {"min_pct": -20, "max_pct": 50},
+    },
+    "ktc": {
+        "players": {"min_pct": -10, "max_pct": 10},  # Valuations fairly stable
+    },
+    "sleeper": {
+        "rosters": {"min_pct": -10, "max_pct": 10},
+        "transactions": {"min_pct": 0, "max_pct": 100},  # Cumulative
+    },
+}
+
+
+def load_snapshot_registry(registry_path: Path | None = None) -> pl.DataFrame:
+    """Load the snapshot registry CSV file.
+
+    Args:
+        registry_path: Optional path to registry file. Defaults to standard location.
+
+    Returns:
+        Polars DataFrame with snapshot registry data
+
+    """
+    if registry_path is None:
+        registry_path = Path("dbt/ff_data_transform/seeds/snapshot_registry.csv")
+
+    if not registry_path.exists():
+        raise FileNotFoundError(f"Snapshot registry not found: {registry_path}")
+
+    return pl.read_csv(registry_path)
+
+
+def calculate_deltas(source: str, dataset: str, registry_df: pl.DataFrame) -> dict:
+    """Calculate row count deltas between current and previous snapshots.
+
+    Args:
+        source: Data source (e.g., 'nflverse')
+        dataset: Dataset within source (e.g., 'weekly')
+        registry_df: Snapshot registry DataFrame
+
+    Returns:
+        Dictionary with delta statistics
+
+    """
+    # Filter registry to source/dataset
+    snapshots = (
+        registry_df.filter((pl.col("source") == source) & (pl.col("dataset") == dataset))
+        .sort("snapshot_date", descending=True)
+        .select(["snapshot_date", "row_count"])
+    )
+
+    if len(snapshots) < 2:
+        return {"error": "Need at least 2 snapshots for delta calculation"}
+
+    current = snapshots.row(0, named=True)
+    previous = snapshots.row(1, named=True)
+
+    current_count = current["row_count"] if current["row_count"] is not None else 0
+    previous_count = previous["row_count"] if previous["row_count"] is not None else 0
+
+    delta = current_count - previous_count
+    pct_change = (delta / previous_count * 100) if previous_count > 0 else 0
+
+    # Get thresholds for this source/dataset (with fallback defaults)
+    thresholds = DELTA_THRESHOLDS.get(source, {}).get(
+        dataset, {"min_pct": -50, "max_pct": 50}
+    )
+
+    # Anomaly detection
+    is_anomaly = pct_change < thresholds["min_pct"] or pct_change > thresholds["max_pct"]
+    is_data_loss = delta < 0
+    # Stagnant if very small delta for sources that should be growing
+    is_stagnant = (
+        abs(delta) < 10 and source == "nflverse" and dataset in ["weekly", "snap_counts"]
+    )
+
+    return {
+        "source": source,
+        "dataset": dataset,
+        "current_snapshot": str(current["snapshot_date"]),
+        "current_count": current_count,
+        "previous_snapshot": str(previous["snapshot_date"]),
+        "previous_count": previous_count,
+        "delta": delta,
+        "pct_change": round(pct_change, 2),
+        "is_anomaly": is_anomaly,
+        "is_data_loss": is_data_loss,
+        "is_stagnant": is_stagnant,
+        "thresholds": thresholds,
+    }
 
 
 def _sanitize_path_for_sql(parquet_path: Path) -> str:
@@ -313,13 +417,49 @@ def _print_season_week_breakdown(metrics: dict[str, Any]) -> None:
         print(f"      ... and {len(breakdown) - 5} more seasons")
 
 
-def _print_snapshot_metrics(metrics: dict[str, Any], dt: str, parquet_path: Path) -> None:
+def _print_delta_info(delta_info: dict) -> None:
+    """Print delta information for a snapshot.
+
+    Args:
+        delta_info: Delta statistics from calculate_deltas
+
+    """
+    delta = delta_info["delta"]
+    pct_change = delta_info["pct_change"]
+
+    # Format delta with sign
+    delta_str = f"+{delta:,}" if delta >= 0 else f"{delta:,}"
+    pct_str = f"+{pct_change:.1f}%" if pct_change >= 0 else f"{pct_change:.1f}%"
+
+    print(f"    Delta: {delta_str} rows ({pct_str}) vs {delta_info['previous_snapshot']}")
+
+    # Show warnings for anomalies
+    warnings = []
+    if delta_info["is_data_loss"]:
+        warnings.append("⚠️  DATA LOSS")
+    if delta_info["is_anomaly"]:
+        thresholds = delta_info["thresholds"]
+        warnings.append(
+            f"⚠️  ANOMALY (expected {thresholds['min_pct']}% to {thresholds['max_pct']}%)"
+        )
+    if delta_info["is_stagnant"]:
+        warnings.append("⚠️  STAGNANT (expected growth during season)")
+
+    if warnings:
+        for warning in warnings:
+            print(f"    {warning}")
+
+
+def _print_snapshot_metrics(
+    metrics: dict[str, Any], dt: str, parquet_path: Path, delta_info: dict | None = None
+) -> None:
     """Print metrics for a single snapshot.
 
     Args:
         metrics: Dictionary of metrics from analyze_parquet_file
         dt: Snapshot date partition
         parquet_path: Path to the parquet file
+        delta_info: Optional delta information from calculate_deltas
 
     """
     print(f"\n  Snapshot: dt={dt}")
@@ -330,16 +470,28 @@ def _print_snapshot_metrics(metrics: dict[str, Any], dt: str, parquet_path: Path
         return
 
     _print_basic_metrics(metrics)
+
+    # Print delta information if available
+    if delta_info and "error" not in delta_info and delta_info.get("current_snapshot") == dt:
+        _print_delta_info(delta_info)
+
     _print_distinct_entities(metrics)
     _print_season_week_breakdown(metrics)
 
 
-def _analyze_dataset(dataset: str, files: list[tuple[str, Path]]) -> dict[str, dict[str, Any]]:
+def _analyze_dataset(
+    dataset: str,
+    files: list[tuple[str, Path]],
+    source_name: str,
+    registry_df: pl.DataFrame | None = None,
+) -> dict[str, dict[str, Any]]:
     """Analyze all snapshots for a single dataset.
 
     Args:
         dataset: Name of the dataset
         files: List of (dt, parquet_path) tuples
+        source_name: Name of the source (for delta calculation)
+        registry_df: Optional snapshot registry DataFrame for delta calculation
 
     Returns:
         Dictionary mapping dt -> metrics
@@ -349,13 +501,26 @@ def _analyze_dataset(dataset: str, files: list[tuple[str, Path]]) -> dict[str, d
     print(f"Dataset: {dataset}")
     print(f"{'=' * 60}")
 
+    # Calculate deltas if registry available
+    delta_info = None
+    if registry_df is not None:
+        delta_info = calculate_deltas(source_name, dataset, registry_df)
+        if "error" in delta_info:
+            print(f"  Note: {delta_info['error']}")
+            delta_info = None
+
     dataset_results = {}
 
     for dt, parquet_path in sorted(files):
         metrics = analyze_parquet_file(parquet_path)
         metrics["file_path"] = str(parquet_path)  # Store full path for reference
+
+        # Add delta info to results for the current snapshot
+        if delta_info and delta_info.get("current_snapshot") == dt:
+            metrics["delta"] = delta_info
+
         dataset_results[dt] = metrics
-        _print_snapshot_metrics(metrics, dt, parquet_path)
+        _print_snapshot_metrics(metrics, dt, parquet_path, delta_info)
 
     return dataset_results
 
@@ -399,6 +564,8 @@ def analyze_snapshots(
     base_dir: Path,
     source_name: str | None = None,
     datasets_filter: list[str] | None = None,
+    report_deltas: bool = False,
+    registry_path: Path | None = None,
 ) -> dict:
     """Analyze all snapshots in a directory.
 
@@ -406,6 +573,8 @@ def analyze_snapshots(
         base_dir: Base directory containing snapshots (e.g., data/raw/nflverse)
         source_name: Name of the source (extracted from path if None)
         datasets_filter: Optional list of dataset names to filter by
+        report_deltas: Whether to calculate and report deltas between snapshots
+        registry_path: Optional path to snapshot registry (for delta calculation)
 
     Returns:
         Dictionary mapping dataset -> dt -> metrics
@@ -417,6 +586,16 @@ def analyze_snapshots(
     # Extract source name from path if not provided
     if source_name is None:
         source_name = base_dir.name
+
+    # Load registry if delta reporting requested
+    registry_df = None
+    if report_deltas:
+        try:
+            registry_df = load_snapshot_registry(registry_path)
+            print("Loaded snapshot registry for delta calculation\n")
+        except FileNotFoundError as e:
+            print(f"Warning: {e}")
+            print("Continuing without delta calculation\n")
 
     # Find all parquet files
     parquet_files = sorted(base_dir.glob("*/dt=*/*.parquet"))
@@ -437,7 +616,7 @@ def analyze_snapshots(
     # Analyze each dataset
     results = {}
     for dataset, files in sorted(datasets.items()):
-        results[dataset] = _analyze_dataset(dataset, files)
+        results[dataset] = _analyze_dataset(dataset, files, source_name, registry_df)
 
     return results
 
@@ -496,6 +675,19 @@ Examples:
         help="Skip generating markdown report (only generate JSON)",
     )
 
+    parser.add_argument(
+        "--report-deltas",
+        action="store_true",
+        help="Calculate and report row count deltas between snapshots",
+    )
+
+    parser.add_argument(
+        "--registry-path",
+        type=Path,
+        default=None,
+        help="Path to snapshot registry CSV (default: dbt/ff_data_transform/seeds/snapshot_registry.csv)",
+    )
+
     args = parser.parse_args()
 
     # Determine source name and output filename
@@ -507,6 +699,8 @@ Examples:
         base_dir=args.source,
         source_name=source_name,
         datasets_filter=args.datasets,
+        report_deltas=args.report_deltas,
+        registry_path=args.registry_path,
     )
 
     if not results:
