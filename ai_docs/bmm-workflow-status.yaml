@@ -33,11 +33,34 @@ workflow_status:
       note: "Completed by Paige - comprehensive project documentation"
 
   phase_0_discovery:
-    - id: research
-      status: required
+    - id: research-domain
+      status: ai_docs/research-domain-2025-11-18.md
       agent: analyst
       command: /bmad:bmm:workflows:research
-      note: "User selected - technical/domain research"
+      note: "Domain Research - Dynasty analytics landscape, market context, best practices"
+
+    - id: research-contract-economics
+      status: ai_docs/research-contract-economics-2025-11-18.md
+      agent: analyst
+      command: /bmad:bmm:workflows:research
+      note: "Contract Economics Deep Dive - League salary cap mechanics, rookie contracts, FAAD/FASA systems"
+
+    - id: research-competitive-window
+      status: ai_docs/research-competitive-window-2025-11-18.md
+      agent: analyst
+      command: /bmad:bmm:workflows:research
+      note: "Competitive Window Analysis - Franchise F001 assessment (5-6 record, injuries, cap/draft capital)"
+
+    - id: data-gap-assessment
+      status: ai_docs/data-gap-assessment-competitive-window-2025-11-18.md
+      agent: analyst
+      command: /bmad:bmm:workflows:research
+      note: "Data Gap Assessment - Identified injury tracking + standings modeling needs (Phase 0 blockers)"
+
+    - id: research-validation
+      status: ai_docs/research-validation-complete-2025-11-18.md
+      agent: analyst
+      note: "Research Validation - Final checkpoint confirming completeness before PRD (notebooks, data sources, readiness)"
 
   phase_1_planning:
     - id: prd
