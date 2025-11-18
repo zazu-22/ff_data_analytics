@@ -243,21 +243,21 @@ ______________________________________________________________________
 - [x] Load seed with `dbt seed --select snapshot_registry` and verify no errors
 - [x] Test schema validation with `dbt test --select snapshot_registry` (7 tests passing)
 - [x] Verify seed accessible in DuckDB
-- [ ] Populate with current snapshots for all 5 sources (P2-002):
-  - [ ] nflverse (weekly, snap_counts, ff_opportunity, schedule, teams)
-  - [ ] sheets (roster, transactions, picks)
-  - [ ] ktc (players, picks)
-  - [ ] ffanalytics (projections)
-  - [ ] sleeper (league data)
+- [x] Populate with current snapshots for all 5 sources (P2-002 - COMPLETE 2025-11-18):
+  - [x] nflverse (weekly, snap_counts, ff_opportunity, schedule, teams)
+  - [x] sheets (roster, transactions, picks)
+  - [x] ktc (players, picks)
+  - [x] ffanalytics (projections)
+  - [x] sleeper (league data)
 
 ### Validation Tooling Extensions
 
 #### Extend `tools/analyze_snapshot_coverage.py`
 
-- [ ] Add row delta reporting:
-  - [ ] Compare current vs previous snapshot row counts
-  - [ ] Calculate delta (absolute and percentage)
-  - [ ] Flag anomalies (deltas exceeding thresholds)
+- [-] Add row delta reporting (P2-003 - READY FOR REVIEW, needs validation with real data):
+  - [x] Compare current vs previous snapshot row counts
+  - [x] Calculate delta (absolute and percentage)
+  - [x] Flag anomalies (deltas exceeding thresholds)
 - [ ] Add season/week coverage gap detection:
   - [ ] Identify missing weeks within expected season ranges
   - [ ] Cross-reference with registry coverage expectations

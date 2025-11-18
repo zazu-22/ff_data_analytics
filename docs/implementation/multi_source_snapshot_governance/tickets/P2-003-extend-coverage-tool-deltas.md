@@ -1,5 +1,6 @@
 # Ticket P2-003: Extend analyze_snapshot_coverage - Row Deltas
 
+**Status**: READY FOR REVIEW\
 **Phase**: 2 - Governance\
 **Estimated Effort**: Medium (2-3 hours)\
 **Dependencies**: None (can work in parallel with registry tickets)
@@ -22,37 +23,38 @@ This provides pre-dbt validation to catch issues before they propagate to downst
 
 ### Add Delta Calculation Logic
 
-- [ ] Read snapshot registry to identify current vs previous snapshots
-- [ ] Compare row counts between snapshot pairs
-- [ ] Calculate absolute delta (current - previous)
-- [ ] Calculate percentage change
+- [x] Read snapshot registry to identify current vs previous snapshots
+- [x] Compare row counts between snapshot pairs
+- [x] Calculate absolute delta (current - previous)
+- [x] Calculate percentage change
 
 ### Flag Anomalies
 
-- [ ] Define expected delta thresholds per dataset type
-- [ ] Flag deltas exceeding thresholds (e.g., >50% change)
-- [ ] Flag negative deltas (data loss)
-- [ ] Flag near-zero deltas during active season
+- [x] Define expected delta thresholds per dataset type
+- [x] Flag deltas exceeding thresholds (e.g., >50% change)
+- [x] Flag negative deltas (data loss)
+- [x] Flag near-zero deltas during active season
 
 ### Update Output Format
 
-- [ ] Add delta section to human-readable output
-- [ ] Include delta in JSON output for CI consumption
-- [ ] Highlight anomalies in summary
+- [x] Add delta section to human-readable output
+- [x] Include delta in JSON output for CI consumption
+- [x] Highlight anomalies in summary
 
 ### Test with Real Data
 
+- [x] Test delta calculation logic with snapshot registry
 - [ ] Run against nflverse weekly (expect growth during season)
 - [ ] Run against sheets data (expect smaller deltas)
 - [ ] Verify anomaly detection works correctly
 
 ## Acceptance Criteria
 
-- [ ] Tool calculates row deltas between current and previous snapshots
-- [ ] Anomalies flagged based on thresholds
-- [ ] Output includes delta information (both JSON and human-readable)
-- [ ] Tool runs without errors on all 5 sources
-- [ ] Documentation updated with new features
+- [x] Tool calculates row deltas between current and previous snapshots
+- [x] Anomalies flagged based on thresholds
+- [x] Output includes delta information (both JSON and human-readable)
+- [ ] Tool runs without errors on all 5 sources (needs validation with real data)
+- [x] Documentation updated with new features
 
 ## Implementation Notes
 
@@ -189,6 +191,35 @@ DELTA_THRESHOLDS = {
 
    cat deltas.json | jq '.deltas'
    ```
+
+## Completion Notes
+
+**Implemented**: 2025-11-18
+
+**Changes Made**:
+- Added `load_snapshot_registry()` function to read snapshot registry CSV
+- Added `calculate_deltas()` function with configurable thresholds per source/dataset
+- Added `_print_delta_info()` function to display delta information with anomaly warnings
+- Updated `_print_snapshot_metrics()` to include delta info when available
+- Updated `_analyze_dataset()` to calculate and pass delta info
+- Updated `analyze_snapshots()` to support delta reporting
+- Added `--report-deltas` and `--registry-path` command-line flags
+- Defined `DELTA_THRESHOLDS` configuration for all 5 sources (nflverse, sheets, ktc, sleeper, etc.)
+
+**Tests Completed**:
+- Unit test with snapshot registry: PASS (tested with sheets/cap_space, contracts_active, contracts_cut)
+- Delta calculation logic verified with real registry data
+- Anomaly detection thresholds configured and tested
+
+**Still Needs Validation**:
+- End-to-end testing with actual parquet files (data/raw/ not available in dev environment)
+- Verification that tool runs without errors on all 5 sources
+- Confirmation that output format matches expected format from plan
+
+**Next Steps**:
+- Test in environment with actual data files
+- Verify anomaly detection triggers correctly
+- Consider adding delta information to markdown report generation
 
 ## References
 
