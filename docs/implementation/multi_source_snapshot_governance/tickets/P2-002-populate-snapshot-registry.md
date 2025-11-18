@@ -232,6 +232,14 @@ def scan_snapshots(raw_dir='data/raw'):
 - Seed loaded successfully: `dbt seed --select snapshot_registry --full-refresh` ✅
 - Registry queries verified (source counts, status distribution, sample data) ✅
 - Row count data extraction complete for all available manifests ✅
+- dbt tests pass: All 6 schema tests passing ✅
+
+**Post-Implementation Fix** (2025-11-18):
+
+- Removed `not_null` constraint on `row_count` column in seeds schema
+- 42/100 snapshots intentionally have NULL row_count (no `_meta.json` manifests)
+- Updated column description to clarify nullable behavior
+- Commit: `21cf9ab` - "fix(snapshot): make row_count nullable in registry schema"
 
 **Notes**:
 
