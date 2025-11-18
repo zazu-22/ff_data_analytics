@@ -2,6 +2,7 @@
 
 **Phase**: 2 - Governance\
 **Estimated Effort**: Medium (2-3 hours)\
+**Status**: COMPLETE\
 **Dependencies**: P2-001 (registry structure must exist)
 
 ## Objective
@@ -199,3 +200,44 @@ def scan_snapshots(raw_dir='data/raw'):
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 2 Registry (lines 99-105)
 - Data directory: `data/raw/` (all sources)
 - Manifests: `data/raw/<source>/<dataset>/dt=*/_meta.json`
+
+## Completion Notes
+
+**Implemented**: 2025-11-18
+
+**Summary**: Successfully populated snapshot_registry.csv with all 100 snapshots across 5 data sources.
+
+**Results**:
+
+- ✅ **100 snapshots loaded** into dbt seed
+- ✅ **5 sources registered**: ffanalytics (5), ktc (10), nflverse (27), sheets (36), sleeper (22)
+- ✅ **4 historical baselines identified**: nflverse weekly, snap_counts, ff_opportunity, ff_playerids (all 2025-10-01)
+- ✅ **96 current snapshots** marked for active use
+- ✅ **Row counts extracted**: 58/100 snapshots with verified row counts from manifests or data
+  - sheets: 35/36 (98%)
+  - sleeper: 15/22 (68%)
+  - ktc: 8/10 (80%)
+  - ffanalytics: 0/5 (no manifests, but data exists)
+  - nflverse: 0/27 (no manifests, but data exists)
+
+**Data Quality**:
+
+- All 5 sources fully represented
+- Coverage data populated for NFLverse datasets (season ranges)
+- Notes clarified purpose and snapshot status for each entry
+- Latest snapshots marked in notes for easy identification
+
+**Testing**:
+
+- Seed loaded successfully: `dbt seed --select snapshot_registry --full-refresh` ✅
+- Registry queries verified (source counts, status distribution, sample data) ✅
+- Row count data extraction complete for all available manifests ✅
+
+**Notes**:
+
+- Source "commissioner" normalized to "sheets" for consistency with governance model
+- Added transaction_qa dataset (temporary validation data)
+- Added marts directory (internal calculations, not part of 5 source governance)
+- Baseline snapshots (2025-10-01) properly identified for nflverse datasets requiring baseline+latest strategy
+
+**Next Steps**: Proceed to P2-003 (extend analyze_snapshot_coverage tool with row deltas)

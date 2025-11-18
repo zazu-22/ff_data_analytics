@@ -1,2 +1,101 @@
 source,dataset,snapshot_date,status,coverage_start_season,coverage_end_season,row_count,notes
-nflverse,weekly,2025-10-27,historical,2020,2024,89145,Test entry - Historical baseline
+sheets,cap_space,2025-11-06,current,,,60,Commissioner league salary cap data
+sheets,cap_space,2025-11-07,current,,,60,Commissioner league salary cap data
+sheets,cap_space,2025-11-09,current,,,60,Commissioner league salary cap data
+sheets,cap_space,2025-11-10,current,,,60,Commissioner league salary cap data
+sheets,cap_space,2025-11-12,current,,,60,Commissioner league salary cap data
+sheets,cap_space,2025-11-16,current,,,60,Commissioner league salary cap data - Latest snapshot
+sheets,contracts_active,2025-11-06,current,,,878,Active player contracts data
+sheets,contracts_active,2025-11-07,current,,,886,Active player contracts data
+sheets,contracts_active,2025-11-09,current,,,886,Active player contracts data
+sheets,contracts_active,2025-11-10,current,,,886,Active player contracts data
+sheets,contracts_active,2025-11-12,current,,,886,Active player contracts data
+sheets,contracts_active,2025-11-16,current,,,888,Active player contracts - Latest snapshot
+sheets,contracts_cut,2025-11-06,current,,,425,Cut player history data
+sheets,contracts_cut,2025-11-07,current,,,436,Cut player history data
+sheets,contracts_cut,2025-11-09,current,,,436,Cut player history data
+sheets,contracts_cut,2025-11-10,current,,,436,Cut player history data
+sheets,contracts_cut,2025-11-12,current,,,436,Cut player history data
+sheets,contracts_cut,2025-11-16,current,,,444,Cut player history - Latest snapshot
+sheets,draft_pick_conditions,2025-11-06,current,,,28,Draft pick conditions/protection rules
+sheets,draft_pick_conditions,2025-11-07,current,,,28,Draft pick conditions/protection rules
+sheets,draft_pick_conditions,2025-11-09,current,,,28,Draft pick conditions/protection rules
+sheets,draft_pick_conditions,2025-11-10,current,,,28,Draft pick conditions/protection rules
+sheets,draft_pick_conditions,2025-11-12,current,,,28,Draft pick conditions/protection rules
+sheets,draft_pick_conditions,2025-11-16,current,,,28,Draft pick conditions - Latest snapshot
+sheets,draft_picks,2025-11-06,current,,,346,Commissioner draft picks inventory
+sheets,draft_picks,2025-11-07,current,,,346,Commissioner draft picks inventory
+sheets,draft_picks,2025-11-09,current,,,346,Commissioner draft picks inventory
+sheets,draft_picks,2025-11-10,current,,,346,Commissioner draft picks inventory
+sheets,draft_picks,2025-11-12,current,,,346,Commissioner draft picks inventory
+sheets,draft_picks,2025-11-16,current,,,346,Commissioner draft picks - Latest snapshot
+sheets,transactions,2025-11-07,current,,,3999,Commissioner league transactions
+sheets,transactions,2025-11-09,current,,,3999,Commissioner league transactions
+sheets,transactions,2025-11-10,current,,,3999,Commissioner league transactions
+sheets,transactions,2025-11-12,current,,,3999,Commissioner league transactions
+sheets,transactions,2025-11-16,current,,,4008,Commissioner league transactions - Latest snapshot
+sheets,transactions_qa,2025-11-10,current,,,,QA/validation transactions (temporary)
+ffanalytics,projections,2025-11-06,current,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-09,current,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-13,current,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-14,current,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-16,current,2024,2025,,Fantasy projections from R package - Latest snapshot
+ktc,picks,2025-10-25,current,,,, Keep Trade Cut draft pick values
+ktc,picks,2025-10-30,current,,,36,Keep Trade Cut draft pick values
+ktc,picks,2025-11-05,current,,,36,Keep Trade Cut draft pick values
+ktc,picks,2025-11-10,current,,,36,Keep Trade Cut draft pick values
+ktc,picks,2025-11-16,current,,,36,Keep Trade Cut draft pick values - Latest snapshot
+ktc,players,2025-10-25,current,,,,Dynasty valuations 1QB format
+ktc,players,2025-10-30,current,,,464,Dynasty valuations 1QB format
+ktc,players,2025-11-05,current,,,464,Dynasty valuations 1QB format
+ktc,players,2025-11-10,current,,,464,Dynasty valuations 1QB format
+ktc,players,2025-11-16,current,,,464,Dynasty valuations 1QB format - Latest snapshot
+nflverse,ff_opportunity,2025-10-01,historical,2020,2024,,Fantasy opportunity metrics (baseline)
+nflverse,ff_opportunity,2025-10-28,current,2020,2024,,Fantasy opportunity metrics through Week 8
+nflverse,ff_opportunity,2025-11-05,current,2020,2025,,Fantasy opportunity metrics through Week 9
+nflverse,ff_opportunity,2025-11-09,current,2020,2025,,Fantasy opportunity metrics through Week 10
+nflverse,ff_opportunity,2025-11-10,current,2020,2025,,Fantasy opportunity metrics through Week 10
+nflverse,ff_opportunity,2025-11-16,current,2020,2025,,Fantasy opportunity metrics - Latest snapshot
+nflverse,ff_playerids,2025-10-01,historical,,,, Player ID mappings for FF (baseline)
+nflverse,ff_playerids,2025-11-09,current,,,,Player ID mappings for FF
+nflverse,ff_playerids,2025-11-10,current,,,,Player ID mappings for FF
+nflverse,ff_playerids,2025-11-16,current,,,,Player ID mappings for FF - Latest snapshot
+nflverse,schedule,2024-12-01,current,2024,2025,,NFL schedule data (2024-2025)
+nflverse,schedule,2025-10-27,current,2025,2025,,NFL schedule data (2025)
+nflverse,schedule,2025-11-05,current,2025,2025,,NFL schedule data (2025) - Latest snapshot
+nflverse,snap_counts,2025-10-01,historical,2020,2024,,Player snap counts (baseline)
+nflverse,snap_counts,2025-10-28,current,2020,2024,,Player snap counts through Week 8
+nflverse,snap_counts,2025-11-05,current,2020,2025,,Player snap counts through Week 9
+nflverse,snap_counts,2025-11-09,current,2020,2025,,Player snap counts through Week 10
+nflverse,snap_counts,2025-11-10,current,2020,2025,,Player snap counts through Week 10
+nflverse,snap_counts,2025-11-16,current,2020,2025,,Player snap counts - Latest snapshot
+nflverse,teams,2024-12-01,current,,,,NFL team information (32 teams)
+nflverse,weekly,2024-01-01,current,2020,2024,,Player weekly statistics (historical archive)
+nflverse,weekly,2025-10-01,historical,2020,2024,,Player weekly statistics (baseline)
+nflverse,weekly,2025-10-27,current,2020,2024,,Player weekly statistics through Week 8
+nflverse,weekly,2025-11-05,current,2020,2025,,Player weekly statistics through Week 9
+nflverse,weekly,2025-11-09,current,2020,2025,,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-10,current,2020,2025,,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-16,current,2020,2025,,Player weekly statistics - Latest snapshot
+sleeper,fa_pool,2025-10-27,current,,,7489,Sleeper free agent pool
+sleeper,fa_pool,2025-10-30,current,,,7512,Sleeper free agent pool
+sleeper,fa_pool,2025-11-05,current,,,7518,Sleeper free agent pool
+sleeper,fa_pool,2025-11-09,current,,,7485,Sleeper free agent pool
+sleeper,fa_pool,2025-11-12,current,,,7508,Sleeper free agent pool - Latest snapshot
+sleeper,players,2025-10-27,current,,,,Sleeper player database
+sleeper,players,2025-10-30,current,,,,Sleeper player database
+sleeper,players,2025-11-05,current,,,,Sleeper player database
+sleeper,players,2025-11-06,current,,,,Sleeper player database
+sleeper,players,2025-11-09,current,,,,Sleeper player database
+sleeper,players,2025-11-10,current,,,,Sleeper player database
+sleeper,players,2025-11-12,current,,,,Sleeper player database
+sleeper,players,2025-11-16,current,,,11401,Sleeper player database - Latest snapshot
+sleeper,rosters,2025-10-30,current,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-05,current,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-09,current,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-12,current,,,12,Sleeper league rosters - Latest snapshot
+sleeper,users,2025-10-27,current,,,13,Sleeper league users
+sleeper,users,2025-10-30,current,,,13,Sleeper league users
+sleeper,users,2025-11-05,current,,,13,Sleeper league users
+sleeper,users,2025-11-09,current,,,13,Sleeper league users
+sleeper,users,2025-11-12,current,,,13,Sleeper league users - Latest snapshot
