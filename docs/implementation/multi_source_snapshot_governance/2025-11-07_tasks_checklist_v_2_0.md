@@ -227,23 +227,28 @@ ______________________________________________________________________
 
 ### Snapshot Registry Seed
 
-- [ ] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` with columns:
-  - [ ] `source` (nflverse, sheets, ktc, ffanalytics, sleeper)
-  - [ ] `dataset` (weekly, snap_counts, etc.)
-  - [ ] `snapshot_date` (dt value)
-  - [ ] `status` (pending, current, historical, archived)
-  - [ ] `coverage_start_season`
-  - [ ] `coverage_end_season`
-  - [ ] `row_count`
-  - [ ] `notes`
-- [ ] Populate with current snapshots for all 5 sources:
+- [x] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` with columns:
+  - [x] `source` (nflverse, sheets, ktc, ffanalytics, sleeper)
+  - [x] `dataset` (weekly, snap_counts, etc.)
+  - [x] `snapshot_date` (dt value)
+  - [x] `status` (pending, current, historical, archived)
+  - [x] `coverage_start_season`
+  - [x] `coverage_end_season`
+  - [x] `row_count`
+  - [x] `notes`
+- [x] Create schema documentation in `dbt/ff_data_transform/seeds/seeds.yml`:
+  - [x] Document all columns with descriptions
+  - [x] Add validation tests (not_null, accepted_values)
+  - [x] Define lifecycle states
+- [x] Load seed with `dbt seed --select snapshot_registry` and verify no errors
+- [x] Test schema validation with `dbt test --select snapshot_registry` (7 tests passing)
+- [x] Verify seed accessible in DuckDB
+- [ ] Populate with current snapshots for all 5 sources (P2-002):
   - [ ] nflverse (weekly, snap_counts, ff_opportunity, schedule, teams)
   - [ ] sheets (roster, transactions, picks)
   - [ ] ktc (players, picks)
   - [ ] ffanalytics (projections)
   - [ ] sleeper (league data)
-- [ ] Load seed with `dbt seed` and verify no errors
-- [ ] Document snapshot lifecycle policy in registry notes
 
 ### Validation Tooling Extensions
 

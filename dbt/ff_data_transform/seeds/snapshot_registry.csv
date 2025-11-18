@@ -1,0 +1,2 @@
+source,dataset,snapshot_date,status,coverage_start_season,coverage_end_season,row_count,notes
+nflverse,weekly,2025-10-27,historical,2020,2024,89145,Test entry - Historical baseline

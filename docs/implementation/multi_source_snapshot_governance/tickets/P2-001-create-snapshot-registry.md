@@ -1,6 +1,7 @@
 # Ticket P2-001: Create Snapshot Registry Seed
 
 **Phase**: 2 - Governance\
+**Status**: COMPLETE\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: None (can start after Phase 1 kickoff)
 
@@ -16,20 +17,20 @@ This ticket creates the file structure and documents the schema. The next ticket
 
 ## Tasks
 
-- [ ] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` file
-- [ ] Define column schema with header row
-- [ ] Add initial test entry to verify seed loads
-- [ ] Document column definitions in seed schema file
-- [ ] Test seed loading: `uv run dbt seed --select snapshot_registry`
-- [ ] Verify seed accessible in dbt models
+- [x] Create `dbt/ff_data_transform/seeds/snapshot_registry.csv` file
+- [x] Define column schema with header row
+- [x] Add initial test entry to verify seed loads
+- [x] Document column definitions in seed schema file
+- [x] Test seed loading: `just dbt-seed --select snapshot_registry`
+- [x] Verify seed accessible in dbt models
 
 ## Acceptance Criteria
 
-- [ ] File exists at `dbt/ff_data_transform/seeds/snapshot_registry.csv`
-- [ ] Header row with all required columns defined
-- [ ] At least one test entry for validation
-- [ ] `dbt seed` loads file without errors
-- [ ] Column documentation complete
+- [x] File exists at `dbt/ff_data_transform/seeds/snapshot_registry.csv`
+- [x] Header row with all required columns defined
+- [x] At least one test entry for validation
+- [x] `dbt seed` loads file without errors
+- [x] Column documentation complete
 
 ## Implementation Notes
 
@@ -153,3 +154,32 @@ seeds:
 - Plan: `../2025-11-07_plan_v_2_0.md` - Design Decision #3 (lines 107-139)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 2 Registry (lines 90-106)
 - Example entries: Plan lines 125-131
+
+______________________________________________________________________
+
+## Completion Notes
+
+**Implemented**: 2025-11-18
+
+**Tests**: All passing (7/7 tests)
+
+- ✅ `not_null` tests: source, dataset, snapshot_date, status, row_count (5 tests)
+- ✅ `accepted_values` tests: source, status (2 tests)
+
+**Impact**:
+
+- Created snapshot registry seed foundation with full schema
+- Established governance lifecycle states: pending, current, historical, archived
+- Added comprehensive validation tests to ensure data quality
+- Seed successfully loads into DuckDB and is queryable
+- Test entry validates the full workflow
+
+**Files Created**:
+
+- `dbt/ff_data_transform/seeds/snapshot_registry.csv` (1 test entry)
+- Schema documentation in `dbt/ff_data_transform/seeds/seeds.yml` (lines 314-355)
+
+**Next Steps**:
+
+- **P2-002**: Populate registry with actual snapshot data for all 5 sources
+- Registry is now ready to serve as single source of truth for snapshot selection logic

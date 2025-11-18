@@ -310,3 +310,46 @@ seeds:
         description: "Chronological 1-indexed sequence of FAAD awards within season (immutable baseline)"
         data_tests:
           - not_null
+
+  - name: snapshot_registry
+    description: "Registry tracking snapshot lifecycle across all data sources. Serves as single source of truth for snapshot selection logic, CI validation, and audit trail."
+    columns:
+      - name: source
+        description: "Data provider (nflverse, sheets, ktc, ffanalytics, sleeper)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['nflverse', 'sheets', 'ktc', 'ffanalytics', 'sleeper']
+
+      - name: dataset
+        description: "Specific dataset within source (e.g., weekly, snap_counts, contracts_active)"
+        data_tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "Partition date (dt value in YYYY-MM-DD format)"
+        data_tests:
+          - not_null
+
+      - name: status
+        description: "Lifecycle stage: pending (loaded but not validated), current (active in production), historical (baseline for continuity), archived (retained for audit)"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pending', 'current', 'historical', 'archived']
+
+      - name: coverage_start_season
+        description: "Earliest season in snapshot (nullable for non-seasonal data)"
+
+      - name: coverage_end_season
+        description: "Latest season in snapshot (nullable for non-seasonal data)"
+
+      - name: row_count
+        description: "Total rows for validation purposes"
+        data_tests:
+          - not_null
+
+      - name: notes
+        description: "Freeform description and context"

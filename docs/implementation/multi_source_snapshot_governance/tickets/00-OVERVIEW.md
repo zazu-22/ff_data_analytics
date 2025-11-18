@@ -130,7 +130,7 @@ ______________________________________________________________________
 
 ## Phase 2: Governance (7 tickets)
 
-- [ ] **P2-001** — Create snapshot registry seed
+- [x] **P2-001** — Create snapshot registry seed
 - [ ] **P2-002** — Populate snapshot registry with all 5 sources
 - [ ] **P2-003** — Extend analyze_snapshot_coverage - row deltas
 - [ ] **P2-004** — Extend analyze_snapshot_coverage - gap detection
@@ -190,8 +190,9 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 29/61 tickets complete (48%)\
-**Phase 1 Foundation**: 29/30 tickets complete (97%)\
+**Overall Project**: 30/61 tickets complete (49%)\
+**Phase 1 Foundation**: 30/30 tickets complete (100%)\
+**Phase 2 Governance**: 1/7 tickets complete (14%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 
