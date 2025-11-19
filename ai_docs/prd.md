@@ -1657,7 +1657,7 @@ ______________________________________________________________________
 - **Task:** Build backtesting infrastructure for 2020→2021, 2021→2022, 2022→2023 validation
 - **Inputs:** Historical projections, actual outcomes
 - **Outputs:** MAE, RMSE, directional accuracy metrics by position
-- **Acceptance:** \<20% MAE on 1-year ahead target achieved
+- **Acceptance:** \<20% MAE on 1-year ahead target achieved; backtesting uses seeded randomness (np.random.seed(42), random_state=42) for reproducibility
 - **Estimate:** 8 hours
 
 **E2-S6: dbt Mart: mrt_multi_year_projections**
