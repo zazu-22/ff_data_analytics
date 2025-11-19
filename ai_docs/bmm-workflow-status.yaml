@@ -90,10 +90,10 @@ workflow_status:
       note: "HIGHLY RECOMMENDED - Distills brownfield context into focused solution design"
 
     - id: create-epics-and-stories-final
-      status: required
+      status: ai_docs/prd.md
       agent: pm
       command: /bmad:bmm:workflows:create-epics-and-stories
-      note: "Required - Final epic breakdown with full context"
+      note: "Completed - Epic breakdown included in PRD Section 10 (Epics 0-5 with stories)"
 
     - id: test-design
       status: recommended
