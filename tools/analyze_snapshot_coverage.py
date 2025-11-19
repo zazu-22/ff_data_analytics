@@ -3,7 +3,8 @@
 Analyze snapshot coverage for any data source to understand what data is in each snapshot.
 
 This tool analyzes Parquet files organized in date-partitioned directories (dt=YYYY-MM-DD)
-and generates reports showing data coverage, freshness, and entity counts.
+and generates reports showing data coverage, freshness, entity counts, row deltas, coverage
+gaps, and player mapping rates.
 
 Usage:
     # Analyze nflverse (default)
@@ -14,6 +15,12 @@ Usage:
 
     # Analyze specific datasets only
     python tools/analyze_snapshot_coverage.py --datasets weekly snap_counts
+
+    # Report row deltas between snapshots
+    python tools/analyze_snapshot_coverage.py --report-deltas
+
+    # Detect coverage gaps and check player mappings
+    python tools/analyze_snapshot_coverage.py --detect-gaps --check-mappings
 
     # Custom output directory
     python tools/analyze_snapshot_coverage.py --out-dir data/review/custom
@@ -105,17 +112,13 @@ def calculate_deltas(source: str, dataset: str, registry_df: pl.DataFrame) -> di
     pct_change = (delta / previous_count * 100) if previous_count > 0 else 0
 
     # Get thresholds for this source/dataset (with fallback defaults)
-    thresholds = DELTA_THRESHOLDS.get(source, {}).get(
-        dataset, {"min_pct": -50, "max_pct": 50}
-    )
+    thresholds = DELTA_THRESHOLDS.get(source, {}).get(dataset, {"min_pct": -50, "max_pct": 50})
 
     # Anomaly detection
     is_anomaly = pct_change < thresholds["min_pct"] or pct_change > thresholds["max_pct"]
     is_data_loss = delta < 0
     # Stagnant if very small delta for sources that should be growing
-    is_stagnant = (
-        abs(delta) < 10 and source == "nflverse" and dataset in ["weekly", "snap_counts"]
-    )
+    is_stagnant = abs(delta) < 10 and source == "nflverse" and dataset in ["weekly", "snap_counts"]
 
     return {
         "source": source,
@@ -131,6 +134,336 @@ def calculate_deltas(source: str, dataset: str, registry_df: pl.DataFrame) -> di
         "is_stagnant": is_stagnant,
         "thresholds": thresholds,
     }
+
+
+def _detect_weeks_gaps_for_season(
+    season: int, season_data: pl.DataFrame, current_year: int
+) -> list[dict]:
+    """Detect missing weeks for a specific season.
+
+    Args:
+        season: Season to check
+        season_data: DataFrame filtered to this season
+        current_year: Current year (to skip incomplete seasons)
+
+    Returns:
+        List of gap dictionaries
+
+    """
+    gaps = []
+    weeks_present = set(season_data["week"].unique().to_list())
+
+    # Expected weeks (1-18 for NFL regular season)
+    # Note: Some datasets may have playoff weeks 19-22
+    expected_weeks = set(range(1, 19))
+    missing_weeks = expected_weeks - weeks_present
+
+    # Only flag as gaps if season is complete (not current or future year)
+    is_current_or_future = season >= current_year
+    if missing_weeks and not is_current_or_future:
+        for week in sorted(missing_weeks):
+            gaps.append({"season": season, "week": week, "type": "missing_week"})
+
+    return gaps
+
+
+def _check_has_baseline(registry_df: pl.DataFrame, source: str, dataset: str) -> bool:
+    """Check if a baseline snapshot exists for this source/dataset.
+
+    Args:
+        registry_df: Snapshot registry
+        source: Data source
+        dataset: Dataset name
+
+    Returns:
+        True if baseline snapshot exists
+
+    """
+    baseline_count = len(
+        registry_df.filter(
+            (pl.col("source") == source)
+            & (pl.col("dataset") == dataset)
+            & (pl.col("status").is_in(["historical", "baseline"]))
+        )
+    )
+    return baseline_count > 0
+
+
+def detect_coverage_gaps(
+    source: str,
+    dataset: str,
+    snapshot_path: Path,
+    registry_df: pl.DataFrame,
+    snapshot_dt: str,
+) -> dict:
+    """Detect season/week coverage gaps in snapshot data.
+
+    Args:
+        source: Data source (e.g., 'nflverse')
+        dataset: Dataset within source (e.g., 'weekly')
+        snapshot_path: Path to snapshot Parquet files
+        registry_df: Snapshot registry for expected coverage
+        snapshot_dt: Date partition of this snapshot (e.g., '2025-11-16')
+
+    Returns:
+        Dictionary with gap analysis
+
+    """
+    try:
+        # Read snapshot data
+        df = pl.read_parquet(snapshot_path)
+
+        # Check if data has season/week columns
+        if "season" not in df.columns or "week" not in df.columns:
+            return {"error": "No season/week columns in data"}
+
+        # Get registry entry for THIS specific snapshot
+        this_snapshot = registry_df.filter(
+            (pl.col("source") == source)
+            & (pl.col("dataset") == dataset)
+            & (pl.col("snapshot_date") == snapshot_dt)
+        ).select(["coverage_start_season", "coverage_end_season", "status"])
+
+        if len(this_snapshot) == 0:
+            return {"error": f"Snapshot {snapshot_dt} not found in registry"}
+
+        snapshot_info = this_snapshot.row(0, named=True)
+        start_season = snapshot_info["coverage_start_season"]
+        end_season = snapshot_info["coverage_end_season"]
+        status = snapshot_info["status"]
+
+        if start_season is None or end_season is None:
+            return {"error": "Missing coverage season info in registry"}
+
+        # Check if there's a baseline snapshot available
+        has_baseline = _check_has_baseline(registry_df, source, dataset)
+
+        # Get actual seasons present in this snapshot
+        actual_seasons = set(df["season"].unique().to_list())
+
+        # Get current date to determine in-progress season
+        current_year = datetime.now().year
+
+        # Detect missing weeks
+        gaps = []
+        for season in range(start_season, end_season + 1):
+            # Skip if this is a current snapshot with baseline_plus_latest strategy
+            # (expected to only have current season, baseline has historical)
+            if status == "current" and has_baseline and season < current_year:
+                continue
+
+            # Skip if season not in actual data
+            if season not in actual_seasons:
+                # Only flag missing season if it's not current/future year
+                if season < current_year:
+                    gaps.append({"season": season, "week": None, "type": "missing_season"})
+                continue
+
+            season_data = df.filter(pl.col("season") == season)
+            season_gaps = _detect_weeks_gaps_for_season(season, season_data, current_year)
+            gaps.extend(season_gaps)
+
+        return {
+            "source": source,
+            "dataset": dataset,
+            "snapshot_dt": snapshot_dt,
+            "status": status,
+            "has_baseline": has_baseline,
+            "gaps": gaps,
+            "gap_count": len(gaps),
+            "coverage_seasons": f"{start_season}-{end_season}",
+            "strategy_note": (
+                "Uses baseline_plus_latest strategy - historical data in baseline snapshot"
+                if status == "current" and has_baseline
+                else None
+            ),
+        }
+
+    except Exception as e:
+        return {"error": f"Failed to detect gaps: {e}"}
+
+
+def _determine_join_column(id_col: str | None) -> str | None:
+    """Determine which xref column to join on based on the ID column.
+
+    Args:
+        id_col: Player ID column name from snapshot
+
+    Returns:
+        Join column name to use with dim_player_id_xref, or None if undeterminable
+
+    """
+    if not id_col:
+        return None
+
+    # Direct mappings
+    if id_col in ("gsis_id", "mfl_id", "pfr_player_id"):
+        return id_col
+
+    # For generic player_id, try gsis_id
+    if id_col == "player_id":
+        return "gsis_id"
+
+    return None
+
+
+def _find_player_id_columns(
+    snapshot_df: pl.DataFrame,
+) -> tuple[str | None, str | None]:
+    """Find player ID and name columns in the snapshot.
+
+    Args:
+        snapshot_df: Snapshot DataFrame
+
+    Returns:
+        Tuple of (id_col, name_col) or (None, None)
+
+    """
+    player_id_cols = ["player_id", "gsis_id", "pfr_player_id", "mfl_id"]
+    player_name_cols = ["player_name", "player_display_name", "player"]
+
+    id_col = None
+    for col in player_id_cols:
+        if col in snapshot_df.columns:
+            id_col = col
+            break
+
+    name_col = None
+    for col in player_name_cols:
+        if col in snapshot_df.columns:
+            name_col = col
+            break
+
+    return id_col, name_col
+
+
+def _get_unmapped_players_query(
+    id_col_safe: str, join_col_safe: str, name_col_safe: str | None
+) -> str:
+    """Build query to get unmapped players for the given columns.
+
+    Args:
+        id_col_safe: Validated and quoted ID column name
+        join_col_safe: Validated and quoted join column name
+        name_col_safe: Validated and quoted name column (optional)
+
+    Returns:
+        SQL query string
+
+    """
+    select_cols = f"s.{id_col_safe}"
+    if name_col_safe:
+        select_cols = f"s.{id_col_safe}, s.{name_col_safe}"
+
+    return f"""
+        SELECT {select_cols}
+        FROM sample_players s
+        LEFT JOIN dim_player_id_xref x ON s.{id_col_safe} = x.{join_col_safe}
+        WHERE x.mfl_id IS NULL
+        ORDER BY s.{id_col_safe}
+        LIMIT 10
+    """  # noqa: S608
+
+
+def calculate_mapping_rate(
+    snapshot_path: Path,
+    xref_path: str = "dbt/ff_data_transform/target/dev.duckdb",
+) -> dict:
+    """Calculate player mapping rate to dim_player_id_xref.
+
+    Args:
+        snapshot_path: Path to snapshot Parquet files
+        xref_path: Path to DuckDB database with dim_player_id_xref
+
+    Returns:
+        Dictionary with mapping statistics
+
+    """
+    try:
+        # Read snapshot
+        snapshot_df = pl.read_parquet(snapshot_path)
+
+        # Find player ID and name columns
+        id_col, name_col = _find_player_id_columns(snapshot_df)
+
+        if not id_col and not name_col:
+            return {"error": "No player identification columns found"}
+
+        # Get distinct players
+        select_cols = [c for c in [id_col, name_col] if c is not None]
+        sample_players = snapshot_df.select(select_cols).unique()
+
+        if len(sample_players) == 0:
+            return {
+                "total_players": 0,
+                "mapped_players": 0,
+                "mapping_rate": 100.0,
+                "unmapped_sample": [],
+            }
+
+        # Connect to DuckDB and join to xref
+        xref_db_path = Path(xref_path)
+        if not xref_db_path.exists():
+            return {"error": f"DuckDB file not found: {xref_path}"}
+
+        conn = duckdb.connect(str(xref_db_path), read_only=True)
+
+        # Determine which column to join on
+        join_col = _determine_join_column(id_col)
+
+        if join_col:
+            # Validate column names before using in SQL
+            id_col_safe = _validate_column_name(id_col)
+            join_col_safe = _validate_column_name(join_col)
+
+            # Column names are validated and quoted by _validate_column_name()
+            # which checks they contain only alphanumeric/underscore and adds quotes.
+            # The column names come from schema introspection (df.columns), not user
+            # input, so they are inherently safe. Using noqa to suppress false positive.
+            mapped_count = conn.execute(
+                f"""
+                SELECT COUNT(DISTINCT s.{id_col_safe})
+                FROM sample_players s
+                JOIN dim_player_id_xref x ON s.{id_col_safe} = x.{join_col_safe}
+            """  # noqa: S608
+            ).fetchone()[0]
+
+            # Get top unmapped players
+            name_col_safe = None
+            if name_col:
+                name_col_safe = _validate_column_name(name_col)
+
+            unmapped_query = _get_unmapped_players_query(id_col_safe, join_col_safe, name_col_safe)
+            unmapped_players = conn.execute(unmapped_query).fetchall()
+        else:
+            # Cannot join without ID column
+            mapped_count = 0
+            unmapped_players = []
+
+        conn.close()
+
+        total_count = len(sample_players)
+        mapping_rate = (mapped_count / total_count * 100) if total_count > 0 else 0
+
+        unmapped_sample = []
+        if name_col:
+            unmapped_sample = [
+                {"player_id": str(p[0]), "player_name": str(p[1])} for p in unmapped_players
+            ]
+        else:
+            unmapped_sample = [{"player_id": str(p[0])} for p in unmapped_players]
+
+        return {
+            "total_players": total_count,
+            "mapped_players": mapped_count,
+            "mapping_rate": round(mapping_rate, 2),
+            "unmapped_sample": unmapped_sample,
+            "id_column_used": id_col,
+            "join_column_used": join_col,
+        }
+
+    except Exception as e:
+        return {"error": f"Failed to calculate mapping rate: {e}"}
 
 
 def _sanitize_path_for_sql(parquet_path: Path) -> str:
@@ -159,6 +492,25 @@ def _sanitize_path_for_sql(parquet_path: Path) -> str:
     escaped = path_str.replace("'", "''")
 
     return escaped
+
+
+def _validate_column_name(col_name: str) -> str:
+    """Validate and quote a column name for safe SQL use.
+
+    Args:
+        col_name: Column name to validate
+
+    Returns:
+        Quoted column name safe for SQL
+
+    Raises:
+        ValueError: If column name contains invalid characters
+
+    """
+    # Only allow alphanumeric, underscore, and basic identifiers
+    if not all(c.isalnum() or c == "_" for c in col_name):
+        raise ValueError(f"Invalid column name: {col_name}")
+    return f'"{col_name}"'
 
 
 def _get_basic_file_info(
@@ -450,8 +802,79 @@ def _print_delta_info(delta_info: dict) -> None:
             print(f"    {warning}")
 
 
+def _print_gap_info(gap_info: dict) -> None:
+    """Print coverage gap information.
+
+    Args:
+        gap_info: Gap analysis from detect_coverage_gaps
+
+    """
+    if "error" in gap_info:
+        print(f"    Gap detection: {gap_info['error']}")
+        return
+
+    # Show strategy note if present
+    strategy_note = gap_info.get("strategy_note")
+    if strategy_note:
+        print(f"    Coverage strategy: {strategy_note}")
+
+    gap_count = gap_info.get("gap_count", 0)
+    if gap_count == 0:
+        coverage_msg = f"None (complete coverage for {gap_info['coverage_seasons']})"
+        if strategy_note:
+            coverage_msg = "None (expected for current snapshot - baseline has historical data)"
+        print(f"    Coverage gaps: {coverage_msg}")
+        return
+
+    print(f"    Coverage gaps: {gap_count} missing weeks")
+    gaps = gap_info.get("gaps", [])
+    for gap in gaps[:5]:  # Show first 5 gaps
+        if gap["week"] is None:
+            print(f"      - {gap['season']} (entire season missing)")
+        else:
+            print(f"      - {gap['season']} Week {gap['week']}")
+    if len(gaps) > 5:
+        print(f"      ... and {len(gaps) - 5} more gaps")
+
+
+def _print_mapping_info(mapping_info: dict) -> None:
+    """Print player mapping rate information.
+
+    Args:
+        mapping_info: Mapping statistics from calculate_mapping_rate
+
+    """
+    if "error" in mapping_info:
+        print(f"    Player mapping: {mapping_info['error']}")
+        return
+
+    rate = mapping_info.get("mapping_rate", 0)
+    total = mapping_info.get("total_players", 0)
+    mapped = mapping_info.get("mapped_players", 0)
+    unmapped_count = total - mapped
+
+    print(f"    Player mapping: {rate:.1f}% ({mapped:,}/{total:,} players)")
+
+    if rate < 90 and unmapped_count > 0:
+        print(f"      ⚠️  LOW MAPPING RATE ({unmapped_count:,} unmapped players)")
+
+        unmapped_sample = mapping_info.get("unmapped_sample", [])
+        if unmapped_sample:
+            print("      Top unmapped players:")
+            for player in unmapped_sample[:3]:
+                if "player_name" in player:
+                    print(f"        - {player['player_name']} ({player['player_id']})")
+                else:
+                    print(f"        - {player['player_id']}")
+
+
 def _print_snapshot_metrics(
-    metrics: dict[str, Any], dt: str, parquet_path: Path, delta_info: dict | None = None
+    metrics: dict[str, Any],
+    dt: str,
+    parquet_path: Path,
+    delta_info: dict | None = None,
+    gap_info: dict | None = None,
+    mapping_info: dict | None = None,
 ) -> None:
     """Print metrics for a single snapshot.
 
@@ -460,6 +883,8 @@ def _print_snapshot_metrics(
         dt: Snapshot date partition
         parquet_path: Path to the parquet file
         delta_info: Optional delta information from calculate_deltas
+        gap_info: Optional gap information from detect_coverage_gaps
+        mapping_info: Optional mapping information from calculate_mapping_rate
 
     """
     print(f"\n  Snapshot: dt={dt}")
@@ -475,8 +900,124 @@ def _print_snapshot_metrics(
     if delta_info and "error" not in delta_info and delta_info.get("current_snapshot") == dt:
         _print_delta_info(delta_info)
 
+    # Print gap information if available
+    if gap_info and gap_info.get("current_snapshot") == dt:
+        _print_gap_info(gap_info)
+
+    # Print mapping information if available
+    if mapping_info and mapping_info.get("current_snapshot") == dt:
+        _print_mapping_info(mapping_info)
+
     _print_distinct_entities(metrics)
     _print_season_week_breakdown(metrics)
+
+
+def _compute_delta_info(
+    source_name: str, dataset: str, registry_df: pl.DataFrame | None
+) -> dict | None:
+    """Compute delta information if registry is available.
+
+    Args:
+        source_name: Name of the source
+        dataset: Dataset name
+        registry_df: Optional snapshot registry
+
+    Returns:
+        Delta info dictionary or None
+
+    """
+    if registry_df is None:
+        return None
+
+    delta_info = calculate_deltas(source_name, dataset, registry_df)
+    if "error" in delta_info:
+        print(f"  Note: {delta_info['error']}")
+        return None
+
+    return delta_info
+
+
+def _compute_gap_info(
+    detect_gaps: bool,
+    registry_df: pl.DataFrame | None,
+    source_name: str,
+    dataset: str,
+    current_path: Path | None,
+    current_dt: str | None,
+) -> dict | None:
+    """Compute gap detection information for current snapshot.
+
+    Args:
+        detect_gaps: Whether gap detection is requested
+        registry_df: Optional snapshot registry
+        source_name: Data source name
+        dataset: Dataset name
+        current_path: Path to current snapshot
+        current_dt: Date of current snapshot
+
+    Returns:
+        Gap info dictionary or None
+
+    """
+    if not (detect_gaps and registry_df is not None and current_path and current_dt):
+        return None
+
+    gap_info = detect_coverage_gaps(source_name, dataset, current_path, registry_df, current_dt)
+    if "error" not in gap_info:
+        gap_info["current_snapshot"] = current_dt
+
+    return gap_info
+
+
+def _compute_mapping_info(
+    check_mappings: bool, current_path: Path | None, current_dt: str | None
+) -> dict | None:
+    """Compute player mapping information for current snapshot.
+
+    Args:
+        check_mappings: Whether mapping check is requested
+        current_path: Path to current snapshot
+        current_dt: Date of current snapshot
+
+    Returns:
+        Mapping info dictionary or None
+
+    """
+    if not (check_mappings and current_path):
+        return None
+
+    mapping_info = calculate_mapping_rate(current_path)
+    if "error" not in mapping_info:
+        mapping_info["current_snapshot"] = current_dt
+
+    return mapping_info
+
+
+def _add_analysis_to_metrics(
+    metrics: dict[str, Any],
+    dt: str,
+    delta_info: dict | None,
+    gap_info: dict | None,
+    mapping_info: dict | None,
+) -> None:
+    """Add delta/gap/mapping analysis results to metrics dictionary.
+
+    Args:
+        metrics: Metrics dictionary to update
+        dt: Current snapshot date
+        delta_info: Delta information if available
+        gap_info: Gap information if available
+        mapping_info: Mapping information if available
+
+    """
+    if delta_info and delta_info.get("current_snapshot") == dt:
+        metrics["delta"] = delta_info
+
+    if gap_info and gap_info.get("current_snapshot") == dt:
+        metrics["gaps"] = gap_info
+
+    if mapping_info and mapping_info.get("current_snapshot") == dt:
+        metrics["mapping"] = mapping_info
 
 
 def _analyze_dataset(
@@ -484,6 +1025,8 @@ def _analyze_dataset(
     files: list[tuple[str, Path]],
     source_name: str,
     registry_df: pl.DataFrame | None = None,
+    detect_gaps: bool = False,
+    check_mappings: bool = False,
 ) -> dict[str, dict[str, Any]]:
     """Analyze all snapshots for a single dataset.
 
@@ -492,6 +1035,8 @@ def _analyze_dataset(
         files: List of (dt, parquet_path) tuples
         source_name: Name of the source (for delta calculation)
         registry_df: Optional snapshot registry DataFrame for delta calculation
+        detect_gaps: Whether to detect coverage gaps
+        check_mappings: Whether to check player mapping rates
 
     Returns:
         Dictionary mapping dt -> metrics
@@ -501,26 +1046,28 @@ def _analyze_dataset(
     print(f"Dataset: {dataset}")
     print(f"{'=' * 60}")
 
-    # Calculate deltas if registry available
-    delta_info = None
-    if registry_df is not None:
-        delta_info = calculate_deltas(source_name, dataset, registry_df)
-        if "error" in delta_info:
-            print(f"  Note: {delta_info['error']}")
-            delta_info = None
+    # Get current snapshot for gap and mapping detection
+    sorted_files = sorted(files, reverse=True)
+    current_dt, current_path = sorted_files[0] if sorted_files else (None, None)
 
+    # Compute analysis information
+    delta_info = _compute_delta_info(source_name, dataset, registry_df)
+    gap_info = _compute_gap_info(
+        detect_gaps, registry_df, source_name, dataset, current_path, current_dt
+    )
+    mapping_info = _compute_mapping_info(check_mappings, current_path, current_dt)
+
+    # Analyze each snapshot
     dataset_results = {}
-
     for dt, parquet_path in sorted(files):
         metrics = analyze_parquet_file(parquet_path)
-        metrics["file_path"] = str(parquet_path)  # Store full path for reference
+        metrics["file_path"] = str(parquet_path)
 
-        # Add delta info to results for the current snapshot
-        if delta_info and delta_info.get("current_snapshot") == dt:
-            metrics["delta"] = delta_info
+        # Add analysis results to metrics
+        _add_analysis_to_metrics(metrics, dt, delta_info, gap_info, mapping_info)
 
         dataset_results[dt] = metrics
-        _print_snapshot_metrics(metrics, dt, parquet_path, delta_info)
+        _print_snapshot_metrics(metrics, dt, parquet_path, delta_info, gap_info, mapping_info)
 
     return dataset_results
 
@@ -565,6 +1112,8 @@ def analyze_snapshots(
     source_name: str | None = None,
     datasets_filter: list[str] | None = None,
     report_deltas: bool = False,
+    detect_gaps: bool = False,
+    check_mappings: bool = False,
     registry_path: Path | None = None,
 ) -> dict:
     """Analyze all snapshots in a directory.
@@ -574,6 +1123,8 @@ def analyze_snapshots(
         source_name: Name of the source (extracted from path if None)
         datasets_filter: Optional list of dataset names to filter by
         report_deltas: Whether to calculate and report deltas between snapshots
+        detect_gaps: Whether to detect coverage gaps
+        check_mappings: Whether to check player mapping rates
         registry_path: Optional path to snapshot registry (for delta calculation)
 
     Returns:
@@ -587,15 +1138,20 @@ def analyze_snapshots(
     if source_name is None:
         source_name = base_dir.name
 
-    # Load registry if delta reporting requested
+    # Load registry if delta reporting or gap detection requested
     registry_df = None
-    if report_deltas:
+    if report_deltas or detect_gaps:
         try:
             registry_df = load_snapshot_registry(registry_path)
-            print("Loaded snapshot registry for delta calculation\n")
+            features = []
+            if report_deltas:
+                features.append("delta calculation")
+            if detect_gaps:
+                features.append("gap detection")
+            print(f"Loaded snapshot registry for {', '.join(features)}\n")
         except FileNotFoundError as e:
             print(f"Warning: {e}")
-            print("Continuing without delta calculation\n")
+            print("Continuing without registry-based features\n")
 
     # Find all parquet files
     parquet_files = sorted(base_dir.glob("*/dt=*/*.parquet"))
@@ -616,7 +1172,9 @@ def analyze_snapshots(
     # Analyze each dataset
     results = {}
     for dataset, files in sorted(datasets.items()):
-        results[dataset] = _analyze_dataset(dataset, files, source_name, registry_df)
+        results[dataset] = _analyze_dataset(
+            dataset, files, source_name, registry_df, detect_gaps, check_mappings
+        )
 
     return results
 
@@ -636,6 +1194,15 @@ Examples:
 
   # Analyze specific datasets only
   python tools/analyze_snapshot_coverage.py --datasets weekly snap_counts
+
+  # Report row deltas between snapshots
+  python tools/analyze_snapshot_coverage.py --report-deltas
+
+  # Detect coverage gaps and check player mappings (nflverse)
+  python tools/analyze_snapshot_coverage.py --detect-gaps --check-mappings
+
+  # Full analysis with all features
+  python tools/analyze_snapshot_coverage.py --report-deltas --detect-gaps --check-mappings
 
   # Custom output directory and filename
   python tools/analyze_snapshot_coverage.py --out-dir data/review --out-name custom_report
@@ -682,10 +1249,25 @@ Examples:
     )
 
     parser.add_argument(
+        "--detect-gaps",
+        action="store_true",
+        help="Detect season/week coverage gaps in snapshot data",
+    )
+
+    parser.add_argument(
+        "--check-mappings",
+        action="store_true",
+        help="Check player mapping rates to dim_player_id_xref",
+    )
+
+    parser.add_argument(
         "--registry-path",
         type=Path,
         default=None,
-        help="Path to snapshot registry CSV (default: dbt/ff_data_transform/seeds/snapshot_registry.csv)",
+        help=(
+            "Path to snapshot registry CSV "
+            "(default: dbt/ff_data_transform/seeds/snapshot_registry.csv)"
+        ),
     )
 
     args = parser.parse_args()
@@ -700,6 +1282,8 @@ Examples:
         source_name=source_name,
         datasets_filter=args.datasets,
         report_deltas=args.report_deltas,
+        detect_gaps=args.detect_gaps,
+        check_mappings=args.check_mappings,
         registry_path=args.registry_path,
     )
 

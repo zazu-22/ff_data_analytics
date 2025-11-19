@@ -16,26 +16,34 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 31/61 tickets complete (51%)
+**Progress**: 32/61 tickets complete (52%)
 
-## Recent Accomplishments (2025-11-12)
+## Recent Accomplishments (2025-11-18)
 
-🎉 **Major Breakthrough**: Streaming hypothesis VALIDATED and roster parity test fully resolved!
+🎉 **Phase 2 Governance Tools Complete**: Snapshot observability toolkit fully operational!
 
 **Completed This Session**:
 
-- ✅ **P1-019**: Roster parity investigation COMPLETE (30→0 failures, 100% success)
-  - Discovered and fixed 4 critical player_id resolution bugs
-  - Validated streaming hypothesis: weekly roster changes explain expected discrepancies
-  - Quick fixes applied; full refactor tracked in new ticket P1-027
-- ✅ **P1-026**: Fixed macro cartesian product regression (3,563 duplicates eliminated)
-- ✅ **P1-020**: Resolved TBD pick duplicates (22 pick_ids → 0)
-- ✅ **P1-022**: Resolved orphan pick references (46 orphans → 0)
-- ✅ **P1-023**: Base picks per round validation COMPLETE (4→0 failures, 100% success)
-- ✅ **P1-024**: Comp registry duplicates resolved (19→0 duplicates) - PREVIOUSLY COMPLETED (2025-11-10, commit d6eb65c)
-- 📝 **P1-027**: NEW TICKET created for contracts model refactoring (technical debt cleanup)
+- ✅ **P2-003**: Extend analyze_snapshot_coverage - row deltas
 
-**Impact**: Phase 1 now 27/30 tickets complete (90%); Overall project 27/61 tickets complete (44%)
+  - Row count delta calculations between snapshots
+  - Anomaly detection with configurable thresholds
+  - Discovered missing row_count values in nflverse registry (data quality issue)
+
+- ✅ **P2-004**: Extend analyze_snapshot_coverage - gap detection
+
+  - Season/week coverage gap detection (baseline_plus_latest aware)
+  - Player mapping rate calculation (dim_player_id_xref integration)
+  - CI/CD safe: no false alarms for expected partial coverage
+  - **Bonus**: Created registry maintenance tool + comprehensive documentation
+
+**Bonus Deliverables**:
+
+- 🛠️ **NEW TOOL**: `tools/update_snapshot_registry.py` - sync registry with actual data
+- 📚 **NEW GUIDE**: `docs/.../REGISTRY_MAINTENANCE.md` - Phase 2→4 migration strategy
+- ✅ **Phase 4 verified**: Registry updates included in all Prefect flow tickets
+
+**Impact**: Phase 2 now 4/7 tickets complete (57%); Overall project 32/61 tickets complete (52%)
 
 ______________________________________________________________________
 
@@ -134,8 +142,8 @@ ______________________________________________________________________
 
 - [x] **P2-001** — Create snapshot registry seed
 - [x] **P2-002** — Populate snapshot registry with all 5 sources ✅ **COMPLETE** (2025-11-18)
-- [-] **P2-003** — Extend analyze_snapshot_coverage - row deltas ⏳ **READY FOR REVIEW** (2025-11-18, needs validation with real data)
-- [ ] **P2-004** — Extend analyze_snapshot_coverage - gap detection
+- [x] **P2-003** — Extend analyze_snapshot_coverage - row deltas ✅ **COMPLETE** (2025-11-18)
+- [x] **P2-004** — Extend analyze_snapshot_coverage - gap detection ✅ **COMPLETE** (2025-11-18)
 - [ ] **P2-005** — Create validate_manifests tool
 - [ ] **P2-006** — Add freshness tests (frequently updated: nflverse, sheets, sleeper)
 - [ ] **P2-007** — Add freshness tests (weekly/sporadic: ktc, ffanalytics)

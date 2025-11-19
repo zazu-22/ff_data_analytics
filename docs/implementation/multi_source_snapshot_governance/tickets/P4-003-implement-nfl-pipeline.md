@@ -23,7 +23,7 @@ The NFL data pipeline is the most complex, handling multiple datasets (weekly, s
 
 - [ ] Flow executes successfully for all NFLverse datasets
 - [ ] Anomaly detection catches unusual row count changes
-- [ ] Snapshot registry updated with new snapshot
+- [ ] Snapshot registry updated atomically with data write (deprecates `tools/update_snapshot_registry.py`)
 - [ ] Flow testable locally
 
 ## Implementation Notes

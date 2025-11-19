@@ -90,8 +90,12 @@ PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py
 # Analyze a different source
 PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py --source data/raw/sleeper
 
-# Analyze specific datasets only
-PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py --datasets weekly snap_counts
+# Analyze specific datasets with all features
+PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py \
+  --datasets weekly snap_counts \
+  --report-deltas \
+  --detect-gaps \
+  --check-mappings
 
 # Custom output directory and filename
 PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py \
@@ -109,6 +113,9 @@ PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py \
 - Works with any data source (nflverse, sleeper, commissioner, etc.)
 - Analyzes Parquet files in date-partitioned directories (`dt=YYYY-MM-DD`)
 - Reports season/week coverage, entity counts, and snapshot overlaps
+- Delta reporting: row count changes between snapshots
+- Gap detection: missing weeks in historical data (baseline_plus_latest aware)
+- Player mapping rates: coverage in dim_player_id_xref
 - Helps identify stale data, missing snapshots, and coverage gaps
 
 **When to use**:
@@ -117,6 +124,53 @@ PYTHONPATH=. uv run python tools/analyze_snapshot_coverage.py \
 - Understanding what data exists in snapshots
 - Identifying which snapshots dbt models should use
 - Debugging data coverage issues
+- Monitoring ingestion quality (use --report-deltas)
+
+______________________________________________________________________
+
+### update_snapshot_registry.py
+
+**Purpose**: Synchronize snapshot registry with actual data files (maintenance tool)
+
+**Status**: Temporary - will be deprecated after Phase 4 (Prefect orchestration)
+
+**Usage**:
+
+```bash
+# Update all sources
+python tools/update_snapshot_registry.py
+
+# Update specific source
+python tools/update_snapshot_registry.py --source nflverse
+
+# Dry run (show changes without applying)
+python tools/update_snapshot_registry.py --dry-run
+
+# Update specific datasets
+python tools/update_snapshot_registry.py --source nflverse --datasets weekly snap_counts
+```
+
+**What it does**:
+
+- Scans `data/raw/` for all parquet snapshots
+- Reads row counts and coverage metadata from actual files
+- Updates `snapshot_registry.csv` with accurate values
+- Preserves status and description fields (only updates metrics)
+
+**When to use**:
+
+- After manual data ingestion (before Phase 4)
+- When registry row_count column is NULL/stale
+- To fix registry drift or data quality issues
+- One-time fix for missing metadata
+
+**When NOT to use**:
+
+- After Phase 4 Prefect flows are implemented (automated)
+- For routine operations (should be automated)
+- If you're just reading data (this is for data writers)
+
+**Deprecation notice**: This tool is a temporary bridge until Phase 4 orchestration. In the long-term architecture, Prefect flows will update the registry atomically with data writes, eliminating the need for manual maintenance.
 
 ______________________________________________________________________
 

@@ -228,6 +228,7 @@ def get_output_path(source, dataset, dt, samples=True):
 **Implemented**: 2025-11-14
 
 **Findings**:
+
 - No archival actions required in current environment
 - `data/raw/` directory does not exist (gitignored runtime data)
 - Only one sample snapshot found: `samples/ffanalytics/projections/dt=2025-10-25` (kept per policy - ffanalytics still in development)
@@ -235,6 +236,7 @@ def get_output_path(source, dataset, dt, samples=True):
 - Tests passing: `tests/test_nflverse_samples_pk.py` (2/2 passed)
 
 **Actions Completed**:
+
 - ✅ Investigated all sample data locations
 - ✅ Verified test fixtures work correctly (pytest passes)
 - ✅ Updated `tools/make_samples.py` documentation with sample usage and archival policy
@@ -242,6 +244,7 @@ def get_output_path(source, dataset, dt, samples=True):
 - ✅ Verified dbt models use `external_root` variable correctly (no hardcoded sample paths)
 
 **Impact**:
+
 - Documentation updated to prevent future sample/production data mixing
 - Clear policy established: archive samples when source is fully integrated with production data
 - No changes needed to test fixtures or dbt compilation
