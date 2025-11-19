@@ -84,7 +84,7 @@ workflow_status:
 
   phase_2_solutioning:
     - id: architecture
-      status: recommended
+      status: ai_docs/architecture.md
       agent: architect
       command: /bmad:bmm:workflows:architecture
       note: "HIGHLY RECOMMENDED - Distills brownfield context into focused solution design"
