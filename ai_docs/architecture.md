@@ -319,7 +319,7 @@ ______________________________________________________________________
 
 - Package management (uv 0.8.8)
 - Python version (3.13.6 via .python-version)
-- dbt setup (dbt-fusion 2.0.0-preview.32)
+- dbt setup (dbt-core 1.10.13 + dbt-duckdb 1.10.0)
 - Task runner (justfile patterns)
 - Testing framework (pytest)
 - Code quality (ruff, pre-commit hooks)
@@ -332,8 +332,9 @@ ______________________________________________________________________
 | ------------------- | -------------------------- | ---------------------------- | --------------------------------------------------- | -------------------------- |
 | **Language**        | Python                     | 3.13.6                       | Existing project standard, compatible with all deps | Existing (.python-version) |
 | **Package Manager** | uv                         | 0.8.8                        | Existing project standard, fast resolver            | Existing                   |
-| **Database**        | DuckDB                     | >=1.4.0                      | Existing OLAP database, columnar analytics          | Existing (dbt-fusion)      |
-| **Transform**       | dbt-fusion                 | 2.0.0-preview.32             | Existing dbt + DuckDB adapter                       | Existing                   |
+| **Database**        | DuckDB                     | >=1.4.0                      | Existing OLAP database, columnar analytics          | Existing                   |
+| **Transform**       | dbt-core                   | 1.10.13                      | SQL transformation engine (Python-based)            | Existing                   |
+| **dbt Adapter**     | dbt-duckdb                 | 1.10.0                       | dbt adapter for DuckDB integration                  | Existing                   |
 | **Data Processing** | Polars                     | 1.35.2 (verified 2025-11-18) | High-performance DataFrames, columnar optimization  | **NEW**                    |
 | **Data Processing** | PyArrow                    | Latest                       | Parquet I/O, columnar format                        | Existing                   |
 | **Orchestration**   | Prefect                    | 3.6.2 (verified 2025-11-18)  | Cloud-native orchestration, Python-native flows     | **NEW** (Epic 0)           |
@@ -1761,7 +1762,7 @@ ______________________________________________________________________
 
 - All technology versions verified current (2025-11-18)
 - Python 3.13.6 compatible with Prefect 3.6.2, Polars 1.35.2, Pydantic 2.12.4, scikit-learn 1.7.2
-- dbt-fusion 2.0.0-preview.32 compatible with DuckDB >=1.4.0
+- dbt-core 1.10.13 with dbt-duckdb 1.10.0 adapter compatible with DuckDB >=1.4.0
 - All integrations align (external Parquet pattern, Pydantic → dbt schema alignment)
 
 **✓ Epic Coverage:**
