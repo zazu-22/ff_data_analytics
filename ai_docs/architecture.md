@@ -324,7 +324,20 @@ ______________________________________________________________________
 - Testing framework (pytest)
 - Code quality (ruff, pre-commit hooks)
 
-**First Implementation Story:** Epic 0 Story 1 - Prefect Cloud workspace setup (not project initialization)
+**Project Initialization:**
+
+While no starter template is used, **Epic 0 (Prefect Foundation Setup)** serves as the initialization phase for the analytics infrastructure. Epic 0 establishes the orchestration foundation before any analytics development begins:
+
+- **Epic 0 Story 1:** Prefect Cloud workspace setup (authentication, deployment configuration)
+- **Epic 0 Story 2:** Discord notification block (alert infrastructure)
+- **Epic 0 Story 3:** Analytics flow templates (task patterns, error handling, retry logic)
+- **Epic 0 Story 4:** Review snapshot governance flows (extract reusable patterns)
+
+Epic 0 is effectively the "initialization sprint" - it sets up the infrastructure that all subsequent epics (1-5) depend on. Without Epic 0 completion, analytics development cannot proceed (ADR-001: Prefect-First Development).
+
+**First Implementation Story:** Epic 0 Story 1 - Prefect Cloud workspace setup
+
+See Section 10.1 for complete Epic 0 checklist.
 
 ### 2.2 Core Technology Stack
 
@@ -349,6 +362,12 @@ ______________________________________________________________________
 | **Alerts**          | Discord Webhooks           | N/A                          | Existing notification system                        | Existing (GitHub Actions)  |
 
 **Version Verification Date:** 2025-11-18 (all "verified" versions checked against latest stable releases)
+
+**Version Strategy (LTS vs Latest):**
+
+- **Latest stable chosen for new dependencies** (Prefect 3.6.2, Polars 1.35.2, Pydantic 2.12.4, scikit-learn 1.7.2) to leverage performance improvements, modern APIs, and latest features
+- **Python 3.13.6 chosen as project standard** (existing .python-version) - benefits of latest language features and performance optimizations outweigh LTS stability for local development environment
+- **Rationale:** MVP local development prioritizes developer experience and performance over long-term support windows. LTS strategy becomes relevant for production deployments with multi-year support requirements
 
 ### 2.3 Architectural Decisions Summary
 
@@ -532,6 +551,55 @@ def analytics_pipeline():
     # Trigger dbt materialization
     run_dbt_marts()
 ```
+
+**State Transitions (Prefect Built-In):**
+
+Prefect provides built-in state management for all tasks and flows. Understanding these states is critical for debugging and monitoring.
+
+**Task States:**
+
+```
+Pending → Running → Success
+                 ↓
+                Failed → Retrying (if retries configured) → Success
+                                                           ↓
+                                                          Failed
+```
+
+- **Pending:** Task scheduled but not yet started
+- **Running:** Task currently executing
+- **Success:** Task completed successfully, return value cached
+- **Failed:** Task encountered unhandled exception
+- **Retrying:** Task failed but retry attempt scheduled (if `@task(retries=N)` configured)
+- **Crashed:** Task process terminated unexpectedly (rare, infrastructure failure)
+
+**Flow States:**
+
+```
+Scheduled → Running → Completed
+                   ↓
+                  Failed
+```
+
+- **Scheduled:** Flow deployment scheduled via cron or manual trigger
+- **Running:** Flow currently orchestrating tasks
+- **Completed:** All tasks succeeded, flow finished
+- **Failed:** One or more tasks failed without recovery
+
+**State Transition Triggers:**
+
+1. **Task failure → Retry:** Automatic if `@task(retries=N, retry_delay_seconds=M)` configured
+2. **Task failure → Flow failure:** If task has no retries or exhausted all retry attempts
+3. **Flow failure → Discord alert:** Via `@flow(on_failure=[send_failure_alert])` hook
+
+**Prefect UI Monitoring:**
+
+All state transitions visible in Prefect Cloud UI with:
+
+- Task run timeline (visualize task dependencies and execution order)
+- State history (track retries, failures, durations)
+- Logs (DEBUG/INFO/ERROR from Python logging module)
+- Artifacts (intermediate DataFrames, validation results)
 
 **Benefits:**
 
@@ -1054,6 +1122,181 @@ def calculate_vor():
    - Never use random CV splits
    - Small NFL sample (17 games) → overfitting risk → temporal validation mandatory
 
+### 5.7 Communication & Event Patterns
+
+**Communication Layers:**
+
+Analytics infrastructure uses three distinct communication patterns for different audiences and purposes.
+
+**1. Discord Alerts (Human Notification)**
+
+Purpose: Alert stakeholders to critical events requiring human attention.
+
+```python
+from prefect.blocks.discord import DiscordWebhook
+
+# Flow-level failures
+@flow(on_failure=[send_discord_alert])
+def analytics_pipeline():
+    pass  # Any unhandled exception triggers Discord alert
+
+# Backtesting regression
+@task
+def check_backtesting_results(mae: float):
+    TARGET_MAE = 0.20
+    WARNING_MAE = 0.25
+
+    if mae > WARNING_MAE:
+        send_discord_alert(
+            f"⚠️ **MODEL REGRESSION DETECTED**\n"
+            f"Overall MAE: {mae:.2%} (threshold: {TARGET_MAE:.2%})"
+        )
+    elif mae > TARGET_MAE:
+        send_discord_alert(
+            f"ℹ️ MAE above target: {mae:.2%} (target: {TARGET_MAE:.2%})"
+        )
+
+# Critical validation errors
+@task
+def calculate_vor(...):
+    try:
+        validated = [PlayerValuationOutput(**r) for r in results]
+    except ValidationError as e:
+        logger.error(f"Schema validation failed: {e.json()}")
+        send_discord_alert(f"🚨 Schema validation failure in VoR calculation")
+        raise
+```
+
+**When to use Discord alerts:**
+
+- Pipeline failures (flow-level `on_failure` hook)
+- Backtesting regression (MAE > threshold)
+- Critical Pydantic validation failures
+- Data quality issues requiring investigation
+
+**When NOT to use Discord alerts:**
+
+- Task completion (use Prefect logs)
+- Debugging information (use Python logging)
+- Informational events (use Prefect artifacts)
+
+**2. Prefect Events (System Monitoring)**
+
+Purpose: Track system behavior for operational monitoring, debugging, and auditing.
+
+**Automatic Events (Built-In):**
+
+- Task state transitions (Pending → Running → Success/Failed)
+- Flow state transitions (Scheduled → Running → Completed/Failed)
+- Task retries (automatic logging of retry attempts)
+- Task duration/runtime metrics
+
+**Artifacts (Intermediate Results):**
+
+```python
+from prefect import task
+from prefect.artifacts import create_table_artifact
+
+@task
+def calculate_vor(...) -> pl.DataFrame:
+    # Business logic
+    results_df = ...
+
+    # Create artifact for debugging (viewable in Prefect UI)
+    create_table_artifact(
+        key="vor-calculation-summary",
+        table=results_df.head(20).to_dicts(),
+        description="Top 20 players by VoR"
+    )
+
+    return results_df
+```
+
+**Prefect Blocks (Configuration as Code):**
+
+```python
+# Discord webhook block (created in Epic 0)
+discord_webhook = DiscordWebhook.load("ff-analytics-alerts")
+
+# Use block for notifications
+discord_webhook.notify("Pipeline completed successfully")
+```
+
+**When to use Prefect events/artifacts:**
+
+- Store intermediate DataFrames for debugging
+- Track task-level metrics (row counts, execution time)
+- Configuration management (Discord webhooks, API keys via blocks)
+- Operational monitoring (task dependencies, flow runs)
+
+**3. Inter-Component State Synchronization**
+
+Purpose: Coordinate state between Python analytics, dbt models, and notebooks.
+
+**Python → dbt State Boundary:**
+
+```python
+# Python writes Parquet = signal to dbt that data is ready
+@task
+def write_parquet(df: pl.DataFrame, output_path: str):
+    df.write_parquet(output_path)
+    # Implicit state transition: Data now available for dbt to read
+
+# dbt reads external Parquet source
+# State query: Does file exist? Is it newer than last run?
+```
+
+**dbt → Notebooks State Boundary:**
+
+```sql
+-- dbt materializes mart = signal to notebooks that data is ready
+-- State stored in DuckDB catalog metadata (table exists, last modified timestamp)
+```
+
+**No Distributed State Management Needed:**
+
+All components run sequentially in local execution:
+
+1. Python Prefect tasks write Parquet (blocking)
+2. dbt reads Parquet and materializes marts (blocking)
+3. Notebooks query materialized marts (data guaranteed to exist)
+
+No need for distributed locks, message queues, or event buses. State transitions are file-based (Parquet written = ready) and database-based (dbt mart materialized = ready).
+
+**State Verification Pattern:**
+
+```python
+from pathlib import Path
+
+@task
+def verify_prerequisites():
+    """Ensure all prerequisites exist before starting flow."""
+    required_marts = [
+        "data/analytics/player_valuation/latest.parquet",
+        "data/analytics/multi_year_projections/latest.parquet",
+        "data/analytics/cap_scenarios/latest.parquet"
+    ]
+
+    for path in required_marts:
+        if not Path(path).exists():
+            raise FileNotFoundError(f"Required input not found: {path}")
+
+    logger.info("All prerequisites verified")
+```
+
+**Summary - Communication Decision Matrix:**
+
+| Event Type                  | Communication Channel        | Audience       | When to Use                            |
+| --------------------------- | ---------------------------- | -------------- | -------------------------------------- |
+| **Pipeline failure**        | Discord alert                | Human          | Flow-level failures, critical errors   |
+| **Backtesting regression**  | Discord alert                | Human          | MAE > threshold                        |
+| **Schema validation error** | Discord alert + Prefect logs | Human + System | Pydantic validation failures           |
+| **Task completion**         | Prefect logs                 | System         | All task executions (automatic)        |
+| **Intermediate results**    | Prefect artifacts            | Developer      | Debugging, data inspection             |
+| **Configuration**           | Prefect blocks               | System         | API keys, webhooks, connection strings |
+| **State synchronization**   | File-based (Parquet)         | System         | Python → dbt coordination              |
+| **Data readiness**          | Database metadata            | System         | dbt → notebooks coordination           |
+
 ______________________________________________________________________
 
 ## 6. Data Architecture
@@ -1462,6 +1705,63 @@ backtesting_flow.serve(cron="0 9 * * 1")  # Monday 9am
 3. **CI/CD integration:** Run on every commit. Rejected - slow (5-10 min), blocks PRs unnecessarily.
 
 **Related Patterns:** Prefect-First (ADR-001), TimeSeriesSplit validation (mandatory for small NFL samples)
+
+______________________________________________________________________
+
+### ADR-005: Polars vs Pandas for DataFrame Processing
+
+**Status:** Accepted
+
+**Context:**
+Python analytics require high-performance DataFrame operations for processing player statistics, projections, and contract data. The industry standard is Pandas, but alternatives like Polars offer performance and architectural benefits.
+
+**Decision:**
+Use Polars as the primary DataFrame library for all analytics modules (Epics 1-4).
+
+**Rationale:**
+
+1. **Columnar optimization:** Polars built on Apache Arrow, native columnar format aligns perfectly with Parquet storage pattern (ADR-002). No conversion overhead between DataFrame representation and Parquet I/O.
+
+2. **Performance:** 5-10x faster than Pandas for analytics operations (aggregations, joins, filters) on datasets >10K rows. Player statistics datasets (~500 players × 5 years × 17 weeks = ~42,500 rows) benefit significantly.
+
+3. **Memory efficiency:** Lazy evaluation reduces memory footprint for multi-step transformations. Critical for multi-year projection generation (Epic 2) which processes historical data + future projections simultaneously.
+
+4. **PyArrow integration:** Native Parquet I/O without Pandas overhead. Direct `pl.read_parquet()` and `df.write_parquet()` with zero-copy semantics.
+
+5. **Modern API:** Query optimizer automatically optimizes lazy operations. Better default behaviors (no index confusion, explicit null handling).
+
+6. **Type safety:** Strong typing aligns with Pydantic contract-first design (ADR-003). Schema inference from Pydantic models more reliable than Pandas.
+
+**Consequences:**
+
+- **Positive:**
+
+  - Faster execution (5-10x for aggregations, critical for backtesting validation)
+  - Lower memory usage (lazy evaluation, columnar storage)
+  - Better Parquet integration (zero-copy I/O)
+  - Modern API reduces boilerplate code
+  - Strong typing aligns with Pydantic validation
+
+- **Negative:**
+
+  - Smaller ecosystem than Pandas (fewer third-party integrations, though scikit-learn works via numpy arrays)
+  - Learning curve for developers familiar with Pandas (mitigated by intermediate user skill level, similar API for basic operations)
+  - Some advanced Pandas features not available (e.g., complex time series resampling - but not required for analytics use cases)
+
+- **Neutral:**
+
+  - Polars API similar enough to Pandas for basic operations (select, filter, groupby, join)
+  - Can interoperate with Pandas via `df.to_pandas()` if needed for specific libraries
+
+**Alternatives Considered:**
+
+1. **Pandas:** Rejected - slower for columnar analytics (row-based design), higher memory usage, index complexity adds cognitive overhead, not optimized for Parquet I/O.
+
+2. **Dask:** Rejected - overkill for local execution, dataset size (\<1M rows) doesn't require distributed processing, adds deployment complexity.
+
+3. **DuckDB Python API:** Rejected - SQL-first API less Pythonic for complex analytics logic, harder to integrate with Pydantic validation, less suitable for multi-step transformations.
+
+**Related Patterns:** External Parquet Flow (ADR-002), Contract-First Design (ADR-003)
 
 ______________________________________________________________________
 
