@@ -74,6 +74,7 @@ exclude = [
     "**/*script_snippets/**",
     "data/**",  # Exclude data files from linting
     "scripts/_debug/**/*.py",
+    "scripts/performance/**/*.py",  # Performance benchmarking scripts (experimental)
 ]
 
 [tool.ruff.lint]
