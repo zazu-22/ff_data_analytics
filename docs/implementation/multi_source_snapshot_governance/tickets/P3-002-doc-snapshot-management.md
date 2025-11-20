@@ -2,7 +2,8 @@
 
 **Phase**: 3 - Documentation\
 **Estimated Effort**: Small (2 hours)\
-**Dependencies**: P3-001 (SPEC checklist should be updated first)
+**Dependencies**: P3-001 (SPEC checklist should be updated first)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -14,20 +15,23 @@ This operational doc answers "how do snapshots work?" for contributors and LLMs.
 
 ## Tasks
 
-- [ ] Create `docs/ops/snapshot_management_current_state.md`
-- [ ] Document snapshot selection logic per source
-- [ ] List models using hardcoded dates vs macros
-- [ ] Explain sample storage patterns (`_samples/` directories)
-- [ ] Document snapshot lifecycle policy
-- [ ] Link to snapshot registry seed
-- [ ] Add examples of common snapshot operations
+- [x] Create `docs/ops/snapshot_management_current_state.md`
+- [x] Document snapshot selection logic per source
+- [x] List models using hardcoded dates vs macros
+- [x] Explain sample storage patterns (`_samples/` directories)
+- [x] Document snapshot lifecycle policy
+- [x] Link to snapshot registry seed
+- [x] Add examples of common snapshot operations
+- [x] Add configuration section (dbt vars, env vars, macro reference)
+- [x] Add troubleshooting Q&A section
+- [x] Document migration status (Phase 1-3 progress)
 
 ## Acceptance Criteria
 
-- [ ] Document answers "how are snapshots selected?"
-- [ ] Current state accurately described (no future plans)
-- [ ] Examples provided for common operations
-- [ ] Links to related artifacts included
+- [x] Document answers "how are snapshots selected?"
+- [x] Current state accurately described (no future plans)
+- [x] Examples provided for common operations
+- [x] Links to related artifacts included
 
 ## Implementation Notes
 
@@ -156,5 +160,38 @@ export RAW_NFLVERSE_SNAP_COUNTS_GLOB="data/raw/nflverse/snap_counts/dt=*/*.parqu
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 3 Activity (lines 378-387)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 3 Ops Docs (lines 208-215)
+
+## Completion Notes
+
+**Implemented**: 2025-11-20
+
+**Document Created**: `docs/ops/snapshot_management_current_state.md`
+
+**Content Sections**:
+- Overview of snapshot selection strategies
+- Macro-based selection (13 models documented)
+- Snapshot lifecycle policy (4 states: pending, current, historical, archived)
+- Common operations (check, add, retire, validate, analyze)
+- Configuration (dbt vars, env vars, macro reference)
+- Migration status (Phase 1-3 progress tracked)
+- Troubleshooting Q&A section
+- Comprehensive references to tools and documentation
+
+**Verification**:
+- All file references verified (6 tools, 7 documentation files)
+- All 13 staging models documented with correct strategies
+- Snapshot registry inventory accurate (100 snapshots, 96 current, 4 historical)
+- Examples tested for syntax correctness
+- Links validated for correct paths
+
+**Impact**:
+- Provides single authoritative source for "how do snapshots work?"
+- Eliminates need to search through code/tickets for snapshot logic
+- Actionable guidance for common operations (add, retire, validate)
+- Clear migration status showing Phase 1 complete, Phase 2-3 in progress
+
+**Next Steps**:
+- Recommended next ticket: P3-003 (ingestion_triggers_current_state doc)
+- No blockers discovered
 
 ```

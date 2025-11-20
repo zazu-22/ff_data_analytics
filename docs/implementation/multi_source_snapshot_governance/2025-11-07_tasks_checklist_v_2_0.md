@@ -339,13 +339,17 @@ ______________________________________________________________________
 
 ### Create Ops Documentation (Current State Focus)
 
-- [ ] Create `docs/ops/snapshot_management_current_state.md`:
+- [x] Create `docs/ops/snapshot_management_current_state.md`: ✅ **COMPLETE** (2025-11-20)
 
-  - [ ] Document snapshot selection logic per source
-  - [ ] List models using hardcoded dates vs macros
-  - [ ] Explain sample storage patterns (`_samples/` directories)
-  - [ ] Document snapshot lifecycle policy (pending → current → historical → archived)
-  - [ ] Link to snapshot registry seed
+  - [x] Document snapshot selection logic per source
+  - [x] List models using hardcoded dates vs macros
+  - [x] Explain sample storage patterns (`_samples/` directories)
+  - [x] Document snapshot lifecycle policy (pending → current → historical → archived)
+  - [x] Link to snapshot registry seed
+  - [x] Add common operations section (check snapshots, add/retire, validate)
+  - [x] Add configuration section (dbt vars, env vars, macro reference)
+  - [x] Add migration status (Phase 1-3 progress)
+  - [x] Add troubleshooting Q&A section
 
 - [ ] Create `docs/ops/ingestion_triggers_current_state.md`:
 
