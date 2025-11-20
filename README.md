@@ -23,12 +23,27 @@
 - R: see `scripts/R/` for runners and `renv.lock` for pins
 - Generate samples: `uv run python tools/make_samples.py`
 
+### Prefect Cloud Workspace Setup
+
+**Workspace:** `ff-analytics`
+**Dashboard:** [https://app.prefect.cloud](https://app.prefect.cloud)
+
+1. Install Prefect: `uv add prefect` (already in pyproject.toml)
+2. Authenticate: `uv run prefect cloud login` (interactive)
+3. Add API key to `.env` file: `PREFECT_API_KEY=<your-key>`
+4. Verify setup: `uv run python flows/test_workspace_setup.py`
+
+**Required Environment Variables:**
+
+- `PREFECT_API_KEY` — API key from Prefect Cloud (stored in `.env`, auto-loaded via direnv)
+
 ## Repo Structure (high level)
 
 - `ingest/` — provider shims/loaders (execution code)
 - `src/ff_analytics_utils/` — reusable helpers (library code)
 - `scripts/` — operational scripts (R runners, ingest, troubleshooting)
 - `tools/` — developer utilities (sample generator)
+- `flows/` — Prefect flows for orchestration (local execution, Cloud UI monitoring)
 - `config/` — projections, scoring, env
 - `data/` — local dev data (raw/stage/mart/ops)
 - `dbt/ff_data_transform/` — dbt project (duckdb + external Parquet)

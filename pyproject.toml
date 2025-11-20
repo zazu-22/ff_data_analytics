@@ -19,6 +19,7 @@ dependencies = [
     "openai>=1.109.1",
     "pandas>=2.3.2",
     "polars[pyarrow]>=1.33.1",
+    "prefect>=3.6.3",
     "pyarrow>=21.0.0",
     "pydrive2>=1.21.3",
     "rich>=14.1.0",
