@@ -363,13 +363,15 @@ ______________________________________________________________________
   - [x] Add GitHub Actions workflow details (schedules, manual triggers)
   - [x] Add comprehensive troubleshooting guide
 
-- [ ] Create `docs/ops/data_freshness_current_state.md`:
+- [x] Create `docs/ops/data_freshness_current_state.md`:
 
-  - [ ] Document freshness test thresholds per source (table format)
-  - [ ] Explain how to check data freshness (`dbt source freshness`)
-  - [ ] Document expected update cadence per source
-  - [ ] Note monitoring status (dbt tests only, no alerts yet)
-  - [ ] Link to freshness test configurations
+  - [x] Document freshness test thresholds per source (table format)
+  - [x] Explain how to check data freshness (using `validate_manifests.py --check-freshness`)
+  - [x] Document expected update cadence per source
+  - [x] Note monitoring status (validate_manifests.py, CI integration ready)
+  - [x] Link to freshness configuration file (`config/snapshot_freshness_thresholds.yaml`)
+  - [x] Document why dbt source freshness doesn't apply (architectural incompatibility)
+  - [x] Add comprehensive troubleshooting guide for stale data scenarios
 
 - [ ] Create `docs/ops/orchestration_architecture.md`:
 
