@@ -145,8 +145,9 @@ ______________________________________________________________________
 - [x] **P2-003** — Extend analyze_snapshot_coverage - row deltas ✅ **COMPLETE** (2025-11-18)
 - [x] **P2-004** — Extend analyze_snapshot_coverage - gap detection ✅ **COMPLETE** (2025-11-18)
 - [x] **P2-005** — Create validate_manifests tool ✅ **COMPLETE** (2025-11-20)
-- [ ] **P2-006** — Add freshness tests (frequently updated: nflverse, sheets, sleeper)
-- [ ] **P2-007** — Add freshness tests (weekly/sporadic: ktc, ffanalytics)
+- [x] **P2-006** — ~~Add freshness tests (dbt source freshness)~~ ❌ **CANCELLED** - Replaced by P2-006B (2025-11-20)
+- [x] **P2-007** — ~~Add freshness tests (remaining sources)~~ ❌ **CANCELLED** - Replaced by P2-006B (2025-11-20)
+- [ ] **P2-006B** — Add freshness validation to validate_manifests.py (replaces P2-006/P2-007)
 
 ______________________________________________________________________
 
@@ -302,8 +303,8 @@ The following tickets represent the critical path for achieving minimum viable g
 08. **P1-028** → DST team defense seed ✅ **COMPLETE** (2025-11-13)
 09. **P1-028b** → Defense macro in contracts ✅ **COMPLETE** (2025-11-13)
 10. **P2-001, P2-002** → Registry creation
-11. **P2-005** → Validation tooling
-12. **P2-006, P2-007** → Freshness tests
+11. **P2-005** → Validation tooling (integrity)
+12. **P2-006B** → Freshness validation (replaces P2-006/P2-007 - manifest-based instead of dbt)
 13. **P3-001** → SPEC update
 
 ______________________________________________________________________
@@ -374,7 +375,7 @@ Implementation is complete when:
   - [x] Defense macro applied to contracts (P1-028b: contracts models use defense crosswalk) ✅ **COMPLETE** (2025-11-13)
 - [ ] Snapshot registry tracking current/historical snapshots (P2-001, P2-002)
 - [ ] Working Prefect flows for all 5 sources (P4-002 through P4-006)
-- [ ] Freshness tests providing pre-dbt safety net (P2-006, P2-007)
+- [ ] Freshness validation providing pre-dbt safety net (P2-006B - manifest-based, replaces dbt source freshness)
 - [ ] CI transition plan documented (P5-001, P5-002)
 - [ ] Cloud migration blueprint complete (P6-001 through P6-004)
 

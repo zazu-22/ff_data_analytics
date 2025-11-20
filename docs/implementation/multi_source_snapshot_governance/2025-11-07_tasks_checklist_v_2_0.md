@@ -286,53 +286,42 @@ ______________________________________________________________________
   - [ ] Optional: `--fail-on-gaps` flag for strict enforcement
 - [ ] Optional: Add notification hooks (log warnings, Slack alerts)
 
-### Freshness Tests (All 5 Sources)
+### Freshness Validation (All 5 Sources) - P2-006B
 
-- [ ] Add freshness tests for **nflverse**:
+**NOTE**: Original plan specified dbt source freshness (P2-006/P2-007), but this is architecturally incompatible. Implementation changed to extend `tools/validate_manifests.py` with freshness validation.
 
-  - [ ] Update `dbt/ff_data_transform/models/sources/src_nflverse.yml`
-  - [ ] Set `loaded_at_field: dt`
-  - [ ] Set `warn_after: {count: 2, period: day}`
-  - [ ] Set `error_after: {count: 7, period: day}`
-  - [ ] Test with `dbt source freshness --select source:nflverse`
+- [ ] Add freshness validation to `tools/validate_manifests.py`:
 
-- [ ] Add freshness tests for **sheets**:
+  - [ ] Add `--check-freshness` CLI flag
+  - [ ] Add `--freshness-warn-days` and `--freshness-error-days` options
+  - [ ] Add `--freshness-config` option for per-source thresholds
+  - [ ] Implement snapshot age calculation (current date - snapshot_date)
+  - [ ] Add age threshold checks (warn/error based on thresholds)
+  - [ ] Update output formats (text and JSON) to include freshness status
 
-  - [ ] Update `dbt/ff_data_transform/models/sources/src_sheets.yml` (or create if missing)
-  - [ ] Set `loaded_at_field: dt`
-  - [ ] Set `warn_after: {count: 1, period: day}`
-  - [ ] Set `error_after: {count: 7, period: day}`
-  - [ ] Test with `dbt source freshness --select source:sheets`
+- [ ] Create freshness configuration file:
 
-- [ ] Add freshness tests for **ktc**:
+  - [ ] Create `config/snapshot_freshness_thresholds.yaml`
+  - [ ] Add nflverse thresholds (warn: 2 days, error: 7 days)
+  - [ ] Add sheets thresholds (warn: 1 day, error: 7 days)
+  - [ ] Add sleeper thresholds (warn: 1 day, error: 7 days)
+  - [ ] Add ffanalytics thresholds (warn: 2 days, error: 7 days)
+  - [ ] Add ktc thresholds (warn: 5 days, error: 14 days)
 
-  - [ ] Update `dbt/ff_data_transform/models/sources/src_ktc.yml` (or create if missing)
-  - [ ] Set `loaded_at_field: dt`
-  - [ ] Set `warn_after: {count: 5, period: day}`
-  - [ ] Set `error_after: {count: 14, period: day}`
-  - [ ] Test with `dbt source freshness --select source:ktc`
+- [ ] Test freshness validation:
 
-- [ ] Add freshness tests for **ffanalytics**:
+  - [ ] Test with default thresholds: `validate_manifests.py --check-freshness --freshness-warn-days 2`
+  - [ ] Test with config file: `validate_manifests.py --check-freshness --freshness-config config/snapshot_freshness_thresholds.yaml`
+  - [ ] Test CI integration: `--fail-on-gaps` fails if data stale
+  - [ ] Test JSON output format
+  - [ ] Validate backwards compatibility (freshness disabled by default)
 
-  - [ ] Update `dbt/ff_data_transform/models/sources/src_ffanalytics.yml` (or create if missing)
-  - [ ] Set `loaded_at_field: dt`
-  - [ ] Set `warn_after: {count: 2, period: day}`
-  - [ ] Set `error_after: {count: 7, period: day}`
-  - [ ] Test with `dbt source freshness --select source:ffanalytics`
+- [ ] Update documentation:
 
-- [ ] Add freshness tests for **sleeper**:
+  - [ ] Update `tools/CLAUDE.md` with freshness validation examples
+  - [ ] Document threshold selection rationale
 
-  - [ ] Update `dbt/ff_data_transform/models/sources/src_sleeper.yml` (or create if missing)
-  - [ ] Set `loaded_at_field: dt`
-  - [ ] Set `warn_after: {count: 1, period: day}`
-  - [ ] Set `error_after: {count: 7, period: day}`
-  - [ ] Test with `dbt source freshness --select source:sleeper`
-
-- [ ] Run full freshness check: `dbt source freshness`
-
-- [ ] Validate current data meets thresholds (baseline)
-
-**Exit Criteria**: Registry seed loads, validation tools functional, freshness tests pass for recently updated sources.
+**Exit Criteria**: Registry seed loads, validation tools functional (integrity + freshness), freshness validation passes for recently updated sources.
 
 ______________________________________________________________________
 

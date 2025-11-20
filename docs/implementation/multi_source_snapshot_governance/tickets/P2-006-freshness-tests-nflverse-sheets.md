@@ -1,12 +1,33 @@
 # Ticket P2-006: Add Freshness Tests (Frequently Updated Sources)
 
 **Phase**: 2 - Governance\
+**Status**: CANCELLED (Replaced by P2-006B)\
 **Estimated Effort**: Small (2-3 hours)\
 **Dependencies**: None (can work in parallel)
 
-## Objective
+______________________________________________________________________
+
+## CANCELLATION NOTICE
+
+**Status**: CANCELLED on 2025-11-20\
+**Reason**: Architectural incompatibility - dbt source freshness requires database tables, but this project uses external Parquet files read via `read_parquet()`.\
+**Replacement**: P2-006B - Add freshness validation to `tools/validate_manifests.py` instead.\
+**Decision**: After analysis, extending the existing manifest validation tool achieves the same goal (detect stale data) without requiring architectural changes that would break ADR-002 (External Parquet Data Flow) and affect 13+ staging models.
+
+**See**: `P2-006B-add-freshness-validation.md` for the replacement implementation.
+
+______________________________________________________________________
+
+## Original Objective (Preserved for Historical Context)
 
 Add dbt source freshness tests for frequently updated sources (nflverse, sheets, sleeper) with appropriate warn/error thresholds based on their daily/near-daily update cadence.
+
+**Why this approach doesn't work:**
+
+- dbt source freshness requires `loaded_at_field` to reference an actual database table column
+- This project uses external Parquet files that are never loaded into DuckDB
+- Staging models use `read_parquet()` directly, not `{{ source() }}` references
+- Would require loading Parquet → DuckDB tables, breaking ADR-002 architecture decision
 
 ## Context
 

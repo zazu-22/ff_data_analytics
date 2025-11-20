@@ -4,6 +4,10 @@ sources:
   - name: nflverse
     description: "Raw nflverse snapshots loaded via shim; local dev reads Parquet under data/raw."
     schema: raw
+    freshness:
+      warn_after: {count: 2, period: day}
+      error_after: {count: 7, period: day}
+    loaded_at_field: dt
     tables:
       - name: players
         description: "Canonical player reference including cross-IDs."

@@ -2,24 +2,27 @@
 
 **Phase**: 3 - Documentation\
 **Estimated Effort**: Small (1-2 hours)\
-**Dependencies**: P2-006, P2-007 (freshness tests should be implemented), P3-001
+**Dependencies**: P2-006B (freshness validation implementation), P3-001\
+**Updated**: 2025-11-20 - Revised to document manifest validation approach (not dbt source freshness)
 
 ## Objective
 
-Create `docs/ops/data_freshness_current_state.md` documenting freshness test thresholds, how to check data freshness, and expected update cadence per source.
+Create `docs/ops/data_freshness_current_state.md` documenting freshness validation thresholds, how to check snapshot freshness using `tools/validate_manifests.py`, and expected update cadence per source.
 
 ## Context
 
-This doc provides operational guidance on data freshness monitoring, explaining the thresholds chosen, how to run freshness checks, and what to do when data goes stale.
+This doc provides operational guidance on snapshot freshness monitoring using the manifest validation approach. It explains the thresholds chosen, how to run freshness checks, and what to do when data goes stale.
+
+**Note**: Original ticket assumed dbt source freshness, but this was cancelled (P2-006/P2-007) due to architectural incompatibility. Instead, freshness validation is implemented via `tools/validate_manifests.py` (P2-006B).
 
 ## Tasks
 
 - [ ] Create `docs/ops/data_freshness_current_state.md`
-- [ ] Document freshness test thresholds per source (table format)
-- [ ] Explain how to check data freshness (`dbt source freshness`)
+- [ ] Document freshness validation thresholds per source (table format)
+- [ ] Explain how to check data freshness using `validate_manifests.py --check-freshness`
 - [ ] Document expected update cadence per source
-- [ ] Note monitoring status (dbt tests only, no alerts yet)
-- [ ] Link to freshness test configurations
+- [ ] Note monitoring status (validate_manifests.py, CI integration ready)
+- [ ] Link to freshness configuration file (`config/snapshot_freshness_thresholds.yaml`)
 
 ## Acceptance Criteria
 
@@ -70,25 +73,32 @@ This document describes data freshness monitoring as of November 2025.
 ### Check All Sources
 
 ```bash
-cd dbt/ff_data_transform
-uv run dbt source freshness
-````
+# From repository root
+uv run python tools/validate_manifests.py \
+    --sources all \
+    --check-freshness \
+    --freshness-config config/snapshot_freshness_thresholds.yaml
+```
 
 **Expected Output**:
 
 ```
-Running with dbt=...
+Snapshot Manifest Validation (with Freshness)
+==================================================
 
-source: nflverse
-  freshness of nflverse.weekly: PASS (updated 1 day ago)
-  freshness of nflverse.snap_counts: PASS (updated 1 day ago)
-  ...
+Validated: 24/24 snapshots (integrity)
+Fresh: 22/24 snapshots (within thresholds)
 
-source: sheets
-  freshness of sheets.roster: PASS (updated 6 hours ago)
-  ...
+Freshness Status:
 
-Done. PASS=15 WARN=0 ERROR=0 SKIP=0 TOTAL=15
+  nflverse.weekly [2025-11-18] FRESH:
+    - Snapshot FRESH: 2 days old
+
+  sheets.transactions [2025-11-19] FRESH:
+    - Snapshot FRESH: 1 day old
+
+  ktc.assets [2025-11-15] STALE (WARN):
+    - Snapshot STALE (WARN): 5 days old (threshold: 5 days)
 ```
 
 ### Check Specific Source
@@ -213,3 +223,4 @@ Freshness checks run in CI before dbt models:
 - Source configs: `dbt/ff_data_transform/models/sources/src_*.yml`
 
 ```
+````

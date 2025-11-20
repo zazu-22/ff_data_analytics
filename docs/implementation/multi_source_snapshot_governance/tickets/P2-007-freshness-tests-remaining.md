@@ -1,14 +1,28 @@
 # Ticket P2-007: Add Freshness Tests (Weekly/Sporadic Sources)
 
 **Phase**: 2 - Governance\
+**Status**: CANCELLED (Replaced by P2-006B)\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: None (can work in parallel with P2-006)
 
-## Objective
+______________________________________________________________________
+
+## CANCELLATION NOTICE
+
+**Status**: CANCELLED on 2025-11-20\
+**Reason**: Same as P2-006 - dbt source freshness architecturally incompatible with external Parquet pattern.\
+**Replacement**: P2-006B includes freshness thresholds for ALL sources (nflverse, sheets, sleeper, ffanalytics, ktc).\
+**Note**: The per-source threshold configuration in P2-006B covers both frequently-updated (P2-006) and weekly/sporadic (P2-007) sources in a single implementation.
+
+**See**: `P2-006B-add-freshness-validation.md` for the unified implementation.
+
+______________________________________________________________________
+
+## Original Objective (Preserved for Historical Context)
 
 Add dbt source freshness tests for weekly/sporadically updated sources (ktc, ffanalytics) with appropriate warn/error thresholds based on their less frequent update cadence.
 
-## Context
+## Original Context
 
 This ticket completes freshness test coverage by adding tests for the **weekly/sporadically updated sources**. These sources have different update patterns than the frequently updated sources (nflverse/sheets/sleeper in P2-006):
 
