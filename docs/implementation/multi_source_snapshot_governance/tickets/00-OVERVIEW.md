@@ -16,7 +16,7 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 32/61 tickets complete (52%)
+**Progress**: 33/61 tickets complete (54%)
 
 ## Recent Accomplishments (2025-11-18)
 
@@ -144,7 +144,7 @@ ______________________________________________________________________
 - [x] **P2-002** — Populate snapshot registry with all 5 sources ✅ **COMPLETE** (2025-11-18)
 - [x] **P2-003** — Extend analyze_snapshot_coverage - row deltas ✅ **COMPLETE** (2025-11-18)
 - [x] **P2-004** — Extend analyze_snapshot_coverage - gap detection ✅ **COMPLETE** (2025-11-18)
-- [ ] **P2-005** — Create validate_manifests tool
+- [x] **P2-005** — Create validate_manifests tool ✅ **COMPLETE** (2025-11-20)
 - [ ] **P2-006** — Add freshness tests (frequently updated: nflverse, sheets, sleeper)
 - [ ] **P2-007** — Add freshness tests (weekly/sporadic: ktc, ffanalytics)
 
@@ -200,9 +200,9 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 31/61 tickets complete (51%)\
+**Overall Project**: 33/61 tickets complete (54%)\
 **Phase 1 Foundation**: 30/30 tickets complete (100%)\
-**Phase 2 Governance**: 2/7 tickets complete (29%)\
+**Phase 2 Governance**: 5/7 tickets complete (71%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 

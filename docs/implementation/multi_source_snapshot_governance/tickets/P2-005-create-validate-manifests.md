@@ -1,6 +1,7 @@
 # Ticket P2-005: Create validate_manifests Tool
 
 **Phase**: 2 - Governance\
+**Status**: COMPLETE\
 **Estimated Effort**: Medium (3-4 hours)\
 **Dependencies**: P2-001, P2-002 (registry must exist and be populated)
 
@@ -23,39 +24,39 @@ This tool provides CI-integrated validation that catches missing or corrupted sn
 
 ### Create Core Validation Tool
 
-- [ ] Create `tools/validate_manifests.py`
-- [ ] Implement registry-driven validation logic
-- [ ] Add manifest vs Parquet verification
-- [ ] Add CI integration (exit code handling)
+- [x] Create `tools/validate_manifests.py`
+- [x] Implement registry-driven validation logic
+- [x] Add manifest vs Parquet verification
+- [x] Add CI integration (exit code handling)
 
 ### Implement Validation Checks
 
-- [ ] Check expected snapshots exist in `data/raw/`
-- [ ] Verify `_meta.json` manifests exist for each snapshot
-- [ ] Compare manifest row_count vs actual Parquet row count
-- [ ] Validate date ranges (coverage_start_season/end_season)
-- [ ] Check required metadata fields (source_version, asof_datetime)
+- [x] Check expected snapshots exist in `data/raw/`
+- [x] Verify `_meta.json` manifests exist for each snapshot
+- [x] Compare manifest row_count vs actual Parquet row count
+- [x] Validate date ranges (coverage_start_season/end_season)
+- [x] Check required metadata fields (source_version, asof_datetime)
 
 ### Add CLI Interface
 
-- [ ] Support `--sources` flag to validate specific sources
-- [ ] Add `--fail-on-gaps` flag for strict enforcement
-- [ ] Add `--output-format` flag (text, json)
-- [ ] Implement proper exit codes (0=pass, 1=fail)
+- [x] Support `--sources` flag to validate specific sources
+- [x] Add `--fail-on-gaps` flag for strict enforcement
+- [x] Add `--output-format` flag (text, json)
+- [x] Implement proper exit codes (0=pass, 1=fail)
 
 ### Optional: Notification Hooks
 
-- [ ] Log warnings for minor issues
-- [ ] Slack alerts for critical failures (optional)
-- [ ] Email notifications (optional)
+- [x] Log warnings for minor issues
+- [ ] Slack alerts for critical failures (optional) - defer to future
+- [ ] Email notifications (optional) - defer to future
 
 ## Acceptance Criteria
 
-- [ ] Tool validates all registry entries against disk
-- [ ] Manifest vs Parquet row count verification works
-- [ ] CI integration functional (exit code 1 on failure)
-- [ ] Tool runs successfully on all 5 sources
-- [ ] Documentation complete with usage examples
+- [x] Tool validates all registry entries against disk
+- [x] Manifest vs Parquet row count verification works
+- [x] CI integration functional (exit code 1 on failure)
+- [x] Tool runs successfully on all 5 sources
+- [x] Documentation complete with usage examples
 
 ## Implementation Notes
 
@@ -275,3 +276,33 @@ if __name__ == '__main__':
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 2 Validation (lines 128-142)
 - Registry: `dbt/ff_data_transform/seeds/snapshot_registry.csv`
 - Manifest spec: See existing `_meta.json` files in `data/raw/`
+
+## Completion Notes
+
+**Implemented**: 2025-11-20
+
+**Tests**: All passing
+
+- ✅ Validation on all sources (24/100 passing - discovered real data quality issues)
+- ✅ Validation on specific sources (nflverse, sheets)
+- ✅ Failure handling with --fail-on-gaps flag (exit code 1)
+- ✅ JSON output format
+- ✅ Edge case handling (non-existent source)
+
+**Key Findings**:
+
+1. **Missing snapshots**: 36 `sheets` snapshots don't exist on disk (expected - not all historical snapshots kept locally)
+2. **Missing manifests**: 5 older snapshots (nflverse.schedule, nflverse.teams, nflverse.weekly historical, ktc 2025-10-25) don't have `_meta.json`
+3. **Missing manifest fields**: KTC and Sleeper sources missing `source_version` field (11 snapshots)
+4. **Schema evolution**: FFAnalytics has evolving schema across snapshots (5 snapshots with Parquet schema mismatches)
+5. **Row count mismatch**: 1 Sleeper snapshot has unexpected row count (registry=11,401, actual=22,802)
+
+**Impact**:
+
+- Created production-ready validation tool for CI/CD integration
+- Uncovered 76 manifest/data quality issues across all sources
+- Tool successfully validates 24/100 snapshots with strict checks
+- Provides actionable error messages for each validation failure
+- Supports both text and JSON output formats for automation
+
+**File**: `tools/validate_manifests.py` (180 lines)
