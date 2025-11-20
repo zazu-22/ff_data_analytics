@@ -373,13 +373,13 @@ ______________________________________________________________________
   - [x] Document why dbt source freshness doesn't apply (architectural incompatibility)
   - [x] Add comprehensive troubleshooting guide for stale data scenarios
 
-- [ ] Create `docs/ops/orchestration_architecture.md`:
+- [x] Create `docs/ops/orchestration_architecture.md`:
 
-  - [ ] Document current orchestration mix (GH Actions + manual)
-  - [ ] Explain Prefect plan status (Phases 1+2 implementation)
-  - [ ] Describe local vs cloud execution state
-  - [ ] Document dependencies between ingestion jobs
-  - [ ] Diagram flow sequence if helpful
+  - [x] Document current orchestration mix (GH Actions + manual)
+  - [x] Explain Prefect plan status (Phases 1+2 implementation)
+  - [x] Describe local vs cloud execution state
+  - [x] Document dependencies between ingestion jobs
+  - [x] Diagram flow sequence if helpful
 
 - [ ] Create `docs/ops/ci_transition_plan.md`:
 
