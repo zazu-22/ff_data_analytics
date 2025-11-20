@@ -48,6 +48,28 @@ ______________________________________________________________________
 
    - **Track A (NFL Actuals)**: ☑ 100% COMPLETE ✅ - nflverse staging ✅ → fact_player_stats ✅ (109 stat types) → player_key solution ✅ → dim_player ✅ → dim_team ✅ (dedupe added) → dim_schedule ✅ (requires teams data availability) → mart_real_world_actuals_weekly ✅ → mart_fantasy_actuals_weekly ✅ (data-driven scoring) → **Kicking stats added ✅ (21 new stats: FG/PAT by distance)**
 
+   **Snapshot Governance (Multi-Source Snapshot Governance Epic - Phase 1 COMPLETE ✅)**:
+
+   - ☑ `snapshot_selection_strategy` macro implemented (calls existing `latest_snapshot_only` helper)
+   - ☑ `stg_nflverse__player_stats` uses macro (`baseline_plus_latest`, fallback baseline_dt pattern)
+   - ☑ `stg_nflverse__snap_counts` uses macro (`baseline_plus_latest`, fallback baseline_dt pattern)
+   - ☑ `stg_nflverse__ff_opportunity` uses macro (`latest_only`, consistency with other models)
+   - ☑ `stg_nflverse__ff_playerids` uses macro (`latest_only`)
+   - ☑ `stg_sheets__cap_space` uses macro (`latest_only`)
+   - ☑ `stg_sheets__contracts_active` uses macro (`latest_only`)
+   - ☑ `stg_sheets__contracts_cut` uses macro (`latest_only`)
+   - ☑ `stg_sheets__draft_pick_holdings` uses macro (`latest_only`)
+   - ☑ `stg_sheets__transactions` uses macro (`latest_only`)
+   - ☑ `stg_sleeper__fa_pool` uses macro (`latest_only`)
+   - ☑ `stg_sleeper__rosters` uses macro (`latest_only`)
+   - ☑ `stg_ktc_assets` uses macro (`latest_only`)
+   - ☑ `stg_ffanalytics__projections` uses macro (`latest_only`)
+   - ☑ Legacy sample artifacts archived (documented archival policy - no action needed)
+   - ☑ Performance baseline documented (all three NFLverse models profiled)
+
+   See: `dbt/ff_data_transform/macros/snapshot_selection.sql`
+   See: `docs/implementation/multi_source_snapshot_governance/`
+
    **Critical Fixes Applied (Oct 25)**:
 
    - ✅ Player ID architecture corrected: Using mfl_id as canonical player_id (ADR-010 compliance restored)
@@ -69,6 +91,104 @@ ______________________________________________________________________
    - CI (Sheets): copy_league_sheet → commissioner_parse → dbt run/test, with CSV previews + dbt summary and LKG fallback
    - Ops: run ledger, model metrics, data quality, freshness banners
    - Change‑capture staging models (roster/sheets change logs) and compaction playbook docs
+
+## Data Quality & Governance
+
+**Multi-Source Snapshot Governance (Phase 2 - 71% Complete)**:
+
+### Snapshot Registry
+
+- ☑ Registry seed created (`dbt/ff_data_transform/seeds/snapshot_registry.csv`)
+- ☑ Populated with all 5 sources (nflverse, sheets, ktc, ffanalytics, sleeper) - 100 snapshots registered
+- ☑ Lifecycle states defined (pending, current, historical, archived)
+- ☑ Validation tooling implemented (`tools/validate_manifests.py`)
+- ☑ Registry maintenance tooling created (`tools/update_snapshot_registry.py`)
+
+### Freshness Tests
+
+**Manifest-based freshness validation** (replaces dbt source freshness):
+
+- ☑ Freshness validation added to `validate_manifests.py` (P2-006B)
+- ☑ Per-source thresholds configured:
+  - nflverse: warn 2 days, error 7 days
+  - sheets: warn 1 day, error 7 days (multiple times per day during season)
+  - sleeper: warn 1 day, error 7 days
+  - ktc: warn 5 days, error 14 days
+  - ffanalytics: warn 2 days, error 7 days
+- ☑ Validates manifest timestamps against current date
+- ☑ Reports freshness violations with actionable messages
+
+See: `tools/validate_manifests.py`
+
+### Coverage Analysis & Observability
+
+- ☑ `analyze_snapshot_coverage.py` extended with row deltas (P2-003)
+  - Row count delta calculations between snapshots
+  - Anomaly detection with configurable thresholds
+  - Discovered data quality issues (missing row_count values in nflverse registry)
+- ☑ Gap detection added (P2-004)
+  - Season/week coverage gap detection (baseline_plus_latest aware)
+  - Player mapping rate calculation (dim_player_id_xref integration)
+  - CI/CD safe: no false alarms for expected partial coverage
+- ☑ CI integration ready (validation tooling designed for automated pipelines)
+
+See: `tools/analyze_snapshot_coverage.py`
+See: `docs/implementation/multi_source_snapshot_governance/REGISTRY_MAINTENANCE.md`
+
+**Data Quality Fixes (Phase 1)**:
+
+- ☑ Macro cartesian product regression fixed (P1-026: 3,563 duplicates → 0) ✅
+- ☑ TBD pick duplicates resolved (P1-020: 22 pick_ids → 0) ✅
+- ☑ Base picks per round validation (P1-023: 4 failures → 0) ✅ 100% success
+- ☑ Comp registry duplicates eliminated (P1-024: 19 duplicates → 0) ✅
+- ☑ Orphan pick references resolved (P1-022: 46 orphans → 0) ✅
+- ☑ Roster parity discrepancies resolved (P1-019: 30 failures → 0) ✅ Streaming hypothesis validated
+- ☑ FFAnalytics source data duplicates (P1-018: 34 duplicates → 0) ✅ Architectural fix
+- ☑ Mart duplicates eliminated (P1-017: 1,908 duplicates → 0) ✅ IDP position filter
+- ☑ IDP source diversity validated (P1-025: COMPLETE - test downgraded to warning, industry limitation documented) ✅
+- ☑ Player ID resolution refactored (P1-027: contracts models use macro consistently) ✅
+- ☑ DST team defense seed created (P1-028: 612/612 DST mapped, coverage ~89% → ~93%) ✅
+- ☑ Defense macro applied to contracts (P1-028b: contracts models use defense crosswalk) ✅
+
+**Success Metrics** (from Multi-Source Snapshot Governance epic):
+
+- ☑ Zero hardcoded snapshot dates in all 13 staging models ✅
+- ☑ All staging models use snapshot_selection_strategy macro ✅
+- ☑ All current test failures resolved (2,088+ duplicates eliminated) ✅
+
+## Prefect Orchestration (Phases 1+2)
+
+**Status**: Phase 4 - Pending Implementation
+
+- ☐ Flow structure created (`src/flows/`)
+- ☐ `copy_league_sheet_flow` implemented (Google Sheets copy operation)
+- ☐ `parse_league_sheet_flow` implemented (Google Sheets parse operation)
+- ☐ `nfl_data_pipeline` implemented
+- ☐ `ktc_pipeline` implemented
+- ☐ `ffanalytics_pipeline` implemented
+- ☐ `sleeper_pipeline` implemented
+- ☐ Governance integration (validation tasks, copy completeness checks)
+- ☐ Local testing completed
+- ☐ Cloud deployment (Phase 3 - deferred)
+- ☐ Advanced monitoring (Phase 4 - deferred)
+
+See: `src/flows/` (to be created)
+See: `docs/ops/orchestration_architecture.md` (to be created in P3-005)
+See: `docs/spec/prefect_dbt_sources_migration_20251026.md` (detailed implementation guide)
+
+## Operations Documentation
+
+**Status**: Phase 3 - Pending Implementation
+
+- ☐ `snapshot_management_current_state.md` (P3-002)
+- ☐ `ingestion_triggers_current_state.md` (P3-003)
+- ☐ `data_freshness_current_state.md` (P3-004)
+- ☐ `orchestration_architecture.md` (P3-005)
+- ☐ `ci_transition_plan.md` (P3-006)
+- ☐ `cloud_storage_migration.md` (P3-007)
+
+See: `docs/ops/` directory (to be created)
+See: `docs/implementation/multi_source_snapshot_governance/tickets/P3-00*.md` for ticket details
 
 ### 0a) Conventions & Structure
 
