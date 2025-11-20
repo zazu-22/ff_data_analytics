@@ -16,7 +16,7 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 36/61 tickets complete (59%)
+**Progress**: 37/61 tickets complete (61%)
 
 ## Recent Accomplishments (2025-11-20)
 
@@ -34,12 +34,21 @@ This document provides a concise checklist for tracking completion of all implem
 **Completed This Session**:
 
 - ✅ **P3-002**: Create snapshot_management_current_state doc
+
   - Comprehensive operational documentation describing how snapshot selection works
   - Documents all 13 staging models using macro-based selection
   - Includes common operations, configuration, troubleshooting
   - References all tools and governance utilities
 
-**Impact**: Phase 3 now 2/8 tickets complete (25%); Overall project 36/61 tickets complete (59%)
+- ✅ **P3-003**: Create ingestion_triggers_current_state doc
+
+  - Complete documentation of current orchestration mix (GH Actions + manual commands)
+  - All 5 sources documented with trigger frequency and manual procedures
+  - GitHub Actions workflows detailed (schedules, secrets, troubleshooting)
+  - Credential storage patterns (local .env, GH secrets, service accounts)
+  - Comprehensive troubleshooting guide for common ingestion issues
+
+**Impact**: Phase 3 now 3/8 tickets complete (38%); Overall project 37/61 tickets complete (61%)
 
 ## Previous Accomplishments (2025-11-20 - Earlier)
 
@@ -193,7 +202,7 @@ ______________________________________________________________________
 
 - [x] **P3-001** — Update SPEC v2.3 checklist ✅ **COMPLETE** (2025-11-20)
 - [x] **P3-002** — Create snapshot_management_current_state doc ✅ **COMPLETE** (2025-11-20)
-- [ ] **P3-003** — Create ingestion_triggers_current_state doc
+- [x] **P3-003** — Create ingestion_triggers_current_state doc ✅ **COMPLETE** (2025-11-20)
 - [ ] **P3-004** — Create data_freshness_current_state doc
 - [ ] **P3-005** — Create orchestration_architecture doc
 - [ ] **P3-006** — Create ci_transition_plan doc
@@ -239,10 +248,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 36/61 tickets complete (59%)\
+**Overall Project**: 37/61 tickets complete (61%)\
 **Phase 1 Foundation**: 30/30 tickets complete (100%)\
 **Phase 2 Governance**: 5/7 tickets complete (71%)\
-**Phase 3 Documentation**: 2/8 tickets complete (25%)\
+**Phase 3 Documentation**: 3/8 tickets complete (38%)\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 

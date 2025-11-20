@@ -2,7 +2,8 @@
 
 **Phase**: 3 - Documentation\
 **Estimated Effort**: Small (1-2 hours)\
-**Dependencies**: P3-001 (SPEC checklist should be updated first)
+**Dependencies**: P3-001 (SPEC checklist should be updated first)\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -14,19 +15,22 @@ This doc answers "how do loads run?" and "when/how does each source update?" It 
 
 ## Tasks
 
-- [ ] Create `docs/ops/ingestion_triggers_current_state.md`
-- [ ] Document how loads run today (GH Actions schedules, manual make commands)
-- [ ] List trigger frequency per source
-- [ ] Document credential storage patterns (env vars, service accounts)
-- [ ] Explain when/how each source updates
-- [ ] Note Prefect migration plan status
+- [x] Create `docs/ops/ingestion_triggers_current_state.md`
+- [x] Document how loads run today (GH Actions schedules, manual just commands)
+- [x] List trigger frequency per source
+- [x] Document credential storage patterns (env vars, service accounts)
+- [x] Explain when/how each source updates
+- [x] Note Prefect migration plan status
+- [x] Add manual load instructions for all 5 sources
+- [x] Add composite workflow documentation
+- [x] Add troubleshooting guide
 
 ## Acceptance Criteria
 
-- [ ] Document answers "how do I trigger a load?"
-- [ ] Trigger frequency documented per source
-- [ ] Credential requirements clear
-- [ ] Manual and automated triggers both covered
+- [x] Document answers "how do I trigger a load?"
+- [x] Trigger frequency documented per source
+- [x] Credential requirements clear
+- [x] Manual and automated triggers both covered
 
 ## Implementation Notes
 
@@ -205,5 +209,43 @@ uv run python src/ingest/sleeper/fetch.py
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 3 Activity (lines 389-396)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 3 Ops Docs (lines 217-223)
 - Workflows: `.github/workflows/data-pipeline.yml`, `.github/workflows/ingest_google_sheets.yml`
+
+## Completion Notes
+
+**Implemented**: 2025-11-20
+
+**Document Created**: `docs/ops/ingestion_triggers_current_state.md`
+
+**Content Sections**:
+- Overview of orchestration mix (GH Actions + manual commands)
+- GitHub Actions workflows documented (2 workflows: sheets scheduled 2x daily, nflverse manual only)
+- Manual commands for all 5 sources (nflverse, sheets, sleeper, ktc, ffanalytics)
+- Trigger frequency table (current vs ideal, with rationale)
+- Credential storage patterns (local .env, GH secrets, service account setup)
+- Manual load instructions with code examples for each source
+- Composite workflows (ingest-quick, ingest-full)
+- Automated triggers (GH Actions details, schedules, notifications)
+- Prefect migration status (not yet implemented, Phase 4 planned)
+- Data freshness monitoring integration
+- Comprehensive troubleshooting guide (GH Actions failures, manual load issues, data visibility)
+
+**Verification**:
+- All workflow files verified (2 GH Actions workflows)
+- All script files verified (7 ingestion scripts)
+- All just commands tested for syntax
+- All file references validated
+- Credential requirements documented for each source
+- Examples tested for correct Python/bash syntax
+
+**Impact**:
+- Single authoritative source for "how do I trigger a load?"
+- Clear separation of automated (GH Actions) vs manual (just) triggers
+- Eliminates confusion about which sources are automated
+- Provides actionable troubleshooting for common ingestion failures
+- Documents credential requirements per source (local dev + CI)
+
+**Next Steps**:
+- Recommended next ticket: P3-004 (data_freshness_current_state doc)
+- No blockers discovered
 
 ```

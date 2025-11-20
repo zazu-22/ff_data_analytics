@@ -351,13 +351,17 @@ ______________________________________________________________________
   - [x] Add migration status (Phase 1-3 progress)
   - [x] Add troubleshooting Q&A section
 
-- [ ] Create `docs/ops/ingestion_triggers_current_state.md`:
+- [x] Create `docs/ops/ingestion_triggers_current_state.md`: ✅ **COMPLETE** (2025-11-20)
 
-  - [ ] Document how loads run today (GH Actions, manual make commands)
-  - [ ] List trigger frequency per source
-  - [ ] Document credential storage patterns (env vars, service accounts)
-  - [ ] Explain when/how each source updates
-  - [ ] Note Prefect migration plan status
+  - [x] Document how loads run today (GH Actions, manual just commands)
+  - [x] List trigger frequency per source (with ideal vs current comparison)
+  - [x] Document credential storage patterns (env vars, GH secrets, service accounts)
+  - [x] Explain when/how each source updates (with rationale)
+  - [x] Note Prefect migration plan status (not yet implemented)
+  - [x] Add manual load instructions for all 5 sources
+  - [x] Add composite workflow documentation (ingest-quick, ingest-full)
+  - [x] Add GitHub Actions workflow details (schedules, manual triggers)
+  - [x] Add comprehensive troubleshooting guide
 
 - [ ] Create `docs/ops/data_freshness_current_state.md`:
 
