@@ -16,7 +16,7 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 33/61 tickets complete (54%)
+**Progress**: 34/61 tickets complete (56%)
 
 ## Recent Accomplishments (2025-11-18)
 
@@ -147,7 +147,7 @@ ______________________________________________________________________
 - [x] **P2-005** — Create validate_manifests tool ✅ **COMPLETE** (2025-11-20)
 - [x] **P2-006** — ~~Add freshness tests (dbt source freshness)~~ ❌ **CANCELLED** - Replaced by P2-006B (2025-11-20)
 - [x] **P2-007** — ~~Add freshness tests (remaining sources)~~ ❌ **CANCELLED** - Replaced by P2-006B (2025-11-20)
-- [ ] **P2-006B** — Add freshness validation to validate_manifests.py (replaces P2-006/P2-007)
+- [x] **P2-006B** — Add freshness validation to validate_manifests.py (replaces P2-006/P2-007) ✅ **COMPLETE** (2025-11-20)
 
 ______________________________________________________________________
 

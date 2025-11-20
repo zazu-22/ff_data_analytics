@@ -1,7 +1,7 @@
 # Ticket P2-006B: Add Freshness Validation to validate_manifests.py
 
 **Phase**: 2 - Governance\
-**Status**: TODO\
+**Status**: COMPLETE\
 **Estimated Effort**: Small (2-3 hours)\
 **Dependencies**: P2-005 (validate_manifests.py must exist - COMPLETE)\
 **Replaces**: P2-006 (dbt source freshness - cancelled due to architectural incompatibility)
@@ -333,3 +333,43 @@ This project uses external Parquet files read directly via `read_parquet()`, mak
 - ✅ CI integration already proven (P2-005)
 - ✅ No dependency on dbt execution
 - ✅ Can run before dbt as pre-execution safety check
+
+______________________________________________________________________
+
+## Completion Notes
+
+**Implemented**: 2025-11-20
+
+**Implementation Summary**:
+
+- Added `check_snapshot_freshness()` function to `tools/validate_manifests.py:83-123`
+- Added CLI options: `--check-freshness`, `--freshness-warn-days`, `--freshness-error-days`, `--freshness-config`
+- Integrated freshness validation into main validation loop with per-source threshold support
+- Created `config/snapshot_freshness_thresholds.yaml` with source-specific thresholds
+- Updated output formatting to display freshness status (FRESH/STALE-WARN/STALE-ERROR)
+- Enhanced exit code logic: fails with code 1 if `--fail-on-gaps` set and freshness errors exist
+- Updated `tools/CLAUDE.md` documentation with comprehensive usage examples
+
+**Tests Passed**:
+
+- ✅ Freshness validation with global thresholds (warn=2, error=7)
+- ✅ Freshness validation with per-source config file
+- ✅ JSON output format includes freshness metadata
+- ✅ Backwards compatibility: freshness disabled by default (no breaking changes)
+- ✅ Exit code 1 with `--fail-on-gaps` when stale-error snapshots exist
+- ✅ Exit code 0 when all snapshots fresh or only warnings present
+
+**Impact**:
+
+- Pre-dbt safety net: Can detect stale data before model execution
+- CI-ready: Supports automated data freshness validation with configurable thresholds
+- Flexible configuration: Per-source thresholds account for varying update cadences
+- Backwards compatible: Existing validation workflows unaffected
+
+**Files Modified**:
+
+- `tools/validate_manifests.py` (added freshness validation)
+- `config/snapshot_freshness_thresholds.yaml` (new file)
+- `tools/CLAUDE.md` (added validate_manifests.py documentation)
+
+**Acceptance Criteria Met**: All 6 criteria from ticket satisfied.

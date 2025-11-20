@@ -174,6 +174,113 @@ python tools/update_snapshot_registry.py --source nflverse --datasets weekly sna
 
 ______________________________________________________________________
 
+### validate_manifests.py
+
+**Purpose**: Validate snapshot integrity and freshness against the snapshot registry
+
+**Usage**:
+
+```bash
+# Basic integrity validation (all sources)
+uv run python tools/validate_manifests.py --sources all
+
+# Validate specific sources
+uv run python tools/validate_manifests.py --sources nflverse,sheets
+
+# With freshness validation (global thresholds)
+uv run python tools/validate_manifests.py \
+  --sources all \
+  --check-freshness \
+  --freshness-warn-days 2 \
+  --freshness-error-days 7
+
+# With per-source freshness thresholds
+uv run python tools/validate_manifests.py \
+  --sources all \
+  --check-freshness \
+  --freshness-config config/snapshot_freshness_thresholds.yaml
+
+# CI mode (fail on stale data)
+uv run python tools/validate_manifests.py \
+  --sources nflverse,sheets \
+  --check-freshness \
+  --freshness-config config/snapshot_freshness_thresholds.yaml \
+  --fail-on-gaps
+
+# JSON output for programmatic use
+uv run python tools/validate_manifests.py \
+  --sources all \
+  --check-freshness \
+  --freshness-config config/snapshot_freshness_thresholds.yaml \
+  --output-format json > validation_report.json
+```
+
+**What it validates**:
+
+**Integrity checks** (always enabled):
+
+- Snapshot directory exists at `data/raw/{source}/{dataset}/dt={snapshot_date}`
+- `_meta.json` manifest present and valid JSON
+- Required manifest fields present (dataset, loader_path, source_version, asof_datetime)
+- Parquet files exist and are readable
+- Row counts match registry expectations (if specified)
+
+**Freshness checks** (opt-in with `--check-freshness`):
+
+- Snapshot age (current date - snapshot_date)
+- Age within warn/error thresholds (per-source or global)
+- Status: FRESH / STALE (WARN) / STALE (ERROR)
+
+**When to use**:
+
+- **Pre-dbt safety check**: Run before dbt to catch stale/missing snapshots
+- **CI validation**: Ensure data freshness in automated pipelines
+- **Data quality audits**: Verify snapshot integrity after ingestion
+- **Troubleshooting**: Diagnose data age or missing manifest issues
+
+**Freshness thresholds** (from `config/snapshot_freshness_thresholds.yaml`):
+
+| Source      | Warn (days) | Error (days) | Rationale                                      |
+| ----------- | ----------- | ------------ | ---------------------------------------------- |
+| nflverse    | 2           | 7            | Weekly in-season, updates within 2 days        |
+| sheets      | 1           | 7            | Daily roster/transaction updates during season |
+| sleeper     | 1           | 7            | Daily league activity updates                  |
+| ffanalytics | 2           | 7            | Weekly projection updates during season        |
+| ktc         | 5           | 14           | Sporadic market valuations updates             |
+
+**Output examples**:
+
+Text output (with freshness):
+
+```
+Snapshot Manifest Validation (with Freshness)
+======================================================================
+
+Validated: 22/24 snapshots (integrity)
+Fresh: 18/24 snapshots (within thresholds)
+
+Freshness Issues (4):
+
+  nflverse.weekly [2025-11-10] STALE (WARN):
+    - Snapshot STALE (WARN): 10 days old (threshold: 2 days)
+
+  ktc.assets [2025-10-01] STALE (ERROR):
+    - Snapshot STALE (ERROR): 50 days old (threshold: 14 days)
+```
+
+**Troubleshooting stale data**:
+
+1. **Check ingestion status**: Verify when data was last fetched
+2. **Seasonal variation**: Some sources update weekly during season only
+3. **Run manual ingestion**: Use `scripts/ingest/` to refresh stale snapshots
+4. **Adjust thresholds**: Edit `config/snapshot_freshness_thresholds.yaml` for offseason
+
+**Why not dbt source freshness?**
+
+This project uses external Parquet files read via `read_parquet()`, not database tables. dbt's `dbt source freshness` requires queryable tables with timestamp columns, making it architecturally incompatible. See ADR-002 for details.
+
+______________________________________________________________________
+
 ### ffa_score_projections.py
 
 **Purpose**: Apply scoring rules to FFAnalytics projections

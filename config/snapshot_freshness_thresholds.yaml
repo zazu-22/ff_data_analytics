@@ -1,0 +1,34 @@
+# Snapshot Freshness Thresholds by Source
+#
+# Defines expected data freshness for each data source based on update cadence.
+# Used by tools/validate_manifests.py --check-freshness validation.
+#
+# Fields:
+#   warn_days:  Warn if snapshot older than this many days
+#   error_days: Error if snapshot older than this many days (CI fails with --fail-on-gaps)
+#   rationale:  Explanation of threshold selection
+
+nflverse:
+  warn_days: 2
+  error_days: 7
+  rationale: "Weekly in-season, updates within 2 days post-games"
+
+sheets:
+  warn_days: 1
+  error_days: 7
+  rationale: "Daily roster/transaction updates during season"
+
+sleeper:
+  warn_days: 1
+  error_days: 7
+  rationale: "Daily league activity updates"
+
+ffanalytics:
+  warn_days: 2
+  error_days: 7
+  rationale: "Weekly projection updates during season"
+
+ktc:
+  warn_days: 5
+  error_days: 14
+  rationale: "Sporadic market valuations updates"

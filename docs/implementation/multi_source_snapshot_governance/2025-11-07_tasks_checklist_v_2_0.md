@@ -286,42 +286,42 @@ ______________________________________________________________________
   - [ ] Optional: `--fail-on-gaps` flag for strict enforcement
 - [ ] Optional: Add notification hooks (log warnings, Slack alerts)
 
-### Freshness Validation (All 5 Sources) - P2-006B
+### Freshness Validation (All 5 Sources) - P2-006B ✅ COMPLETE
 
 **NOTE**: Original plan specified dbt source freshness (P2-006/P2-007), but this is architecturally incompatible. Implementation changed to extend `tools/validate_manifests.py` with freshness validation.
 
-- [ ] Add freshness validation to `tools/validate_manifests.py`:
+- [x] Add freshness validation to `tools/validate_manifests.py`:
 
-  - [ ] Add `--check-freshness` CLI flag
-  - [ ] Add `--freshness-warn-days` and `--freshness-error-days` options
-  - [ ] Add `--freshness-config` option for per-source thresholds
-  - [ ] Implement snapshot age calculation (current date - snapshot_date)
-  - [ ] Add age threshold checks (warn/error based on thresholds)
-  - [ ] Update output formats (text and JSON) to include freshness status
+  - [x] Add `--check-freshness` CLI flag
+  - [x] Add `--freshness-warn-days` and `--freshness-error-days` options
+  - [x] Add `--freshness-config` option for per-source thresholds
+  - [x] Implement snapshot age calculation (current date - snapshot_date)
+  - [x] Add age threshold checks (warn/error based on thresholds)
+  - [x] Update output formats (text and JSON) to include freshness status
 
-- [ ] Create freshness configuration file:
+- [x] Create freshness configuration file:
 
-  - [ ] Create `config/snapshot_freshness_thresholds.yaml`
-  - [ ] Add nflverse thresholds (warn: 2 days, error: 7 days)
-  - [ ] Add sheets thresholds (warn: 1 day, error: 7 days)
-  - [ ] Add sleeper thresholds (warn: 1 day, error: 7 days)
-  - [ ] Add ffanalytics thresholds (warn: 2 days, error: 7 days)
-  - [ ] Add ktc thresholds (warn: 5 days, error: 14 days)
+  - [x] Create `config/snapshot_freshness_thresholds.yaml`
+  - [x] Add nflverse thresholds (warn: 2 days, error: 7 days)
+  - [x] Add sheets thresholds (warn: 1 day, error: 7 days)
+  - [x] Add sleeper thresholds (warn: 1 day, error: 7 days)
+  - [x] Add ffanalytics thresholds (warn: 2 days, error: 7 days)
+  - [x] Add ktc thresholds (warn: 5 days, error: 14 days)
 
-- [ ] Test freshness validation:
+- [x] Test freshness validation:
 
-  - [ ] Test with default thresholds: `validate_manifests.py --check-freshness --freshness-warn-days 2`
-  - [ ] Test with config file: `validate_manifests.py --check-freshness --freshness-config config/snapshot_freshness_thresholds.yaml`
-  - [ ] Test CI integration: `--fail-on-gaps` fails if data stale
-  - [ ] Test JSON output format
-  - [ ] Validate backwards compatibility (freshness disabled by default)
+  - [x] Test with default thresholds: `validate_manifests.py --check-freshness --freshness-warn-days 2`
+  - [x] Test with config file: `validate_manifests.py --check-freshness --freshness-config config/snapshot_freshness_thresholds.yaml`
+  - [x] Test CI integration: `--fail-on-gaps` fails if data stale
+  - [x] Test JSON output format
+  - [x] Validate backwards compatibility (freshness disabled by default)
 
-- [ ] Update documentation:
+- [x] Update documentation:
 
-  - [ ] Update `tools/CLAUDE.md` with freshness validation examples
-  - [ ] Document threshold selection rationale
+  - [x] Update `tools/CLAUDE.md` with freshness validation examples
+  - [x] Document threshold selection rationale
 
-**Exit Criteria**: Registry seed loads, validation tools functional (integrity + freshness), freshness validation passes for recently updated sources.
+**Exit Criteria**: ✅ Registry seed loads, validation tools functional (integrity + freshness), freshness validation passes for recently updated sources.
 
 ______________________________________________________________________
 
