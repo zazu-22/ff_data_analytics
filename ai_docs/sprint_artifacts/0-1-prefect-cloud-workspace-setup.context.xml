@@ -1,0 +1,250 @@
+<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>0</epicId>
+    <storyId>1</storyId>
+    <title>Prefect Cloud Workspace Setup</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>ai_docs/sprint_artifacts/0-1-prefect-cloud-workspace-setup.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>data engineer</asA>
+    <iWant>a configured Prefect Cloud workspace with local execution verified</iWant>
+    <soThat>I can orchestrate analytics tasks with monitoring, retry logic, and alerting from Day 1</soThat>
+    <tasks>
+      - Task 1: Install Prefect and configure environment (AC: #1, #2)
+        - Add prefect>=3.6.2 to pyproject.toml dependencies
+        - Run uv add prefect to install package
+        - Verify installation: uv run prefect version
+        - Create .env file in project root (if not exists)
+        - Add .env to .gitignore to prevent accidental commit of secrets
+      - Task 2: Create and authenticate Prefect Cloud workspace (AC: #1, #2)
+        - Run prefect cloud login (interactive authentication)
+        - Create workspace: prefect workspace create ff-analytics
+        - Copy API key from Prefect Cloud UI
+        - Add PREFECT_API_KEY=&lt;value&gt; to .env file
+        - Verify environment variable loading
+      - Task 3: Create and deploy simple test flow (AC: #3, #4)
+        - Create flows/ directory: mkdir -p flows
+        - Create test flow file: flows/test_workspace_setup.py
+        - Implement minimal flow with single task
+        - Execute flow locally: python flows/test_workspace_setup.py
+        - Verify execution completes without errors
+      - Task 4: Verify Prefect Cloud integration (AC: #4)
+        - Open Prefect Cloud UI in browser
+        - Navigate to Flow Runs section
+        - Locate test flow run by timestamp
+        - Verify state transitions visible: Scheduled → Running → Completed
+        - Check task logs are captured and readable in UI
+        - Verify flow run metadata (duration, parameters, artifacts)
+      - Task 5: Document workspace configuration (AC: #1, #2)
+        - Document workspace URL in project README or docs
+        - Document .env file structure (required variables)
+        - Add setup instructions for team members
+        - Verify documentation complete
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    AC-1: Workspace ff-analytics created and accessible via Prefect Cloud UI
+    AC-2: API key stored in .env file as PREFECT_API_KEY
+    AC-3: Simple test flow deploys and executes successfully from local Mac environment
+    AC-4: Flow run visible in Prefect Cloud UI with state transitions logged
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>ai_docs/sprint_artifacts/tech-spec-epic-0.md</path>
+        <title>Epic Technical Specification: Prefect Foundation Setup</title>
+        <section>AC-1: Prefect Cloud Workspace Operational</section>
+        <snippet>Workspace ff-analytics created and accessible via Prefect Cloud UI. API key stored in .env file as PREFECT_API_KEY. Simple test flow deploys and executes successfully from local Mac environment.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/sprint_artifacts/tech-spec-epic-0.md</path>
+        <title>Epic Technical Specification: Prefect Foundation Setup</title>
+        <section>APIs and Interfaces - Prefect Cloud API</section>
+        <snippet>Authentication via prefect cloud login (interactive) or PREFECT_API_KEY environment variable. Workspace management via prefect workspace create command. Flow deployment via prefect deploy or flow.serve() for local execution.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/sprint_artifacts/tech-spec-epic-0.md</path>
+        <title>Epic Technical Specification: Prefect Foundation Setup</title>
+        <section>Workflows and Sequencing - Story 1 Execution</section>
+        <snippet>Install Prefect via uv add prefect, login via prefect cloud login, create workspace via prefect workspace create ff-analytics, verify with simple test flow deployment.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/sprint_artifacts/tech-spec-epic-0.md</path>
+        <title>Epic Technical Specification: Prefect Foundation Setup</title>
+        <section>Security - Authentication</section>
+        <snippet>Prefect API key stored in environment variable PREFECT_API_KEY (never committed to git). .env file added to .gitignore to prevent accidental commit of secrets.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/sprint_artifacts/tech-spec-epic-0.md</path>
+        <title>Epic Technical Specification: Prefect Foundation Setup</title>
+        <section>Dependencies and Integrations - Python Dependencies</section>
+        <snippet>Add prefect>=3.6.2 to pyproject.toml dependencies. Python 3.13.6 required (existing .python-version). uv 0.8.8 package manager.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/architecture.md</path>
+        <title>Architecture: Analytics Infrastructure Platform</title>
+        <section>Epic Breakdown - Epic 0</section>
+        <snippet>Prefect Foundation Setup establishes orchestration infrastructure FIRST. Delivers Prefect Cloud workspace, Discord alerts, task templates, and flow patterns.</snippet>
+      </doc>
+      <doc>
+        <path>ai_docs/index.md</path>
+        <title>Project Documentation Index</title>
+        <section>Quick Reference - Technology Stack</section>
+        <snippet>Python 3.13, uv package manager, just task runner. Project uses direnv for automatic environment variable loading from .env file.</snippet>
+      </doc>
+      <doc>
+        <path>CLAUDE.md</path>
+        <title>Project Instructions</title>
+        <section>Environment Variables &amp; Security</section>
+        <snippet>Project uses direnv with .envrc file that automatically loads all .env variables when cd into project directory. Never commit secrets to git.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>pyproject.toml</path>
+        <kind>configuration</kind>
+        <symbol>dependencies</symbol>
+        <lines>7-29</lines>
+        <reason>Needs prefect>=3.6.2 added to dependencies list. Currently contains data processing (polars, pandas, duckdb), visualization (altair, matplotlib), and cloud storage (google-cloud-storage) packages.</reason>
+      </artifact>
+      <artifact>
+        <path>.gitignore</path>
+        <kind>configuration</kind>
+        <symbol>Environment and secrets</symbol>
+        <lines>22-27</lines>
+        <reason>.env pattern already excluded via *.env (line 22). No changes needed - confirms secrets protection already in place.</reason>
+      </artifact>
+      <artifact>
+        <path>.envrc</path>
+        <kind>configuration</kind>
+        <symbol>direnv config</symbol>
+        <lines>1-2</lines>
+        <reason>Existing direnv setup with dotenv command. Automatically loads .env variables when cd into project. PREFECT_API_KEY will be auto-loaded once added to .env file.</reason>
+      </artifact>
+      <artifact>
+        <path>.env</path>
+        <kind>configuration</kind>
+        <symbol>environment variables</symbol>
+        <lines>N/A</lines>
+        <reason>File exists (4374 bytes). Will need PREFECT_API_KEY=&lt;value&gt; added. File already gitignored, safe for secrets.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="prefect" version=">=3.6.2" status="TO_ADD" />
+        <package name="polars[pyarrow]" version=">=1.33.1" status="EXISTING" />
+        <package name="duckdb" version=">=1.4.0" status="EXISTING" />
+        <package name="rich" version=">=14.1.0" status="EXISTING" />
+      </python>
+      <environment>
+        <variable name="PREFECT_API_KEY" required="true" status="TO_ADD" storage=".env" />
+        <variable name="DISCORD_WEBHOOK_URL" required="false" status="FUTURE" note="Story 2 requirement" />
+      </environment>
+      <tools>
+        <tool name="uv" version="0.8.8" purpose="Package manager" />
+        <tool name="just" version="latest" purpose="Task runner" />
+        <tool name="direnv" version="latest" purpose="Auto-load environment variables" />
+      </tools>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Python version: 3.13.6 (enforced by .python-version file)
+    - Package manager: uv only (NOT pip, poetry, or conda)
+    - Task runner: Use 'just' commands for dbt operations (NEVER manual dbt commands)
+    - Environment variables: Loaded via direnv + .env file (auto-loaded on cd)
+    - Secrets management: NEVER commit .env file (already gitignored via *.env pattern)
+    - Directory structure: flows/ at project root (same level as src/, dbt/, scripts/)
+    - Flow execution: Local Mac execution only (no cloud compute for MVP)
+    - Prefect Cloud: SaaS platform for orchestration UI only (not compute)
+    - Testing approach: Manual verification via Prefect UI (no unit tests for infrastructure setup)
+    - Architecture alignment: Implements ADR-001 (Prefect-First Development)
+    - Epic 0 foundation: Must complete before Epics 1-4 (dependency chain)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Prefect Cloud API</name>
+      <kind>REST API</kind>
+      <signature>prefect cloud login - Interactive authentication workflow</signature>
+      <path>External service (https://api.prefect.cloud)</path>
+    </interface>
+    <interface>
+      <name>Prefect Workspace Management</name>
+      <kind>CLI command</kind>
+      <signature>prefect workspace create &lt;name&gt; - Creates workspace in Prefect Cloud</signature>
+      <path>External service</path>
+    </interface>
+    <interface>
+      <name>Prefect Flow Decorator</name>
+      <kind>Python decorator</kind>
+      <signature>@flow(name="...", on_failure=[...]) - Flow definition pattern for future stories</signature>
+      <path>prefect.flow module</path>
+    </interface>
+    <interface>
+      <name>Prefect Task Decorator</name>
+      <kind>Python decorator</kind>
+      <signature>@task(name="...", retries=N, retry_delay_seconds=M) - Task definition pattern for future stories</signature>
+      <path>prefect.task module</path>
+    </interface>
+    <interface>
+      <name>Environment Variable Loading</name>
+      <kind>direnv integration</kind>
+      <signature>Automatic .env file loading via .envrc (layout uv + dotenv)</signature>
+      <path>.envrc file</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Infrastructure setup story with no business logic to unit test. Test coverage achieved through manual verification against acceptance criteria. Story validates end-to-end integration: Prefect Cloud workspace accessibility, API key authentication, test flow execution, and UI state visibility. Project uses pytest for unit tests (when applicable), but infrastructure stories rely on integration testing via actual system interaction.
+    </standards>
+    <locations>
+      - Manual testing: Prefect Cloud UI (https://app.prefect.cloud)
+      - Manual testing: Terminal (prefect CLI commands)
+      - Manual testing: git status (verify .env not committed)
+      - Future unit tests: tests/unit/ (pytest) - Not applicable for this story
+      - Future integration tests: tests/integration/ (pytest) - Not applicable for this story
+    </locations>
+    <ideas>
+      <test id="AC-1" acceptance_criteria="AC-1">
+        - Verify workspace ff-analytics visible in Prefect Cloud UI
+        - Verify workspace accessible (no authentication errors)
+        - Verify test flow run appears in Flow Runs section
+        - Verify flow run shows Completed state
+      </test>
+      <test id="AC-2" acceptance_criteria="AC-2">
+        - Verify .env file exists in project root
+        - Verify .env contains PREFECT_API_KEY=&lt;value&gt; line
+        - Verify git status does NOT show .env file (gitignored)
+        - Verify environment variable loads: python -c "import os; print(os.getenv('PREFECT_API_KEY'))" returns key value
+      </test>
+      <test id="AC-3" acceptance_criteria="AC-3">
+        - Verify flows/ directory created
+        - Verify test flow file exists: flows/test_workspace_setup.py
+        - Verify test flow executes without errors: python flows/test_workspace_setup.py
+        - Verify test flow completes (exit code 0)
+      </test>
+      <test id="AC-4" acceptance_criteria="AC-4">
+        - Verify flow run in Prefect UI matches timestamp of local execution
+        - Verify state transitions: Scheduled → Running → Completed
+        - Verify task logs captured and readable in UI
+        - Verify flow run metadata present (duration, parameters)
+      </test>
+      <test id="EDGE-1" acceptance_criteria="General">
+        - Test missing PREFECT_API_KEY: Unset env var, run flow, expect authentication error
+        - Test network connectivity: Disconnect internet, run flow, expect API unreachable error
+        - Test workspace already exists: Run prefect workspace create ff-analytics twice, expect error or idempotent success
+      </test>
+      <test id="REGRESSION" acceptance_criteria="General">
+        - Verify uv pip list shows prefect>=3.6.2 after installation
+        - Verify .env file not in git: git ls-files | grep .env should return empty
+        - Verify direnv working: cd into project, echo $PREFECT_API_KEY should show value
+      </test>
+    </ideas>
+  </tests>
+</story-context>

@@ -37,7 +37,7 @@ story_location: /Users/jason/code/ff_data_analytics/ai_docs/sprint_artifacts
 
 development_status:
   epic-0: contexted
-  0-1-prefect-cloud-workspace-setup: backlog
+  0-1-prefect-cloud-workspace-setup: ready-for-dev
   0-2-discord-notification-block: backlog
   0-3-analytics-flow-templates: backlog
   0-4-snapshot-governance-flow-integration-review: backlog
