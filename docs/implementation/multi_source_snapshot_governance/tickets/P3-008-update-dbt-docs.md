@@ -1,5 +1,6 @@
 # Ticket P3-008: Update dbt Model Documentation
 
+**Status**: COMPLETE\
 **Phase**: 3 - Documentation\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P1-002, P1-003 (models should be updated first)
@@ -14,18 +15,18 @@ This ticket ensures dbt model files themselves are self-documenting regarding sn
 
 ## Tasks
 
-- [ ] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
-- [ ] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
-- [ ] Add comments to `stg_nflverse__ff_opportunity` explaining snapshot strategy (latest_only, uses snapshot_selection_strategy macro for consistency)
-- [ ] Update `dbt/ff_data_transform/models/staging/README.md` with snapshot governance overview
-- [ ] Document baseline date choices and rationale
+- [x] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
+- [x] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy (baseline_plus_latest, fallback baseline_dt pattern)
+- [x] Add comments to `stg_nflverse__ff_opportunity` explaining snapshot strategy (latest_only, uses snapshot_selection_strategy macro for consistency)
+- [x] Update `dbt/ff_data_transform/models/staging/README.md` with snapshot governance overview
+- [x] Document baseline date choices and rationale
 
 ## Acceptance Criteria
 
-- [ ] All staging models have snapshot strategy comments
-- [ ] Comments explain WHY strategy chosen (not just WHAT)
-- [ ] README provides staging layer overview including governance
-- [ ] Baseline date rationale documented
+- [x] All staging models have snapshot strategy comments
+- [x] Comments explain WHY strategy chosen (not just WHAT)
+- [x] README provides staging layer overview including governance
+- [x] Baseline date rationale documented
 
 ## Implementation Notes
 
@@ -182,3 +183,35 @@ uv run dbt compile --select staging.nflverse.*
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 3 Activity (lines 426-429)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 3 dbt Docs (lines 259-262)
 - Model files: `dbt/ff_data_transform/models/staging/nflverse/`
+
+## Completion Notes
+
+**Implemented**: 2025-11-20
+
+**Changes Made**:
+
+1. Added comprehensive snapshot strategy comments to three staging models:
+   - `stg_nflverse__player_stats.sql` (lines 7-21): baseline_plus_latest strategy
+   - `stg_nflverse__snap_counts.sql` (lines 8-22): baseline_plus_latest strategy
+   - `stg_nflverse__ff_opportunity.sql` (lines 8-21): latest_only strategy
+2. Updated `models/staging/README.md` with complete snapshot governance section including:
+   - Selection strategy overview (baseline_plus_latest, latest_only, all)
+   - Baseline snapshots table with dates and rationale
+   - Configuration examples showing dbt var usage
+   - Schema evolution pattern with union_by_name
+   - Model naming conventions
+   - Testing guidance
+   - References section
+
+**Tests**: All passing
+
+- dbt compilation: PASS (48 models compiled successfully)
+- SQL comments do not break compilation
+- README markdown renders correctly
+
+**Impact**:
+
+- Future developers can understand snapshot strategy without reading external docs
+- Inline comments explain WHY strategies chosen (historical continuity vs current-only)
+- README provides complete governance overview at staging layer
+- Baseline date rationale documented (2025-10-01 chosen for complete 2024 season coverage)

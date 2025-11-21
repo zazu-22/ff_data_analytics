@@ -16,13 +16,23 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 41/61 tickets complete (67%)
+**Progress**: 42/61 tickets complete (69%)
 
 ## Recent Accomplishments (2025-11-20)
 
-📚 **Phase 3 Documentation Progressing**: Ops documentation suite growing!
+🎉 **Phase 3 Documentation COMPLETE**: All 8/8 tickets done!
 
 **Completed This Session**:
+
+- ✅ **P3-008**: Update dbt model documentation
+
+  - Added comprehensive snapshot strategy comments to 3 staging models (player_stats, snap_counts, ff_opportunity)
+  - Comments explain WHY strategies chosen (historical continuity vs current-only)
+  - Updated staging/README.md with complete snapshot governance section
+  - Baseline snapshot dates and rationale documented
+  - Configuration examples showing dbt var usage and fallback pattern
+  - Schema evolution pattern documented (union_by_name for evolving schemas)
+  - All tests passing (dbt compilation successful)
 
 - ✅ **P3-007**: Create cloud_storage_migration doc
 
@@ -80,7 +90,7 @@ This document provides a concise checklist for tracking completion of all implem
   - Manifest-based freshness checking (validate_manifests.py)
   - Per-source freshness thresholds and validation approach
 
-**Impact**: Phase 3 now 7/8 tickets complete (88%); Overall project 41/61 tickets complete (67%)
+**Impact**: Phase 3 now 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**; Overall project 42/61 tickets complete (69%)
 
 ## Previous Accomplishments (2025-11-20 - Earlier)
 
@@ -239,7 +249,7 @@ ______________________________________________________________________
 - [x] **P3-005** — Create orchestration_architecture doc ✅ **COMPLETE** (2025-11-20)
 - [x] **P3-006** — Create ci_transition_plan doc ✅ **COMPLETE** (2025-11-20)
 - [x] **P3-007** — Create cloud_storage_migration doc ✅ **COMPLETE** (2025-11-20)
-- [ ] **P3-008** — Update dbt model documentation
+- [x] **P3-008** — Update dbt model documentation ✅ **COMPLETE** (2025-11-20)
 
 ______________________________________________________________________
 
@@ -280,10 +290,10 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 41/61 tickets complete (67%)\
+**Overall Project**: 42/61 tickets complete (69%)\
 **Phase 1 Foundation**: 30/30 tickets complete (100%)\
 **Phase 2 Governance**: 5/7 tickets complete (71%)\
-**Phase 3 Documentation**: 7/8 tickets complete (88%)\
+**Phase 3 Documentation**: 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets
 

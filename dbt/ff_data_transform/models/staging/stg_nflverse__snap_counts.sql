@@ -6,6 +6,21 @@
 }}
 
 /*
+ * Snapshot Selection Strategy: baseline_plus_latest
+ *
+ * This model uses the baseline_plus_latest strategy to maintain historical
+ * continuity while automatically picking up new snapshots. The baseline
+ * snapshot (2025-10-01) provides complete 2020-2024 season data, while
+ * the latest snapshot captures in-progress 2025 season.
+ *
+ * Baseline Date Rationale:
+ *   2025-10-01 was chosen as baseline because it contains complete data
+ *   through the 2024 season and represents a stable, validated snapshot.
+ *
+ * See: dbt/ff_data_transform/macros/snapshot_selection.sql
+ * See: docs/ops/snapshot_management_current_state.md
+ */
+/*
 Stage nflverse snap counts with player_id crosswalk and long-form unpivot.
 
 Source: data/raw/nflverse/snap_counts/ (load_snap_counts)

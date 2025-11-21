@@ -401,9 +401,10 @@ ______________________________________________________________________
 
 ### Update dbt Model Documentation
 
-- [ ] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy
-- [ ] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy
-- [ ] Update `dbt/ff_data_transform/models/staging/README.md` (if exists) with snapshot governance overview
+- [x] Add comments to `stg_nflverse__player_stats` explaining snapshot strategy
+- [x] Add comments to `stg_nflverse__snap_counts` explaining snapshot strategy
+- [x] Add comments to `stg_nflverse__ff_opportunity` explaining snapshot strategy
+- [x] Update `dbt/ff_data_transform/models/staging/README.md` with complete snapshot governance section
 
 **Exit Criteria**: SPEC checklist accurate, ops docs answer current-state questions, dbt model docs explain governance.
 

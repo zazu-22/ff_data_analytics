@@ -6,6 +6,20 @@
 }}
 
 /*
+ * Snapshot Selection Strategy: latest_only
+ *
+ * This model uses the latest_only strategy because fantasy opportunity metrics
+ * only need current season data. Unlike historical stats where we maintain
+ * continuity across seasons, opportunity-based metrics are most valuable for
+ * current season analysis and projections.
+ *
+ * Uses snapshot_selection_strategy macro (not direct latest_snapshot_only helper)
+ * for consistency with other staging models.
+ *
+ * See: dbt/ff_data_transform/macros/snapshot_selection.sql
+ * See: docs/ops/snapshot_management_current_state.md
+ */
+/*
 Stage nflverse ff_opportunity metrics with player_id crosswalk and long-form unpivot.
 
 Source: data/raw/nflverse/ff_opportunity/ (load_ff_opportunity)
