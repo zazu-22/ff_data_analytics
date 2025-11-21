@@ -1,47 +1,6 @@
-# Ticket P3-007: Create cloud_storage_migration Doc
-
-**Phase**: 3 - Documentation\
-**Status**: COMPLETE\
-**Estimated Effort**: Medium (3 hours)\
-**Dependencies**: None (pure documentation)
-
-## Objective
-
-Create `docs/ops/cloud_storage_migration.md` documenting GCS bucket layout, retention policies, IAM requirements, DuckDB GCS configuration, and migration checklist.
-
-## Context
-
-This doc provides a blueprint for future cloud migration (GCS). It's planning documentation only — no actual migration occurs in this ticket. The goal is to document requirements so the team can execute migration independently later.
-
-## Tasks
-
-- [x] Create `docs/ops/cloud_storage_migration.md`
-- [x] Document GCS bucket layout (`gs://ff-analytics/{raw,stage,mart,ops}/`)
-- [x] Explain retention policies and lifecycle rules
-- [x] Document IAM requirements (`storage.objects.*` permissions)
-- [x] Provide service account setup guide with gcloud commands
-- [x] Document DuckDB GCS configuration (httpfs extension)
-- [x] Create migration checklist
-- [x] Note: Blueprint only, no actual migration
-
-## Acceptance Criteria
-
-- [x] Document provides complete migration blueprint
-- [x] IAM requirements clearly specified
-- [x] GCS bucket layout documented with retention policies
-- [x] DuckDB configuration steps provided
-- [x] Migration checklist actionable
-
-## Implementation Notes
-
-**File**: `docs/ops/cloud_storage_migration.md`
-
-**Document Structure** (from plan Phase 6):
-
-```markdown
 # Cloud Storage Migration — GCS Blueprint
 
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-11-20
 **Status**: Planning Only (No Migration)
 
 ## Overview
@@ -55,28 +14,27 @@ This document provides a blueprint for migrating from local storage to Google Cl
 ### Bucket Structure
 
 ```
-
 gs://ff-analytics/
-├── raw/ # Immutable source snapshots
-│ ├── nflverse/
-│ │ ├── weekly/dt=2025-10-27/
-│ │ ├── snap_counts/dt=2025-10-28/
-│ │ └── ...
-│ ├── sheets/
-│ ├── ktc/
-│ ├── ffanalytics/
-│ └── sleeper/
-├── stage/ # Intermediate staging artifacts
-├── mart/ # Published dimensional models
-└── ops/ # Metadata, logs, monitoring
-
-````
+├── raw/              # Immutable source snapshots
+│   ├── nflverse/
+│   │   ├── weekly/dt=2025-10-27/
+│   │   ├── snap_counts/dt=2025-10-28/
+│   │   └── ...
+│   ├── sheets/
+│   ├── ktc/
+│   ├── ffanalytics/
+│   └── sleeper/
+├── stage/            # Intermediate staging artifacts
+├── mart/             # Published dimensional models
+└── ops/              # Metadata, logs, monitoring
+```
 
 ### Partition Patterns
 
 All snapshots follow: `<source>/<dataset>/dt=YYYY-MM-DD/`
 
 Example:
+
 - `gs://ff-analytics/raw/nflverse/weekly/dt=2025-10-27/weekly.parquet`
 - `gs://ff-analytics/raw/nflverse/weekly/dt=2025-10-27/_meta.json`
 
@@ -84,12 +42,12 @@ Example:
 
 ### By Layer
 
-| Layer | Retention Period | Storage Class Transitions | Rationale |
-|-------|-----------------|---------------------------|-----------|
-| **raw** | 90 days | Standard → Nearline (30d) → Coldline (60d) | Immutable snapshots, kept for reprocessing |
-| **stage** | 30 days | Standard only, then delete | Intermediate artifacts, can be regenerated |
-| **mart** | 365 days | Standard → Nearline (90d) → Archive (180d) | Published models, kept for historical analysis |
-| **ops** | 180 days | Standard → Nearline (60d) | Logs and metadata for troubleshooting |
+| Layer     | Retention Period | Storage Class Transitions                  | Rationale                                      |
+| --------- | ---------------- | ------------------------------------------ | ---------------------------------------------- |
+| **raw**   | 90 days          | Standard → Nearline (30d) → Coldline (60d) | Immutable snapshots, kept for reprocessing     |
+| **stage** | 30 days          | Standard only, then delete                 | Intermediate artifacts, can be regenerated     |
+| **mart**  | 365 days         | Standard → Nearline (90d) → Archive (180d) | Published models, kept for historical analysis |
+| **ops**   | 180 days         | Standard → Nearline (60d)                  | Logs and metadata for troubleshooting          |
 
 ### Lifecycle Rules
 
@@ -144,7 +102,7 @@ Create `config/gcs/lifecycle.json`:
     ]
   }
 }
-````
+```
 
 **Apply lifecycle rules**:
 
@@ -458,37 +416,3 @@ uv run python tools/sync_snapshots.py --direction down
 - GCS documentation: https://cloud.google.com/storage/docs
 - DuckDB httpfs extension: https://duckdb.org/docs/extensions/httpfs
 - Bucket lifecycle: https://cloud.google.com/storage/docs/lifecycle
-
-```
-
-## Testing
-
-1. **Verify all commands are valid**: Test gcloud commands in docs (requires GCP project)
-2. **Check lifecycle JSON**: Validate JSON syntax
-3. **Link checking**: Ensure external references are current
-
-## References
-
-- Plan: `../2025-11-07_plan_v_2_0.md` - Phase 6 (lines 575-665)
-- Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 6 (lines 448-567)
-
-## Completion Notes
-
-**Implemented**: 2025-11-20
-
-**Deliverable**: Created comprehensive `docs/ops/cloud_storage_migration.md` covering:
-
-1. **GCS Bucket Layout**: 4-layer structure (raw/stage/mart/ops) with partition patterns
-2. **Retention Policies**: Lifecycle rules with storage class transitions (Standard → Nearline → Coldline → Archive/Delete)
-3. **Cost Optimization**: Documented pricing and example savings (50% reduction with lifecycle rules)
-4. **IAM Requirements**: Detailed permissions (storage.objects.{create,get,list,delete}) with gcloud commands
-5. **Service Account Setup**: Verified existing setup, documented key rotation policy
-6. **DuckDB GCS Configuration**: httpfs extension setup, authentication, and performance considerations
-7. **Migration Checklist**: Comprehensive pre-migration, execution, post-migration, and rollback procedures
-8. **Optional Sync Utility**: Python script for manual snapshot sync operations
-
-**Status**: Planning documentation only - no actual migration performed
-
-**Impact**: Provides complete blueprint for future GCS migration with actionable steps and validation criteria
-
-```

@@ -389,15 +389,15 @@ ______________________________________________________________________
   - [x] Define cut-over validation criteria
   - [x] Note: Planning only, execution deferred to future work
 
-- [ ] Create `docs/ops/cloud_storage_migration.md`:
+- [x] Create `docs/ops/cloud_storage_migration.md`: ✅ **COMPLETE** (2025-11-20)
 
-  - [ ] Document GCS bucket layout (`gs://ff-analytics/{raw,stage,mart,ops}/`)
-  - [ ] Explain retention policies and lifecycle rules
-  - [ ] Document IAM requirements (`storage.objects.*` permissions)
-  - [ ] Provide service account setup guide with gcloud commands
-  - [ ] Document DuckDB GCS configuration (httpfs extension)
-  - [ ] Create migration checklist
-  - [ ] Note: Blueprint only, no actual migration
+  - [x] Document GCS bucket layout (`gs://ff-analytics/{raw,stage,mart,ops}/`)
+  - [x] Explain retention policies and lifecycle rules
+  - [x] Document IAM requirements (`storage.objects.*` permissions)
+  - [x] Provide service account setup guide with gcloud commands
+  - [x] Document DuckDB GCS configuration (httpfs extension)
+  - [x] Create migration checklist
+  - [x] Note: Blueprint only, no actual migration
 
 ### Update dbt Model Documentation
 
