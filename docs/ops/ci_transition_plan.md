@@ -1,44 +1,6 @@
-# Ticket P3-006: Create ci_transition_plan Doc
-
-**Phase**: 3 - Documentation\
-**Estimated Effort**: Medium (2-3 hours)\
-**Dependencies**: P3-005 (orchestration architecture should be documented first)\
-**Status**: COMPLETE
-
-## Objective
-
-Create `docs/ops/ci_transition_plan.md` documenting the GitHub Actions → Prefect migration strategy, parallel run period, rollback procedures, and cut-over validation criteria.
-
-## Context
-
-This doc provides the playbook for transitioning from GitHub Actions to Prefect as the primary orchestrator. It's planning documentation only — actual execution is deferred to future work.
-
-## Tasks
-
-- [x] Create `docs/ops/ci_transition_plan.md`
-- [x] Document GitHub Actions → Prefect migration strategy
-- [x] Define parallel run period (1-2 weeks)
-- [x] Document rollback procedures if Prefect fails
-- [x] Define cut-over validation criteria
-- [x] Note: Planning only, execution deferred to future work
-
-## Acceptance Criteria
-
-- [x] Document provides complete transition playbook
-- [x] Parallel run strategy defined with timeline
-- [x] Rollback procedures cover major failure scenarios
-- [x] Cut-over criteria objective and measurable
-
-## Implementation Notes
-
-**File**: `docs/ops/ci_transition_plan.md`
-
-**Document Structure** (from plan Phase 5):
-
-````markdown
 # CI Transition Plan — GitHub Actions to Prefect
 
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-11-20
 **Status**: Planning Only (Execution Deferred)
 
 ## Overview
@@ -52,11 +14,13 @@ This document describes the planned transition from GitHub Actions to Prefect as
 ### Week 1: Deploy Prefect Alongside GH Actions
 
 **Objectives**:
+
 - Add Prefect flows to deployment
 - Keep GitHub Actions running unchanged
 - Begin collecting metrics
 
 **Actions**:
+
 - [ ] Deploy Prefect flows (manual trigger initially)
 - [ ] Run both systems in parallel (non-blocking)
 - [ ] Collect metrics: row counts, timing, failure rates
@@ -65,24 +29,27 @@ This document describes the planned transition from GitHub Actions to Prefect as
 ### Week 2: Compare and Validate
 
 **Objectives**:
+
 - Compare outputs daily
 - Monitor for discrepancies
 - Adjust Prefect flows if issues found
 
 **Actions**:
+
 - [ ] Daily comparison: row counts match? (±1% acceptable)
 - [ ] Compare manifests (lineage fields populated?)
 - [ ] Check timing (Prefect faster/slower?)
 - [ ] Monitor for failures in either system
 
 **Comparison Script**:
+
 ```bash
 # Compare outputs
 uv run python tools/compare_pipeline_outputs.py \
     --source1 data/raw/nflverse \
     --source2 data/raw/nflverse_prefect \
     --output comparison_report.json
-````
+```
 
 ### Week 3: Cut-Over Decision
 
@@ -365,46 +332,3 @@ Weekly review meeting:
 - GitHub Actions: `.github/workflows/`
 - Orchestration architecture: `docs/ops/orchestration_architecture.md`
 - Validation tool: `tools/validate_manifests.py`
-
-```
-
-## Testing
-
-1. **Accuracy review**: Verify transition plan is comprehensive
-2. **Rollback procedures**: Desk-check each scenario
-3. **Validation criteria**: Ensure criteria are measurable
-
-## References
-
-- Plan: `../2025-11-07_plan_v_2_0.md` - Phase 5 (lines 517-573)
-- Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 5 (lines 375-443)
-
-## Completion Notes
-
-**Implemented**: 2025-11-20
-
-**Changes Made**:
-1. Created `docs/ops/ci_transition_plan.md` with comprehensive transition playbook
-
-**Document Structure**:
-- **Overview** - Planning-only status, execution deferred
-- **Parallel Run Strategy** - 4-week timeline (Deploy → Compare → Cut-Over Decision → Monitoring)
-- **Cut-Over Validation Criteria** - 5 measurable criteria (row count parity, manifest quality, query performance, freshness tests, team approval)
-- **Rollback Procedures** - 4 failure scenarios with specific actions (Prefect crash during parallel run, data quality regression, performance degradation, post-cut-over failure)
-- **Comparison Process** - Automated diff tool template + manual review process
-- **Decision Framework** - ASCII flow diagram for go/no-go decision
-- **Post-Cut-Over Monitoring** - First 48 hours (critical), first week, ongoing monitoring plans
-
-**Testing**:
-- ✅ Document provides complete transition playbook
-- ✅ Parallel run strategy defined with 4-week timeline
-- ✅ Rollback procedures cover 4 major failure scenarios
-- ✅ Cut-over criteria objective and measurable (5 specific criteria with SQL validation queries)
-
-**Impact**:
-- Provides actionable playbook for future GitHub Actions → Prefect migration
-- Defines clear go/no-go decision criteria and rollback procedures
-- Complements `orchestration_architecture.md` (P3-005) by providing execution roadmap
-- Planning documentation only - no immediate execution required
-
-```

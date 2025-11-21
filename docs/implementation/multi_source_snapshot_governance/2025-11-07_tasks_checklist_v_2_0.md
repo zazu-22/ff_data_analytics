@@ -381,13 +381,13 @@ ______________________________________________________________________
   - [x] Document dependencies between ingestion jobs
   - [x] Diagram flow sequence if helpful
 
-- [ ] Create `docs/ops/ci_transition_plan.md`:
+- [x] Create `docs/ops/ci_transition_plan.md`:
 
-  - [ ] Document GitHub Actions → Prefect migration strategy
-  - [ ] Define parallel run period (1-2 weeks)
-  - [ ] Document rollback procedures if Prefect fails
-  - [ ] Define cut-over validation criteria
-  - [ ] Note: Planning only, execution deferred to future work
+  - [x] Document GitHub Actions → Prefect migration strategy
+  - [x] Define parallel run period (1-2 weeks)
+  - [x] Document rollback procedures if Prefect fails
+  - [x] Define cut-over validation criteria
+  - [x] Note: Planning only, execution deferred to future work
 
 - [ ] Create `docs/ops/cloud_storage_migration.md`:
 
