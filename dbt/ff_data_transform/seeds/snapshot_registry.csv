@@ -35,11 +35,11 @@ sheets,transactions,2025-11-10,current,,,3999,Commissioner league transactions
 sheets,transactions,2025-11-12,current,,,3999,Commissioner league transactions
 sheets,transactions,2025-11-16,current,,,4008,Commissioner league transactions - Latest snapshot
 sheets,transactions_qa,2025-11-10,current,,,,QA/validation transactions (temporary)
-ffanalytics,projections,2025-11-06,current,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-09,current,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-13,current,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-14,current,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-16,current,2024,2025,,Fantasy projections from R package - Latest snapshot
+ffanalytics,projections,2025-11-06,superseded,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-09,superseded,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-13,superseded,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-14,superseded,2024,2025,,Fantasy projections from R package
+ffanalytics,projections,2025-11-16,superseded,2024,2025,,Fantasy projections from R package - Latest snapshot
 ktc,picks,2025-10-25,superseded,,,, Keep Trade Cut draft pick values
 ktc,picks,2025-10-30,superseded,,,36,Keep Trade Cut draft pick values
 ktc,picks,2025-11-05,superseded,,,36,Keep Trade Cut draft pick values
@@ -102,3 +102,4 @@ sleeper,users,2025-11-12,current,,,13,Sleeper league users - Latest snapshot
 nflverse,weekly,2025-11-21,current,2024,2024,18981,NFLverse ingestion for seasons [2024]
 ktc,players,2025-11-21,current,,,464,KTC dynasty_1qb ingestion
 ktc,picks,2025-11-21,current,,,36,KTC dynasty_1qb ingestion
+ffanalytics,projections,2025-11-21,current,,,0,FFAnalytics ROS projections (weeks 1-1)

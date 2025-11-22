@@ -260,7 +260,7 @@ ______________________________________________________________________
 - [x] **P4-002** — Implement parse_league_sheet_flow (parse copied sheet, depends on P4-002a)
 - [x] **P4-003** — Implement nfl_data_pipeline flow
 - [x] **P4-004** — Implement ktc_pipeline flow ✅ **COMPLETE** (2025-11-21)
-- [ ] **P4-005** — Implement ffanalytics_pipeline flow
+- [x] **P4-005** — Implement ffanalytics_pipeline flow
 - [ ] **P4-006** — Implement sleeper_pipeline flow
 
 ______________________________________________________________________

@@ -475,17 +475,17 @@ ______________________________________________________________________
   - [x] Player mapping validation (join to dim_player_id_xref)
 - [x] Test locally with Prefect dev server
 
-#### FFAnalytics Projections Pipeline
+#### FFAnalytics Projections Pipeline ✅ **COMPLETE** (2025-11-21)
 
-- [ ] Create `src/flows/ffanalytics_pipeline.py`
-- [ ] Define flow with tasks:
-  - [ ] Run R projections via `scripts/R/run_projections.R`
-  - [ ] Export Parquet files
-  - [ ] Write `_meta.json` manifests
-- [ ] Add governance tasks:
-  - [ ] Projection reasonableness checks (min/max/sum validations)
-  - [ ] Compare to historical projections (outlier detection)
-- [ ] Test locally with Prefect dev server
+- [x] Create `src/flows/ffanalytics_pipeline.py`
+- [x] Define flow with tasks:
+  - [x] Run R projections via `scripts/R/run_projections.R`
+  - [x] Export Parquet files
+  - [x] Write `_meta.json` manifests
+- [x] Add governance tasks:
+  - [x] Projection reasonableness checks (min/max/sum validations)
+  - [x] Compare to historical projections (outlier detection)
+- [x] Test locally with Prefect dev server
 
 #### Sleeper Pipeline
 
