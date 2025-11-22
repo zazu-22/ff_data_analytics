@@ -487,18 +487,21 @@ ______________________________________________________________________
   - [x] Compare to historical projections (outlier detection)
 - [x] Test locally with Prefect dev server
 
-#### Sleeper Pipeline
+#### Sleeper Pipeline ✅ **COMPLETE** (2025-11-21)
 
-- [ ] Create `src/flows/sleeper_pipeline.py`
-- [ ] Define flow with tasks:
-  - [ ] Fetch league data via Sleeper API
-  - [ ] Parse rosters and transactions
-  - [ ] Write Parquet files
-  - [ ] Write `_meta.json` manifests
-- [ ] Add governance tasks:
-  - [ ] Transaction date ordering validation
-  - [ ] Roster size validations (expected ranges per league settings)
-- [ ] Test locally with Prefect dev server
+- [x] Create `src/flows/sleeper_pipeline.py`
+- [x] Define flow with tasks:
+  - [x] Fetch league data via Sleeper API (uses existing load_sleeper.py)
+  - [x] Fetch rosters, players, fa_pool, users datasets
+  - [x] Write Parquet files (handled by load_sleeper.py)
+  - [x] Write `_meta.json` manifests (handled by load_sleeper.py)
+- [x] Add governance tasks:
+  - [x] Roster size validations (25-35 players per team)
+  - [x] Player mapping validation (>85% coverage against dim_player_id_xref)
+  - [x] Snapshot registry updates (atomic)
+  - [x] Manifest validation
+  - Note: Transaction ordering validation deferred (API client doesn't fetch transactions yet)
+- [x] Test locally with Prefect dev server
 
 ### Governance Integration
 

@@ -77,29 +77,33 @@ nflverse,weekly,2025-11-05,superseded,2020,2025,,Player weekly statistics throug
 nflverse,weekly,2025-11-09,superseded,2020,2025,,Player weekly statistics through Week 10
 nflverse,weekly,2025-11-10,superseded,2020,2025,,Player weekly statistics through Week 10
 nflverse,weekly,2025-11-16,superseded,2020,2025,,Player weekly statistics - Latest snapshot
-sleeper,fa_pool,2025-10-27,current,,,7489,Sleeper free agent pool
-sleeper,fa_pool,2025-10-30,current,,,7512,Sleeper free agent pool
-sleeper,fa_pool,2025-11-05,current,,,7518,Sleeper free agent pool
-sleeper,fa_pool,2025-11-09,current,,,7485,Sleeper free agent pool
-sleeper,fa_pool,2025-11-12,current,,,7508,Sleeper free agent pool - Latest snapshot
-sleeper,players,2025-10-27,current,,,,Sleeper player database
-sleeper,players,2025-10-30,current,,,,Sleeper player database
-sleeper,players,2025-11-05,current,,,,Sleeper player database
-sleeper,players,2025-11-06,current,,,,Sleeper player database
-sleeper,players,2025-11-09,current,,,,Sleeper player database
-sleeper,players,2025-11-10,current,,,,Sleeper player database
-sleeper,players,2025-11-12,current,,,,Sleeper player database
-sleeper,players,2025-11-16,current,,,11401,Sleeper player database - Latest snapshot
-sleeper,rosters,2025-10-30,current,,,12,Sleeper league rosters
-sleeper,rosters,2025-11-05,current,,,12,Sleeper league rosters
-sleeper,rosters,2025-11-09,current,,,12,Sleeper league rosters
-sleeper,rosters,2025-11-12,current,,,12,Sleeper league rosters - Latest snapshot
-sleeper,users,2025-10-27,current,,,13,Sleeper league users
-sleeper,users,2025-10-30,current,,,13,Sleeper league users
-sleeper,users,2025-11-05,current,,,13,Sleeper league users
-sleeper,users,2025-11-09,current,,,13,Sleeper league users
-sleeper,users,2025-11-12,current,,,13,Sleeper league users - Latest snapshot
+sleeper,fa_pool,2025-10-27,superseded,,,7489,Sleeper free agent pool
+sleeper,fa_pool,2025-10-30,superseded,,,7512,Sleeper free agent pool
+sleeper,fa_pool,2025-11-05,superseded,,,7518,Sleeper free agent pool
+sleeper,fa_pool,2025-11-09,superseded,,,7485,Sleeper free agent pool
+sleeper,fa_pool,2025-11-12,superseded,,,7508,Sleeper free agent pool - Latest snapshot
+sleeper,players,2025-10-27,superseded,,,,Sleeper player database
+sleeper,players,2025-10-30,superseded,,,,Sleeper player database
+sleeper,players,2025-11-05,superseded,,,,Sleeper player database
+sleeper,players,2025-11-06,superseded,,,,Sleeper player database
+sleeper,players,2025-11-09,superseded,,,,Sleeper player database
+sleeper,players,2025-11-10,superseded,,,,Sleeper player database
+sleeper,players,2025-11-12,superseded,,,,Sleeper player database
+sleeper,players,2025-11-16,superseded,,,11401,Sleeper player database - Latest snapshot
+sleeper,rosters,2025-10-30,superseded,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-05,superseded,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-09,superseded,,,12,Sleeper league rosters
+sleeper,rosters,2025-11-12,superseded,,,12,Sleeper league rosters - Latest snapshot
+sleeper,users,2025-10-27,superseded,,,13,Sleeper league users
+sleeper,users,2025-10-30,superseded,,,13,Sleeper league users
+sleeper,users,2025-11-05,superseded,,,13,Sleeper league users
+sleeper,users,2025-11-09,superseded,,,13,Sleeper league users
+sleeper,users,2025-11-12,superseded,,,13,Sleeper league users - Latest snapshot
 nflverse,weekly,2025-11-21,current,2024,2024,18981,NFLverse ingestion for seasons [2024]
 ktc,players,2025-11-21,current,,,464,KTC dynasty_1qb ingestion
 ktc,picks,2025-11-21,current,,,36,KTC dynasty_1qb ingestion
 ffanalytics,projections,2025-11-21,current,,,0,FFAnalytics ROS projections (weeks 1-1)
+sleeper,rosters,2025-11-21,current,,,12,Sleeper league 1230330435511275520
+sleeper,players,2025-11-21,current,,,11401,Sleeper league 1230330435511275520
+sleeper,fa_pool,2025-11-21,current,,,7479,Sleeper league 1230330435511275520
+sleeper,users,2025-11-21,current,,,13,Sleeper league 1230330435511275520
