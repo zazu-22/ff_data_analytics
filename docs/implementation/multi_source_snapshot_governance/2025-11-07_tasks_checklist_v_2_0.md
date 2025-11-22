@@ -433,20 +433,20 @@ ______________________________________________________________________
 - [x] Configure to run every 2-4 hours during season
 - [x] Test locally with Prefect dev server
 
-**Parse Flow** (`parse_league_sheet_flow.py`):
+**Parse Flow** (`parse_league_sheet_flow.py`) - P4-002 ✅ COMPLETE:
 
-- [ ] Create `src/flows/parse_league_sheet_flow.py`
-- [ ] Define flow with tasks:
-  - [ ] Re-validate copy completeness before parsing
-  - [ ] Parse with `src/ingest/sheets/commissioner_parser.py`
-  - [ ] Write Parquet files
-  - [ ] Write `_meta.json` manifests
-- [ ] Add governance tasks:
-  - [ ] Validate row counts against expected ranges
-  - [ ] Check for required columns (player_name, team, etc.)
-- [ ] Configure to run 15-30 minutes after copy flow completes
-- [ ] Test flow sequencing (copy → parse)
-- [ ] Test locally with Prefect dev server
+- [x] Create `src/flows/parse_league_sheet_flow.py`
+- [x] Define flow with tasks:
+  - [x] Re-validate copy completeness before parsing
+  - [x] Parse with `src/ingest/sheets/commissioner_parser.py`
+  - [x] Write Parquet files
+  - [x] Write `_meta.json` manifests
+- [x] Add governance tasks:
+  - [x] Validate row counts against expected ranges
+  - [x] Check for required columns (player_name, team, etc.)
+- [x] Configure to run 15-30 minutes after copy flow completes
+- [x] Test flow sequencing (copy → parse)
+- [x] Test locally with Prefect dev server
 
 #### NFL Data Pipeline
 

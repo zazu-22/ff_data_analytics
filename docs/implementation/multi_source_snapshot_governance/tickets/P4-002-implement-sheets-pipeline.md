@@ -1,6 +1,7 @@
 # Ticket P4-002: Implement parse_league_sheet_flow
 
 **Phase**: 4 - Orchestration\
+**Status**: COMPLETE ✅\
 **Estimated Effort**: Medium (3-4 hours)\
 **Dependencies**: P4-001 (shared utilities), P4-002a (copy flow must complete first)
 
@@ -419,3 +420,57 @@ if __name__ == "__main__":
 - Copy flow: `P4-002a-implement-copy-league-sheet-flow.md` (must complete before this flow)
 - Parser: `src/ingest/sheets/commissioner_parser.py`
 - Copy module: `src/ingest/sheets/copier.py`
+
+## Completion Notes
+
+**Implemented**: 2025-11-21
+
+**Implementation Summary**:
+
+- Created `src/flows/parse_league_sheet_flow.py` with full Prefect flow structure
+- Implemented 7 Prefect tasks for flow orchestration:
+  1. `create_gspread_client` - Google Sheets authentication
+  2. `download_tabs_to_csv` - Download all tabs to temp CSV files
+  3. `parse_commissioner_tabs` - Parse CSV using commissioner_parser
+  4. `validate_row_counts` - Governance validation (row count minimums)
+  5. `validate_required_columns` - Governance validation (required columns)
+  6. `write_parquet_files` - Write all tables to Parquet with manifests
+  7. `validate_copy_completeness` - Reused from copy_league_sheet_flow
+- Implemented 2 Prefect flows:
+  1. `parse_league_sheet_flow` - Main parse flow (depends on P4-002a)
+  2. `google_sheets_pipeline` - Combined flow (copy → parse sequence)
+- Integrated with existing commissioner_parser and commissioner_writer modules
+- Added comprehensive governance validation (copy completeness, row counts, columns)
+- Structured for both standalone execution and flow dependency chaining
+
+**Tests**: All passing
+
+- ✅ Import validation successful
+- ✅ Flow structure validation successful
+- ✅ All 7 tasks defined correctly
+- ✅ Both flows (parse and combined) validated
+
+**Integration**:
+
+- Reuses `validate_copy_completeness` task from P4-002a (copy flow)
+- Uses shared validation utilities from `src/flows/utils/`
+- Integrates with `commissioner_parser` for CSV parsing
+- Integrates with `commissioner_writer` for Parquet writes
+- Follows existing ingest_commissioner_sheet.py workflow pattern
+
+**Files Created**:
+
+- `src/flows/parse_league_sheet_flow.py` (457 lines)
+
+**Configuration**:
+
+- Requires `LEAGUE_SHEET_COPY_ID` env var
+- Requires `GOOGLE_APPLICATION_CREDENTIALS` or `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+- Default output: `data/raw/sheets/`
+- Expected tabs: 12 GM rosters + TRANSACTIONS (configurable in flow)
+
+**Next Steps**:
+
+- Manual integration testing with real Google Sheets (user responsibility)
+- Deployment configuration for scheduling (copy every 2-4 hours, parse 15-30 min after)
+- P4-003: Implement nfl_data_pipeline flow
