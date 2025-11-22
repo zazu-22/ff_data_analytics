@@ -10,17 +10,19 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 61 (includes 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 tech debt)
+- **Total Tickets**: 65 (includes 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 tech debt + 4 Phase 4 hardening)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
-- **Estimated Total Effort**: ~182-229 hours (updated for expanded Phase 1 + P1-027 + P1-028 + P1-028b)
+- **Estimated Total Effort**: ~192-239 hours (updated for Phase 4 hardening tickets)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 47/61 tickets complete (77%)
+**Progress**: 47/65 tickets complete (72%)
 
 ## Recent Accomplishments (2025-11-21)
 
-🎉 **Phase 4 Orchestration COMPLETE**: All 7/7 tickets done!
+🎉 **Phase 4 Core Implementation COMPLETE**: All 7/7 implementation tickets done!
+
+⚠️ **Phase 4 Hardening Added**: Senior dev review identified 4 additional tickets for production readiness
 
 **Completed This Session**:
 
@@ -34,7 +36,18 @@ This document provides a concise checklist for tracking completion of all implem
   - Flow execution: PASS (roster validation PASS, datasets fetched successfully)
   - **Impact**: Phase 4 now 7/7 complete - All 5 Prefect source pipelines operational
 
-**Impact**: Phase 4 now 7/7 tickets complete (100%) ✅ **PHASE COMPLETE**; Overall project 47/61 tickets complete (77%)
+**Impact**: Phase 4 core implementation 7/7 complete (100%) ✅; Overall project 47/65 tickets complete (72%)
+
+**Senior Dev Review Results** (2025-11-21):
+
+- ✅ **Overall Assessment**: APPROVED with minor recommendations
+- ✅ All acceptance criteria met for P4-002 through P4-006
+- ✅ Excellent architecture, governance integration, code quality
+- ⚠️ **4 hardening tickets created** (P4-007 through P4-010):
+  - **P4-007** (CRITICAL): Add retry/timeout configuration before production
+  - **P4-008** (HIGH): Add unit tests for regression protection
+  - **P4-009** (MEDIUM): Extract governance config for maintainability
+  - **P4-010** (LOW): Refactor to reduce ~400 lines of duplication
 
 ## Previous Accomplishments (2025-11-20)
 
@@ -271,7 +284,9 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Phase 4: Orchestration (7 tickets)
+## Phase 4: Orchestration (11 tickets - 7 implementation + 4 hardening)
+
+### Core Implementation (7 tickets) ✅ **ALL COMPLETE**
 
 - [x] **P4-001** — Create flows directory and shared utilities
 - [x] **P4-002a** — Implement copy_league_sheet_flow (copy tabs from Commissioner sheet)
@@ -280,6 +295,13 @@ ______________________________________________________________________
 - [x] **P4-004** — Implement ktc_pipeline flow ✅ **COMPLETE** (2025-11-21)
 - [x] **P4-005** — Implement ffanalytics_pipeline flow
 - [x] **P4-006** — Implement sleeper_pipeline flow
+
+### Production Hardening & Quality (4 tickets) 🔴 **REQUIRED FOR PRODUCTION**
+
+- [ ] **P4-007** — 🔴 **CRITICAL**: Production hardening (retry + timeout configuration) - **MUST DO BEFORE PRODUCTION**
+- [ ] **P4-008** — Add unit test coverage for flow validation logic - **DO SOON**
+- [ ] **P4-009** — Extract governance thresholds to configuration module - **DO SOON**
+- [ ] **P4-010** — Refactor shared utilities and reduce duplication - **TECH DEBT** (depends on P4-008)
 
 ______________________________________________________________________
 
@@ -308,13 +330,14 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 46/61 tickets complete (75%)\
+**Overall Project**: 47/65 tickets complete (72%)\
 **Phase 1 Foundation**: 30/30 tickets complete (100%) ✅ **PHASE COMPLETE**\
-**Phase 2 Governance**: 5/7 tickets complete (71%)\
+**Phase 2 Governance**: 7/7 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 3 Documentation**: 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**\
-**Phase 4 Orchestration**: 4/7 tickets complete (57%)\
+**Phase 4 Orchestration**: 7/11 tickets complete (64%) - Core implementation ✅, Hardening pending\
 **In Progress**: 0 tickets\
-**Blocked**: 0 tickets
+**Blocked**: 0 tickets\
+**Production Blockers**: 1 ticket (P4-007 - retry/timeout configuration)
 
 **Recent Progress** (2025-11-18):
 
