@@ -16,7 +16,7 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 43/61 tickets complete (70%)
+**Progress**: 44/61 tickets complete (72%)
 
 ## Recent Accomplishments (2025-11-20)
 
@@ -256,7 +256,7 @@ ______________________________________________________________________
 ## Phase 4: Orchestration (7 tickets)
 
 - [x] **P4-001** — Create flows directory and shared utilities
-- [ ] **P4-002a** — Implement copy_league_sheet_flow (copy tabs from Commissioner sheet)
+- [x] **P4-002a** — Implement copy_league_sheet_flow (copy tabs from Commissioner sheet)
 - [ ] **P4-002** — Implement parse_league_sheet_flow (parse copied sheet, depends on P4-002a)
 - [ ] **P4-003** — Implement nfl_data_pipeline flow
 - [ ] **P4-004** — Implement ktc_pipeline flow

@@ -60,6 +60,7 @@ repos:
       - id: mypy
         name: mypy (type checking)
         files: ^(src/|tools/).*\.py$
+        exclude: ^src/flows/.*\.py$  # Flows use sys.path manipulation
         additional_dependencies:
           - types-requests
           - pandas-stubs

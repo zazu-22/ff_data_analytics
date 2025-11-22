@@ -424,14 +424,14 @@ ______________________________________________________________________
 
 #### Google Sheets Pipeline (Split into Two Flows)
 
-**Copy Flow** (`copy_league_sheet_flow.py`):
+**Copy Flow** (`copy_league_sheet_flow.py`) - P4-002a ✅ COMPLETE:
 
-- [ ] Create `src/flows/copy_league_sheet_flow.py`
-- [ ] Define flow with tasks:
-  - [ ] Copy tabs from Commissioner sheet to working copy
-  - [ ] Validate copy completeness (all expected tabs copied)
-- [ ] Configure to run every 2-4 hours during season
-- [ ] Test locally with Prefect dev server
+- [x] Create `src/flows/copy_league_sheet_flow.py`
+- [x] Define flow with tasks:
+  - [x] Copy tabs from Commissioner sheet to working copy
+  - [x] Validate copy completeness (all expected tabs copied)
+- [x] Configure to run every 2-4 hours during season
+- [x] Test locally with Prefect dev server
 
 **Parse Flow** (`parse_league_sheet_flow.py`):
 

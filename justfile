@@ -230,6 +230,16 @@ ingest-ffanalytics:
     @echo "✅ FFanalytics ingestion complete"
 
 # ============================================================================
+# PREFECT FLOWS
+# ============================================================================
+
+# Run copy league sheet flow (Commissioner sheet → working copy)
+flow-copy-sheet:
+    @echo "Running copy_league_sheet_flow..."
+    @uv run python src/flows/copy_league_sheet_flow.py
+    @echo "✅ Sheet copy flow complete"
+
+# ============================================================================
 # DBT WORKFLOWS
 # ============================================================================
 

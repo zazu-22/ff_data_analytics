@@ -239,6 +239,7 @@ ignore_missing_imports = true  # Lenient for gradual typing
 files = ["src/", "tools/"]
 exclude = [
     "^scripts/",  # Scripts are orchestration runners, not libraries
+    "^src/flows/",  # Flows are orchestration runners (use sys.path manipulation)
     "^tests/",
     "^notebooks/",
 ]
