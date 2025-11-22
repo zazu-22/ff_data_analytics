@@ -464,16 +464,16 @@ ______________________________________________________________________
 
 #### KTC Pipeline
 
-- [ ] Create `src/flows/ktc_pipeline.py`
-- [ ] Define flow with tasks:
-  - [ ] Fetch KTC API data
-  - [ ] Parse players and picks
-  - [ ] Write Parquet files
-  - [ ] Write `_meta.json` manifests
-- [ ] Add governance tasks:
-  - [ ] Valuation range checks (min/max/median validations)
-  - [ ] Player mapping validation (join to dim_player_id_xref)
-- [ ] Test locally with Prefect dev server
+- [x] Create `src/flows/ktc_pipeline.py`
+- [x] Define flow with tasks:
+  - [x] Fetch KTC API data
+  - [x] Parse players and picks
+  - [x] Write Parquet files
+  - [x] Write `_meta.json` manifests
+- [x] Add governance tasks:
+  - [x] Valuation range checks (min/max/median validations)
+  - [x] Player mapping validation (join to dim_player_id_xref)
+- [x] Test locally with Prefect dev server
 
 #### FFAnalytics Projections Pipeline
 

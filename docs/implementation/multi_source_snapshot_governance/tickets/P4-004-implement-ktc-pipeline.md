@@ -2,7 +2,8 @@
 
 **Phase**: 4 - Orchestration\
 **Estimated Effort**: Medium (3-4 hours)\
-**Dependencies**: P4-001
+**Dependencies**: P4-001\
+**Status**: COMPLETE
 
 ## Objective
 
@@ -14,17 +15,17 @@ KTC provides dynasty player and pick valuations (1QB default). Governance focuse
 
 ## Tasks
 
-- [ ] Create `src/flows/ktc_pipeline.py`
-- [ ] Define flow with tasks: Fetch KTC API → Parse → Write Parquet → Manifest
-- [ ] Add governance: Valuation range checks, player mapping validation
-- [ ] Test locally
+- [x] Create `src/flows/ktc_pipeline.py`
+- [x] Define flow with tasks: Fetch KTC API → Parse → Write Parquet → Manifest
+- [x] Add governance: Valuation range checks, player mapping validation
+- [x] Test locally
 
 ## Acceptance Criteria
 
-- [ ] Flow fetches KTC data successfully
-- [ ] Valuation range checks catch anomalies
-- [ ] Player mapping validation reports coverage
-- [ ] Flow testable locally
+- [x] Flow fetches KTC data successfully
+- [x] Valuation range checks catch anomalies
+- [x] Player mapping validation reports coverage
+- [x] Flow testable locally
 
 ## Implementation Notes
 
@@ -46,3 +47,38 @@ uv run python src/flows/ktc_pipeline.py
 
 - Plan: `../2025-11-07_plan_v_2_0.md` - Phase 4 KTC Flow (lines 474-482)
 - Checklist: `../2025-11-07_tasks_checklist_v_2_0.md` - Phase 4 KTC (lines 307-318)
+
+## Completion Notes
+
+**Implemented**: 2025-11-21
+
+**Test Results**:
+
+- ✅ Compilation: PASS
+- ✅ Execution: PASS
+- ✅ Datasets processed: 2 (players, picks)
+- ✅ Player mapping coverage: 100.0% (464/464 players mapped)
+- ✅ Valuation validation: PASS (range 50-9999 for players, 1469-6705 for picks)
+- ✅ Snapshot registry: Updated with 2 snapshots (ktc.players, ktc.picks)
+- ✅ Manifest validation: PASS
+
+**Impact**:
+
+- Flow successfully integrates KTC dynasty valuations with governance
+- 100% player mapping coverage (all 464 KTC players mapped to dim_player_id_xref)
+- Valuation range checks working (0-10000 sanity bounds)
+- Registry updates atomic (supersedes old snapshots, marks new as current)
+- Top unmapped player reporting implemented (for future data quality monitoring)
+
+**Implementation Details**:
+
+- Direct load_players()/load_picks() calls (no separate fetch/parse/write split needed)
+- Governance validation added as separate tasks after ingestion
+- Player mapping uses DuckDB query against dim_player_id_xref
+- Valuation anomaly detection with outlier reporting
+- Market scope parameter (defaults to dynasty_1qb per spec)
+
+**Files Modified**:
+
+- Created: `src/flows/ktc_pipeline.py` (469 lines)
+- Updated: `dbt/ff_data_transform/seeds/snapshot_registry.csv` (added 2 KTC snapshots)
