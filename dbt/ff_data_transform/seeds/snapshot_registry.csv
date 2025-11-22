@@ -70,13 +70,13 @@ nflverse,snap_counts,2025-11-09,current,2020,2025,,Player snap counts through We
 nflverse,snap_counts,2025-11-10,current,2020,2025,,Player snap counts through Week 10
 nflverse,snap_counts,2025-11-16,current,2020,2025,,Player snap counts - Latest snapshot
 nflverse,teams,2024-12-01,current,,,,NFL team information (32 teams)
-nflverse,weekly,2024-01-01,current,2020,2024,,Player weekly statistics (historical archive)
+nflverse,weekly,2024-01-01,superseded,2020,2024,,Player weekly statistics (historical archive)
 nflverse,weekly,2025-10-01,historical,2020,2024,,Player weekly statistics (baseline)
-nflverse,weekly,2025-10-27,current,2020,2024,,Player weekly statistics through Week 8
-nflverse,weekly,2025-11-05,current,2020,2025,,Player weekly statistics through Week 9
-nflverse,weekly,2025-11-09,current,2020,2025,,Player weekly statistics through Week 10
-nflverse,weekly,2025-11-10,current,2020,2025,,Player weekly statistics through Week 10
-nflverse,weekly,2025-11-16,current,2020,2025,,Player weekly statistics - Latest snapshot
+nflverse,weekly,2025-10-27,superseded,2020,2024,,Player weekly statistics through Week 8
+nflverse,weekly,2025-11-05,superseded,2020,2025,,Player weekly statistics through Week 9
+nflverse,weekly,2025-11-09,superseded,2020,2025,,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-10,superseded,2020,2025,,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-16,superseded,2020,2025,,Player weekly statistics - Latest snapshot
 sleeper,fa_pool,2025-10-27,current,,,7489,Sleeper free agent pool
 sleeper,fa_pool,2025-10-30,current,,,7512,Sleeper free agent pool
 sleeper,fa_pool,2025-11-05,current,,,7518,Sleeper free agent pool
@@ -99,3 +99,4 @@ sleeper,users,2025-10-30,current,,,13,Sleeper league users
 sleeper,users,2025-11-05,current,,,13,Sleeper league users
 sleeper,users,2025-11-09,current,,,13,Sleeper league users
 sleeper,users,2025-11-12,current,,,13,Sleeper league users - Latest snapshot
+nflverse,weekly,2025-11-21,current,2024,2024,18981,NFLverse ingestion for seasons [2024]
