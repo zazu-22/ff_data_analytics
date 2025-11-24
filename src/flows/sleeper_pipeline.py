@@ -592,11 +592,8 @@ if __name__ == "__main__":
     # For local testing
     league_id = os.getenv("SLEEPER_LEAGUE_ID", "1230330435511275520")
 
-    result = sleeper_pipeline(
-        league_id=league_id,
-        min_roster_size=25,
-        max_roster_size=35,
-    )
+    # Use config defaults for roster size validation
+    result = sleeper_pipeline(league_id=league_id)
 
     print("\n" + "=" * 70)
     print("Sleeper Data Pipeline Result")
