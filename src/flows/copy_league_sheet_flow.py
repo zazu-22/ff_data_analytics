@@ -1,4 +1,20 @@
-"""Prefect flow for copying Commissioner sheet to working copy."""
+"""Prefect flow for copying Commissioner sheet to working copy.
+
+This flow copies all tabs from the Commissioner sheet to a working copy
+for downstream parsing (P4-002b). Uses paste-values-only to avoid formula errors.
+
+Architecture:
+    1. Copy all tabs via Google Sheets API (batch operation)
+    2. Validate all expected tabs were copied (governance)
+
+Dependencies:
+    - src/ingest/sheets/copier.py (sheet copy logic)
+    - Google Sheets API v4
+
+Production Hardening:
+    - copy_league_sheet_tabs: 3 retries with 60s delay, 3min timeout (handles API transients)
+    - validate_copy_completeness: 2 retries with 30s delay, 2min timeout (handles API transients)
+"""
 
 import os
 import sys
@@ -17,7 +33,13 @@ from src.flows.utils.notifications import log_error, log_info, log_warning  # no
 from src.ingest.sheets.copier import CopyOptions, copy_league_sheet  # noqa: E402
 
 
-@task(name="copy_league_sheet_tabs")
+@task(
+    name="copy_league_sheet_tabs",
+    retries=3,
+    retry_delay_seconds=60,
+    timeout=180,
+    tags=["external_api"],
+)
 def copy_tabs_task(src_sheet_id: str, dst_sheet_id: str, tabs: list[str]) -> dict:
     """Copy tabs from source sheet to destination sheet.
 
@@ -53,7 +75,13 @@ def copy_tabs_task(src_sheet_id: str, dst_sheet_id: str, tabs: list[str]) -> dic
     return result
 
 
-@task(name="validate_copy_completeness")
+@task(
+    name="validate_copy_completeness",
+    retries=2,
+    retry_delay_seconds=30,
+    timeout=120,
+    tags=["external_api"],
+)
 def validate_copy_completeness(expected_tabs: list[str], copied_sheet_id: str) -> dict:
     """Validate all expected tabs were copied from source sheet.
 

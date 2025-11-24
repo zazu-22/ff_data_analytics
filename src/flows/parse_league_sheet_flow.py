@@ -47,6 +47,7 @@ from src.ingest.sheets import commissioner_parser, commissioner_writer  # noqa: 
     name="create_gspread_client",
     retries=3,
     retry_delay_seconds=60,
+    timeout=120,
     tags=["external_api"],
 )
 def create_gspread_client() -> gspread.Client:
@@ -97,6 +98,7 @@ def create_gspread_client() -> gspread.Client:
     name="download_sheet_tabs_to_csv",
     retries=2,
     retry_delay_seconds=30,
+    timeout=300,
     tags=["io"],
 )
 def download_tabs_to_csv(sheet_id: str, temp_dir: Path, expected_tabs: list[str]) -> dict:

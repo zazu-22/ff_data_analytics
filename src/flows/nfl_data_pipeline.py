@@ -253,7 +253,13 @@ def update_snapshot_registry(
     }
 
 
-@task(name="extract_row_count_from_manifest")
+@task(
+    name="extract_row_count_from_manifest",
+    retries=2,
+    retry_delay_seconds=10,
+    timeout=60,
+    tags=["io"],
+)
 def extract_row_count_from_manifest(manifest: dict) -> int:
     """Extract row count from NFLverse manifest.
 
@@ -277,7 +283,13 @@ def extract_row_count_from_manifest(manifest: dict) -> int:
     return len(df)
 
 
-@task(name="extract_coverage_metadata")
+@task(
+    name="extract_coverage_metadata",
+    retries=2,
+    retry_delay_seconds=10,
+    timeout=60,
+    tags=["io"],
+)
 def extract_coverage_metadata(manifest: dict) -> dict:
     """Extract season coverage metadata from NFLverse data.
 

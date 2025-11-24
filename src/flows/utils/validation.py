@@ -7,7 +7,13 @@ import polars as pl
 from prefect import task
 
 
-@task(name="validate_manifests")
+@task(
+    name="validate_manifests",
+    retries=2,
+    retry_delay_seconds=10,
+    timeout=60,
+    tags=["io"],
+)
 def validate_manifests_task(sources: list[str], fail_on_gaps: bool = True) -> dict:
     """Run manifest validation tool.
 
@@ -44,7 +50,12 @@ def validate_manifests_task(sources: list[str], fail_on_gaps: bool = True) -> di
     return {"success": result.returncode == 0, "output": result.stdout, "errors": result.stderr}
 
 
-@task(name="check_snapshot_currency")
+@task(
+    name="check_snapshot_currency",
+    retries=2,
+    retry_delay_seconds=10,
+    tags=["io"],
+)
 def check_snapshot_currency(source: str, dataset: str, max_age_days: int) -> dict:
     """Check if snapshot is current (not stale).
 
@@ -85,7 +96,12 @@ def check_snapshot_currency(source: str, dataset: str, max_age_days: int) -> dic
     }
 
 
-@task(name="detect_row_count_anomaly")
+@task(
+    name="detect_row_count_anomaly",
+    retries=2,
+    retry_delay_seconds=10,
+    tags=["io"],
+)
 def detect_row_count_anomaly(
     source: str, dataset: str, current_count: int, threshold_pct: float = 50.0
 ) -> dict:
