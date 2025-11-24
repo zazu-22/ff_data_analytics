@@ -49,7 +49,7 @@ from src.ingest.ktc.registry import load_picks, load_players  # noqa: E402
     name="fetch_ktc_data",
     retries=2,
     retry_delay_seconds=30,
-    timeout=180,
+    timeout_seconds=180,
     tags=["external_api"],
 )
 def fetch_ktc_data(

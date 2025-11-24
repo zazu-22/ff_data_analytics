@@ -43,7 +43,7 @@ from src.ingest.ffanalytics.loader import load_projections, load_projections_ros
 
 @task(
     name="run_projections_scraper",
-    timeout=900,
+    timeout_seconds=900,
     tags=["long_running"],
 )
 def run_projections_scraper(

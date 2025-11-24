@@ -51,7 +51,7 @@ from src.ingest.nflverse.shim import load_nflverse  # noqa: E402
     name="fetch_nflverse_data",
     retries=2,
     retry_delay_seconds=60,
-    timeout=300,
+    timeout_seconds=300,
     tags=["fetch"],
 )
 def fetch_nflverse_data(
@@ -257,7 +257,7 @@ def update_snapshot_registry(
     name="extract_row_count_from_manifest",
     retries=2,
     retry_delay_seconds=10,
-    timeout=60,
+    timeout_seconds=60,
     tags=["io"],
 )
 def extract_row_count_from_manifest(manifest: dict) -> int:
@@ -287,7 +287,7 @@ def extract_row_count_from_manifest(manifest: dict) -> int:
     name="extract_coverage_metadata",
     retries=2,
     retry_delay_seconds=10,
-    timeout=60,
+    timeout_seconds=60,
     tags=["io"],
 )
 def extract_coverage_metadata(manifest: dict) -> dict:

@@ -57,7 +57,7 @@ load_sleeper = load_sleeper_module.load_sleeper
     name="fetch_sleeper_data",
     retries=3,
     retry_delay_seconds=60,
-    timeout=180,
+    timeout_seconds=180,
     tags=["external_api"],
 )
 def fetch_sleeper_data(

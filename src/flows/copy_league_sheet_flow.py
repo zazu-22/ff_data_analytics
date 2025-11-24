@@ -37,7 +37,7 @@ from src.ingest.sheets.copier import CopyOptions, copy_league_sheet  # noqa: E40
     name="copy_league_sheet_tabs",
     retries=3,
     retry_delay_seconds=60,
-    timeout=180,
+    timeout_seconds=180,
     tags=["external_api"],
 )
 def copy_tabs_task(src_sheet_id: str, dst_sheet_id: str, tabs: list[str]) -> dict:
@@ -79,7 +79,7 @@ def copy_tabs_task(src_sheet_id: str, dst_sheet_id: str, tabs: list[str]) -> dic
     name="validate_copy_completeness",
     retries=2,
     retry_delay_seconds=30,
-    timeout=120,
+    timeout_seconds=120,
     tags=["external_api"],
 )
 def validate_copy_completeness(expected_tabs: list[str], copied_sheet_id: str) -> dict:

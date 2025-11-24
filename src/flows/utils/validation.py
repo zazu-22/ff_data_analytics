@@ -11,7 +11,7 @@ from prefect import task
     name="validate_manifests",
     retries=2,
     retry_delay_seconds=10,
-    timeout=60,
+    timeout_seconds=60,
     tags=["io"],
 )
 def validate_manifests_task(sources: list[str], fail_on_gaps: bool = True) -> dict:

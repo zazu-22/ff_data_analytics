@@ -8,6 +8,8 @@ wheels/
 .eggs/
 *.egg
 *.DS_Store
+.coverage
+coverage.json
 
 # Virtual environments
 .venv
