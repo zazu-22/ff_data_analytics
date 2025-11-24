@@ -10,13 +10,13 @@ This document provides a concise checklist for tracking completion of all implem
 
 ## Quick Reference
 
-- **Total Tickets**: 65 (includes 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 tech debt + 4 Phase 4 hardening)
+- **Total Tickets**: 66 (includes 13 staging models + 10 data quality fixes + 2 architectural refactors + 2 tech debt + 5 Phase 4 hardening)
 - **Total Phases**: 7 (Phase 0-6 + Cross-Cutting)
 - **Estimated Total Effort**: ~192-239 hours (updated for Phase 4 hardening tickets)
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 48/65 tickets complete (74%)
+**Progress**: 48/66 tickets complete (73%)
 
 ## Recent Accomplishments (2025-11-24)
 
@@ -24,7 +24,8 @@ This document provides a concise checklist for tracking completion of all implem
 
 **Completed This Session**:
 
-- ✅ **P4-009**: Extract governance thresholds to configuration
+- ✅ **P4-009**: Extract governance thresholds to configuration (COMPLETE)
+- 🔴 **P4-011 CREATED**: Restore source freshness governance (regression discovered during review)
   - Created `src/flows/config.py` with 8 threshold categories
   - Extracted thresholds from 5 flows (nfl_data, ktc, ffanalytics, sleeper, parse_league_sheet)
   - Added TypedDict type hints for all config constants
@@ -32,7 +33,13 @@ This document provides a concise checklist for tracking completion of all implem
   - Zero hardcoded thresholds remaining in flow files
   - **Impact**: Governance thresholds now transparent and tunable without code changes
 
-**Impact**: Phase 4 now 9/11 tickets complete (82%); Overall project 48/65 tickets complete (74%)
+**Governance Regression Discovered**:
+
+- Legacy `copy_league_sheet.py` had: modifiedTime checks, skip-if-unchanged, checksums, audit logging
+- New Prefect flow only has: tab existence validation
+- **Created P4-011** to restore missing governance features
+
+**Impact**: Phase 4 now 9/12 tickets complete (75%); Overall project 48/66 tickets complete (73%); 1 new production blocker identified
 
 ## Previous Accomplishments (2025-11-21)
 
@@ -312,12 +319,13 @@ ______________________________________________________________________
 - [x] **P4-005** — Implement ffanalytics_pipeline flow
 - [x] **P4-006** — Implement sleeper_pipeline flow
 
-### Production Hardening & Quality (4 tickets) 🔴 **REQUIRED FOR PRODUCTION**
+### Production Hardening & Quality (5 tickets) 🔴 **REQUIRED FOR PRODUCTION**
 
 - [x] **P4-007** — 🔴 **CRITICAL**: Production hardening (retry + timeout configuration) ✅ **COMPLETE** (2025-11-23)
 - [ ] **P4-008** — Add unit test coverage for flow validation logic - **DO SOON**
 - [x] **P4-009** — Extract governance thresholds to configuration module ✅ **COMPLETE** (2025-11-24)
 - [ ] **P4-010** — Refactor shared utilities and reduce duplication - **TECH DEBT** (depends on P4-008)
+- [ ] **P4-011** — 🔴 **HIGH**: Restore source freshness & quality governance (regression fix) - **DO SOON**
 
 ______________________________________________________________________
 
@@ -346,14 +354,14 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 48/65 tickets complete (74%)\
+**Overall Project**: 48/66 tickets complete (73%)\
 **Phase 1 Foundation**: 30/30 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 2 Governance**: 7/7 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 3 Documentation**: 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**\
-**Phase 4 Orchestration**: 9/11 tickets complete (82%) - Core implementation ✅, Production hardening ✅, Config extraction ✅\
+**Phase 4 Orchestration**: 9/12 tickets complete (75%) - Core implementation ✅, Production hardening ✅, Config extraction ✅\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets\
-**Production Blockers**: 0 tickets - ✅ **ALL CRITICAL BLOCKERS RESOLVED**
+**Production Blockers**: 1 ticket - 🔴 **P4-011** (freshness governance regression)
 
 **Recent Progress**:
 
