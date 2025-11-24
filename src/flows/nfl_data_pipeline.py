@@ -21,6 +21,9 @@ Dependencies:
 
 Deprecates:
     - tools/update_snapshot_registry.py (manual registry updates)
+
+Production Hardening:
+    - fetch_nflverse_data: 2 retries with 60s delay, 5min timeout (handles network transients)
 """
 
 import sys
@@ -44,7 +47,13 @@ from src.flows.utils.validation import (  # noqa: E402
 from src.ingest.nflverse.shim import load_nflverse  # noqa: E402
 
 
-@task(name="fetch_nflverse_data")
+@task(
+    name="fetch_nflverse_data",
+    retries=2,
+    retry_delay_seconds=60,
+    timeout=300,
+    tags=["fetch"],
+)
 def fetch_nflverse_data(
     datasets: list[str],
     seasons: list[int],

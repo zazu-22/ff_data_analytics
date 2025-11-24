@@ -14,6 +14,10 @@ Dependencies:
     - copy_league_sheet_flow (P4-002a) must run first
     - Uses src/ingest/sheets/commissioner_parser for parsing
     - Uses src/ingest/sheets/commissioner_writer for writing
+
+Production Hardening:
+    - create_gspread_client: 3 retries with 60s delay (handles auth transients)
+    - download_sheet_tabs_to_csv: 2 retries with 30s delay (handles I/O transients)
 """
 
 import csv
@@ -39,7 +43,12 @@ from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.sheets import commissioner_parser, commissioner_writer  # noqa: E402
 
 
-@task(name="create_gspread_client")
+@task(
+    name="create_gspread_client",
+    retries=3,
+    retry_delay_seconds=60,
+    tags=["external_api"],
+)
 def create_gspread_client() -> gspread.Client:
     """Create authenticated gspread client from env credentials.
 
@@ -84,7 +93,12 @@ def create_gspread_client() -> gspread.Client:
     )
 
 
-@task(name="download_sheet_tabs_to_csv")
+@task(
+    name="download_sheet_tabs_to_csv",
+    retries=2,
+    retry_delay_seconds=30,
+    tags=["io"],
+)
 def download_tabs_to_csv(sheet_id: str, temp_dir: Path, expected_tabs: list[str]) -> dict:
     """Download all expected tabs from sheet to CSV files.
 

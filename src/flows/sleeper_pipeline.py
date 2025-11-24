@@ -23,6 +23,9 @@ Architecture Decision:
     - Rationale: Sleeper loader is already well-tested and handles all datasets
     - Governance layer added AFTER ingestion for validation checks
     - Note: Transaction data not yet implemented in Sleeper API client
+
+Production Hardening:
+    - fetch_sleeper_data: 3 retries with 60s delay, 3min timeout (handles API transients)
 """
 
 import sys
@@ -50,7 +53,13 @@ spec.loader.exec_module(load_sleeper_module)
 load_sleeper = load_sleeper_module.load_sleeper
 
 
-@task(name="fetch_sleeper_data")
+@task(
+    name="fetch_sleeper_data",
+    retries=3,
+    retry_delay_seconds=60,
+    timeout=180,
+    tags=["external_api"],
+)
 def fetch_sleeper_data(
     league_id: str,
     output_dir: str = "data/raw/sleeper",

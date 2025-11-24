@@ -23,6 +23,9 @@ Architecture Decision:
     - This flow uses DIRECT load_players()/load_picks() calls, not fetch/parse/write split
     - Rationale: KTC client is already simple, single-source, no complex transformation needed
     - Governance layer added AFTER ingestion for validation checks
+
+Production Hardening:
+    - fetch_ktc_data: 2 retries with 30s delay (handles API rate limits)
 """
 
 import sys
@@ -42,7 +45,12 @@ from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ktc.registry import load_picks, load_players  # noqa: E402
 
 
-@task(name="fetch_ktc_data")
+@task(
+    name="fetch_ktc_data",
+    retries=2,
+    retry_delay_seconds=30,
+    tags=["external_api"],
+)
 def fetch_ktc_data(
     datasets: list[str],
     market_scope: str = "dynasty_1qb",

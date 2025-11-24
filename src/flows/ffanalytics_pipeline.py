@@ -19,6 +19,9 @@ Dependencies:
     - scripts/R/ffanalytics_run.R (R scraper with consensus aggregation)
     - src/flows/utils/validation.py (governance tasks)
     - src/flows/utils/notifications.py (logging)
+
+Production Hardening:
+    - run_projections_scraper: 15min timeout (R process can take 15+ minutes for multi-week scrapes)
 """
 
 import sys
@@ -38,7 +41,11 @@ from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ffanalytics.loader import load_projections, load_projections_ros  # noqa: E402
 
 
-@task(name="run_projections_scraper")
+@task(
+    name="run_projections_scraper",
+    timeout=900,
+    tags=["long_running"],
+)
 def run_projections_scraper(
     season: int | None = None,
     week: int | None = None,
