@@ -1,7 +1,7 @@
 # Ticket P4-009: Extract Governance Thresholds to Configuration
 
 **Phase**: 4 - Orchestration\
-**Status**: TODO\
+**Status**: COMPLETE\
 **Estimated Effort**: Small (1-2 hours)\
 **Dependencies**: P4-002 through P4-006\
 **Priority**: 🟡 **MEDIUM - Do soon (improves maintainability)**
@@ -18,12 +18,12 @@ Senior developer review identified that governance thresholds are hardcoded thro
 
 ## Tasks
 
-- [ ] Create `src/flows/config.py` configuration module
-- [ ] Extract all governance thresholds from flows
-- [ ] Update all flows to import from config
-- [ ] Document threshold rationale in config
-- [ ] Update flow docstrings to reference config
-- [ ] Update SPEC v2.3 with configuration approach
+- [x] Create `src/flows/config.py` configuration module
+- [x] Extract all governance thresholds from flows
+- [x] Update all flows to import from config
+- [x] Document threshold rationale in config
+- [x] Update flow docstrings to reference config
+- [x] Update SPEC v2.3 with configuration approach
 
 ## Hardcoded Thresholds to Extract
 
@@ -347,8 +347,36 @@ def test_get_freshness_threshold_raises_on_unknown():
 
 ## Completion Notes
 
-**Implementation Date**: TBD\
-**Thresholds Extracted**: TBD
+**Implemented**: 2025-11-24\
+**Tests**: All flows compile successfully, imports verified\
+**Thresholds Extracted**: 8 threshold categories across 5 flows
+
+### Implementation Summary
+
+Created centralized `src/flows/config.py` with all governance thresholds:
+
+**Thresholds Extracted:**
+
+1. **Freshness Thresholds** (5 sources): nflverse (2d), ffanalytics (7d), ktc (5d), sleeper/sheets (1d)
+2. **Anomaly Detection**: 50% row count change threshold
+3. **Player Mapping Coverage**: ktc (90%), sleeper (85%), ffanalytics (92%)
+4. **Valuation Ranges**: KTC players/picks (0-10,000)
+5. **Statistical Outliers**: 3.0 standard deviations
+6. **Projection Maxes**: pass_yds, rush_yds, rec, rec_yds, fpts
+7. **Roster Size**: Dynasty (25-35 players)
+8. **Row Count Minimums**: contracts_active (50), transactions (100), draft_picks (20), cap_space (10)
+
+**Flows Updated:**
+
+- `nfl_data_pipeline.py`: Freshness threshold (line 381), anomaly threshold (line 423)
+- `ktc_pipeline.py`: Valuation ranges (lines 156-176), player mapping threshold (line 509)
+- `ffanalytics_pipeline.py`: Projection maxes (line 191), statistical thresholds (line 514)
+- `sleeper_pipeline.py`: Roster size ranges (lines 502-505), player mapping threshold (line 538)
+- `parse_league_sheet_flow.py`: Row count minimums (line 421)
+
+**Type Safety:** All config constants have proper TypedDict type hints for IDE support and type checking.
+
+**Backward Compatibility:** All changes maintain existing behavior - only refactoring thresholds to centralized location.
 
 ______________________________________________________________________
 

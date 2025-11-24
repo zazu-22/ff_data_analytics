@@ -16,9 +16,25 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 47/65 tickets complete (72%)
+**Progress**: 48/65 tickets complete (74%)
 
-## Recent Accomplishments (2025-11-21)
+## Recent Accomplishments (2025-11-24)
+
+🎉 **P4-009 COMPLETE**: Governance configuration centralized!
+
+**Completed This Session**:
+
+- ✅ **P4-009**: Extract governance thresholds to configuration
+  - Created `src/flows/config.py` with 8 threshold categories
+  - Extracted thresholds from 5 flows (nfl_data, ktc, ffanalytics, sleeper, parse_league_sheet)
+  - Added TypedDict type hints for all config constants
+  - All flows compile successfully
+  - Zero hardcoded thresholds remaining in flow files
+  - **Impact**: Governance thresholds now transparent and tunable without code changes
+
+**Impact**: Phase 4 now 9/11 tickets complete (82%); Overall project 48/65 tickets complete (74%)
+
+## Previous Accomplishments (2025-11-21)
 
 🎉 **Phase 4 Core Implementation COMPLETE**: All 7/7 implementation tickets done!
 
@@ -300,7 +316,7 @@ ______________________________________________________________________
 
 - [x] **P4-007** — 🔴 **CRITICAL**: Production hardening (retry + timeout configuration) ✅ **COMPLETE** (2025-11-23)
 - [ ] **P4-008** — Add unit test coverage for flow validation logic - **DO SOON**
-- [ ] **P4-009** — Extract governance thresholds to configuration module - **DO SOON**
+- [x] **P4-009** — Extract governance thresholds to configuration module ✅ **COMPLETE** (2025-11-24)
 - [ ] **P4-010** — Refactor shared utilities and reduce duplication - **TECH DEBT** (depends on P4-008)
 
 ______________________________________________________________________
@@ -334,13 +350,14 @@ ______________________________________________________________________
 **Phase 1 Foundation**: 30/30 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 2 Governance**: 7/7 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 3 Documentation**: 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**\
-**Phase 4 Orchestration**: 8/11 tickets complete (73%) - Core implementation ✅, Production hardening ✅\
+**Phase 4 Orchestration**: 9/11 tickets complete (82%) - Core implementation ✅, Production hardening ✅, Config extraction ✅\
 **In Progress**: 0 tickets\
 **Blocked**: 0 tickets\
 **Production Blockers**: 0 tickets - ✅ **ALL CRITICAL BLOCKERS RESOLVED**
 
 **Recent Progress**:
 
+- ✅ **P4-009 COMPLETE** (2025-11-24): Governance config extraction - all thresholds centralized in `src/flows/config.py`
 - ✅ **P4-007 COMPLETE** (2025-11-23): Production hardening - all flows have retry/timeout configuration
   - Google Sheets: 3 retries + 60s delay for auth, 2 retries + 30s delay for downloads
   - Sleeper: 3 retries + 60s delay + 3min timeout

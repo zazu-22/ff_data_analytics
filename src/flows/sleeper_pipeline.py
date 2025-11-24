@@ -1,8 +1,8 @@
 """Prefect flow for Sleeper league platform data ingestion with governance.
 
 This flow handles Sleeper data ingestion with integrated governance:
-- Roster size validations (verify rosters match league settings)
-- Player mapping validation against dim_player_id_xref
+- Roster size validations (thresholds in src/flows/config.py)
+- Player mapping validation (thresholds in src/flows/config.py)
 - Atomic snapshot registry updates
 
 Architecture:
@@ -17,6 +17,7 @@ Dependencies:
     - scripts/ingest/load_sleeper.py (existing loader)
     - src/flows/utils/validation.py (governance tasks)
     - src/flows/utils/notifications.py (logging)
+    - src/flows/config.py (governance thresholds)
 
 Architecture Decision:
     - This flow uses existing load_sleeper() from scripts/ingest/load_sleeper.py
@@ -43,6 +44,7 @@ import importlib.util  # noqa: E402
 import polars as pl  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
+from src.flows.config import ROSTER_SIZE_RANGES, get_player_mapping_threshold  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 
@@ -461,8 +463,8 @@ def sleeper_pipeline(
     league_id: str | None = None,
     output_dir: str = "data/raw/sleeper",
     snapshot_date: str | None = None,
-    min_roster_size: int = 25,
-    max_roster_size: int = 35,
+    min_roster_size: int | None = None,
+    max_roster_size: int | None = None,
 ) -> dict:
     """Prefect flow for Sleeper league platform data ingestion with governance.
 
@@ -496,6 +498,12 @@ def sleeper_pipeline(
     if snapshot_date is None:
         snapshot_date = datetime.now().strftime("%Y-%m-%d")
 
+    # Apply config defaults for roster size validation
+    if min_roster_size is None:
+        min_roster_size = ROSTER_SIZE_RANGES["dynasty"]["min"]
+    if max_roster_size is None:
+        max_roster_size = ROSTER_SIZE_RANGES["dynasty"]["max"]
+
     log_info(
         "Starting Sleeper data pipeline",
         context={
@@ -526,7 +534,9 @@ def sleeper_pipeline(
         )
 
     # Governance: Validate player mapping
-    player_mapping_validation = validate_sleeper_player_mapping(manifest, min_coverage_pct=85.0)
+    player_mapping_validation = validate_sleeper_player_mapping(
+        manifest, min_coverage_pct=get_player_mapping_threshold("sleeper")
+    )
 
     if not player_mapping_validation.get("is_valid", True):
         log_warning(

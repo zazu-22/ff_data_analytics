@@ -1,8 +1,8 @@
 """Prefect flow for NFLverse data ingestion with governance.
 
 This flow handles NFLverse data ingestion with integrated governance:
-- Freshness validation (warn if latest snapshot > 2 days old)
-- Row delta anomaly detection (flag if row delta > 50% or < 0)
+- Freshness validation (thresholds in src/flows/config.py)
+- Row delta anomaly detection (thresholds in src/flows/config.py)
 - Manifest validation (ensure all files have valid manifests)
 - Atomic snapshot registry updates
 
@@ -18,6 +18,7 @@ Dependencies:
     - src/ingest/nflverse/shim.py (load_nflverse)
     - src/flows/utils/validation.py (governance tasks)
     - src/flows/utils/notifications.py (logging)
+    - src/flows/config.py (governance thresholds)
 
 Deprecates:
     - tools/update_snapshot_registry.py (manual registry updates)
@@ -38,6 +39,7 @@ if str(repo_root) not in sys.path:
 import polars as pl  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
+from src.flows.config import ANOMALY_THRESHOLD_PCT, get_freshness_threshold  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
 from src.flows.utils.validation import (  # noqa: E402
     check_snapshot_currency,
@@ -370,13 +372,13 @@ def nfl_data_pipeline(
         },
     )
 
-    # Governance: Check freshness of existing snapshots (warn if > 2 days old)
+    # Governance: Check freshness of existing snapshots
     freshness_results = {}
     for dataset in datasets:
         freshness = check_snapshot_currency(
             source="nflverse",
             dataset=dataset,
-            max_age_days=2,
+            max_age_days=get_freshness_threshold("nflverse"),
         )
 
         freshness_results[dataset] = freshness
@@ -413,12 +415,12 @@ def nfl_data_pipeline(
         row_count = extract_row_count_from_manifest(manifest)
         coverage = extract_coverage_metadata(manifest)
 
-        # Governance: Detect row count anomalies (> 50% change or data loss)
+        # Governance: Detect row count anomalies
         anomaly = detect_row_count_anomaly(
             source="nflverse",
             dataset=dataset,
             current_count=row_count,
-            threshold_pct=50.0,
+            threshold_pct=ANOMALY_THRESHOLD_PCT,
         )
 
         anomaly_results[dataset] = anomaly

@@ -1,8 +1,8 @@
 """Prefect flow for FFAnalytics projections ingestion with governance.
 
 This flow handles FFAnalytics fantasy projections with integrated governance:
-- Projection reasonableness checks (no negative values, statistical ranges)
-- Outlier detection (>3 std devs from position mean)
+- Projection reasonableness checks (thresholds in src/flows/config.py)
+- Outlier detection (thresholds in src/flows/config.py)
 - Sum validations (team totals within expected ranges)
 - Atomic snapshot registry updates
 
@@ -19,6 +19,7 @@ Dependencies:
     - scripts/R/ffanalytics_run.R (R scraper with consensus aggregation)
     - src/flows/utils/validation.py (governance tasks)
     - src/flows/utils/notifications.py (logging)
+    - src/flows/config.py (governance thresholds)
 
 Production Hardening:
     - run_projections_scraper: 15min timeout (R process can take 15+ minutes for multi-week scrapes)
@@ -36,6 +37,7 @@ if str(repo_root) not in sys.path:
 import polars as pl  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
+from src.flows.config import PROJECTION_REASONABLE_MAXES, STATISTICAL_THRESHOLDS  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ffanalytics.loader import load_projections, load_projections_ros  # noqa: E402
@@ -186,15 +188,7 @@ def validate_projection_ranges(manifest: dict) -> dict:
             log_warning(f"Negative values detected in {col}", context={"min": min_val})
 
     # Check reasonable upper bounds (optional - warn only, don't fail)
-    reasonable_maxes = {
-        "pass_yds": 6000,  # Historical max ~5500 (Peyton 2013)
-        "rush_yds": 2500,  # Historical max ~2100 (Eric Dickerson 1984)
-        "rec": 200,  # Historical max ~150 (PPR relevance)
-        "rec_yds": 2500,  # Historical max ~1900 (Calvin Johnson 2012)
-        "fpts": 600,  # Historical max ~500 for season-long
-    }
-
-    for col, max_reasonable in reasonable_maxes.items():
+    for col, max_reasonable in PROJECTION_REASONABLE_MAXES.items():
         if col in df.columns:
             max_val = df[col].max()
             if max_val is not None and max_val > max_reasonable:
@@ -516,7 +510,9 @@ def ffanalytics_pipeline(
         )
 
     # Governance: Detect statistical outliers
-    outlier_detection = detect_statistical_outliers(scraper_result, std_dev_threshold=3.0)
+    outlier_detection = detect_statistical_outliers(
+        scraper_result, std_dev_threshold=STATISTICAL_THRESHOLDS["outlier_std_devs"]
+    )
 
     if outlier_detection.get("outliers_detected", 0) > 0:
         log_warning(

@@ -7,13 +7,14 @@ Architecture:
     1. Validate copy completeness (ensure all tabs were copied)
     2. Download tabs to temp CSV files
     3. Parse with commissioner_parser (pure functions)
-    4. Validate row counts and required columns
+    4. Validate row counts (thresholds in src/flows/config.py)
     5. Write Parquet files + manifests
 
 Dependencies:
     - copy_league_sheet_flow (P4-002a) must run first
     - Uses src/ingest/sheets/commissioner_parser for parsing
     - Uses src/ingest/sheets/commissioner_writer for writing
+    - src/flows/config.py (governance thresholds)
 
 Production Hardening:
     - create_gspread_client: 3 retries with 60s delay (handles auth transients)
@@ -37,6 +38,7 @@ import gspread  # noqa: E402
 from google.oauth2 import service_account  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
+from src.flows.config import ROW_COUNT_MINIMUMS  # noqa: E402
 from src.flows.copy_league_sheet_flow import validate_copy_completeness  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
@@ -415,13 +417,8 @@ def parse_league_sheet_flow(
     ]
     expected_tabs = gm_tabs + ["TRANSACTIONS"]
 
-    # Validation thresholds
-    expected_min_rows = {
-        "contracts_active": 50,  # At least 50 active contracts
-        "transactions": 100,  # Expect many transactions
-        "draft_picks": 20,  # Expect draft picks
-        "cap_space": 10,  # At least some cap space records
-    }
+    # Validation thresholds (from config)
+    expected_min_rows = ROW_COUNT_MINIMUMS
 
     required_columns = {
         "contracts_active": ["gm", "player", "year", "amount"],

@@ -1,8 +1,8 @@
 """Prefect flow for KTC (Keep Trade Cut) dynasty valuations ingestion with governance.
 
 This flow handles KTC data ingestion with integrated governance:
-- Valuation range checks (0-10000 sanity check)
-- Player mapping validation (>90% coverage against dim_player_id_xref)
+- Valuation range checks (thresholds in src/flows/config.py)
+- Player mapping validation (thresholds in src/flows/config.py)
 - Missing player reporting (top 10 unmapped for investigation)
 - Atomic snapshot registry updates
 
@@ -18,6 +18,7 @@ Dependencies:
     - src/ingest/ktc/registry.py (load_players, load_picks)
     - src/flows/utils/validation.py (governance tasks)
     - src/flows/utils/notifications.py (logging)
+    - src/flows/config.py (governance thresholds)
 
 Architecture Decision:
     - This flow uses DIRECT load_players()/load_picks() calls, not fetch/parse/write split
@@ -40,6 +41,7 @@ if str(repo_root) not in sys.path:
 import polars as pl  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
+from src.flows.config import VALUATION_RANGES, get_player_mapping_threshold  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ktc.registry import load_picks, load_players  # noqa: E402
@@ -151,22 +153,27 @@ def validate_valuation_ranges(manifest: dict, dataset: str) -> dict:
     if "value" not in df.columns:
         log_error(f"Missing 'value' column in {dataset}", context={"columns": df.columns})
 
-    # Validate ranges: Min 0, Max 10000
+    # Validate ranges using configuration
+    dataset_key = f"ktc_{dataset}"
+    val_range = VALUATION_RANGES.get(dataset_key, {"min": 0, "max": 10000})
+    min_allowed = val_range["min"]
+    max_allowed = val_range["max"]
+
     min_value = df["value"].min()
     max_value = df["value"].max()
 
     anomalies = []
 
-    if min_value < 0:
+    if min_value < min_allowed:
         anomalies.append(f"Negative values detected: min={min_value}")
         log_warning(f"Negative values in {dataset}", context={"min_value": min_value})
 
-    if max_value > 10000:
+    if max_value > max_allowed:
         anomalies.append(f"Excessive values detected: max={max_value}")
         log_warning(f"Excessive values in {dataset}", context={"max_value": max_value})
 
     # Report outliers for investigation
-    outliers = df.filter((pl.col("value") < 0) | (pl.col("value") > 10000))
+    outliers = df.filter((pl.col("value") < min_allowed) | (pl.col("value") > max_allowed))
     if len(outliers) > 0:
         log_warning(
             f"Found {len(outliers)} outliers in {dataset}",
@@ -498,7 +505,9 @@ def ktc_pipeline(
 
         # Governance: Validate player mapping (players only)
         if dataset == "players":
-            player_mapping_validation = validate_player_mapping(manifest, min_coverage_pct=90.0)
+            player_mapping_validation = validate_player_mapping(
+                manifest, min_coverage_pct=get_player_mapping_threshold("ktc")
+            )
 
             if not player_mapping_validation.get("is_valid", True):
                 log_warning(
