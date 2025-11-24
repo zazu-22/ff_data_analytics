@@ -116,6 +116,29 @@ ROW_COUNT_MINIMUMS: RowCountMinimumsConfig = {
     "cap_space": 10,  # At least some cap space records
 }
 
+# Source Freshness Validation (hours)
+SOURCE_FRESHNESS_THRESHOLDS = {
+    "sheets": 24,  # Warn if working copy > 24 hours old
+    "nflverse": 48,  # Warn if NFLverse fetch > 48 hours old
+    "sleeper": 24,  # Warn if Sleeper fetch > 24 hours old
+    "ktc": 120,  # Warn if KTC fetch > 5 days old (120 hours)
+    "ffanalytics": 168,  # Warn if projections > 7 days old (168 hours)
+}
+
+# Skip-if-unchanged configuration (per source)
+SKIP_IF_UNCHANGED_ENABLED = {
+    "sheets": True,  # Always skip if source sheet unchanged
+    "nflverse": False,  # Always fetch (data changes frequently during season)
+    "sleeper": False,  # Always fetch (league activity)
+    "ktc": True,  # Skip if KTC data unchanged
+    "ffanalytics": False,  # Always scrape (projections change weekly)
+}
+
+# Checksum validation configuration
+CHECKSUM_VALIDATION = {
+    "sheets_copy": {"rows": 50, "cols": 50, "enabled": True},
+}
+
 
 # Convenience exports for common patterns
 def get_freshness_threshold(source: str) -> int:

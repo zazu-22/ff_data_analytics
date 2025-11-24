@@ -38,11 +38,63 @@ import gspread  # noqa: E402
 from google.oauth2 import service_account  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
-from src.flows.config import ROW_COUNT_MINIMUMS  # noqa: E402
+from src.flows.config import ROW_COUNT_MINIMUMS, SOURCE_FRESHNESS_THRESHOLDS  # noqa: E402
 from src.flows.copy_league_sheet_flow import validate_copy_completeness  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
+from src.flows.utils.source_freshness import get_data_age_hours  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.sheets import commissioner_parser, commissioner_writer  # noqa: E402
+
+
+@task(name="check_working_copy_freshness")
+def check_working_copy_freshness() -> dict:
+    """Check freshness of working copy data.
+
+    Warns if parsing data older than configured threshold.
+    This implements the "stale working copy" detection from legacy scripts.
+
+    Returns:
+        Freshness status with age and threshold info
+
+    """
+    age_hours = get_data_age_hours(source="sheets", dataset="commissioner")
+
+    if age_hours is None:
+        log_warning(
+            "No previous copy metadata found - cannot validate freshness",
+            context={"source": "sheets", "dataset": "commissioner"},
+        )
+        return {
+            "has_metadata": False,
+            "age_hours": None,
+            "threshold_hours": SOURCE_FRESHNESS_THRESHOLDS.get("sheets", 24),
+            "is_stale": False,
+        }
+
+    threshold_hours = SOURCE_FRESHNESS_THRESHOLDS.get("sheets", 24)
+    is_stale = age_hours > threshold_hours
+
+    if is_stale:
+        log_warning(
+            f"Working copy is stale ({age_hours:.1f} hours old, threshold: {threshold_hours}h)",
+            context={
+                "age_hours": age_hours,
+                "threshold_hours": threshold_hours,
+                "recommendation": "Consider running copy flow first",
+            },
+        )
+    else:
+        log_info(
+            f"Working copy is fresh ({age_hours:.1f} hours old, threshold: {threshold_hours}h)",
+            context={"age_hours": age_hours, "threshold_hours": threshold_hours},
+        )
+
+    return {
+        "has_metadata": True,
+        "age_hours": age_hours,
+        "threshold_hours": threshold_hours,
+        "is_stale": is_stale,
+    }
 
 
 @task(
@@ -434,6 +486,9 @@ def parse_league_sheet_flow(
             context={"copy_result": copy_flow_result},
         )
 
+    # Governance: Check working copy freshness
+    freshness_result = check_working_copy_freshness()
+
     # Governance: Validate copy completeness (BEFORE downloading)
     copy_result = validate_copy_completeness(expected_tabs, sheet_id)
     if not copy_result["valid"]:
@@ -475,11 +530,13 @@ def parse_league_sheet_flow(
         context={
             "snapshot_date": snapshot_date,
             "validation": "passed" if row_count_result["valid"] else "warnings",
+            "freshness_status": "stale" if freshness_result.get("is_stale") else "fresh",
         },
     )
 
     return {
         "snapshot_date": snapshot_date,
+        "freshness_check": freshness_result,
         "download_result": download_result,
         "row_count_validation": row_count_result,
         "column_validation": column_result,
