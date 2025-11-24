@@ -78,4 +78,6 @@ scripts/troubleshooting/**/*
 notebooks/*_executed.ipynb
 .bmad
 .cursor/rules/bmad
-.claude/commands/bmad
+.claude/commands
+.claude/agents
+.claude/settings*.json
