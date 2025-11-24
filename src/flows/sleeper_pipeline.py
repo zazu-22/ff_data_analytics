@@ -46,6 +46,7 @@ from prefect import flow, task  # noqa: E402
 
 from src.flows.config import ROSTER_SIZE_RANGES, get_player_mapping_threshold  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
+from src.flows.utils.source_freshness import record_successful_run  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 
 sleeper_loader_path = repo_root / "scripts" / "ingest" / "load_sleeper.py"
@@ -560,6 +561,16 @@ def sleeper_pipeline(
         )
 
         registry_updates[dataset_name] = registry_update
+
+        # Record successful run metadata (for governance/observability)
+        record_successful_run(
+            source="sleeper",
+            dataset=dataset_name,
+            snapshot_date=snapshot_date,
+            row_count=row_count,
+            source_hash=None,  # Could add API response hash in future
+            source_modified_time=None,  # Sleeper API doesn't provide modifiedTime
+        )
 
     # Governance: Validate manifests
     manifest_validation = validate_manifests_task(

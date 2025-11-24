@@ -404,25 +404,27 @@ def copy_league_sheet_flow(
     # Step 2: Copy tabs
     copy_result = copy_tabs_task(src_sheet_id, dst_sheet_id, tabs)
 
-    # Step 3: Validate checksum
+    # Step 3: Validate checksum (don't fail yet - collect all validation results)
     checksum_result = validate_copy_checksum(src_sheet_id, dst_sheet_id, tabs)
 
+    # Step 4: Validate copy completeness (don't fail yet - collect all validation results)
+    validation_result = validate_copy_completeness(tabs, dst_sheet_id)
+
+    # Now fail if EITHER validation failed (provides complete debugging context)
     if not checksum_result["valid"]:
         log_error(
-            "Copy validation failed - checksum mismatches",
-            context={"mismatches": checksum_result["mismatches"]},
+            "Copy flow failed - checksum mismatches detected",
+            context={
+                "mismatches": checksum_result["mismatches"],
+                "affected_tabs": [m["tab"] for m in checksum_result["mismatches"]],
+            },
         )
-        # Flow will fail here due to log_error raising exception
-
-    # Step 4: Validate copy completeness
-    validation_result = validate_copy_completeness(tabs, dst_sheet_id)
 
     if not validation_result["valid"]:
         log_error(
             "Copy flow failed - incomplete copy detected",
             context={"missing_tabs": validation_result["missing_tabs"]},
         )
-        # Flow will fail here due to log_error raising exception
 
     # Step 5: Record successful run metadata
     record_successful_run(

@@ -41,10 +41,72 @@ if str(repo_root) not in sys.path:
 import polars as pl  # noqa: E402
 from prefect import flow, task  # noqa: E402
 
-from src.flows.config import VALUATION_RANGES, get_player_mapping_threshold  # noqa: E402
+from src.flows.config import (  # noqa: E402
+    SKIP_IF_UNCHANGED_ENABLED,
+    SOURCE_FRESHNESS_THRESHOLDS,
+    VALUATION_RANGES,
+    get_player_mapping_threshold,
+)
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
+from src.flows.utils.source_freshness import (  # noqa: E402
+    get_data_age_hours,
+    record_successful_run,
+)
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ktc.registry import load_picks, load_players  # noqa: E402
+
+
+@task(name="check_ktc_freshness")
+def check_ktc_freshness(dataset: str, force: bool = False) -> dict:
+    """Check if KTC dataset should be fetched based on data age.
+
+    KTC has skip-if-unchanged enabled, so we skip if data is fresh enough.
+
+    Args:
+        dataset: Dataset name (players or picks)
+        force: Force fetch even if data is fresh
+
+    Returns:
+        Dict with should_skip recommendation and reason
+
+    """
+    if force:
+        return {"should_skip": False, "reason": "Force flag set"}
+
+    if not SKIP_IF_UNCHANGED_ENABLED.get("ktc", True):
+        return {"should_skip": False, "reason": "Skip-if-unchanged disabled for KTC"}
+
+    age_hours = get_data_age_hours(source="ktc", dataset=dataset)
+
+    if age_hours is None:
+        return {"should_skip": False, "reason": "No previous fetch found"}
+
+    threshold_hours = SOURCE_FRESHNESS_THRESHOLDS.get("ktc", 120)
+
+    if age_hours < threshold_hours:
+        log_info(
+            f"Skipping {dataset} - data is fresh ({age_hours:.1f}h old, threshold: "
+            f"{threshold_hours}h)",
+            context={"age_hours": age_hours, "threshold_hours": threshold_hours},
+        )
+        return {
+            "should_skip": True,
+            "reason": f"Data fresh ({age_hours:.1f}h old, threshold: {threshold_hours}h)",
+            "age_hours": age_hours,
+            "threshold_hours": threshold_hours,
+        }
+
+    log_info(
+        f"Fetching {dataset} - data is stale ({age_hours:.1f}h old, threshold: {threshold_hours}h)",
+        context={"age_hours": age_hours, "threshold_hours": threshold_hours},
+    )
+
+    return {
+        "should_skip": False,
+        "reason": f"Data stale ({age_hours:.1f}h old, threshold: {threshold_hours}h)",
+        "age_hours": age_hours,
+        "threshold_hours": threshold_hours,
+    }
 
 
 @task(
@@ -431,11 +493,12 @@ def update_snapshot_registry(
 
 
 @flow(name="ktc_pipeline")
-def ktc_pipeline(
+def ktc_pipeline(  # noqa: C901
     datasets: list[str] | None = None,
     market_scope: str = "dynasty_1qb",
     output_dir: str = "data/raw/ktc",
     snapshot_date: str | None = None,
+    force: bool = False,
 ) -> dict:
     """Prefect flow for KTC data ingestion with governance.
 
@@ -450,6 +513,7 @@ def ktc_pipeline(
         market_scope: dynasty_1qb or dynasty_superflex (defaults to dynasty_1qb per spec)
         output_dir: Output directory for Parquet files
         snapshot_date: Snapshot date (defaults to today)
+        force: Force fetch even if data is fresh
 
     Returns:
         Flow result with governance validation status
@@ -468,12 +532,36 @@ def ktc_pipeline(
             "datasets": datasets,
             "market_scope": market_scope,
             "snapshot_date": snapshot_date,
+            "force": force,
         },
     )
 
-    # Fetch KTC data
+    # Check freshness for each dataset
+    freshness_results = {}
+    datasets_to_fetch = []
+
+    for dataset in datasets:
+        freshness = check_ktc_freshness(dataset, force=force)
+        freshness_results[dataset] = freshness
+
+        if freshness["should_skip"]:
+            log_info(f"Skipping {dataset} - {freshness['reason']}")
+        else:
+            datasets_to_fetch.append(dataset)
+
+    # If all datasets skipped, exit early
+    if not datasets_to_fetch:
+        log_info("All datasets fresh - skipping fetch", context={"skipped": len(datasets)})
+        return {
+            "snapshot_date": snapshot_date,
+            "freshness_check": freshness_results,
+            "skipped": True,
+            "datasets_skipped": datasets,
+        }
+
+    # Fetch KTC data (only datasets that need updating)
     fetch_results = fetch_ktc_data(
-        datasets=datasets,
+        datasets=datasets_to_fetch,
         market_scope=market_scope,
         output_dir=output_dir,
     )
@@ -528,6 +616,16 @@ def ktc_pipeline(
         )
 
         registry_updates[dataset] = registry_update
+
+        # Record successful run metadata (for governance/observability)
+        record_successful_run(
+            source="ktc",
+            dataset=dataset,
+            snapshot_date=snapshot_date,
+            row_count=row_count,
+            source_hash=None,  # Could add data hash in future
+            source_modified_time=None,  # KTC API doesn't provide modifiedTime
+        )
 
     # Governance: Validate manifests
     manifest_validation = validate_manifests_task(

@@ -41,6 +41,7 @@ from prefect import flow, task  # noqa: E402
 
 from src.flows.config import ANOMALY_THRESHOLD_PCT, get_freshness_threshold  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
+from src.flows.utils.source_freshness import record_successful_run  # noqa: E402
 from src.flows.utils.validation import (  # noqa: E402
     check_snapshot_currency,
     detect_row_count_anomaly,
@@ -443,6 +444,16 @@ def nfl_data_pipeline(
         )
 
         registry_updates[dataset] = registry_update
+
+        # Record successful run metadata (for governance/observability)
+        record_successful_run(
+            source="nflverse",
+            dataset=dataset,
+            snapshot_date=snapshot_date,
+            row_count=row_count,
+            source_hash=None,  # NFLverse doesn't have upstream hash
+            source_modified_time=None,  # NFLverse doesn't have upstream modifiedTime
+        )
 
     # Governance: Validate manifests
     manifest_validation = validate_manifests_task(

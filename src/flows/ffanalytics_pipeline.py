@@ -39,6 +39,7 @@ from prefect import flow, task  # noqa: E402
 
 from src.flows.config import PROJECTION_REASONABLE_MAXES, STATISTICAL_THRESHOLDS  # noqa: E402
 from src.flows.utils.notifications import log_error, log_info, log_warning  # noqa: E402
+from src.flows.utils.source_freshness import record_successful_run  # noqa: E402
 from src.flows.utils.validation import validate_manifests_task  # noqa: E402
 from src.ingest.ffanalytics.loader import load_projections, load_projections_ros  # noqa: E402
 
@@ -538,6 +539,16 @@ def ffanalytics_pipeline(
         coverage_start_week=coverage_start_week,
         coverage_end_week=coverage_end_week,
         notes=f"FFAnalytics ROS projections (weeks {coverage_start_week}-{coverage_end_week})",
+    )
+
+    # Record successful run metadata (for governance/observability)
+    record_successful_run(
+        source="ffanalytics",
+        dataset="projections",
+        snapshot_date=snapshot_date,
+        row_count=consensus_rows,
+        source_hash=None,  # Could add scraper results hash in future
+        source_modified_time=None,  # R scraper doesn't track source modified times
     )
 
     # Governance: Validate manifests
