@@ -325,7 +325,7 @@ ______________________________________________________________________
 - [ ] **P4-008** — Add unit test coverage for flow validation logic - **DO SOON**
 - [x] **P4-009** — Extract governance thresholds to configuration module ✅ **COMPLETE** (2025-11-24)
 - [ ] **P4-010** — Refactor shared utilities and reduce duplication - **TECH DEBT** (depends on P4-008)
-- [ ] **P4-011** — 🔴 **HIGH**: Restore source freshness & quality governance (regression fix) - **DO SOON**
+- [x] **P4-011** — 🔴 **HIGH**: Restore source freshness & quality governance (regression fix) ✅ **COMPLETE** (2025-11-24)
 
 ______________________________________________________________________
 
