@@ -217,15 +217,22 @@ with
 
     with_corrections as (
         -- Apply data quality corrections from seed
-        -- Currently handles swap_from_to corrections (transactions 2657, 2658)
-        select wtf.*, coalesce(corr.correction_type = 'swap_from_to', false) as needs_from_to_swap
+        -- Handles swap_from_to (2657, 2658) and override_player_id (3328, 3785) corrections
+        select
+            wtf.*,
+            coalesce(from_to_corr.correction_type = 'swap_from_to', false) as needs_from_to_swap,
+            try_cast(pid_corr.corrected_value as bigint) as player_id_override
         from with_timeframe wtf
         left join
-            {{ ref('corrections_stg_sheets__transactions') }} corr
-            on wtf.transaction_id = corr.transaction_id
-            and corr.correction_type = 'swap_from_to'
+            {{ ref('corrections_stg_sheets__transactions') }} from_to_corr
+            on wtf.transaction_id = from_to_corr.transaction_id
+            and from_to_corr.correction_type = 'swap_from_to'
+        left join
+            {{ ref('corrections_stg_sheets__transactions') }} pid_corr
+            on wtf.transaction_id = pid_corr.transaction_id
+            and pid_corr.correction_type = 'override_player_id'
         -- For swap corrections, we only need one row per transaction (not per field)
-        qualify row_number() over (partition by wtf.transaction_id order by corr.transaction_id nulls last) = 1
+        qualify row_number() over (partition by wtf.transaction_id order by from_to_corr.transaction_id nulls last) = 1
     ),
 
     with_normalized_names as (
@@ -295,6 +302,7 @@ with
             wa.next_draft_end_id,
             wa.transaction_date,
             wa.needs_from_to_swap,
+            wa.player_id_override,
             wa.player_name_normalized,
             wa.player_name_canonical,
             pid.player_id,
@@ -312,9 +320,9 @@ with
             wp.transaction_id_unique as transaction_id_unique,
             wp.transaction_id as transaction_id,
             case
-                when wp.asset_type = 'player' and wp.player_id is not null
-                then cast(wp.player_id as varchar)
-                when wp.asset_type = 'player' and wp.player_id is null
+                when wp.asset_type = 'player' and coalesce(wp.player_id_override, wp.player_id) is not null
+                then cast(coalesce(wp.player_id_override, wp.player_id) as varchar)
+                when wp.asset_type = 'player' and coalesce(wp.player_id_override, wp.player_id) is null
                 then coalesce(cast(wp.player_name as varchar), 'UNKNOWN_' || cast(wp.transaction_id_unique as varchar))
                 when wp.asset_type = 'pick'
                 then coalesce(cast(wp.pick_id as varchar), 'PICK_' || cast(wp.transaction_id_unique as varchar))
@@ -346,7 +354,8 @@ with
             case
                 when wp.needs_from_to_swap then from_fran.franchise_name else to_fran.franchise_name
             end as to_franchise_name,
-            wp.player_id as player_id,
+            -- Apply player_id override for same-name disambiguation (transactions 3328, 3785)
+            coalesce(wp.player_id_override, wp.player_id) as player_id,
             wp.player_name as player_name,
             wp.position as position,
             wp.pick_id as pick_id,

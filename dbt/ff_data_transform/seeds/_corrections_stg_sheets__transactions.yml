@@ -12,6 +12,7 @@ seeds:
 
       **Common Correction Types**:
       - `swap_from_to`: FROM and TO franchises were entered backwards (affects both fields)
+      - `override_player_id`: Override incorrect player_id resolution for same-name disambiguation
 
       **Usage**: Join this seed to `stg_sheets__transactions` to apply corrections based on
       transaction_id and field_name.
@@ -19,6 +20,8 @@ seeds:
       **Discovered Issues**:
       - Transactions 2657 & 2658 (2023 offseason): Player-for-player trade (Karlaftis <-> Gabriel Davis)
         had FROM/TO reversed. Confirmed by tracing player ownership through draft → trade → cut sequences.
+      - Transactions 3328 & 3785 (2024-2025 FAAD): Byron Young player_id incorrectly resolved to
+        8768 (DT/PHI) instead of 8771 (DE/LAR) due to same-name collision.
 
     config:
       enabled: true
@@ -33,11 +36,12 @@ seeds:
         description: |
           Type of correction needed:
           - swap_from_to: Swap FROM and TO franchise values
+          - override_player_id: Override player_id for same-name disambiguation
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['swap_from_to']
+                values: ['swap_from_to', 'override_player_id']
 
       - name: field_name
         description: Specific field that needs correction (from_franchise_id, to_franchise_id, etc)
