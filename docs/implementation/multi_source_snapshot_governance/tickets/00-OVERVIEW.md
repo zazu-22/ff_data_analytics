@@ -16,9 +16,26 @@ This document provides a concise checklist for tracking completion of all implem
 - **Parent Plan**: `../2025-11-07_plan_v_2_0.md`
 - **Task Checklist**: `../2025-11-07_tasks_checklist_v_2_0.md`
 
-**Progress**: 48/66 tickets complete (73%)
+**Progress**: 49/66 tickets complete (74%)
 
-## Recent Accomplishments (2025-11-24)
+## Recent Accomplishments (2025-11-25)
+
+🚨 **CRITICAL-001 COMPLETE**: Duplicate Player IDs in dim_player_id_xref FIXED!
+
+**Completed This Session**:
+
+- ✅ **CRITICAL-001**: Fix duplicate player IDs in crosswalk (P0 + P1 core fixes)
+  - Deleted duplicate parquet file from `dt=2025-11-16` partition
+  - Added `_clear_partition()` helper to nflverse shim (prevents future duplicates)
+  - Added defensive row-level deduplication to staging model
+  - Added uniqueness test to YAML schema
+  - **Row count restored**: 9,760 players (was ~19,500 duplicated)
+  - **Verification query**: 0 rows (no duplicate player IDs)
+  - All 23/24 core tests PASS (1 unrelated IO error)
+
+**Impact**: All player identity resolution restored; Phase 4 hardening continues
+
+## Previous Accomplishments (2025-11-24)
 
 🎉 **P4-009 COMPLETE**: Governance configuration centralized!
 
@@ -354,7 +371,8 @@ ______________________________________________________________________
 
 ## Progress Summary
 
-**Overall Project**: 48/66 tickets complete (73%)\
+**Overall Project**: 49/66 tickets complete (74%)\
+**Critical Fixes**: 1/1 ticket complete (100%) ✅ **CRITICAL-001 RESOLVED**\
 **Phase 1 Foundation**: 30/30 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 2 Governance**: 7/7 tickets complete (100%) ✅ **PHASE COMPLETE**\
 **Phase 3 Documentation**: 8/8 tickets complete (100%) ✅ **PHASE COMPLETE**\
@@ -365,6 +383,7 @@ ______________________________________________________________________
 
 **Recent Progress**:
 
+- ✅ **CRITICAL-001 COMPLETE** (2025-11-25): Duplicate player IDs fixed - crosswalk restored from 19,500→9,760 rows
 - ✅ **P4-009 COMPLETE** (2025-11-24): Governance config extraction - all thresholds centralized in `src/flows/config.py`
 - ✅ **P4-007 COMPLETE** (2025-11-23): Production hardening - all flows have retry/timeout configuration
   - Google Sheets: 3 retries + 60s delay for auth, 2 retries + 30s delay for downloads

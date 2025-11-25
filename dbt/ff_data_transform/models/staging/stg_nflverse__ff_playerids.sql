@@ -52,8 +52,11 @@ Grain: One row per player (after filtering and deduplication)
 Source: nflverse ff_playerids dataset (~9,734 valid players after filtering)
 */
 with
-    raw_players as (
-        select *
+    -- Raw data with defensive row-level deduplication
+    -- This handles cases where duplicate parquet files exist in the same partition
+    -- (e.g., from re-ingestion without cleanup)
+    raw_players_all as (
+        select *, row_number() over (partition by mfl_id, gsis_id, name, birthdate order by dt desc) as _dedup_rank
         from
             read_parquet(
                 '{{ var("external_root", "data/raw") }}/nflverse/ff_playerids/dt=*/ff_playerids_*.parquet',
@@ -66,6 +69,10 @@ with
                 strategy='latest_only'
             )
         }}
+    ),
+
+    raw_players as (
+        select * exclude (_dedup_rank) from raw_players_all where _dedup_rank = 1  -- Keep only first occurrence per natural key
     ),
 
     -- Filter out team placeholder entries (critical to prevent join explosions)

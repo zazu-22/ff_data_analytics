@@ -38,6 +38,56 @@ except Exception:
     pl = None  # type: ignore[assignment]  # Optional dependency - None when not installed (e.g., doc builds)
 
 
+def _clear_partition(partition_uri: str) -> int:
+    """Clear all parquet and metadata files in partition (local or GCS).
+
+    Ensures idempotent writes - if the loader runs multiple times on the same
+    date, only the most recent write persists (no duplicates).
+
+    Uses PyArrow FileSystem for cloud-agnostic deletion.
+
+    Args:
+        partition_uri: Partition URI (e.g., "data/raw/nflverse/ff_playerids/dt=2025-10-26"
+                       or "gs://bucket/raw/nflverse/ff_playerids/dt=2025-10-26")
+
+    Returns:
+        Number of files deleted
+
+    """
+    try:
+        from pyarrow import fs as pafs
+    except ImportError:
+        return 0  # PyArrow not available, skip cleanup
+
+    # Handle relative paths for local filesystem
+    if not partition_uri.startswith("gs://"):
+        partition_uri = str(Path(partition_uri).resolve())
+
+    # Get filesystem and path from URI
+    try:
+        filesystem, path = pafs.FileSystem.from_uri(partition_uri)
+    except Exception:
+        return 0  # Partition doesn't exist yet
+
+    # Check if partition exists
+    try:
+        file_info = filesystem.get_file_info(path)
+        if file_info.type != pafs.FileType.Directory:
+            return 0
+    except Exception:
+        return 0
+
+    # Delete parquet and metadata files
+    deleted_count = 0
+    selector = pafs.FileSelector(path, allow_not_found=True, recursive=False)
+    for file_info in filesystem.get_file_info(selector):
+        if file_info.path.endswith((".parquet", "_meta.json")):
+            filesystem.delete_file(file_info.path)
+            deleted_count += 1
+
+    return deleted_count
+
+
 def _utcnow_iso() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -54,12 +104,17 @@ def _write_parquet(
     """Write a dataframe to Parquet with a sidecar _meta.json.
 
     Supports both local paths and `gs://` destinations via PyArrow FS.
+    Idempotent: clears partition before writing to prevent duplicate files.
     """
     dt = datetime.now(UTC).strftime("%Y-%m-%d")
     # Build partition directory URI (works for local and GCS)
     # Ensure no trailing slash duplication
     base = out_path.rstrip("/")
     partition_uri = f"{base}/{dataset}/dt={dt}"
+
+    # Clear existing files in partition (idempotent - prevents duplicate files)
+    _clear_partition(partition_uri)
+
     file_name = f"{dataset}_{uuid.uuid4().hex[:8]}.parquet"
     parquet_uri = f"{partition_uri}/{file_name}"
 
