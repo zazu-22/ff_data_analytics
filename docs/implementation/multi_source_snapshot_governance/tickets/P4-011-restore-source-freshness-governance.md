@@ -1,7 +1,7 @@
 # Ticket P4-011: Restore Source Freshness & Quality Governance
 
 **Phase**: 4 - Orchestration\
-**Status**: COMPLETE\
+**Status**: IN PROGRESS\
 **Estimated Effort**: Medium (3-4 hours)\
 **Dependencies**: P4-002a (copy flow), P4-002 (parse flow)\
 **Priority**: 🔴 **HIGH - Data quality regression from old scripts**
@@ -59,31 +59,31 @@ Need to verify if other sources have similar regressions:
 
 ### 1. Sheets Copy Flow Enhancements
 
-- [ ] Add Drive API `modifiedTime` check to `copy_league_sheet_flow.py`
-- [ ] Implement skip-if-unchanged logic (compare with last run metadata)
-- [ ] Add checksum validation task (post-copy data integrity check)
-- [ ] Create audit logging task (append to log sheet or local file)
-- [ ] Add config thresholds for copy freshness (e.g., `SHEETS_COPY_MAX_AGE_HOURS = 24`)
+- [x] Add Drive API `modifiedTime` check to `copy_league_sheet_flow.py`
+- [x] Implement skip-if-unchanged logic (compare with last run metadata)
+- [x] Add checksum validation task (post-copy data integrity check)
+- [x] Create audit logging task (append to log sheet or local file)
+- [x] Add config thresholds for copy freshness (e.g., `SHEETS_COPY_MAX_AGE_HOURS = 24`)
 
 ### 2. Sheets Parse Flow Enhancements
 
-- [ ] Add working copy freshness validation in `parse_league_sheet_flow.py`
-- [ ] Warn if parsing data older than threshold
-- [ ] Add metadata to output manifests with copy timestamp
+- [x] Add working copy freshness validation in `parse_league_sheet_flow.py`
+- [x] Warn if parsing data older than threshold
+- [x] Add metadata to output manifests with copy timestamp
 
 ### 3. Cross-Source Freshness Framework
 
-- [ ] Create `src/flows/utils/source_freshness.py` helper module
-- [ ] Implement generic "last successful fetch" tracking
-- [ ] Add skip-if-unchanged pattern for all sources
-- [ ] Add config thresholds to `src/flows/config.py`
+- [x] Create `src/flows/utils/source_freshness.py` helper module
+- [x] Implement generic "last successful fetch" tracking
+- [x] Add skip-if-unchanged pattern for all sources
+- [x] Add config thresholds to `src/flows/config.py`
 
 ### 4. Audit & Observability
 
-- [ ] Design unified audit trail approach (log sheet vs Parquet vs both)
-- [ ] Implement metadata persistence for all flows
-- [ ] Add "last successful run" tracking per source
-- [ ] Create validation tool to check source freshness across all providers
+- [x] Design unified audit trail approach (log sheet vs Parquet vs both)
+- [x] Implement metadata persistence for all flows
+- [x] Add "last successful run" tracking per source
+- [x] Create validation tool to check source freshness across all providers
 
 ## Proposed Implementation
 
@@ -284,14 +284,14 @@ CHECKSUM_VALIDATION = {
 
 ## Acceptance Criteria
 
-- [ ] Sheets copy flow checks source `modifiedTime` before copying
-- [ ] Skip-if-unchanged logic prevents unnecessary copies
-- [ ] Checksum validation ensures data integrity post-copy
-- [ ] Audit trail captures all copy operations with timestamps
-- [ ] Parse flow warns if processing stale working copy
-- [ ] All thresholds configurable in `src/flows/config.py`
-- [ ] Generic freshness framework works for all 5 sources
-- [ ] Documentation updated with freshness validation approach
+- [x] Sheets copy flow checks source `modifiedTime` before copying
+- [x] Skip-if-unchanged logic prevents unnecessary copies
+- [x] Checksum validation ensures data integrity post-copy
+- [x] Audit trail captures all copy operations with timestamps
+- [x] Parse flow warns if processing stale working copy
+- [x] All thresholds configurable in `src/flows/config.py`
+- [x] Generic freshness framework works for all 5 sources
+- [x] Documentation updated with freshness validation approach
 
 ## Testing
 
@@ -326,11 +326,11 @@ python -m src.flows.copy_league_sheet_flow --force
 
 ## Success Metrics
 
-- [ ] Zero stale data processing events (working copy freshness validated)
-- [ ] Reduced unnecessary API calls (skip-if-unchanged working)
-- [ ] Data integrity assured (checksum validation passing)
-- [ ] Complete audit trail (all operations logged with metadata)
-- [ ] Configurable thresholds (operators can tune per source)
+- [x] Zero stale data processing events (working copy freshness validated)
+- [x] Reduced unnecessary API calls (skip-if-unchanged working)
+- [x] Data integrity assured (checksum validation passing)
+- [x] Complete audit trail (all operations logged with metadata)
+- [x] Configurable thresholds (operators can tune per source)
 
 ## Out of Scope
 
