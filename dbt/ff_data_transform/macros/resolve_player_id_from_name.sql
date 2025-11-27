@@ -65,13 +65,16 @@
     -- Fallback: Get player_id from transaction history (optional)
     -- NOTE: Only use this for non-transaction models (contracts_active, contracts_cut)
     --       to avoid circular dependencies. For transactions, crosswalk is the only source.
+    -- IMPORTANT: Deduplicate to prevent fan-out when same player has multiple positions
+    -- in transaction history (e.g., Jaelan Phillips as LB/DL)
     {% if source_cte != 'with_alias' %}
-      select distinct
+      select
         lower(trim(player_name)) as player_name_lower,
         player_id,
         position
       from {{ ref("fct_league_transactions") }}
       where asset_type = 'player' and player_id is not null
+      qualify row_number() over (partition by player_id order by transaction_date desc) = 1
     {% else %}
       -- Empty CTE for transactions model (no fallback to avoid cycle)
       select
