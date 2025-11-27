@@ -105,20 +105,23 @@ ingest-quick:
     echo "  Fast Ingestion Workflow"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
-    echo "[1/5] Ingesting NFLverse data..."
+    echo "[1/6] Ingesting NFLverse data..."
     just ingest-nflverse
     echo ""
-    echo "[2/5] Building player ID crosswalk..."
+    echo "[2/6] Building player ID crosswalk..."
     just dbt-xref
     echo ""
-    echo "[3/5] Ingesting Commissioner sheets..."
+    echo "[3/6] Ingesting Commissioner sheets..."
     just ingest-sheets
     echo ""
-    echo "[4/5] Ingesting Sleeper data..."
+    echo "[4/6] Ingesting Sleeper data..."
     just ingest-sleeper
     echo ""
-    echo "[5/5] Ingesting KTC dynasty values..."
+    echo "[5/6] Ingesting KTC dynasty values..."
     just ingest-ktc
+    echo ""
+    echo "[6/6] Updating snapshot registry..."
+    just update-registry
     echo ""
     echo "═══════════════════════════════════════════════════════════════"
     echo "  ✅ Fast ingestion complete!"
@@ -136,8 +139,11 @@ ingest-full:
     echo "═══════════════════════════════════════════════════════════════"
     just ingest-quick
     echo ""
-    echo "[6/6] Ingesting FFanalytics projections (⚠️  15-20 min)..."
+    echo "[7/7] Ingesting FFanalytics projections (⚠️  15-20 min)..."
     just ingest-ffanalytics
+    echo ""
+    echo "Updating registry with FFanalytics..."
+    just update-registry --source ffanalytics
     echo ""
     echo "═══════════════════════════════════════════════════════════════"
     echo "  ✅ Full ingestion complete!"
@@ -228,6 +234,12 @@ ingest-ffanalytics:
     @echo "Ingesting FFanalytics projections (this takes 15-20 minutes)..."
     @uv run python -c "from src.ingest.ffanalytics.loader import load_projections_ros; load_projections_ros()"
     @echo "✅ FFanalytics ingestion complete"
+
+# Update snapshot registry from actual data files
+update-registry *ARGS:
+    @echo "Updating snapshot registry..."
+    @uv run python tools/update_snapshot_registry.py {{ ARGS }}
+    @echo "✅ Registry updated"
 
 # ============================================================================
 # PREFECT FLOWS

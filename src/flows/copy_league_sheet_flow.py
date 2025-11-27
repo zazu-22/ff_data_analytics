@@ -86,8 +86,8 @@ def check_source_freshness(src_sheet_id: str, force: bool = False) -> dict:
 
     source_modified = datetime.fromisoformat(file_meta["modifiedTime"].replace("Z", "+00:00"))
 
-    # Check if skip-if-unchanged is enabled for sheets
-    skip_enabled = SKIP_IF_UNCHANGED_ENABLED.get("sheets", True)
+    # Check if skip-if-unchanged is enabled for commissioner
+    skip_enabled = SKIP_IF_UNCHANGED_ENABLED.get("commissioner", True)
 
     # Determine if we should skip
     should_skip = False
@@ -95,7 +95,7 @@ def check_source_freshness(src_sheet_id: str, force: bool = False) -> dict:
 
     if skip_enabled and not force:
         should_skip, reason = should_skip_fetch(
-            source="sheets",
+            source="commissioner",
             dataset="commissioner",
             source_modified_time=source_modified,
             force=force,
@@ -428,7 +428,7 @@ def copy_league_sheet_flow(
 
     # Step 5: Record successful run metadata
     record_successful_run(
-        source="sheets",
+        source="commissioner",
         dataset="commissioner",
         snapshot_date=datetime.now().strftime("%Y-%m-%d"),
         row_count=copy_result.get("copied", 0),

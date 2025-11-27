@@ -42,7 +42,7 @@ DELTA_THRESHOLDS = {
         "weekly": {"min_pct": -5, "max_pct": 20},  # Allow 20% growth during season
         "snap_counts": {"min_pct": -5, "max_pct": 20},
     },
-    "sheets": {
+    "commissioner": {
         "roster": {"min_pct": -10, "max_pct": 30},  # Trades can cause swings
         "transactions": {"min_pct": 0, "max_pct": 100},  # Cumulative, always grows
         "cap_space": {"min_pct": -10, "max_pct": 10},

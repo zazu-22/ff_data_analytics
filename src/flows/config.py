@@ -20,7 +20,7 @@ class FreshnessConfig(TypedDict):
     ffanalytics: int
     ktc: int
     sleeper: int
-    sheets: int
+    commissioner: int
 
 
 class PlayerMappingConfig(TypedDict):
@@ -70,7 +70,7 @@ FRESHNESS_THRESHOLDS: FreshnessConfig = {
     "ffanalytics": 7,  # Projections update weekly (Tuesday typical)
     "ktc": 5,  # Market values update multiple times per week
     "sleeper": 1,  # League data should sync daily during season
-    "sheets": 1,  # Commissioner updates should be daily
+    "commissioner": 1,  # Commissioner updates should be daily
 }
 
 # Anomaly Detection
@@ -118,7 +118,7 @@ ROW_COUNT_MINIMUMS: RowCountMinimumsConfig = {
 
 # Source Freshness Validation (hours)
 SOURCE_FRESHNESS_THRESHOLDS = {
-    "sheets": 24,  # Warn if working copy > 24 hours old
+    "commissioner": 24,  # Warn if working copy > 24 hours old
     "nflverse": 48,  # Warn if NFLverse fetch > 48 hours old
     "sleeper": 24,  # Warn if Sleeper fetch > 24 hours old
     "ktc": 120,  # Warn if KTC fetch > 5 days old (120 hours)
@@ -127,7 +127,7 @@ SOURCE_FRESHNESS_THRESHOLDS = {
 
 # Skip-if-unchanged configuration (per source)
 SKIP_IF_UNCHANGED_ENABLED = {
-    "sheets": True,  # Always skip if source sheet unchanged
+    "commissioner": True,  # Always skip if source sheet unchanged
     "nflverse": False,  # Always fetch (data changes frequently during season)
     "sleeper": False,  # Always fetch (league activity)
     "ktc": True,  # Skip if KTC data unchanged
@@ -136,7 +136,7 @@ SKIP_IF_UNCHANGED_ENABLED = {
 
 # Checksum validation configuration
 CHECKSUM_VALIDATION = {
-    "sheets_copy": {"rows": 50, "cols": 50, "enabled": True},
+    "commissioner_copy": {"rows": 50, "cols": 50, "enabled": True},
 }
 
 

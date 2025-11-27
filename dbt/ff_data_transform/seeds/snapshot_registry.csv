@@ -1,94 +1,94 @@
 source,dataset,snapshot_date,status,coverage_start_season,coverage_end_season,row_count,notes
-sheets,cap_space,2025-11-06,current,,,60,Commissioner league salary cap data
-sheets,cap_space,2025-11-07,current,,,60,Commissioner league salary cap data
-sheets,cap_space,2025-11-09,current,,,60,Commissioner league salary cap data
-sheets,cap_space,2025-11-10,current,,,60,Commissioner league salary cap data
-sheets,cap_space,2025-11-12,current,,,60,Commissioner league salary cap data
-sheets,cap_space,2025-11-16,current,,,60,Commissioner league salary cap data - Latest snapshot
-sheets,contracts_active,2025-11-06,current,,,878,Active player contracts data
-sheets,contracts_active,2025-11-07,current,,,886,Active player contracts data
-sheets,contracts_active,2025-11-09,current,,,886,Active player contracts data
-sheets,contracts_active,2025-11-10,current,,,886,Active player contracts data
-sheets,contracts_active,2025-11-12,current,,,886,Active player contracts data
-sheets,contracts_active,2025-11-16,current,,,888,Active player contracts - Latest snapshot
-sheets,contracts_cut,2025-11-06,current,,,425,Cut player history data
-sheets,contracts_cut,2025-11-07,current,,,436,Cut player history data
-sheets,contracts_cut,2025-11-09,current,,,436,Cut player history data
-sheets,contracts_cut,2025-11-10,current,,,436,Cut player history data
-sheets,contracts_cut,2025-11-12,current,,,436,Cut player history data
-sheets,contracts_cut,2025-11-16,current,,,444,Cut player history - Latest snapshot
-sheets,draft_pick_conditions,2025-11-06,current,,,28,Draft pick conditions/protection rules
-sheets,draft_pick_conditions,2025-11-07,current,,,28,Draft pick conditions/protection rules
-sheets,draft_pick_conditions,2025-11-09,current,,,28,Draft pick conditions/protection rules
-sheets,draft_pick_conditions,2025-11-10,current,,,28,Draft pick conditions/protection rules
-sheets,draft_pick_conditions,2025-11-12,current,,,28,Draft pick conditions/protection rules
-sheets,draft_pick_conditions,2025-11-16,current,,,28,Draft pick conditions - Latest snapshot
-sheets,draft_picks,2025-11-06,current,,,346,Commissioner draft picks inventory
-sheets,draft_picks,2025-11-07,current,,,346,Commissioner draft picks inventory
-sheets,draft_picks,2025-11-09,current,,,346,Commissioner draft picks inventory
-sheets,draft_picks,2025-11-10,current,,,346,Commissioner draft picks inventory
-sheets,draft_picks,2025-11-12,current,,,346,Commissioner draft picks inventory
-sheets,draft_picks,2025-11-16,current,,,346,Commissioner draft picks - Latest snapshot
-sheets,transactions,2025-11-07,current,,,3999,Commissioner league transactions
-sheets,transactions,2025-11-09,current,,,3999,Commissioner league transactions
-sheets,transactions,2025-11-10,current,,,3999,Commissioner league transactions
-sheets,transactions,2025-11-12,current,,,3999,Commissioner league transactions
-sheets,transactions,2025-11-16,current,,,4008,Commissioner league transactions - Latest snapshot
-sheets,transactions_qa,2025-11-10,current,,,,QA/validation transactions (temporary)
-ffanalytics,projections,2025-11-06,superseded,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-09,superseded,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-13,superseded,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-14,superseded,2024,2025,,Fantasy projections from R package
-ffanalytics,projections,2025-11-16,superseded,2024,2025,,Fantasy projections from R package - Latest snapshot
-ktc,picks,2025-10-25,superseded,,,, Keep Trade Cut draft pick values
+commissioner,cap_space,2025-11-06,superseded,2025,2029,60,Commissioner league salary cap data
+commissioner,cap_space,2025-11-07,superseded,2025,2029,60,Commissioner league salary cap data
+commissioner,cap_space,2025-11-09,superseded,2025,2029,60,Commissioner league salary cap data
+commissioner,cap_space,2025-11-10,superseded,2025,2029,60,Commissioner league salary cap data
+commissioner,cap_space,2025-11-12,superseded,2025,2029,60,Commissioner league salary cap data
+commissioner,cap_space,2025-11-16,superseded,2025,2029,60,Commissioner league salary cap data - Latest snapshot
+commissioner,contracts_active,2025-11-06,superseded,,,878,Active player contracts data
+commissioner,contracts_active,2025-11-07,superseded,,,886,Active player contracts data
+commissioner,contracts_active,2025-11-09,superseded,,,886,Active player contracts data
+commissioner,contracts_active,2025-11-10,superseded,,,886,Active player contracts data
+commissioner,contracts_active,2025-11-12,superseded,,,886,Active player contracts data
+commissioner,contracts_active,2025-11-16,superseded,,,888,Active player contracts - Latest snapshot
+commissioner,contracts_cut,2025-11-06,superseded,,,425,Cut player history data
+commissioner,contracts_cut,2025-11-07,superseded,,,436,Cut player history data
+commissioner,contracts_cut,2025-11-09,superseded,,,436,Cut player history data
+commissioner,contracts_cut,2025-11-10,superseded,,,436,Cut player history data
+commissioner,contracts_cut,2025-11-12,superseded,,,436,Cut player history data
+commissioner,contracts_cut,2025-11-16,superseded,,,444,Cut player history - Latest snapshot
+commissioner,draft_pick_conditions,2025-11-06,superseded,,,28,Draft pick conditions/protection rules
+commissioner,draft_pick_conditions,2025-11-07,superseded,,,28,Draft pick conditions/protection rules
+commissioner,draft_pick_conditions,2025-11-09,superseded,,,28,Draft pick conditions/protection rules
+commissioner,draft_pick_conditions,2025-11-10,superseded,,,28,Draft pick conditions/protection rules
+commissioner,draft_pick_conditions,2025-11-12,superseded,,,28,Draft pick conditions/protection rules
+commissioner,draft_pick_conditions,2025-11-16,superseded,,,28,Draft pick conditions - Latest snapshot
+commissioner,draft_picks,2025-11-06,superseded,,,346,Commissioner draft picks inventory
+commissioner,draft_picks,2025-11-07,superseded,,,346,Commissioner draft picks inventory
+commissioner,draft_picks,2025-11-09,superseded,,,346,Commissioner draft picks inventory
+commissioner,draft_picks,2025-11-10,superseded,,,346,Commissioner draft picks inventory
+commissioner,draft_picks,2025-11-12,superseded,,,346,Commissioner draft picks inventory
+commissioner,draft_picks,2025-11-16,superseded,,,346,Commissioner draft picks - Latest snapshot
+commissioner,transactions,2025-11-07,superseded,2012,2025,3999,Commissioner league transactions
+commissioner,transactions,2025-11-09,superseded,2012,2025,3999,Commissioner league transactions
+commissioner,transactions,2025-11-10,superseded,2012,2025,3999,Commissioner league transactions
+commissioner,transactions,2025-11-12,superseded,2012,2025,3999,Commissioner league transactions
+commissioner,transactions,2025-11-16,superseded,2012,2025,4008,Commissioner league transactions - Latest snapshot
+commissioner,transactions_qa,2025-11-10,current,,,,QA/validation transactions (temporary)
+ffanalytics,projections,2025-11-06,superseded,2025,2025,3604,Fantasy projections from R package
+ffanalytics,projections,2025-11-09,superseded,2025,2025,9605,Fantasy projections from R package
+ffanalytics,projections,2025-11-13,superseded,2025,2025,9270,Fantasy projections from R package
+ffanalytics,projections,2025-11-14,superseded,2025,2025,19211,Fantasy projections from R package
+ffanalytics,projections,2025-11-16,superseded,2025,2025,16186,Fantasy projections from R package - Latest snapshot
+ktc,picks,2025-10-25,superseded,,,36, Keep Trade Cut draft pick values
 ktc,picks,2025-10-30,superseded,,,36,Keep Trade Cut draft pick values
 ktc,picks,2025-11-05,superseded,,,36,Keep Trade Cut draft pick values
 ktc,picks,2025-11-10,superseded,,,36,Keep Trade Cut draft pick values
 ktc,picks,2025-11-16,superseded,,,36,Keep Trade Cut draft pick values - Latest snapshot
-ktc,players,2025-10-25,superseded,,,,Dynasty valuations 1QB format
+ktc,players,2025-10-25,superseded,,,50,Dynasty valuations 1QB format
 ktc,players,2025-10-30,superseded,,,464,Dynasty valuations 1QB format
 ktc,players,2025-11-05,superseded,,,464,Dynasty valuations 1QB format
 ktc,players,2025-11-10,superseded,,,464,Dynasty valuations 1QB format
 ktc,players,2025-11-16,superseded,,,464,Dynasty valuations 1QB format - Latest snapshot
-nflverse,ff_opportunity,2025-10-01,historical,2020,2024,,Fantasy opportunity metrics (baseline)
-nflverse,ff_opportunity,2025-10-28,current,2020,2024,,Fantasy opportunity metrics through Week 8
-nflverse,ff_opportunity,2025-11-05,current,2020,2025,,Fantasy opportunity metrics through Week 9
-nflverse,ff_opportunity,2025-11-09,current,2020,2025,,Fantasy opportunity metrics through Week 10
-nflverse,ff_opportunity,2025-11-10,current,2020,2025,,Fantasy opportunity metrics through Week 10
-nflverse,ff_opportunity,2025-11-16,current,2020,2025,,Fantasy opportunity metrics - Latest snapshot
-nflverse,ff_playerids,2025-10-01,historical,,,, Player ID mappings for FF (baseline)
-nflverse,ff_playerids,2025-11-09,current,,,,Player ID mappings for FF
-nflverse,ff_playerids,2025-11-10,current,,,,Player ID mappings for FF
-nflverse,ff_playerids,2025-11-16,current,,,,Player ID mappings for FF - Latest snapshot
-nflverse,schedule,2024-12-01,current,2024,2025,,NFL schedule data (2024-2025)
-nflverse,schedule,2025-10-27,current,2025,2025,,NFL schedule data (2025)
-nflverse,schedule,2025-11-05,current,2025,2025,,NFL schedule data (2025) - Latest snapshot
-nflverse,snap_counts,2025-10-01,historical,2020,2024,,Player snap counts (baseline)
-nflverse,snap_counts,2025-10-28,current,2020,2024,,Player snap counts through Week 8
-nflverse,snap_counts,2025-11-05,current,2020,2025,,Player snap counts through Week 9
-nflverse,snap_counts,2025-11-09,current,2020,2025,,Player snap counts through Week 10
-nflverse,snap_counts,2025-11-10,current,2020,2025,,Player snap counts through Week 10
-nflverse,snap_counts,2025-11-16,current,2020,2025,,Player snap counts - Latest snapshot
-nflverse,teams,2024-12-01,current,,,,NFL team information (32 teams)
-nflverse,weekly,2024-01-01,superseded,2020,2024,,Player weekly statistics (historical archive)
-nflverse,weekly,2025-10-01,historical,2020,2024,,Player weekly statistics (baseline)
-nflverse,weekly,2025-10-27,superseded,2020,2024,,Player weekly statistics through Week 8
-nflverse,weekly,2025-11-05,superseded,2020,2025,,Player weekly statistics through Week 9
-nflverse,weekly,2025-11-09,superseded,2020,2025,,Player weekly statistics through Week 10
-nflverse,weekly,2025-11-10,superseded,2020,2025,,Player weekly statistics through Week 10
-nflverse,weekly,2025-11-16,superseded,2020,2025,,Player weekly statistics - Latest snapshot
+nflverse,ff_opportunity,2025-10-01,superseded,2020,2025,31339,Fantasy opportunity metrics (baseline)
+nflverse,ff_opportunity,2025-10-28,superseded,2025,2025,2541,Fantasy opportunity metrics through Week 8
+nflverse,ff_opportunity,2025-11-05,superseded,2025,2025,2837,Fantasy opportunity metrics through Week 9
+nflverse,ff_opportunity,2025-11-09,superseded,2025,2025,2859,Fantasy opportunity metrics through Week 10
+nflverse,ff_opportunity,2025-11-10,superseded,2025,2025,3088,Fantasy opportunity metrics through Week 10
+nflverse,ff_opportunity,2025-11-16,superseded,2025,2025,3148,Fantasy opportunity metrics - Latest snapshot
+nflverse,ff_playerids,2025-10-01,superseded,,,12133, Player ID mappings for FF (baseline)
+nflverse,ff_playerids,2025-11-09,superseded,,,12155,Player ID mappings for FF
+nflverse,ff_playerids,2025-11-10,superseded,,,12155,Player ID mappings for FF
+nflverse,ff_playerids,2025-11-16,superseded,,,12158,Player ID mappings for FF - Latest snapshot
+nflverse,schedule,2024-12-01,superseded,2024,2024,285,NFL schedule data (2024-2025)
+nflverse,schedule,2025-10-27,superseded,2025,2025,272,NFL schedule data (2025)
+nflverse,schedule,2025-11-05,current,2025,2025,272,NFL schedule data (2025) - Latest snapshot
+nflverse,snap_counts,2025-10-01,superseded,2020,2025,136974,Player snap counts (baseline)
+nflverse,snap_counts,2025-10-28,superseded,2025,2025,11297,Player snap counts through Week 8
+nflverse,snap_counts,2025-11-05,superseded,2025,2025,12609,Player snap counts through Week 9
+nflverse,snap_counts,2025-11-09,superseded,2025,2025,12704,Player snap counts through Week 10
+nflverse,snap_counts,2025-11-10,superseded,2025,2025,12704,Player snap counts through Week 10
+nflverse,snap_counts,2025-11-16,superseded,2025,2025,14011,Player snap counts - Latest snapshot
+nflverse,teams,2024-12-01,current,2002,2025,768,NFL team information (32 teams)
+nflverse,weekly,2024-01-01,superseded,2024,2024,1000,Player weekly statistics (historical archive)
+nflverse,weekly,2025-10-01,superseded,2020,2025,97415,Player weekly statistics (baseline)
+nflverse,weekly,2025-10-27,superseded,2025,2025,8222,Player weekly statistics through Week 8
+nflverse,weekly,2025-11-05,superseded,2025,2025,9239,Player weekly statistics through Week 9
+nflverse,weekly,2025-11-09,superseded,2025,2025,9310,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-10,superseded,2025,2025,10058,Player weekly statistics through Week 10
+nflverse,weekly,2025-11-16,superseded,2025,2025,10268,Player weekly statistics - Latest snapshot
 sleeper,fa_pool,2025-10-27,superseded,,,7489,Sleeper free agent pool
 sleeper,fa_pool,2025-10-30,superseded,,,7512,Sleeper free agent pool
 sleeper,fa_pool,2025-11-05,superseded,,,7518,Sleeper free agent pool
 sleeper,fa_pool,2025-11-09,superseded,,,7485,Sleeper free agent pool
 sleeper,fa_pool,2025-11-12,superseded,,,7508,Sleeper free agent pool - Latest snapshot
-sleeper,players,2025-10-27,superseded,,,,Sleeper player database
-sleeper,players,2025-10-30,superseded,,,,Sleeper player database
-sleeper,players,2025-11-05,superseded,,,,Sleeper player database
-sleeper,players,2025-11-06,superseded,,,,Sleeper player database
-sleeper,players,2025-11-09,superseded,,,,Sleeper player database
-sleeper,players,2025-11-10,superseded,,,,Sleeper player database
-sleeper,players,2025-11-12,superseded,,,,Sleeper player database
+sleeper,players,2025-10-27,superseded,,,11400,Sleeper player database
+sleeper,players,2025-10-30,superseded,,,11400,Sleeper player database
+sleeper,players,2025-11-05,superseded,,,11400,Sleeper player database
+sleeper,players,2025-11-06,superseded,,,11400,Sleeper player database
+sleeper,players,2025-11-09,superseded,,,11400,Sleeper player database
+sleeper,players,2025-11-10,superseded,,,11400,Sleeper player database
+sleeper,players,2025-11-12,superseded,,,11400,Sleeper player database
 sleeper,players,2025-11-16,superseded,,,11401,Sleeper player database - Latest snapshot
 sleeper,rosters,2025-10-30,superseded,,,12,Sleeper league rosters
 sleeper,rosters,2025-11-05,superseded,,,12,Sleeper league rosters
@@ -99,11 +99,46 @@ sleeper,users,2025-10-30,superseded,,,13,Sleeper league users
 sleeper,users,2025-11-05,superseded,,,13,Sleeper league users
 sleeper,users,2025-11-09,superseded,,,13,Sleeper league users
 sleeper,users,2025-11-12,superseded,,,13,Sleeper league users - Latest snapshot
-nflverse,weekly,2025-11-21,current,2024,2024,18981,NFLverse ingestion for seasons [2024]
-ktc,players,2025-11-21,current,,,464,KTC dynasty_1qb ingestion
-ktc,picks,2025-11-21,current,,,36,KTC dynasty_1qb ingestion
-ffanalytics,projections,2025-11-21,current,,,0,FFAnalytics ROS projections (weeks 1-1)
-sleeper,rosters,2025-11-21,current,,,12,Sleeper league 1230330435511275520
-sleeper,players,2025-11-21,current,,,11401,Sleeper league 1230330435511275520
-sleeper,fa_pool,2025-11-21,current,,,7479,Sleeper league 1230330435511275520
-sleeper,users,2025-11-21,current,,,13,Sleeper league 1230330435511275520
+nflverse,weekly,2025-11-21,superseded,2024,2024,18981,NFLverse ingestion for seasons [2024]
+ktc,players,2025-11-21,superseded,,,464,KTC dynasty_1qb ingestion
+ktc,picks,2025-11-21,superseded,,,36,KTC dynasty_1qb ingestion
+ffanalytics,projections,2025-11-21,superseded,,,0,FFAnalytics ROS projections (weeks 1-1)
+sleeper,rosters,2025-11-21,superseded,,,12,Sleeper league 1230330435511275520
+sleeper,players,2025-11-21,superseded,,,11401,Sleeper league 1230330435511275520
+sleeper,fa_pool,2025-11-21,superseded,,,7479,Sleeper league 1230330435511275520
+sleeper,users,2025-11-21,superseded,,,13,Sleeper league 1230330435511275520
+commissioner,cap_space,2025-11-25,superseded,2025,2029,60,Auto-added by update_snapshot_registry
+commissioner,cap_space,2025-11-27,current,2025,2029,60,Auto-added by update_snapshot_registry
+commissioner,contracts_active,2025-11-25,superseded,,,888,Auto-added by update_snapshot_registry
+commissioner,contracts_cut,2025-11-25,superseded,,,461,Auto-added by update_snapshot_registry
+commissioner,contracts_cut,2025-11-27,current,,,461,Auto-added by update_snapshot_registry
+commissioner,draft_pick_conditions,2025-11-25,superseded,,,37,Auto-added by update_snapshot_registry
+commissioner,draft_pick_conditions,2025-11-27,current,,,37,Auto-added by update_snapshot_registry
+commissioner,draft_picks,2025-11-25,superseded,,,353,Auto-added by update_snapshot_registry
+commissioner,draft_picks,2025-11-27,current,,,353,Auto-added by update_snapshot_registry
+commissioner,transactions,2025-11-25,superseded,2012,2025,4048,Auto-added by update_snapshot_registry
+commissioner,transactions,2025-11-27,current,2012,2025,4048,Auto-added by update_snapshot_registry
+ffanalytics,projections,2025-11-22,superseded,2024,2024,1456,Auto-added by update_snapshot_registry
+ffanalytics,projections,2025-11-27,current,2025,2025,14034,Auto-added by update_snapshot_registry
+ktc,picks,2025-11-22,superseded,,,36,Auto-added by update_snapshot_registry
+ktc,picks,2025-11-27,current,,,36,Auto-added by update_snapshot_registry
+ktc,players,2025-11-22,superseded,,,464,Auto-added by update_snapshot_registry
+ktc,players,2025-11-27,current,,,464,Auto-added by update_snapshot_registry
+marts,mart_fasa_targets,2025-10-30,superseded,,,313,Auto-added by update_snapshot_registry
+marts,mart_fasa_targets,2025-11-06,superseded,,,5263,Auto-added by update_snapshot_registry
+marts,mart_fasa_targets,2025-11-07,current,,,3380,Auto-added by update_snapshot_registry
+marts,mart_my_roster_droppable,2025-10-27,superseded,,,3,Auto-added by update_snapshot_registry
+marts,mart_my_roster_droppable,2025-10-28,superseded,,,26,Auto-added by update_snapshot_registry
+marts,mart_my_roster_droppable,2025-10-30,superseded,,,26,Auto-added by update_snapshot_registry
+marts,mart_my_roster_droppable,2025-11-07,current,,,29,Auto-added by update_snapshot_registry
+nflverse,ff_opportunity,2025-11-27,current,2025,2025,3748,Auto-added by update_snapshot_registry
+nflverse,ff_playerids,2025-11-27,current,,,12163,Auto-added by update_snapshot_registry
+nflverse,snap_counts,2025-11-27,current,2025,2025,16635,Auto-added by update_snapshot_registry
+nflverse,weekly,2025-11-22,superseded,2024,2024,18981,Auto-added by update_snapshot_registry
+nflverse,weekly,2025-11-27,current,2025,2025,12201,Auto-added by update_snapshot_registry
+sleeper,fa_pool,2025-11-25,current,,,7507,Auto-added by update_snapshot_registry
+sleeper,players,2025-11-25,superseded,,,11401,Auto-added by update_snapshot_registry
+sleeper,players,2025-11-27,current,,,11401,Auto-added by update_snapshot_registry
+sleeper,rosters,2025-11-25,current,,,12,Auto-added by update_snapshot_registry
+sleeper,users,2025-11-25,current,,,13,Auto-added by update_snapshot_registry
+commissioner,contracts_active,2025-11-27,current,,,888,Auto-added by update_snapshot_registry

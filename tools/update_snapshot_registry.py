@@ -192,20 +192,22 @@ def load_current_registry(registry_path: Path) -> pl.DataFrame:
 
 def merge_registry_updates(
     current_registry: pl.DataFrame, scanned_snapshots: list[dict]
-) -> pl.DataFrame:
+) -> tuple[pl.DataFrame, list[dict]]:
     """Merge scanned snapshot metadata into current registry.
+
+    Updates existing entries and adds new snapshots not in registry.
 
     Args:
         current_registry: Current registry DataFrame
         scanned_snapshots: List of scanned snapshot metadata
 
     Returns:
-        Updated registry DataFrame
+        Tuple of (updated registry DataFrame, list of new snapshots added)
 
     """
     if not scanned_snapshots:
         print("No snapshots found to merge")
-        return current_registry
+        return current_registry, []
 
     # Convert scanned snapshots to DataFrame
     scanned_df = pl.DataFrame(scanned_snapshots).select(
@@ -219,9 +221,7 @@ def merge_registry_updates(
         ]
     )
 
-    # Join with current registry to preserve other columns (status, description)
-    # Update strategy: prefer registry values for status/description,
-    # scanned values for row_count/coverage
+    # Step 1: Update existing entries (left join on registry)
     updated = (
         current_registry.join(
             scanned_df,
@@ -250,30 +250,78 @@ def merge_registry_updates(
         .select(current_registry.columns)  # Keep only original columns
     )
 
-    return updated
+    # Step 2: Find new snapshots not in registry (anti-join)
+    existing_keys = current_registry.select(["source", "dataset", "snapshot_date"])
+    new_snapshots_df = scanned_df.join(
+        existing_keys,
+        on=["source", "dataset", "snapshot_date"],
+        how="anti",
+    )
+
+    new_snapshots_list = []
+    if len(new_snapshots_df) > 0:
+        # Step 3: Mark old "current" snapshots as "superseded" for datasets getting new entries
+        # Get unique source/dataset pairs that have new snapshots
+        new_pairs = new_snapshots_df.select(["source", "dataset"]).unique()
+
+        # For each source/dataset with new data, mark existing "current" as "superseded"
+        # Use a left join to identify which rows need status update
+        updated = (
+            updated.join(
+                new_pairs.with_columns(pl.lit(True).alias("_has_new")),
+                on=["source", "dataset"],
+                how="left",
+            )
+            .with_columns(
+                pl.when(
+                    (pl.col("status") == "current") & (pl.col("_has_new") == True)  # noqa: E712
+                )
+                .then(pl.lit("superseded"))
+                .otherwise(pl.col("status"))
+                .alias("status")
+            )
+            .drop("_has_new")
+        )
+
+        # Add new entries as "current"
+        new_entries = new_snapshots_df.with_columns(
+            [
+                pl.lit("current").alias("status"),
+                pl.lit("Auto-added by update_snapshot_registry").alias("notes"),
+            ]
+        ).select(current_registry.columns)
+
+        # Concatenate new entries
+        updated = pl.concat([updated, new_entries])
+        new_snapshots_list = new_snapshots_df.to_dicts()
+
+    return updated, new_snapshots_list
 
 
-def print_changes(current: pl.DataFrame, updated: pl.DataFrame) -> None:
-    """Print summary of changes that will be made.
+def _detect_row_changes(
+    current: pl.DataFrame, updated: pl.DataFrame
+) -> tuple[list[dict], list[dict]]:
+    """Detect metadata and status changes between registry versions.
 
-    Args:
-        current: Current registry
-        updated: Updated registry
+    Returns:
+        Tuple of (metadata_changes, status_changes)
 
     """
-    changes = []
+    metadata_changes = []
+    status_changes = []
 
     for i in range(len(current)):
         curr_row = current.row(i, named=True)
         upd_row = updated.row(i, named=True)
 
+        # Check metadata changes
         row_changes = []
         for col in ["row_count", "coverage_start_season", "coverage_end_season"]:
             if curr_row[col] != upd_row[col]:
                 row_changes.append(f"{col}: {curr_row[col]} → {upd_row[col]}")
 
         if row_changes:
-            changes.append(
+            metadata_changes.append(
                 {
                     "source": curr_row["source"],
                     "dataset": curr_row["dataset"],
@@ -282,17 +330,46 @@ def print_changes(current: pl.DataFrame, updated: pl.DataFrame) -> None:
                 }
             )
 
-    if not changes:
+        # Check status changes
+        if curr_row["status"] != upd_row["status"]:
+            status_changes.append(
+                {
+                    "source": curr_row["source"],
+                    "dataset": curr_row["dataset"],
+                    "snapshot_date": curr_row["snapshot_date"],
+                    "old_status": curr_row["status"],
+                    "new_status": upd_row["status"],
+                }
+            )
+
+    return metadata_changes, status_changes
+
+
+def print_changes(current: pl.DataFrame, updated: pl.DataFrame, new_snapshots: list[dict]) -> None:
+    """Print summary of changes that will be made."""
+    metadata_changes, status_changes = _detect_row_changes(current, updated)
+
+    if not metadata_changes and not status_changes and not new_snapshots:
         print("✓ No changes needed - registry is up to date")
         return
 
-    print(f"\n📝 Found {len(changes)} snapshots to update:\n")
-    for change in changes:
-        source = change["source"]
-        dataset = change["dataset"]
-        snapshot_date = change["snapshot_date"]
-        changes_str = change["changes"]
-        print(f"  {source}/{dataset}/dt={snapshot_date}: {changes_str}")
+    if metadata_changes:
+        print(f"\n📝 Found {len(metadata_changes)} snapshots to update:\n")
+        for c in metadata_changes:
+            print(f"  {c['source']}/{c['dataset']}/dt={c['snapshot_date']}: {c['changes']}")
+
+    if status_changes:
+        print(f"\n🔄 Found {len(status_changes)} status changes:\n")
+        for c in status_changes:
+            key = f"{c['source']}/{c['dataset']}/dt={c['snapshot_date']}"
+            print(f"  {key}: {c['old_status']} → {c['new_status']}")
+
+    if new_snapshots:
+        print(f"\n🆕 Found {len(new_snapshots)} NEW snapshots to add:\n")
+        for snap in new_snapshots:
+            key = f"{snap['source']}/{snap['dataset']}/dt={snap['snapshot_date']}"
+            row_count = snap.get("row_count", "?")
+            print(f"  {key} ({row_count} rows)")
 
 
 def main():
@@ -384,10 +461,10 @@ IMPORTANT:
 
     # Merge updates
     print("🔄 Merging updates...")
-    updated_registry = merge_registry_updates(current_registry, scanned)
+    updated_registry, new_snapshots = merge_registry_updates(current_registry, scanned)
 
     # Show changes
-    print_changes(current_registry, updated_registry)
+    print_changes(current_registry, updated_registry, new_snapshots)
 
     # Apply changes
     if args.dry_run:

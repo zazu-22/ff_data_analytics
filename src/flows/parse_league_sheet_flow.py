@@ -57,21 +57,21 @@ def check_working_copy_freshness() -> dict:
         Freshness status with age and threshold info
 
     """
-    age_hours = get_data_age_hours(source="sheets", dataset="commissioner")
+    age_hours = get_data_age_hours(source="commissioner", dataset="commissioner")
 
     if age_hours is None:
         log_warning(
             "No previous copy metadata found - cannot validate freshness",
-            context={"source": "sheets", "dataset": "commissioner"},
+            context={"source": "commissioner", "dataset": "commissioner"},
         )
         return {
             "has_metadata": False,
             "age_hours": None,
-            "threshold_hours": SOURCE_FRESHNESS_THRESHOLDS.get("sheets", 24),
+            "threshold_hours": SOURCE_FRESHNESS_THRESHOLDS.get("commissioner", 24),
             "is_stale": False,
         }
 
-    threshold_hours = SOURCE_FRESHNESS_THRESHOLDS.get("sheets", 24)
+    threshold_hours = SOURCE_FRESHNESS_THRESHOLDS.get("commissioner", 24)
     is_stale = age_hours > threshold_hours
 
     if is_stale:
@@ -523,7 +523,7 @@ def parse_league_sheet_flow(
         write_result = write_parquet_files(parsed_data, output_dir, snapshot_date)
 
     # Governance: Validate manifests
-    manifest_result = validate_manifests_task(sources=["sheets"], fail_on_gaps=False)
+    manifest_result = validate_manifests_task(sources=["commissioner"], fail_on_gaps=False)
 
     log_info(
         "Parse league sheet flow complete",

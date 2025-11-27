@@ -13,7 +13,7 @@ nflverse:
   error_days: 7
   rationale: "Weekly in-season, updates within 2 days post-games"
 
-sheets:
+commissioner:
   warn_days: 1
   error_days: 7
   rationale: "Daily roster/transaction updates during season"

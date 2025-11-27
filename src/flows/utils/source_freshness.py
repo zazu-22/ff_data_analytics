@@ -70,11 +70,11 @@ def should_skip_fetch(
         Tuple of (should_skip, reason_string)
 
     Examples:
-        >>> should_skip_fetch("sheets", "commissioner", None, force=True)
+        >>> should_skip_fetch("commissioner", "commissioner", None, force=True)
         (False, "Force flag set")
 
         >>> # If source modified time hasn't changed since last fetch
-        >>> should_skip_fetch("sheets", "commissioner", datetime(2025, 1, 1))
+        >>> should_skip_fetch("commissioner", "commissioner", datetime(2025, 1, 1))
         (True, "Source unchanged since 2025-01-01T12:00:00")
 
     """
